@@ -36,12 +36,14 @@ public final class HexActions {
         stack.push(new DoubleIota(1.0D)));
 
     public static final ResourceLocation DUPLICATE_ID = new ResourceLocation(HexAPI.MOD_ID, "duplicate");
-    public static final HexPattern DUPLICATE_PATTERN = pattern(HexDir.EAST, HexAngle.RIGHT);
+public static final HexPattern DUPLICATE_PATTERN =
+        pattern(HexDir.EAST, "aadaa");
     public static final HexAction DUPLICATE = register(DUPLICATE_ID, DUPLICATE_PATTERN, stack ->
         stack.push(stack.peek()));
 
     public static final ResourceLocation SWAP_ID = new ResourceLocation(HexAPI.MOD_ID, "swap");
-    public static final HexPattern SWAP_PATTERN = pattern(HexDir.EAST, HexAngle.RIGHT_BACK);
+public static final HexPattern SWAP_PATTERN =
+        pattern(HexDir.EAST, "aawdd");
     public static final HexAction SWAP = register(SWAP_ID, SWAP_PATTERN, stack -> {
         at.petra_k.hexcasting.api.casting.iota.Iota top = stack.pop();
         at.petra_k.hexcasting.api.casting.iota.Iota below = stack.pop();
@@ -50,7 +52,8 @@ public final class HexActions {
     });
 
     public static final ResourceLocation ADD_ID = new ResourceLocation(HexAPI.MOD_ID, "add");
-    public static final HexPattern ADD_PATTERN = pattern(HexDir.NORTH_EAST, "waaw");
+public static final HexPattern ADD_PATTERN =
+        pattern(HexDir.NORTH_EAST, "waaw");
     public static final HexAction ADD = register(ADD_ID, ADD_PATTERN, stack -> {
         double right = stack.pop(DoubleIota.class).getValue();
         double left = stack.pop(DoubleIota.class).getValue();
@@ -58,7 +61,8 @@ public final class HexActions {
     });
 
     public static final ResourceLocation NOT_ID = new ResourceLocation(HexAPI.MOD_ID, "not");
-    public static final HexPattern NOT_PATTERN = pattern(HexDir.EAST, HexAngle.LEFT_BACK);
+public static final HexPattern NOT_PATTERN =
+        pattern(HexDir.NORTH_WEST, "dw");
     public static final HexAction NOT = register(NOT_ID, NOT_PATTERN, stack ->
         stack.push(new BooleanIota(!stack.pop(BooleanIota.class).getValue())));
 
@@ -93,7 +97,8 @@ public final class HexActions {
 
     /** Compare two stack values using their Iota value semantics. */
     public static final ResourceLocation EQUALITY_ID = new ResourceLocation(HexAPI.MOD_ID, "equals");
-    public static final HexPattern EQUALITY_PATTERN = pattern(HexDir.EAST, "ad");
+public static final HexPattern EQUALITY_PATTERN =
+        pattern(HexDir.EAST, "ad");
     public static final HexAction EQUALITY = register(EQUALITY_ID, EQUALITY_PATTERN, stack -> {
         Iota right = stack.pop();
         Iota left = stack.pop();
@@ -102,7 +107,8 @@ public final class HexActions {
 
     /** Compare only the kinds of two stack values, ignoring their payloads. */
     public static final ResourceLocation TYPE_EQUALITY_ID = new ResourceLocation(HexAPI.MOD_ID, "type_equals");
-    public static final HexPattern TYPE_EQUALITY_PATTERN = pattern(HexDir.EAST, "wawdw");
+public static final HexPattern TYPE_EQUALITY_PATTERN =
+        pattern(HexDir.EAST, "wawdw");
     public static final HexAction TYPE_EQUALITY = register(TYPE_EQUALITY_ID, TYPE_EQUALITY_PATTERN, stack -> {
         Iota right = stack.pop();
         Iota left = stack.pop();
@@ -111,13 +117,15 @@ public final class HexActions {
 
     /** Convert any Iota's truthiness to an explicit Boolean Iota. */
     public static final ResourceLocation COERCE_TO_BOOL_ID = new ResourceLocation(HexAPI.MOD_ID, "bool_coerce");
-    public static final HexPattern COERCE_TO_BOOL_PATTERN = pattern(HexDir.NORTH_EAST, "aw");
+public static final HexPattern COERCE_TO_BOOL_PATTERN =
+        pattern(HexDir.NORTH_EAST, "aw");
     public static final HexAction COERCE_TO_BOOL = register(COERCE_TO_BOOL_ID, COERCE_TO_BOOL_PATTERN, stack ->
         stack.push(new BooleanIota(stack.pop().isTruthy())));
 
     /** Select the true or false branch; stack order is condition, true value, false value. */
     public static final ResourceLocation BOOL_IF_ID = new ResourceLocation(HexAPI.MOD_ID, "if");
-    public static final HexPattern BOOL_IF_PATTERN = pattern(HexDir.SOUTH_EAST, "awdd");
+public static final HexPattern BOOL_IF_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "awdd");
     public static final HexAction BOOL_IF = register(BOOL_IF_ID, BOOL_IF_PATTERN, stack -> {
         Iota falseValue = stack.pop();
         Iota trueValue = stack.pop();
