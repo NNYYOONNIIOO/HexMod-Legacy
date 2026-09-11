@@ -32,6 +32,7 @@ public final class HexCapabilityHandler {
             return;
         }
         try {
+            replacement.setMedia(original.getMedia());
             replacement.getCastingStack().restore(original.getCastingStack().snapshot());
             replacement.getCastingStack().writeLocal(original.getCastingStack().readLocal());
         } catch (CastingException ignored) {
