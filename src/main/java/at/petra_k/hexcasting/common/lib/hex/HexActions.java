@@ -730,6 +730,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.READ_INTO));
 
+    /** Halt the active cast and discard remaining continuation frames. */
+    public static final ResourceLocation HALT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "halt");
+    public static final HexPattern HALT_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "aqdee");
+    public static final HexAction HALT = register(HALT_ID, HALT_PATTERN,
+        new at.petra_k.hexcasting.common.casting.HaltAction());
+
     /** Evaluate a list of executable Iotas in the active VM. */
     public static final ResourceLocation EVAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "eval");

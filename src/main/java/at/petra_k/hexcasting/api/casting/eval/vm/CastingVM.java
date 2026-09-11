@@ -55,6 +55,7 @@ public final class CastingVM {
     private final ArrayDeque<WorkItem> continuation = new ArrayDeque<>();
     private final ArrayDeque<ParenFrame> parentheses = new ArrayDeque<>();
     private boolean escapeNext;
+    private boolean halted;
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
 
@@ -167,6 +168,16 @@ public final class CastingVM {
         return continuation.size();
     }
 
+    public boolean isHalted() {
+        return halted;
+    }
+
+    /** Stop this VM and discard all currently queued work. */
+    public void halt() {
+        halted = true;
+        continuation.clear();
+    }
+
     public int getParenDepth() {
         return parentheses.size();
     }
@@ -229,6 +240,7 @@ public final class CastingVM {
         out.setTag("stack", stack.serializeState());
         out.setInteger("operationsConsumed", operationsConsumed);
         out.setBoolean("escapeNext", escapeNext);
+        out.setBoolean("halted", halted);
         NBTTagList parenthesisTags = new NBTTagList();
         for (ParenFrame frame : parentheses) {
             NBTTagCompound frameTag = new NBTTagCompound();
@@ -261,6 +273,7 @@ public final class CastingVM {
             CastingStack.deserializeState(serialized.getCompoundTag("stack")));
         vm.operationsConsumed = Math.max(0, serialized.getInteger("operationsConsumed"));
         vm.escapeNext = serialized.getBoolean("escapeNext");
+        vm.halted = serialized.getBoolean("halted");
         if (serialized.hasKey("parentheses", 9)) {
             NBTTagList parenthesisTags = serialized.getTagList("parentheses", 10);
             if (parenthesisTags.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
@@ -302,7 +315,7 @@ public final class CastingVM {
     }
 
     public boolean hasPendingWork() {
-        return !continuation.isEmpty();
+        return !halted && !continuation.isEmpty();
     }
 
     /** Remove all pending work while retaining the current stack state. */
@@ -327,6 +340,10 @@ public final class CastingVM {
      */
     public boolean step(int maxOperations) throws CastingException {
         validateBudget(maxOperations);
+        if (halted) {
+            continuation.clear();
+            return false;
+        }
         if (continuation.isEmpty()) {
             return false;
         }
