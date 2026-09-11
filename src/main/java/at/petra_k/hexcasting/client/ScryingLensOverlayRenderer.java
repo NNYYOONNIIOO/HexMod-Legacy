@@ -49,6 +49,13 @@ public final class ScryingLensOverlayRenderer {
         IBlockState state = player.world.getBlockState(pos);
         event.getLeft().add("§5" + state.getBlock().getLocalizedName());
         event.getLeft().add("§7Hex: redstone " + player.world.getRedstonePower(pos, EnumFacing.UP));
+        if (player.hasCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null)) {
+            at.petra_k.hexcasting.api.capability.IHexCastingData data = player.getCapability(
+                at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
+            if (data != null) {
+                event.getLeft().add("§7Hex: media " + data.getMedia() + " / " + data.getMaxMedia());
+            }
+        }
 
         for (Map.Entry<IProperty<?>, Comparable<?>> property : state.getProperties().entrySet()) {
             String name = property.getKey().getName();
