@@ -45,8 +45,12 @@ public final class IotaArithmetics {
         requireCount(arguments, 2, "xor");
         Iota left = arguments.get(0);
         Iota right = arguments.get(1);
+        if (left instanceof BooleanIota && right instanceof BooleanIota) {
+            return new BooleanIota(((BooleanIota) left).getValue()
+                != ((BooleanIota) right).getValue());
+        }
         if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
-            throw new CastingException("xor expects two lists");
+            throw new CastingException("xor expects two booleans or two lists");
         }
         List<Iota> leftItems = ((ListIota) left).getItems();
         List<Iota> rightItems = ((ListIota) right).getItems();
@@ -106,11 +110,13 @@ public final class IotaArithmetics {
     }
 
     public static Iota greaterEq(List<Iota> arguments) throws CastingException {
-        return compare(arguments, "greater_eq", (left, right) -> left >= right);
+        return compare(arguments, "greater_eq", (left, right) ->
+            left >= right || Math.abs(left - right) <= 1.0E-5D);
     }
 
     public static Iota lessEq(List<Iota> arguments) throws CastingException {
-        return compare(arguments, "less_eq", (left, right) -> left <= right);
+        return compare(arguments, "less_eq", (left, right) ->
+            left <= right || Math.abs(left - right) <= 1.0E-5D);
     }
 
     private static Iota compare(List<Iota> arguments, String name, Comparison comparison)

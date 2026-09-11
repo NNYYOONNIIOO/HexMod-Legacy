@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
@@ -170,6 +171,9 @@ public final class HexArithmetics {
         }
         if (arguments.size() == 1 && arguments.get(0) instanceof ListIota) {
             return new DoubleIota(((ListIota) arguments.get(0)).getItems().size());
+        }
+        if (arguments.size() == 1 && arguments.get(0) instanceof BooleanIota) {
+            return new DoubleIota(((BooleanIota) arguments.get(0)).getValue() ? 1.0D : 0.0D);
         }
         return NumericArithmetics.absolute(arguments);
     }
