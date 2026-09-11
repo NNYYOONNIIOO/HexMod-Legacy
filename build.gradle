@@ -106,7 +106,8 @@ dependencies {
         'libs/asm-9.2.jar',
         'libs/asm-tree-9.2.jar',
         'libs/asm-util-9.2.jar',
-        'libs/asm-analysis-9.2.jar'
+        'libs/asm-analysis-9.2.jar',
+        'libs/gson-2.8.5.jar'
     )
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
