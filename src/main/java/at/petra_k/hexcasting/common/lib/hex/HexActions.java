@@ -666,6 +666,27 @@ public static final HexPattern BOOL_IF_PATTERN =
         }
         stack.restore(values);
     });
+    /** Copy a value at signed depth without removing the original. */
+    public static final ResourceLocation FISHERMAN_COPY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "fisherman/copy");
+    public static final HexPattern FISHERMAN_COPY_PATTERN =
+        pattern(HexDir.EAST, "aada");
+    public static final HexAction FISHERMAN_COPY = register(
+        FISHERMAN_COPY_ID, FISHERMAN_COPY_PATTERN, stack -> {
+            DoubleIota depthIota = stack.pop(DoubleIota.class);
+            int maxDepth = stack.size() - 1;
+            int depth = requireSignedInteger(depthIota, maxDepth);
+            java.util.List<Iota> values = stack.snapshot();
+            if (depth >= 0) {
+                stack.push(values.get(values.size() - 1 - depth));
+            } else {
+                Iota lure = values.get(values.size() - 1);
+                java.util.ArrayList<Iota> reordered = new java.util.ArrayList<>(values);
+                reordered.add(reordered.size() + depth, lure);
+                stack.restore(reordered);
+            }
+        });
+
     private HexActions() {
     }
 
