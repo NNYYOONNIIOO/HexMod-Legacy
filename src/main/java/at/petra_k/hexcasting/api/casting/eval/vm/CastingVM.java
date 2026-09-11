@@ -304,10 +304,17 @@ public final class CastingVM {
         if (patterns == null) {
             throw new IllegalArgumentException("Nested pattern sequence cannot be null");
         }
-        int outerPendingCount = continuation.size();
-        enqueueFront(patterns);
-        while (continuation.size() > outerPendingCount) {
-            step(maxOperations);
+        ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
+        continuation.clear();
+        try {
+            for (HexPattern pattern : patterns) {
+                enqueue(pattern);
+            }
+            while (!continuation.isEmpty()) {
+                step(maxOperations);
+            }
+        } finally {
+            continuation.addAll(outerContinuation);
         }
         return stack;
     }
@@ -323,10 +330,15 @@ public final class CastingVM {
         if (iotas == null) {
             throw new IllegalArgumentException("Nested Iota sequence cannot be null");
         }
-        int outerPendingCount = continuation.size();
-        enqueueFrontIotas(iotas);
-        while (continuation.size() > outerPendingCount) {
-            step(maxOperations);
+        ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
+        continuation.clear();
+        try {
+            enqueueIotas(iotas);
+            while (!continuation.isEmpty()) {
+                step(maxOperations);
+            }
+        } finally {
+            continuation.addAll(outerContinuation);
         }
         return stack;
     }
