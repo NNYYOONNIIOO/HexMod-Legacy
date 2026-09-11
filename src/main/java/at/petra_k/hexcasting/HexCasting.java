@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** 1.12.2 Forge entry point for the Hex Casting port. */
 @Mod(modid = HexCasting.MOD_ID, name = HexCasting.NAME, version = HexCasting.VERSION,
@@ -18,6 +19,7 @@ public final class HexCasting {
     public void preInit(FMLPreInitializationEvent event) {
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
+        HexInline.init();
     }
 
     @Mod.EventHandler

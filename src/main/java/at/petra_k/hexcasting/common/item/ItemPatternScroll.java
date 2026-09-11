@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 import java.util.Collections;
 import java.util.List;
 import net.minecraft.util.text.translation.I18n;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
 public final class ItemPatternScroll extends Item {
@@ -108,7 +109,7 @@ public final class ItemPatternScroll extends Item {
         HexPattern pattern = HexActionRegistry.getPattern(id);
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
         if (pattern != null) {
-            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + pattern.signature());
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
         }
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }

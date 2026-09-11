@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.Objects;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** Iota containing a drawable Hex Pattern. */
 public final class PatternIota extends Iota {
@@ -34,7 +35,7 @@ public final class PatternIota extends Iota {
 
     @Override
     public String display() {
-        return pattern.signature();
+        return "Pattern " + HexInline.formatPattern(pattern);
     }
 
     @Override

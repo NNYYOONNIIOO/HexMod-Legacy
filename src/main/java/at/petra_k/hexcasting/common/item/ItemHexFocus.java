@@ -23,6 +23,7 @@ import net.minecraft.world.World;
 import java.util.Collections;
 import java.util.List;
 import net.minecraft.util.text.translation.I18n;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /**
  * Minimal 1.12.2 casting item used to exercise the migrated core end to end.
@@ -40,7 +41,15 @@ public final class ItemHexFocus extends Item {
     public void addInformation(ItemStack stack, World world, List<String> tooltip, net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation selected = resolveSelectedAction(stack);
-        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + (selected == null ? I18n.translateToLocal("hexcasting.tooltip.none") : localizeAction(selected)));
+        HexPattern selectedPattern = selected == null ? null : HexActionRegistry.getPattern(selected);
+        String actionText = selected == null
+            ? I18n.translateToLocal("hexcasting.tooltip.none")
+            : localizeAction(selected);
+        String patternText = selectedPattern == null
+            ? I18n.translateToLocal("hexcasting.tooltip.none")
+            : HexInline.formatPattern(selectedPattern);
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
+            + actionText + " " + patternText);
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }
 
