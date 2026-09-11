@@ -98,9 +98,7 @@ dependencies {
     implementation fg.deobf(files('libs/Forgelin-Continuous-2.4.10.0.jar'))
 
     def mixin = files('libs/!mixinbooter-11.17.jar')
-    implementation(mixin) {
-        transitive = false
-    }
+    implementation mixin
     annotationProcessor mixin
 
     // You may put jars on which you depend on in ./libs or you may define them like so..

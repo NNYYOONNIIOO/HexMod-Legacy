@@ -1,0 +1,16 @@
+[
+{
+  "modid": "hexcasting",
+  "name": "Hex Casting",
+  "description": "A 1.12.2 Forge port of Hex Casting with a portable casting core.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Hex Casting contributors"],
+  "credits": "Based on the Hex Casting project and compatible dependencies.",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": ["patchouli", "jei", "baubles", "forgelin"]
+}
+]

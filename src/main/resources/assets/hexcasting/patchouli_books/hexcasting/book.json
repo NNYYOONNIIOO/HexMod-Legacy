@@ -1,0 +1,12 @@
+{
+  "name": "Hex Casting",
+  "landing_text": "A field guide to the first 1.12.2 Hex Casting patterns.",
+  "version": 1,
+  "creative_tab": "hexcasting",
+  "book_texture": "patchouli:textures/gui/book_green.png",
+  "model": "patchouli:book_green",
+  "show_progress": true,
+  "i18n": "hexcasting.book",
+  "advancements_tab": "hexcasting",
+  "use_resource_pack": true
+}
