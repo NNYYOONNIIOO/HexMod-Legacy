@@ -183,6 +183,15 @@ public final class CastingVM {
         parentheses.push(new ParenFrame());
     }
 
+    public void openParens(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Parenthesis count cannot be negative");
+        }
+        for (int i = 0; i < count; i++) {
+            openParen();
+        }
+    }
+
     public void closeParen() throws CastingException {
         if (parentheses.isEmpty()) {
             throw new CastingException("Cannot close a parenthesis when none is open");
@@ -193,6 +202,12 @@ public final class CastingVM {
             stack.push(result);
         } else {
             parentheses.peek().values.add(result);
+        }
+    }
+
+    public void closeAllParens() throws CastingException {
+        while (!parentheses.isEmpty()) {
+            closeParen();
         }
     }
 

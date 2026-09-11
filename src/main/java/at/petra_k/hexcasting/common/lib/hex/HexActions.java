@@ -700,6 +700,26 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.CLOSE));
 
+    /** Open N nested parenthesis capture frames using the stack count. */
+    public static final ResourceLocation OPEN_N_PARENS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "open_n_parens");
+    public static final HexPattern OPEN_N_PARENS_PATTERN =
+        pattern(HexDir.WEST, "qdaqadq");
+    public static final HexAction OPEN_N_PARENS = register(
+        OPEN_N_PARENS_ID, OPEN_N_PARENS_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.OPEN_N));
+
+    /** Close every currently open parenthesis frame. */
+    public static final ResourceLocation CLOSE_ALL_PARENS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "close_all_parens");
+    public static final HexPattern CLOSE_ALL_PARENS_PATTERN =
+        pattern(HexDir.EAST, "eadedae");
+    public static final HexAction CLOSE_ALL_PARENS = register(
+        CLOSE_ALL_PARENS_ID, CLOSE_ALL_PARENS_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.CLOSE_ALL));
+
     /** Evaluate a list of executable Iotas in the active VM. */
     public static final ResourceLocation EVAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "eval");
