@@ -682,7 +682,9 @@ public static final HexPattern BOOL_IF_PATTERN =
             } else {
                 Iota lure = values.get(values.size() - 1);
                 java.util.ArrayList<Iota> reordered = new java.util.ArrayList<>(values);
-                reordered.add(reordered.size() + depth, lure);
+                // Match the 1.20.1 implementation: depth -1 inserts directly
+                // below the lure, while the minimum depth inserts at index 0.
+                reordered.add(reordered.size() - 1 + depth, lure);
                 stack.restore(reordered);
             }
         });
