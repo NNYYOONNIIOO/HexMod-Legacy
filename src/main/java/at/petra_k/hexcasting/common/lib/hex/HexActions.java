@@ -722,6 +722,16 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.READ_INTO));
 
+    /** Undo the latest captured value while building a parenthesized list. */
+    public static final ResourceLocation UNDO_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "undo");
+    public static final HexPattern UNDO_PATTERN =
+        pattern(HexDir.EAST, "eeedw");
+    public static final HexAction UNDO = register(
+        UNDO_ID, UNDO_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.UNDO));
+
     /** Halt the active cast and discard remaining continuation frames. */
     public static final ResourceLocation HALT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "halt");

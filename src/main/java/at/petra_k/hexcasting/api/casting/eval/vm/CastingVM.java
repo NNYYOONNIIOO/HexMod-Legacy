@@ -230,6 +230,19 @@ public final class CastingVM {
         parentheses.peek().values.add(stack.pop());
     }
 
+    /** Undo the latest captured value, or the current empty parenthesis frame. */
+    public void undo() throws CastingException {
+        if (parentheses.isEmpty()) {
+            throw new CastingException("Undo requires an open parenthesis");
+        }
+        ParenFrame frame = parentheses.peek();
+        if (frame.values.isEmpty()) {
+            parentheses.pop();
+        } else {
+            frame.values.remove(frame.values.size() - 1);
+        }
+    }
+
     /**
      * Serialize the complete resumable VM state for a player capability or
      * packaged casting item. Pending patterns are represented as PatternIotas

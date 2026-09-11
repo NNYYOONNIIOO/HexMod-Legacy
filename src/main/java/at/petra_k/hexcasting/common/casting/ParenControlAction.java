@@ -10,7 +10,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 /** VM-aware meta actions for escaping and parenthesized code capture. */
 public final class ParenControlAction implements HexAction {
     public enum Kind {
-        ESCAPE, RUNTIME_ESCAPE, OPEN, CLOSE, OPEN_N, CLOSE_ALL, READ_INTO
+        ESCAPE, RUNTIME_ESCAPE, OPEN, CLOSE, OPEN_N, CLOSE_ALL, READ_INTO, UNDO
     }
 
     private final Kind kind;
@@ -49,6 +49,9 @@ public final class ParenControlAction implements HexAction {
                 break;
             case READ_INTO:
                 activeVm.readIntoParen();
+                break;
+            case UNDO:
+                activeVm.undo();
                 break;
             default:
                 throw new IllegalStateException("Unknown parenthesis action kind: " + kind);
