@@ -904,11 +904,11 @@ public static final HexPattern BOOL_IF_PATTERN =
         new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::xor));
 
     /** Prefix an Iota to a list. The list is the lower stack argument. */
-    public static final ResourceLocation CONS_ID =
-        new ResourceLocation(HexAPI.MOD_ID, "cons");
-    public static final HexPattern CONS_PATTERN =
+    public static final ResourceLocation CONSTRUCT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "construct");
+    public static final HexPattern CONSTRUCT_PATTERN =
         pattern(HexDir.SOUTH_EAST, "ddewedd");
-    public static final HexAction CONS = register(CONS_ID, CONS_PATTERN, stack -> {
+    public static final HexAction CONSTRUCT = register(CONSTRUCT_ID, CONSTRUCT_PATTERN, stack -> {
         Iota value = stack.pop();
         ListIota list = stack.pop(ListIota.class);
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>();
@@ -918,11 +918,12 @@ public static final HexPattern BOOL_IF_PATTERN =
     });
 
     /** Remove the first Iota from a non-empty list, returning tail then head. */
-    public static final ResourceLocation UNCONS_ID =
-        new ResourceLocation(HexAPI.MOD_ID, "uncons");
-    public static final HexPattern UNCONS_PATTERN =
+    public static final ResourceLocation DECONSTRUCT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "deconstruct");
+    public static final HexPattern DECONSTRUCT_PATTERN =
         pattern(HexDir.SOUTH_WEST, "aaqwqaa");
-    public static final HexAction UNCONS = register(UNCONS_ID, UNCONS_PATTERN, stack -> {
+    public static final HexAction DECONSTRUCT = register(
+        DECONSTRUCT_ID, DECONSTRUCT_PATTERN, stack -> {
         ListIota list = stack.pop(ListIota.class);
         if (list.getItems().isEmpty()) {
             throw new CastingException("Cannot uncons an empty list");
