@@ -679,6 +679,41 @@ public static final HexPattern BOOL_IF_PATTERN =
         });
 
    /** Execute a code list once for every value in a data list. */
+    /**
+     * Reorder the top N stack values using a factorial-number-system
+     * (Lehmer-code) index. The code is consumed from the top of the stack;
+     * values below the selected window are left untouched.
+     */
+    public static final ResourceLocation SWIZZLE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "swizzle");
+    public static final HexPattern SWIZZLE_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qaawdde");
+    public static final HexAction SWIZZLE = register(SWIZZLE_ID, SWIZZLE_PATTERN, stack -> {
+        java.util.List<Iota> before = stack.snapshot();
+        try {
+            long code = requireNonNegativeLong(stack.pop(DoubleIota.class));
+            java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
+            int width = swizzleWidth(code);
+            if (width > values.size()) {
+                throw new CastingException("Swizzle code requires " + width
+                    + " stack values, but only " + values.size() + " are available");
+            }
+            int start = values.size() - width;
+            java.util.ArrayList<Iota> selected = new java.util.ArrayList<>(
+                values.subList(start, values.size()));
+            java.util.ArrayList<Iota> reordered = decodeLehmer(selected, code);
+            values.subList(start, values.size()).clear();
+            values.addAll(reordered);
+            stack.restore(values);
+        } catch (CastingException exception) {
+            stack.restore(before);
+            throw exception;
+        } catch (RuntimeException exception) {
+            stack.restore(before);
+            throw exception;
+        }
+    });
+
     /** Remove duplicate Iotas while preserving their first-occurrence order. */
     public static final ResourceLocation UNIQUE_ID =
         new ResourceLocation(HexAPI.MOD_ID, "unique");
@@ -896,6 +931,50 @@ public static final HexPattern BOOL_IF_PATTERN =
         stack.push(new ListIota(new java.util.ArrayList<>(items.subList(1, items.size()))));
         stack.push(items.get(0));
     });
+    private static long requireNonNegativeLong(DoubleIota value) throws CastingException {
+        double raw = value.getValue();
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
+            || raw < 0.0D || raw > 9.007199254740991E15D) {
+            throw new CastingException("Expected a non-negative integer code but found " + raw);
+        }
+        return (long) raw;
+    }
+
+    /** Return the number of factorial strides required by the code. */
+    private static int swizzleWidth(long code) throws CastingException {
+        long factorial = 1L;
+        long multiplier = 1L;
+        int width = 0;
+        while (factorial <= code) {
+            width++;
+            if (width >= 20 || factorial > Long.MAX_VALUE / multiplier) {
+                throw new CastingException("Swizzle code is too large");
+            }
+            factorial *= multiplier;
+            multiplier++;
+        }
+        return width;
+    }
+
+    /** Decode a Lehmer code into a permutation of the selected values. */
+    private static java.util.ArrayList<Iota> decodeLehmer(
+        java.util.List<Iota> selected, long code) {
+        java.util.ArrayList<Iota> remaining = new java.util.ArrayList<>(selected);
+        java.util.ArrayList<Iota> reordered = new java.util.ArrayList<>(selected.size());
+        long factorial = 1L;
+        for (int i = 2; i < selected.size(); i++) {
+            factorial *= i;
+        }
+        for (int radix = selected.size(); radix > 0; radix--) {
+            int index = (int) ((code / factorial) % radix);
+            reordered.add(remaining.remove(index));
+            if (radix > 1) {
+                factorial /= (radix - 1L);
+            }
+        }
+        return reordered;
+    }
+
     private HexActions() {
     }
 
