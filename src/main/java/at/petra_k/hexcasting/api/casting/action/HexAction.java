@@ -17,4 +17,9 @@ public interface HexAction {
     default void execute(CastingStack stack, CastingVM vm) throws CastingException {
         execute(stack);
     }
+
+    /** Whether this action is allowed to run while a parenthesized list is captured. */
+    default boolean executesInParentheses() {
+        return false;
+    }
 }

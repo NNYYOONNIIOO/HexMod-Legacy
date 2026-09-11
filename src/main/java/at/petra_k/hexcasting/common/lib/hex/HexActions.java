@@ -673,6 +673,33 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction FOR_EACH = register(FOR_EACH_ID, FOR_EACH_PATTERN,
         new at.petra_k.hexcasting.common.casting.ForEachAction());
 
+    /** Mark the next Iota as literal instead of executing it. */
+    public static final ResourceLocation ESCAPE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "escape");
+    public static final HexPattern ESCAPE_PATTERN =
+        pattern(HexDir.WEST, "qqqaw");
+    public static final HexAction ESCAPE = register(ESCAPE_ID, ESCAPE_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.ESCAPE));
+
+    /** Begin capturing executable Iotas into a list. */
+    public static final ResourceLocation OPEN_PAREN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "open_paren");
+    public static final HexPattern OPEN_PAREN_PATTERN =
+        pattern(HexDir.WEST, "qqq");
+    public static final HexAction OPEN_PAREN = register(OPEN_PAREN_ID, OPEN_PAREN_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.OPEN));
+
+    /** Finish a parenthesized list and place it on the enclosing context. */
+    public static final ResourceLocation CLOSE_PAREN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "close_paren");
+    public static final HexPattern CLOSE_PAREN_PATTERN =
+        pattern(HexDir.EAST, "eee");
+    public static final HexAction CLOSE_PAREN = register(CLOSE_PAREN_ID, CLOSE_PAREN_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.CLOSE));
+
    private HexActions() {
     }
 

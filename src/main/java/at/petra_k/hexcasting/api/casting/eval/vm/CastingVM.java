@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -45,8 +46,14 @@ public final class CastingVM {
         }
     }
 
+    private static final class ParenFrame {
+        private final ArrayList<Iota> values = new ArrayList<>();
+    }
+
     private final CastingStack stack;
     private final ArrayDeque<WorkItem> continuation = new ArrayDeque<>();
+    private final ArrayDeque<ParenFrame> parentheses = new ArrayDeque<>();
+    private boolean escapeNext;
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
 
@@ -159,6 +166,35 @@ public final class CastingVM {
         return continuation.size();
     }
 
+    public int getParenDepth() {
+        return parentheses.size();
+    }
+
+    public boolean isEscapeNext() {
+        return escapeNext;
+    }
+
+    public void setEscapeNext() {
+        escapeNext = true;
+    }
+
+    public void openParen() {
+        parentheses.push(new ParenFrame());
+    }
+
+    public void closeParen() throws CastingException {
+        if (parentheses.isEmpty()) {
+            throw new CastingException("Cannot close a parenthesis when none is open");
+        }
+        ParenFrame frame = parentheses.pop();
+        ListIota result = new ListIota(frame.values);
+        if (parentheses.isEmpty()) {
+            stack.push(result);
+        } else {
+            parentheses.peek().values.add(result);
+        }
+    }
+
     /**
      * Serialize the complete resumable VM state for a player capability or
      * packaged casting item. Pending patterns are represented as PatternIotas
@@ -168,6 +204,18 @@ public final class CastingVM {
         NBTTagCompound out = new NBTTagCompound();
         out.setTag("stack", stack.serializeState());
         out.setInteger("operationsConsumed", operationsConsumed);
+        out.setBoolean("escapeNext", escapeNext);
+        NBTTagList parenthesisTags = new NBTTagList();
+        for (ParenFrame frame : parentheses) {
+            NBTTagCompound frameTag = new NBTTagCompound();
+            NBTTagList values = new NBTTagList();
+            for (Iota value : frame.values) {
+                values.appendTag(value.serialize());
+            }
+            frameTag.setTag("values", values);
+            parenthesisTags.appendTag(frameTag);
+        }
+        out.setTag("parentheses", parenthesisTags);
         NBTTagList pending = new NBTTagList();
         for (WorkItem work : continuation) {
             NBTTagCompound entry = new NBTTagCompound();
@@ -188,6 +236,22 @@ public final class CastingVM {
         CastingVM vm = new CastingVM(
             CastingStack.deserializeState(serialized.getCompoundTag("stack")));
         vm.operationsConsumed = Math.max(0, serialized.getInteger("operationsConsumed"));
+        vm.escapeNext = serialized.getBoolean("escapeNext");
+        if (serialized.hasKey("parentheses", 9)) {
+            NBTTagList parenthesisTags = serialized.getTagList("parentheses", 10);
+            if (parenthesisTags.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
+                throw new CastingException("Serialized parenthesis state exceeded its size limit");
+            }
+            for (int i = parenthesisTags.tagCount() - 1; i >= 0; i--) {
+                NBTTagCompound frameTag = parenthesisTags.getCompoundTagAt(i);
+                NBTTagList values = frameTag.getTagList("values", 10);
+                ParenFrame frame = new ParenFrame();
+                for (int j = 0; j < values.tagCount(); j++) {
+                    frame.values.add(HexIotaTypes.deserialize(values.getCompoundTagAt(j)));
+                }
+                vm.parentheses.push(frame);
+            }
+        }
         if (!serialized.hasKey("continuation", 9)) {
             return vm;
         }
@@ -253,9 +317,10 @@ public final class CastingVM {
             pattern = ((PatternIota) work.iota).getPattern();
         }
         HexAction action = pattern == null ? null : HexActionRegistry.get(pattern);
-        if (pattern != null && action == null) {
+        if (pattern != null && action == null && parentheses.isEmpty() && !escapeNext) {
             throw new CastingException("No action is registered for pattern " + pattern.signature());
         }
+        Iota value = pattern == null ? work.iota : new PatternIota(pattern);
 
         // Count before execution so a failing action cannot be retried
         // indefinitely by a caller resuming the VM. Nested actions inherit
@@ -264,10 +329,15 @@ public final class CastingVM {
         int previousLimit = activeOperationLimit;
         activeOperationLimit = maxOperations;
         try {
-            if (action != null) {
+            if (escapeNext) {
+                escapeNext = false;
+                capture(value);
+            } else if (!parentheses.isEmpty() && (action == null || !action.executesInParentheses())) {
+                parentheses.peek().values.add(value);
+            } else if (action != null) {
                 action.execute(stack, this);
             } else {
-                stack.push(work.iota);
+                stack.push(value);
             }
         } finally {
             activeOperationLimit = previousLimit;
@@ -341,6 +411,14 @@ public final class CastingVM {
             continuation.addAll(outerContinuation);
         }
         return stack;
+    }
+
+    private void capture(Iota value) throws CastingException {
+        if (parentheses.isEmpty()) {
+            stack.push(value);
+        } else {
+            parentheses.peek().values.add(value);
+        }
     }
 
     private static void validateBudget(int maxOperations) {
