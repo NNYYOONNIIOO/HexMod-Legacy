@@ -664,7 +664,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
             return new ListIota(unique);
         }));
-+    /** Execute a code list once for every value in a data list. */
+    /** Execute a code list once for every value in a data list. */
     public static final ResourceLocation FOR_EACH_ID =
         new ResourceLocation(HexAPI.MOD_ID, "for_each");
     public static final HexPattern FOR_EACH_PATTERN =
