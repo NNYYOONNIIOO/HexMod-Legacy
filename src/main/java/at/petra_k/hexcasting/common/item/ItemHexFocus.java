@@ -55,7 +55,10 @@ public final class ItemHexFocus extends Item {
                 if (next != null) {
                     setSelectedAction(held, next);
                     player.sendMessage(new TextComponentString(
-                        "Hex Casting pattern: " + next.getResourcePath()
+                        I18n.translateToLocalFormatted(
+                            "hexcasting.message.pattern_selected",
+                            next.getResourcePath()
+                        )
                     ));
                 }
                 return new ActionResult<>(EnumActionResult.SUCCESS, held);
@@ -73,13 +76,22 @@ public final class ItemHexFocus extends Item {
                     HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack());
                     result = data.getCastingStack();
                 }
+                String resultText = result.isEmpty()
+                    ? I18n.translateToLocal("hexcasting.message.empty_stack")
+                    : result.peek().display();
                 player.sendMessage(new TextComponentString(
-                    "Hex Casting [" + selected.getResourcePath() + "]: "
-                        + (result.isEmpty() ? "empty stack" : result.peek().display())
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.result",
+                        selected.getResourcePath(),
+                        resultText
+                    )
                 ));
             } catch (CastingException exception) {
                 player.sendMessage(new TextComponentString(
-                    "Hex Casting error: " + exception.getMessage()
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.error",
+                        exception.getMessage()
+                    )
                 ));
             }
         }

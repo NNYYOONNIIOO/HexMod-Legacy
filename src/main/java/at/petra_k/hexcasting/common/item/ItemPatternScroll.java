@@ -44,7 +44,10 @@ public final class ItemPatternScroll extends Item {
                 if (next != null) {
                     setActionId(stack, next);
                     player.sendMessage(new TextComponentString(
-                        "Hex scroll pattern: " + next.getResourcePath()
+                        I18n.translateToLocalFormatted(
+                            "hexcasting.message.scroll_selected",
+                            next.getResourcePath()
+                        )
                     ));
                 }
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
@@ -62,13 +65,22 @@ public final class ItemPatternScroll extends Item {
                     HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack());
                     result = data.getCastingStack();
                 }
+                String resultText = result.isEmpty()
+                    ? I18n.translateToLocal("hexcasting.message.empty_stack")
+                    : result.peek().display();
                 player.sendMessage(new TextComponentString(
-                    "Hex Scroll [" + current.getResourcePath() + "]: "
-                        + (result.isEmpty() ? "empty stack" : result.peek().display())
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.scroll_result",
+                        current.getResourcePath(),
+                        resultText
+                    )
                 ));
             } catch (CastingException exception) {
                 player.sendMessage(new TextComponentString(
-                    "Hex scroll error: " + exception.getMessage()
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.scroll_error",
+                        exception.getMessage()
+                    )
                 ));
             }
         }
