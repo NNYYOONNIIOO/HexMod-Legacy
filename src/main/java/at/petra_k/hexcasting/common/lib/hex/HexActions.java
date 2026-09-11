@@ -127,12 +127,8 @@ public static final HexPattern COERCE_TO_BOOL_PATTERN =
     public static final ResourceLocation BOOL_IF_ID = new ResourceLocation(HexAPI.MOD_ID, "if");
 public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "awdd");
-    public static final HexAction BOOL_IF = register(BOOL_IF_ID, BOOL_IF_PATTERN, stack -> {
-        Iota falseValue = stack.pop();
-        Iota trueValue = stack.pop();
-        boolean condition = stack.pop(BooleanIota.class).getValue();
-        stack.push(condition ? trueValue : falseValue);
-    });
+    public static final HexAction BOOL_IF = register(BOOL_IF_ID, BOOL_IF_PATTERN,
+        new at.petra_k.hexcasting.common.casting.BranchAction());
 
     /** Numeric comparison actions copied from the 1.20.1 pure stack semantics. */
     public static final ResourceLocation GREATER_ID =
