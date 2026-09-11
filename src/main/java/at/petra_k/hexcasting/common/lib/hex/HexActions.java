@@ -700,7 +700,15 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.CLOSE));
 
-   private HexActions() {
+    /** Evaluate a list of executable Iotas in the active VM. */
+    public static final ResourceLocation EVAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "eval");
+    public static final HexPattern EVAL_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "deaqq");
+    public static final HexAction EVAL = register(EVAL_ID, EVAL_PATTERN,
+        new at.petra_k.hexcasting.common.casting.EvalAction());
+
+    private HexActions() {
     }
 
     public static void touch() {
