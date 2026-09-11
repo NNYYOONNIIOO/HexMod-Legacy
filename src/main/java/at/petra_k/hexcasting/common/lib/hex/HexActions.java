@@ -245,11 +245,8 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "sub");
     public static final HexPattern SUB_PATTERN =
         pattern(HexDir.NORTH_WEST, "wddw");
-    public static final HexAction SUB = register(SUB_ID, SUB_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(left - right));
-    });
+    public static final HexAction SUB = register(SUB_ID, SUB_PATTERN,
+        new OperationAction(2, NumericArithmetics::subtract));
 
     /** Ported arithmetic action from the 1.20.1 registry: mul. */
     public static final ResourceLocation MUL_DOT_ID =
@@ -278,9 +275,8 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "abs");
     public static final HexPattern ABS_PATTERN =
         pattern(HexDir.NORTH_EAST, "wqaqw");
-    public static final HexAction ABS = register(ABS_ID, ABS_PATTERN, stack -> {
-        stack.push(new DoubleIota(Math.abs(stack.pop(DoubleIota.class).getValue())));
-    });
+    public static final HexAction ABS = register(ABS_ID, ABS_PATTERN,
+        new OperationAction(1, NumericArithmetics::absolute));
 
     /** Ported arithmetic action from the 1.20.1 registry: pow. */
     public static final ResourceLocation POW_PROJ_ID =
@@ -298,29 +294,24 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "floor");
     public static final HexPattern FLOOR_PATTERN =
         pattern(HexDir.EAST, "ewq");
-    public static final HexAction FLOOR = register(FLOOR_ID, FLOOR_PATTERN, stack -> {
-        stack.push(new DoubleIota(Math.floor(stack.pop(DoubleIota.class).getValue())));
-    });
+    public static final HexAction FLOOR = register(FLOOR_ID, FLOOR_PATTERN,
+        new OperationAction(1, NumericArithmetics::floor));
 
     /** Ported arithmetic action from the 1.20.1 registry: ceil. */
     public static final ResourceLocation CEIL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "ceil");
     public static final HexPattern CEIL_PATTERN =
         pattern(HexDir.EAST, "qwe");
-    public static final HexAction CEIL = register(CEIL_ID, CEIL_PATTERN, stack -> {
-        stack.push(new DoubleIota(Math.ceil(stack.pop(DoubleIota.class).getValue())));
-    });
+    public static final HexAction CEIL = register(CEIL_ID, CEIL_PATTERN,
+        new OperationAction(1, NumericArithmetics::ceil));
 
     /** Ported arithmetic action from the 1.20.1 registry: modulo. */
     public static final ResourceLocation MODULO_ID =
         new ResourceLocation(HexAPI.MOD_ID, "modulo");
     public static final HexPattern MODULO_PATTERN =
         pattern(HexDir.NORTH_EAST, "addwaad");
-    public static final HexAction MODULO = register(MODULO_ID, MODULO_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(left % right));
-    });
+    public static final HexAction MODULO = register(MODULO_ID, MODULO_PATTERN,
+        new OperationAction(2, NumericArithmetics::modulo));
     /** Ported pure action from the 1.20.1 registry: const/null. */
     public static final ResourceLocation CONST_NULL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "const/null");
