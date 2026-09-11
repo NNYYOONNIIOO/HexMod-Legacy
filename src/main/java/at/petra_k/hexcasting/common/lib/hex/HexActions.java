@@ -654,7 +654,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern UNIQUE_PATTERN =
         pattern(HexDir.NORTH_EAST, "aweaqa");
     public static final HexAction UNIQUE = register(UNIQUE_ID, UNIQUE_PATTERN,
-        new StackOperationAction(1, arguments -> {
+        new OperationAction(1, arguments -> {
             ListIota list = (ListIota) arguments.get(0);
             java.util.ArrayList<Iota> unique = new java.util.ArrayList<>();
             for (Iota value : list.getItems()) {
