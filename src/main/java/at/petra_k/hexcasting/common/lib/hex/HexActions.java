@@ -497,7 +497,13 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction INDEX_OF = register(INDEX_OF_ID, INDEX_OF_PATTERN, stack -> {
         Iota value = stack.pop();
         ListIota list = stack.pop(ListIota.class);
-        int index = list.getItems().indexOf(value);
+        int index = -1;
+        for (int i = 0; i < list.getItems().size(); i++) {
+            if (Iota.tolerates(list.getItems().get(i), value)) {
+                index = i;
+                break;
+            }
+        }
         stack.push(new DoubleIota(index));
     });
 
