@@ -4,7 +4,9 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.ListIota;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Pure Boolean and numeric comparison operations for transactional actions. */
@@ -18,14 +20,81 @@ public final class IotaArithmetics {
 
     public static Iota and(List<Iota> arguments) throws CastingException {
         requireCount(arguments, 2, "and");
-        return new BooleanIota(booleanValue(arguments.get(0), "and", 0)
-            && booleanValue(arguments.get(1), "and", 1));
+        Iota left = arguments.get(0);
+        Iota right = arguments.get(1);
+        if (left instanceof ListIota && right instanceof ListIota) {
+            return listIntersection((ListIota) left, (ListIota) right);
+        }
+        return new BooleanIota(booleanValue(left, "and", 0)
+            && booleanValue(right, "and", 1));
     }
 
     public static Iota or(List<Iota> arguments) throws CastingException {
         requireCount(arguments, 2, "or");
-        return new BooleanIota(booleanValue(arguments.get(0), "or", 0)
-            || booleanValue(arguments.get(1), "or", 1));
+        Iota left = arguments.get(0);
+        Iota right = arguments.get(1);
+        if (left instanceof ListIota && right instanceof ListIota) {
+            return listUnion((ListIota) left, (ListIota) right);
+        }
+        return new BooleanIota(booleanValue(left, "or", 0)
+            || booleanValue(right, "or", 1));
+    }
+
+    /** Symmetric difference for lists; boolean xor is intentionally rejected. */
+    public static Iota xor(List<Iota> arguments) throws CastingException {
+        requireCount(arguments, 2, "xor");
+        Iota left = arguments.get(0);
+        Iota right = arguments.get(1);
+        if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
+            throw new CastingException("xor expects two lists");
+        }
+        List<Iota> leftItems = ((ListIota) left).getItems();
+        List<Iota> rightItems = ((ListIota) right).getItems();
+        ArrayList<Iota> result = new ArrayList<>();
+        for (Iota value : leftItems) {
+            if (!containsIota(rightItems, value)) {
+                result.add(value);
+            }
+        }
+        for (Iota value : rightItems) {
+            if (!containsIota(leftItems, value)) {
+                result.add(value);
+            }
+        }
+        return new ListIota(result);
+    }
+
+    private static Iota listIntersection(ListIota left, ListIota right) {
+        ArrayList<Iota> result = new ArrayList<>();
+        List<Iota> rightItems = right.getItems();
+        for (Iota value : left.getItems()) {
+            if (containsIota(rightItems, value)) {
+                result.add(value);
+            }
+        }
+        return new ListIota(result);
+    }
+
+    private static Iota listUnion(ListIota left, ListIota right) {
+        ArrayList<Iota> result = new ArrayList<>();
+        List<Iota> leftItems = left.getItems();
+        List<Iota> rightItems = right.getItems();
+        result.addAll(leftItems);
+        for (Iota value : rightItems) {
+            if (!containsIota(leftItems, value)) {
+                result.add(value);
+            }
+        }
+        return new ListIota(result);
+    }
+
+    private static boolean containsIota(List<Iota> values, Iota needle) {
+        for (Iota value : values) {
+            if (value.equals(needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static Iota greater(List<Iota> arguments) throws CastingException {

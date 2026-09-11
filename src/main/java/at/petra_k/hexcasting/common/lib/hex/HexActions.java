@@ -829,6 +829,14 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction LOG = register(LOG_ID,
         LOG_PATTERN, new OperationAction(2, HexArithmetics::logarithm));
 
+    /** Symmetric difference for two lists. */
+    public static final ResourceLocation XOR_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "xor");
+    public static final HexPattern XOR_PATTERN =
+        pattern(HexDir.NORTH_WEST, "dwa");
+    public static final HexAction XOR = register(XOR_ID, XOR_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::xor));
+
     private HexActions() {
     }
 
