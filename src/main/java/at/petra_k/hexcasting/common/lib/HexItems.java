@@ -2,7 +2,6 @@ package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
-import at.petra_k.hexcasting.common.item.ItemHexGuideBook;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
@@ -28,9 +27,6 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".pattern_scroll")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemHexGuideBook GUIDE_BOOK = (ItemHexGuideBook) new ItemHexGuideBook()
-        .setCreativeTab(HexCreativeTab.HEX);
-
     private HexItems() {
     }
 
@@ -39,6 +35,5 @@ public final class HexItems {
         event.getRegistry().register(FOCUS);
         event.getRegistry().register(SCRYING_LENS);
         event.getRegistry().register(PATTERN_SCROLL);
-        event.getRegistry().register(GUIDE_BOOK);
     }
 }

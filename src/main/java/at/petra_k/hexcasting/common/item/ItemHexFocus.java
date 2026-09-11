@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.util.text.translation.I18n;
 
 /**
  * Minimal 1.12.2 casting item used to exercise the migrated core end to end.
@@ -39,8 +40,8 @@ public final class ItemHexFocus extends Item {
     public void addInformation(ItemStack stack, World world, List<String> tooltip, net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation selected = resolveSelectedAction(stack);
-        tooltip.add("Pattern: " + (selected == null ? "none" : selected.getResourcePath()));
-        tooltip.add("Sneak + right click to cycle patterns");
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + (selected == null ? I18n.translateToLocal("hexcasting.tooltip.none") : localizeAction(selected)));
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }
 
     @Override
@@ -105,4 +106,10 @@ public final class ItemHexFocus extends Item {
         }
         tag.setString(KEY_SELECTED_ACTION, id.toString());
     }
+    private static String localizeAction(ResourceLocation id) {
+        String key = "hexcasting.action." + id.getResourcePath();
+        String translated = I18n.translateToLocal(key);
+        return key.equals(translated) ? id.getResourcePath() : translated;
+    }
+
 }

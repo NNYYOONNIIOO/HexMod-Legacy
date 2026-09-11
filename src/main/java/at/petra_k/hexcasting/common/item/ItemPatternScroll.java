@@ -23,6 +23,7 @@ import net.minecraft.world.World;
 
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.util.text.translation.I18n;
 
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
 public final class ItemPatternScroll extends Item {
@@ -93,11 +94,11 @@ public final class ItemPatternScroll extends Item {
         HexActionRegistry.bootstrap();
         ResourceLocation id = getActionId(stack);
         HexPattern pattern = HexActionRegistry.getPattern(id);
-        tooltip.add("Action: " + id.getResourcePath());
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
         if (pattern != null) {
-            tooltip.add("Pattern: " + pattern.signature());
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + pattern.signature());
         }
-        tooltip.add("Sneak + right click to cycle patterns");
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }
 
     @Override
@@ -129,4 +130,10 @@ public final class ItemPatternScroll extends Item {
         }
         tag.setString(KEY_ACTION, id.toString());
     }
+    private static String localizeAction(ResourceLocation id) {
+        String key = "hexcasting.action." + id.getResourcePath();
+        String translated = I18n.translateToLocal(key);
+        return key.equals(translated) ? id.getResourcePath() : translated;
+    }
+
 }

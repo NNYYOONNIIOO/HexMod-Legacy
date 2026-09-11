@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "minecraft:items/glass_bottle"
+    "layer0": "hexcasting:items/scrying_lens"
   }
 }

@@ -8,6 +8,8 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.util.ResourceLocation;
+import vazkii.patchouli.common.item.PatchouliItems;
 
 /** Client-only 1.12.2 item model registration. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID, value = Side.CLIENT)
@@ -33,9 +35,9 @@ public final class HexItemModels {
             new ModelResourceLocation(HexItems.PATTERN_SCROLL.getRegistryName(), "inventory")
         );
         ModelLoader.setCustomModelResourceLocation(
-            HexItems.GUIDE_BOOK,
+            PatchouliItems.book,
             0,
-            new ModelResourceLocation(HexItems.GUIDE_BOOK.getRegistryName(), "inventory")
+            new ModelResourceLocation(new ResourceLocation(HexAPI.MOD_ID, "patchouli_book"), "inventory")
         );
     }
 }
