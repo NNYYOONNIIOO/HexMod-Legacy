@@ -10,7 +10,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 /** VM-aware meta actions for escaping and parenthesized code capture. */
 public final class ParenControlAction implements HexAction {
     public enum Kind {
-        ESCAPE, OPEN, CLOSE, OPEN_N, CLOSE_ALL, READ_INTO
+        ESCAPE, RUNTIME_ESCAPE, OPEN, CLOSE, OPEN_N, CLOSE_ALL, READ_INTO
     }
 
     private final Kind kind;
@@ -32,6 +32,7 @@ public final class ParenControlAction implements HexAction {
         CastingVM activeVm = vm == null ? new CastingVM(stack) : vm;
         switch (kind) {
             case ESCAPE:
+            case RUNTIME_ESCAPE:
                 activeVm.setEscapeNext();
                 break;
             case OPEN:

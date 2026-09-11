@@ -682,6 +682,16 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.ESCAPE));
 
+    /** Runtime escape: make the next evaluated Iota a literal value. */
+    public static final ResourceLocation RUNTIME_ESCAPE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "runtime_escape");
+    public static final HexPattern RUNTIME_ESCAPE_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "wdeee");
+    public static final HexAction RUNTIME_ESCAPE = register(
+        RUNTIME_ESCAPE_ID, RUNTIME_ESCAPE_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.RUNTIME_ESCAPE));
+
     /** Begin capturing executable Iotas into a list. */
     public static final ResourceLocation OPEN_PAREN_ID =
         new ResourceLocation(HexAPI.MOD_ID, "open_paren");
