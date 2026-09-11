@@ -772,6 +772,63 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction EVAL_CC = register(EVAL_CC_ID, EVAL_CC_PATTERN,
         new at.petra_k.hexcasting.common.casting.EvalBreakableAction());
 
+    /** Transcendental numeric operators migrated from the 1.20.1 action table. */
+    public static final ResourceLocation SIN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "sin");
+    public static final HexPattern SIN_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqaa");
+    public static final HexAction SIN = register(SIN_ID,
+        SIN_PATTERN, new OperationAction(1, HexArithmetics::sine));
+
+    public static final ResourceLocation COS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "cos");
+    public static final HexPattern COS_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqad");
+    public static final HexAction COS = register(COS_ID,
+        COS_PATTERN, new OperationAction(1, HexArithmetics::cosine));
+
+    public static final ResourceLocation TAN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "tan");
+    public static final HexPattern TAN_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "wqqqqqadq");
+    public static final HexAction TAN = register(TAN_ID,
+        TAN_PATTERN, new OperationAction(1, HexArithmetics::tangent));
+
+    public static final ResourceLocation ARCSIN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "arcsin");
+    public static final HexPattern ARCSIN_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "ddeeeee");
+    public static final HexAction ARCSIN = register(ARCSIN_ID,
+        ARCSIN_PATTERN, new OperationAction(1, HexArithmetics::arcsine));
+
+    public static final ResourceLocation ARCCOS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "arccos");
+    public static final HexPattern ARCCOS_PATTERN =
+        pattern(HexDir.NORTH_EAST, "adeeeee");
+    public static final HexAction ARCCOS = register(ARCCOS_ID,
+        ARCCOS_PATTERN, new OperationAction(1, HexArithmetics::arccosine));
+
+    public static final ResourceLocation ARCTAN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "arctan");
+    public static final HexPattern ARCTAN_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eadeeeeew");
+    public static final HexAction ARCTAN = register(ARCTAN_ID,
+        ARCTAN_PATTERN, new OperationAction(1, HexArithmetics::arctangent));
+
+    public static final ResourceLocation ARCTAN2_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "arctan2");
+    public static final HexPattern ARCTAN2_PATTERN =
+        pattern(HexDir.WEST, "deadeeeeewd");
+    public static final HexAction ARCTAN2 = register(ARCTAN2_ID,
+        ARCTAN2_PATTERN, new OperationAction(2, HexArithmetics::arctangent2));
+
+    public static final ResourceLocation LOG_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "log");
+    public static final HexPattern LOG_PATTERN =
+        pattern(HexDir.NORTH_WEST, "eqaqe");
+    public static final HexAction LOG = register(LOG_ID,
+        LOG_PATTERN, new OperationAction(2, HexArithmetics::logarithm));
+
     private HexActions() {
     }
 

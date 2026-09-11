@@ -69,6 +69,38 @@ public final class HexArithmetics {
         return new Vec3Iota(new Vec3d(x, y, z));
     }
 
+    public static Iota sine(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.sine(arguments);
+    }
+
+    public static Iota cosine(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.cosine(arguments);
+    }
+
+    public static Iota tangent(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.tangent(arguments);
+    }
+
+    public static Iota arcsine(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.arcsine(arguments);
+    }
+
+    public static Iota arccosine(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.arccosine(arguments);
+    }
+
+    public static Iota arctangent(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.arctangent(arguments);
+    }
+
+    public static Iota arctangent2(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.arctangent2(arguments);
+    }
+
+    public static Iota logarithm(List<Iota> arguments) throws CastingException {
+        return NumericArithmetics.logarithm(arguments);
+    }
+
     public static Iota multiply(List<Iota> arguments) throws CastingException {
         requireBinary(arguments, "multiply");
         Iota left = arguments.get(0);
