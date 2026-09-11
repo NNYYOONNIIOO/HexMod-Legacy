@@ -168,6 +168,9 @@ public final class HexArithmetics {
         if (arguments.size() == 1 && arguments.get(0) instanceof Vec3Iota) {
             return new DoubleIota(((Vec3Iota) arguments.get(0)).getValue().lengthVector());
         }
+        if (arguments.size() == 1 && arguments.get(0) instanceof ListIota) {
+            return new DoubleIota(((ListIota) arguments.get(0)).getItems().size());
+        }
         return NumericArithmetics.absolute(arguments);
     }
 

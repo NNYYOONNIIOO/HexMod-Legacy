@@ -837,6 +837,34 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction XOR = register(XOR_ID, XOR_PATTERN,
         new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::xor));
 
+    /** Prefix an Iota to a list. The list is the lower stack argument. */
+    public static final ResourceLocation CONS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "cons");
+    public static final HexPattern CONS_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "ddewedd");
+    public static final HexAction CONS = register(CONS_ID, CONS_PATTERN, stack -> {
+        Iota value = stack.pop();
+        ListIota list = stack.pop(ListIota.class);
+        java.util.ArrayList<Iota> items = new java.util.ArrayList<>();
+        items.add(value);
+        items.addAll(list.getItems());
+        stack.push(new ListIota(items));
+    });
+
+    /** Remove the first Iota from a non-empty list, returning tail then head. */
+    public static final ResourceLocation UNCONS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "uncons");
+    public static final HexPattern UNCONS_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "aaqwqaa");
+    public static final HexAction UNCONS = register(UNCONS_ID, UNCONS_PATTERN, stack -> {
+        ListIota list = stack.pop(ListIota.class);
+        if (list.getItems().isEmpty()) {
+            throw new CastingException("Cannot uncons an empty list");
+        }
+        java.util.List<Iota> items = list.getItems();
+        stack.push(new ListIota(new java.util.ArrayList<>(items.subList(1, items.size()))));
+        stack.push(items.get(0));
+    });
     private HexActions() {
     }
 
