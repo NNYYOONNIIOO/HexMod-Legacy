@@ -607,6 +607,57 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_WEST, "qwaeawqaeaqa");
     public static final HexAction STACK_LEN = register(STACK_LEN_ID, STACK_LEN_PATTERN, stack ->
         stack.push(new DoubleIota(stack.size())));
+    /** Duplicate the second-from-top value above the top value (OpTwiddling [1, 0, 1]). */
+    public static final ResourceLocation TUCK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "tuck");
+    public static final HexPattern TUCK_PATTERN =
+        pattern(HexDir.EAST, "ddqaa");
+    public static final HexAction TUCK = register(TUCK_ID, TUCK_PATTERN, stack -> {
+        Iota top = stack.pop();
+        Iota belowTop = stack.pop();
+        stack.push(top);
+        stack.push(belowTop);
+        stack.push(top);
+    });
+
+    /** Duplicate the top two values (OpTwiddling [0, 1, 0, 1]). */
+    public static final ResourceLocation TWO_DUP_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "2dup");
+    public static final HexPattern TWO_DUP_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qwaeawqaeaqa");
+    public static final HexAction TWO_DUP = register(TWO_DUP_ID, TWO_DUP_PATTERN, stack -> {
+        Iota top = stack.pop();
+        Iota belowTop = stack.pop();
+        stack.push(belowTop);
+        stack.push(top);
+        stack.push(belowTop);
+        stack.push(top);
+    });
+
+    /** Duplicate the top stack value N times, where N is the numeric argument. */
+    public static final ResourceLocation DUPLICATE_N_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "duplicate_n");
+    public static final HexPattern DUPLICATE_N_PATTERN =
+        pattern(HexDir.EAST, "aadaadaa");
+    public static final HexAction DUPLICATE_N = register(DUPLICATE_N_ID, DUPLICATE_N_PATTERN, stack -> {
+        int count = requireInteger(stack.pop(DoubleIota.class), stack.size());
+        Iota value = stack.peek();
+        for (int i = 0; i < count; i++) {
+            stack.push(value);
+        }
+    });
+
+    /** Move the top value below the next stack value (the Fisherman stack primitive). */
+    public static final ResourceLocation FISHERMAN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "fisherman");
+    public static final HexPattern FISHERMAN_PATTERN =
+        pattern(HexDir.WEST, "ddad");
+    public static final HexAction FISHERMAN = register(FISHERMAN_ID, FISHERMAN_PATTERN, stack -> {
+        Iota top = stack.pop();
+        Iota belowTop = stack.pop();
+        stack.push(top);
+        stack.push(belowTop);
+    });
     private HexActions() {
     }
 
