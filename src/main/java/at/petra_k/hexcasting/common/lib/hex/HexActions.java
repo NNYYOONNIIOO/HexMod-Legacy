@@ -1012,7 +1012,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
     public static final HexPattern GET_MEDIA_PATTERN =
-        pattern(HexDir.WEST, "qww");
+        pattern(HexDir.WEST, "dde");
     public static final HexAction GET_MEDIA = register(GET_MEDIA_ID, GET_MEDIA_PATTERN,
         new HexAction() {
             @Override
