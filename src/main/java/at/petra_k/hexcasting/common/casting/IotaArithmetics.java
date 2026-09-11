@@ -90,7 +90,7 @@ public final class IotaArithmetics {
 
     private static boolean containsIota(List<Iota> values, Iota needle) {
         for (Iota value : values) {
-            if (value.equals(needle)) {
+            if (Iota.tolerates(value, needle)) {
                 return true;
             }
         }

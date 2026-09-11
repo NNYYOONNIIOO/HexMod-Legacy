@@ -103,7 +103,7 @@ public static final HexPattern EQUALITY_PATTERN =
     public static final HexAction EQUALITY = register(EQUALITY_ID, EQUALITY_PATTERN, stack -> {
         Iota right = stack.pop();
         Iota left = stack.pop();
-        stack.push(new BooleanIota(left.equals(right)));
+        stack.push(new BooleanIota(Iota.tolerates(left, right)));
     });
 
     /** Compare only the kinds of two stack values, ignoring their payloads. */
@@ -658,7 +658,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             ListIota list = (ListIota) arguments.get(0);
             java.util.ArrayList<Iota> unique = new java.util.ArrayList<>();
             for (Iota value : list.getItems()) {
-                if (!unique.contains(value)) {
+                if (!containsTolerant(unique, value)) {
                     unique.add(value);
                 }
             }
@@ -866,6 +866,15 @@ public static final HexPattern BOOL_IF_PATTERN =
         stack.push(items.get(0));
     });
     private HexActions() {
+    }
+
+    private static boolean containsTolerant(java.util.List<Iota> values, Iota needle) {
+        for (Iota value : values) {
+            if (Iota.tolerates(value, needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void touch() {
