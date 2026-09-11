@@ -253,22 +253,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "mul");
     public static final HexPattern MUL_DOT_PATTERN =
         pattern(HexDir.SOUTH_EAST, "waqaw");
-    public static final HexAction MUL_DOT = register(MUL_DOT_ID, MUL_DOT_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(left * right));
-    });
+    public static final HexAction MUL_DOT = register(MUL_DOT_ID, MUL_DOT_PATTERN, new OperationAction(2, NumericArithmetics::multiply));
 
     /** Ported arithmetic action from the 1.20.1 registry: div. */
     public static final ResourceLocation DIV_CROSS_ID =
         new ResourceLocation(HexAPI.MOD_ID, "div");
     public static final HexPattern DIV_CROSS_PATTERN =
         pattern(HexDir.NORTH_EAST, "wdedw");
-    public static final HexAction DIV_CROSS = register(DIV_CROSS_ID, DIV_CROSS_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(left / right));
-    });
+    public static final HexAction DIV_CROSS = register(DIV_CROSS_ID, DIV_CROSS_PATTERN, new OperationAction(2, NumericArithmetics::divide));
 
     /** Ported arithmetic action from the 1.20.1 registry: abs. */
     public static final ResourceLocation ABS_ID =
@@ -283,11 +275,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "pow");
     public static final HexPattern POW_PROJ_PATTERN =
         pattern(HexDir.NORTH_WEST, "wedew");
-    public static final HexAction POW_PROJ = register(POW_PROJ_ID, POW_PROJ_PATTERN, stack -> {
-        double exponent = stack.pop(DoubleIota.class).getValue();
-        double base = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(Math.pow(base, exponent)));
-    });
+    public static final HexAction POW_PROJ = register(POW_PROJ_ID, POW_PROJ_PATTERN, new OperationAction(2, NumericArithmetics::power));
 
     /** Ported arithmetic action from the 1.20.1 registry: floor. */
     public static final ResourceLocation FLOOR_ID =
