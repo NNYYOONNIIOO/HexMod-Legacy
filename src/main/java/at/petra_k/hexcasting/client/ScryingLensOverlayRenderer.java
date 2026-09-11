@@ -14,6 +14,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import net.minecraft.inventory.IInventory;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -59,8 +61,58 @@ public final class ScryingLensOverlayRenderer {
     private static boolean isHoldingLens(EntityPlayer player) {
         ItemStack main = player.getHeldItemMainhand();
         ItemStack off = player.getHeldItemOffhand();
-        return (!main.isEmpty() && main.getItem() instanceof ItemScryingLens)
-            || (!off.isEmpty() && off.getItem() instanceof ItemScryingLens);
+        if (isLensStack(main) || isLensStack(off)) {
+            return true;
+        }
+
+        // 1.12 stores armor separately from the hand inventory.  Scanning all
+        // four slots also covers packs that expose the lens as a head item.
+        for (ItemStack armor : player.inventory.armorInventory) {
+            if (isLensStack(armor)) {
+                return true;
+            }
+        }
+
+        // BaublesEX keeps the same public API name as Baubles, but reflecting
+        // it keeps this client class usable when the optional mod is absent.
+        return isWearingBaubleLens(player);
+    }
+
+    private static boolean isLensStack(ItemStack stack) {
+        return stack != null && !stack.isEmpty()
+            && stack.getItem() instanceof ItemScryingLens;
+    }
+
+    private static boolean isWearingBaubleLens(EntityPlayer player) {
+        try {
+            Class<?> api = Class.forName("baubles.api.BaublesApi");
+            for (Method method : api.getMethods()) {
+                if (!"getBaubles".equals(method.getName())
+                    || method.getParameterTypes().length != 1) {
+                    continue;
+                }
+
+                Object baubles = method.invoke(null, player);
+                if (baubles instanceof IInventory) {
+                    IInventory inventory = (IInventory) baubles;
+                    for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                        if (isLensStack(inventory.getStackInSlot(slot))) {
+                            return true;
+                        }
+                    }
+                } else if (baubles instanceof Iterable<?>) {
+                    for (Object entry : (Iterable<?>) baubles) {
+                        if (entry instanceof ItemStack && isLensStack((ItemStack) entry)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // Baubles/BaublesEX is optional at runtime.
+        }
+        return false;
     }
 
     private static boolean isUsefulProperty(String name) {
