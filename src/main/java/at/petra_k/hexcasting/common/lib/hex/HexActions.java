@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.action.OperationAction;
+import at.petra_k.hexcasting.common.casting.ForEachAction;
 import at.petra_k.hexcasting.api.casting.action.StackOperationAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
@@ -668,7 +669,15 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
-    private HexActions() {
+    /** Execute a code list once for every value in a data list. */
+    public static final ResourceLocation FOR_EACH_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "for_each");
+    public static final HexPattern FOR_EACH_PATTERN =
+        pattern(HexDir.NORTH_WEST, "append");
+    public static final HexAction FOR_EACH = register(FOR_EACH_ID, FOR_EACH_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ForEachAction());
+
+   private HexActions() {
     }
 
     public static void touch() {
