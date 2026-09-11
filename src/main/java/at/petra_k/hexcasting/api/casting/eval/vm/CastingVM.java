@@ -7,6 +7,9 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -154,6 +157,60 @@ public final class CastingVM {
 
     public int getPendingCount() {
         return continuation.size();
+    }
+
+    /**
+     * Serialize the complete resumable VM state for a player capability or
+     * packaged casting item. Pending patterns are represented as PatternIotas
+     * so they use the same versioned Iota codec as every other queued value.
+     */
+    public NBTTagCompound serializeState() {
+        NBTTagCompound out = new NBTTagCompound();
+        out.setTag("stack", stack.serializeState());
+        out.setInteger("operationsConsumed", operationsConsumed);
+        NBTTagList pending = new NBTTagList();
+        for (WorkItem work : continuation) {
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("kind", work.pattern == null ? "iota" : "pattern");
+            Iota value = work.pattern == null ? work.iota : new PatternIota(work.pattern);
+            entry.setTag("iota", value.serialize());
+            pending.appendTag(entry);
+        }
+        out.setTag("continuation", pending);
+        return out;
+    }
+
+    /** Restore a VM snapshot produced by {@link #serializeState()}. */
+    public static CastingVM deserializeState(NBTTagCompound serialized) throws CastingException {
+        if (serialized == null || !serialized.hasKey("stack", 10)) {
+            throw new CastingException("Missing casting VM stack state");
+        }
+        CastingVM vm = new CastingVM(
+            CastingStack.deserializeState(serialized.getCompoundTag("stack")));
+        vm.operationsConsumed = Math.max(0, serialized.getInteger("operationsConsumed"));
+        if (!serialized.hasKey("continuation", 9)) {
+            return vm;
+        }
+        NBTTagList pending = serialized.getTagList("continuation", 10);
+        if (pending.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
+            throw new CastingException("Serialized casting continuation exceeded its size limit");
+        }
+        for (int i = 0; i < pending.tagCount(); i++) {
+            NBTTagCompound entry = pending.getCompoundTagAt(i);
+            if (!entry.hasKey("iota", 10)) {
+                throw new CastingException("Serialized casting continuation entry is missing its Iota");
+            }
+            Iota value = HexIotaTypes.deserialize(entry.getCompoundTag("iota"));
+            if ("pattern".equals(entry.getString("kind"))) {
+                if (!(value instanceof PatternIota)) {
+                    throw new CastingException("Serialized pattern continuation entry is not a PatternIota");
+                }
+                vm.continuation.addLast(WorkItem.iota(value));
+            } else {
+                vm.continuation.addLast(WorkItem.iota(value));
+            }
+        }
+        return vm;
     }
 
     public boolean hasPendingWork() {
