@@ -16,7 +16,7 @@ import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
-import at.petra_k.hexcasting.common.casting.NumericArithmetics;
+import at.petra_k.hexcasting.common.casting.HexArithmetics;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Arrays;
@@ -59,7 +59,7 @@ public static final HexPattern SWAP_PATTERN =
 public static final HexPattern ADD_PATTERN =
         pattern(HexDir.NORTH_EAST, "waaw");
     public static final HexAction ADD = register(ADD_ID, ADD_PATTERN,
-        new OperationAction(2, NumericArithmetics::add));
+        new OperationAction(2, HexArithmetics::add));
 
     public static final ResourceLocation NOT_ID = new ResourceLocation(HexAPI.MOD_ID, "not");
 public static final HexPattern NOT_PATTERN =
@@ -232,21 +232,21 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern SUB_PATTERN =
         pattern(HexDir.NORTH_WEST, "wddw");
     public static final HexAction SUB = register(SUB_ID, SUB_PATTERN,
-        new OperationAction(2, NumericArithmetics::subtract));
+        new OperationAction(2, HexArithmetics::subtract));
 
     /** Ported arithmetic action from the 1.20.1 registry: mul. */
     public static final ResourceLocation MUL_DOT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "mul");
     public static final HexPattern MUL_DOT_PATTERN =
         pattern(HexDir.SOUTH_EAST, "waqaw");
-    public static final HexAction MUL_DOT = register(MUL_DOT_ID, MUL_DOT_PATTERN, new OperationAction(2, NumericArithmetics::multiply));
+    public static final HexAction MUL_DOT = register(MUL_DOT_ID, MUL_DOT_PATTERN, new OperationAction(2, HexArithmetics::multiply));
 
     /** Ported arithmetic action from the 1.20.1 registry: div. */
     public static final ResourceLocation DIV_CROSS_ID =
         new ResourceLocation(HexAPI.MOD_ID, "div");
     public static final HexPattern DIV_CROSS_PATTERN =
         pattern(HexDir.NORTH_EAST, "wdedw");
-    public static final HexAction DIV_CROSS = register(DIV_CROSS_ID, DIV_CROSS_PATTERN, new OperationAction(2, NumericArithmetics::divide));
+    public static final HexAction DIV_CROSS = register(DIV_CROSS_ID, DIV_CROSS_PATTERN, new OperationAction(2, HexArithmetics::divide));
 
     /** Ported arithmetic action from the 1.20.1 registry: abs. */
     public static final ResourceLocation ABS_ID =
@@ -254,14 +254,14 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern ABS_PATTERN =
         pattern(HexDir.NORTH_EAST, "wqaqw");
     public static final HexAction ABS = register(ABS_ID, ABS_PATTERN,
-        new OperationAction(1, NumericArithmetics::absolute));
+        new OperationAction(1, HexArithmetics::absolute));
 
     /** Ported arithmetic action from the 1.20.1 registry: pow. */
     public static final ResourceLocation POW_PROJ_ID =
         new ResourceLocation(HexAPI.MOD_ID, "pow");
     public static final HexPattern POW_PROJ_PATTERN =
         pattern(HexDir.NORTH_WEST, "wedew");
-    public static final HexAction POW_PROJ = register(POW_PROJ_ID, POW_PROJ_PATTERN, new OperationAction(2, NumericArithmetics::power));
+    public static final HexAction POW_PROJ = register(POW_PROJ_ID, POW_PROJ_PATTERN, new OperationAction(2, HexArithmetics::power));
 
     /** Ported arithmetic action from the 1.20.1 registry: floor. */
     public static final ResourceLocation FLOOR_ID =
@@ -269,7 +269,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern FLOOR_PATTERN =
         pattern(HexDir.EAST, "ewq");
     public static final HexAction FLOOR = register(FLOOR_ID, FLOOR_PATTERN,
-        new OperationAction(1, NumericArithmetics::floor));
+        new OperationAction(1, HexArithmetics::floor));
 
     /** Ported arithmetic action from the 1.20.1 registry: ceil. */
     public static final ResourceLocation CEIL_ID =
@@ -277,7 +277,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern CEIL_PATTERN =
         pattern(HexDir.EAST, "qwe");
     public static final HexAction CEIL = register(CEIL_ID, CEIL_PATTERN,
-        new OperationAction(1, NumericArithmetics::ceil));
+        new OperationAction(1, HexArithmetics::ceil));
 
     /** Ported arithmetic action from the 1.20.1 registry: modulo. */
     public static final ResourceLocation MODULO_ID =
@@ -285,7 +285,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern MODULO_PATTERN =
         pattern(HexDir.NORTH_EAST, "addwaad");
     public static final HexAction MODULO = register(MODULO_ID, MODULO_PATTERN,
-        new OperationAction(2, NumericArithmetics::modulo));
+        new OperationAction(2, HexArithmetics::modulo));
     /** Ported pure action from the 1.20.1 registry: const/null. */
     public static final ResourceLocation CONST_NULL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "const/null");
