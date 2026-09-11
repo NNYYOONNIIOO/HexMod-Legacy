@@ -25,6 +25,7 @@ public final class CastingVM {
     private final CastingStack stack;
     private final ArrayDeque<HexPattern> continuation = new ArrayDeque<>();
     private int operationsConsumed;
+    private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
 
     public CastingVM() {
         this(new CastingStack());
@@ -116,7 +117,7 @@ public final class CastingVM {
 
     /** Execute one pending pattern using the default budget. */
     public boolean step() throws CastingException {
-        return step(DEFAULT_MAX_OPERATIONS);
+        return step(activeOperationLimit);
     }
 
     /**
@@ -141,15 +142,22 @@ public final class CastingVM {
         }
 
         // Count before execution so a failing action cannot be retried
-        // indefinitely by a caller resuming the VM.
+        // indefinitely by a caller resuming the VM. Nested actions inherit
+        // this exact budget instead of silently falling back to 1024.
         operationsConsumed++;
-        action.execute(stack, this);
+        int previousLimit = activeOperationLimit;
+        activeOperationLimit = maxOperations;
+        try {
+            action.execute(stack, this);
+        } finally {
+            activeOperationLimit = previousLimit;
+        }
         return true;
     }
 
     /** Drain all pending work using the default operation budget. */
     public CastingStack run() throws CastingException {
-        return run(DEFAULT_MAX_OPERATIONS);
+        return run(activeOperationLimit);
     }
 
     /** Drain all pending work, failing deterministically if the budget is hit. */
@@ -167,7 +175,7 @@ public final class CastingVM {
      * its caller, which prevents control-flow actions from bypassing limits.
      */
     public CastingStack runNested(List<HexPattern> patterns) throws CastingException {
-        return runNested(patterns, DEFAULT_MAX_OPERATIONS);
+        return runNested(patterns, activeOperationLimit);
     }
 
     public CastingStack runNested(List<HexPattern> patterns, int maxOperations)
