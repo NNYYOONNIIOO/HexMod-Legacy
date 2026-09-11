@@ -647,7 +647,24 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
-    /** Execute a code list once for every value in a data list. */
+   /** Execute a code list once for every value in a data list. */
+    /** Remove duplicate Iotas while preserving their first-occurrence order. */
+    public static final ResourceLocation UNIQUE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "unique");
+    public static final HexPattern UNIQUE_PATTERN =
+        pattern(HexDir.NORTH_EAST, "aweaqa");
+    public static final HexAction UNIQUE = register(UNIQUE_ID, UNIQUE_PATTERN,
+        new StackOperationAction(1, arguments -> {
+            ListIota list = (ListIota) arguments.get(0);
+            java.util.ArrayList<Iota> unique = new java.util.ArrayList<>();
+            for (Iota value : list.getItems()) {
+                if (!unique.contains(value)) {
+                    unique.add(value);
+                }
+            }
+            return new ListIota(unique);
+        }));
++    /** Execute a code list once for every value in a data list. */
     public static final ResourceLocation FOR_EACH_ID =
         new ResourceLocation(HexAPI.MOD_ID, "for_each");
     public static final HexPattern FOR_EACH_PATTERN =
