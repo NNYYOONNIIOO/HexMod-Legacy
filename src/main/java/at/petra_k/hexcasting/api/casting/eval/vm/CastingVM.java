@@ -3,6 +3,8 @@ package at.petra_k.hexcasting.api.casting.eval.vm;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 
@@ -22,8 +24,26 @@ public final class CastingVM {
     /** Conservative default matching the old port's bounded evaluation goal. */
     public static final int DEFAULT_MAX_OPERATIONS = 1024;
 
+    private static final class WorkItem {
+        private final HexPattern pattern;
+        private final Iota iota;
+
+        private WorkItem(HexPattern pattern, Iota iota) {
+            this.pattern = pattern;
+            this.iota = iota;
+        }
+
+        private static WorkItem pattern(HexPattern pattern) {
+            return new WorkItem(pattern, null);
+        }
+
+        private static WorkItem iota(Iota iota) {
+            return new WorkItem(null, iota);
+        }
+    }
+
     private final CastingStack stack;
-    private final ArrayDeque<HexPattern> continuation = new ArrayDeque<>();
+    private final ArrayDeque<WorkItem> continuation = new ArrayDeque<>();
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
 
@@ -70,7 +90,7 @@ public final class CastingVM {
         if (pattern == null) {
             throw new IllegalArgumentException("Pattern cannot be null");
         }
-        continuation.addLast(pattern);
+        continuation.addLast(WorkItem.pattern(pattern));
         return this;
     }
 
@@ -79,7 +99,42 @@ public final class CastingVM {
         if (pattern == null) {
             throw new IllegalArgumentException("Pattern cannot be null");
         }
-        continuation.addFirst(pattern);
+        continuation.addFirst(WorkItem.pattern(pattern));
+        return this;
+    }
+
+    /** Append executable Iotas in source order to the pending continuation. */
+    public CastingVM enqueueIotas(List<? extends Iota> iotas) {
+        if (iotas == null) {
+            throw new IllegalArgumentException("Iota sequence cannot be null");
+        }
+        for (Iota iota : iotas) {
+            enqueueIota(iota);
+        }
+        return this;
+    }
+
+    /** Append one executable Iota to the pending continuation. */
+    public CastingVM enqueueIota(Iota iota) {
+        if (iota == null) {
+            throw new IllegalArgumentException("Iota cannot be null");
+        }
+        continuation.addLast(WorkItem.iota(iota));
+        return this;
+    }
+
+    /** Prepend executable Iotas in source order. */
+    public CastingVM enqueueFrontIotas(List<? extends Iota> iotas) {
+        if (iotas == null) {
+            throw new IllegalArgumentException("Iota sequence cannot be null");
+        }
+        for (int i = iotas.size() - 1; i >= 0; i--) {
+            Iota iota = iotas.get(i);
+            if (iota == null) {
+                throw new IllegalArgumentException("Iota cannot be null");
+            }
+            continuation.addFirst(WorkItem.iota(iota));
+        }
         return this;
     }
 
@@ -135,9 +190,13 @@ public final class CastingVM {
                 + maxOperations);
         }
 
-        HexPattern pattern = continuation.removeFirst();
-        HexAction action = HexActionRegistry.get(pattern);
-        if (action == null) {
+        WorkItem work = continuation.removeFirst();
+        HexPattern pattern = work.pattern;
+        if (pattern == null && work.iota instanceof PatternIota) {
+            pattern = ((PatternIota) work.iota).getPattern();
+        }
+        HexAction action = pattern == null ? null : HexActionRegistry.get(pattern);
+        if (pattern != null && action == null) {
             throw new CastingException("No action is registered for pattern " + pattern.signature());
         }
 
@@ -148,7 +207,11 @@ public final class CastingVM {
         int previousLimit = activeOperationLimit;
         activeOperationLimit = maxOperations;
         try {
-            action.execute(stack, this);
+            if (action != null) {
+                action.execute(stack, this);
+            } else {
+                stack.push(work.iota);
+            }
         } finally {
             activeOperationLimit = previousLimit;
         }
@@ -186,6 +249,25 @@ public final class CastingVM {
         }
         int outerPendingCount = continuation.size();
         enqueueFront(patterns);
+        while (continuation.size() > outerPendingCount) {
+            step(maxOperations);
+        }
+        return stack;
+    }
+
+    /** Run executable Iotas before the VM's existing pending work. */
+    public CastingStack runNestedIotas(List<? extends Iota> iotas) throws CastingException {
+        return runNestedIotas(iotas, activeOperationLimit);
+    }
+
+    public CastingStack runNestedIotas(List<? extends Iota> iotas, int maxOperations)
+        throws CastingException {
+        validateBudget(maxOperations);
+        if (iotas == null) {
+            throw new IllegalArgumentException("Nested Iota sequence cannot be null");
+        }
+        int outerPendingCount = continuation.size();
+        enqueueFrontIotas(iotas);
         while (continuation.size() > outerPendingCount) {
             step(maxOperations);
         }
