@@ -99,7 +99,15 @@ dependencies {
 
     def mixin = files('libs/!mixinbooter-11.17.jar')
     implementation mixin
-    annotationProcessor mixin
+    // MixinBooter is a runtime loader; the compiler needs the Mixin processor
+    // and its unshaded ASM classes explicitly when building fully offline.
+    annotationProcessor files(
+        'libs/mixin-0.8.5.jar',
+        'libs/asm-9.2.jar',
+        'libs/asm-tree-9.2.jar',
+        'libs/asm-util-9.2.jar',
+        'libs/asm-analysis-9.2.jar'
+    )
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
