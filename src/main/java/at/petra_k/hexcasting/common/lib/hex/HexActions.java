@@ -161,6 +161,14 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction RANDOM = register(RANDOM_ID, RANDOM_PATTERN,
         stack -> stack.push(new DoubleIota(Math.random())));
 
+    /** Print the top Iota without consuming it. */
+    public static final ResourceLocation PRINT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "print");
+    public static final HexPattern PRINT_PATTERN =
+        pattern(HexDir.NORTH_EAST, "de");
+    public static final HexAction PRINT = register(PRINT_ID, PRINT_PATTERN,
+        new at.petra_k.hexcasting.common.casting.PrintAction());
+
     /** Numeric comparison actions copied from the 1.20.1 pure stack semantics. */
     public static final ResourceLocation GREATER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "greater");
