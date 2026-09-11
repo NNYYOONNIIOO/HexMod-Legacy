@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 
 import java.util.List;
+import at.petra_k.hexcasting.api.capability.IHexCastingData;
 
 /** Server-safe evaluator for a sequence of registered Hex patterns. */
 public final class HexEvaluator {
@@ -28,4 +29,12 @@ public final class HexEvaluator {
         CastingVM vm = new CastingVM(stack).enqueue(patterns);
         vm.run(maxOperations);
     }
+    /** Evaluate with player/environment state available to contextual actions. */
+    public static void evaluate(List<HexPattern> patterns, CastingStack stack,
+                                IHexCastingData castingData) throws CastingException {
+        CastingVM vm = new CastingVM(stack).enqueue(patterns);
+        vm.setCastingData(castingData);
+        vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+    }
+
 }

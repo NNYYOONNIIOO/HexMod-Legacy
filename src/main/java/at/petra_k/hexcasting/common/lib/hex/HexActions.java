@@ -21,6 +21,9 @@ import net.minecraft.util.ResourceLocation;
 
 import java.util.Arrays;
 import java.util.Collections;
+import at.petra_k.hexcasting.api.capability.IHexCastingData;
+import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
+import at.petra_k.hexcasting.api.misc.MediaConstants;
 
 /**
  * First portable action slice of Hex Casting.
@@ -1005,6 +1008,31 @@ public static final HexPattern BOOL_IF_PATTERN =
         return reordered;
     }
 
+    /** Return available player media in dust units without consuming it. */
+    public static final ResourceLocation GET_MEDIA_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_media");
+    public static final HexPattern GET_MEDIA_PATTERN =
+        pattern(HexDir.WEST, "qww");
+    public static final HexAction GET_MEDIA = register(GET_MEDIA_ID, GET_MEDIA_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("get_media requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                IHexCastingData data = vm.getCastingData();
+                if (data == null) {
+                    throw new CastingException("get_media requires a player casting context");
+                }
+                long available = data.withdrawMedia(-1L, true);
+                stack.push(new DoubleIota(
+                    ((double) available) / (double) MediaConstants.DUST_UNIT
+                ));
+            }
+        });
+
     private HexActions() {
     }
 
@@ -1025,7 +1053,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || EQUALITY == null || TYPE_EQUALITY == null || COERCE_TO_BOOL == null
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
-            || REVERSE == null || LAST_N_LIST == null) {
+            || REVERSE == null || LAST_N_LIST == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }

@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import at.petra_k.hexcasting.api.capability.IHexCastingData;
 
 /**
  * Small, server-safe casting VM for the 1.12.2 port.
@@ -58,6 +59,7 @@ public final class CastingVM {
     private boolean halted;
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
+    private IHexCastingData castingData;
 
     public CastingVM() {
         this(new CastingStack());
@@ -148,6 +150,14 @@ public final class CastingVM {
             continuation.addFirst(WorkItem.iota(iota));
         }
         return this;
+    }
+
+    public IHexCastingData getCastingData() {
+        return castingData;
+    }
+
+    public void setCastingData(IHexCastingData castingData) {
+        this.castingData = castingData;
     }
 
     public CastingStack getStack() {

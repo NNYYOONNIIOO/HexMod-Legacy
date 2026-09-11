@@ -4,12 +4,15 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import net.minecraft.nbt.NBTTagCompound;
+import at.petra_k.hexcasting.api.misc.MediaConstants;
 
 /** Default persistent implementation of the player's casting state. */
 public final class HexCastingData implements IHexCastingData {
     private static final String KEY_STACK = "casting_stack";
+    private static final String KEY_MEDIA = "media";
 
     private final CastingStack castingStack = new CastingStack();
+    private long media;
 
     @Override
     public CastingStack getCastingStack() {
@@ -22,15 +25,55 @@ public final class HexCastingData implements IHexCastingData {
     }
 
     @Override
+    public long getMedia() {
+        return media;
+    }
+
+    @Override
+    public long getMaxMedia() {
+        return MediaConstants.DEFAULT_PLAYER_MAX_MEDIA;
+    }
+
+    @Override
+    public void setMedia(long media) {
+        this.media = clampMedia(media);
+    }
+
+    @Override
+    public boolean canRecharge() {
+        return true;
+    }
+
+    @Override
+    public boolean canProvide() {
+        return true;
+    }
+
+    @Override
+    public int getConsumptionPriority() {
+        return 4000;
+    }
+
+    @Override
+    public boolean canConstructBattery() {
+        return false;
+    }
+
+    @Override
     public NBTTagCompound serializeNBT() {
         NBTTagCompound result = new NBTTagCompound();
         result.setTag(KEY_STACK, castingStack.serialize());
+        result.setLong(KEY_MEDIA, media);
         result.setTag("casting_state", castingStack.serializeState());
         return result;
     }
 
     @Override
     public void deserializeNBT(NBTTagCompound nbt) {
+        castingStack.clear();
+        media = 0L;
+        if (nbt == null) return;
+        media = clampMedia(nbt.getLong(KEY_MEDIA));
         if (nbt.hasKey("casting_state", 10)) {
             try {
                 CastingStack loaded = CastingStack.deserializeState(nbt.getCompoundTag("casting_state"));
@@ -42,17 +85,16 @@ public final class HexCastingData implements IHexCastingData {
                 return;
             }
         }
-        castingStack.clear();
-        if (nbt == null || !nbt.hasKey(KEY_STACK, 9)) {
-            return;
-        }
+        if (!nbt.hasKey(KEY_STACK, 9)) return;
         try {
             CastingStack restored = CastingStack.deserialize(nbt.getTagList(KEY_STACK, 10));
             castingStack.restore(restored.snapshot());
         } catch (CastingException ignored) {
-            // Corrupt or over-sized player data is discarded rather than
-            // preventing the player from joining the world.
             castingStack.clear();
         }
     }
+    private long clampMedia(long value) {
+        return Math.max(0L, Math.min(value, getMaxMedia()));
+    }
+
 }

@@ -73,7 +73,7 @@ public final class ItemHexFocus extends Item {
                 if (data == null) {
                     result = HexEvaluator.evaluate(Collections.singletonList(pattern));
                 } else {
-                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack());
+                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data);
                     result = data.getCastingStack();
                 }
                 String resultText = result.isEmpty()
