@@ -745,6 +745,13 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "deaqq");
     public static final HexAction EVAL = register(EVAL_ID, EVAL_PATTERN,
         new at.petra_k.hexcasting.common.casting.EvalAction());
+    /** Evaluate a code list with an isolated, breakable continuation boundary. */
+    public static final ResourceLocation EVAL_CC_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "eval/cc");
+    public static final HexPattern EVAL_CC_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qwaqde");
+    public static final HexAction EVAL_CC = register(EVAL_CC_ID, EVAL_CC_PATTERN,
+        new at.petra_k.hexcasting.common.casting.EvalBreakableAction());
 
     private HexActions() {
     }
