@@ -211,7 +211,9 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction UNAPPEND = register(UNAPPEND_ID, UNAPPEND_PATTERN, stack -> {
         ListIota list = stack.pop(ListIota.class);
         if (list.getItems().isEmpty()) {
-            throw new CastingException("Cannot unappend an empty list");
+            stack.push(list);
+            stack.push(new NullIota());
+            return;
         }
         java.util.List<Iota> items = list.getItems();
         stack.push(new ListIota(items.subList(0, items.size() - 1)));
@@ -224,10 +226,14 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern INDEX_PATTERN =
         pattern(HexDir.NORTH_WEST, "deeed");
     public static final HexAction INDEX = register(INDEX_ID, INDEX_PATTERN, stack -> {
-        int index = requireInteger(stack.pop(DoubleIota.class),
-            stack.peek() instanceof ListIota ? ((ListIota) stack.peek()).getItems().size() - 1 : -1);
+        DoubleIota indexIota = stack.pop(DoubleIota.class);
         ListIota list = stack.pop(ListIota.class);
-        stack.push(list.getItems().get(index));
+        int index = requireRoundedInteger(indexIota);
+        if (index < 0 || index >= list.getItems().size()) {
+            stack.push(new NullIota());
+        } else {
+            stack.push(list.getItems().get(index));
+        }
     });
 
     /** Reverse the contents of a list without mutating the source Iota. */
@@ -513,10 +519,12 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern REMOVE_FROM_PATTERN =
         pattern(HexDir.SOUTH_WEST, "edqdewaqa");
     public static final HexAction REMOVE_FROM = register(REMOVE_FROM_ID, REMOVE_FROM_PATTERN, stack -> {
-        int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE);
+        DoubleIota indexIota = stack.pop(DoubleIota.class);
         ListIota list = stack.pop(ListIota.class);
-        if (index >= list.getItems().size()) {
-            throw new CastingException("List index out of bounds: " + index);
+        int index = requireRoundedInteger(indexIota);
+        if (index < 0 || index >= list.getItems().size()) {
+            stack.push(list);
+            return;
         }
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>(list.getItems());
         items.remove(index);
@@ -529,12 +537,17 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern SLICE_PATTERN =
         pattern(HexDir.NORTH_WEST, "qaeaqwded");
     public static final HexAction SLICE = register(SLICE_ID, SLICE_PATTERN, stack -> {
-        int end = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE);
-        int start = requireInteger(stack.pop(DoubleIota.class), end);
+        DoubleIota index1Iota = stack.pop(DoubleIota.class);
+        DoubleIota index0Iota = stack.pop(DoubleIota.class);
         ListIota list = stack.pop(ListIota.class);
-        if (end > list.getItems().size() || start > end) {
-            throw new CastingException("Invalid list slice [" + start + ", " + end + ")");
+        int index0 = requireInteger(index0Iota, list.getItems().size());
+        int index1 = requireInteger(index1Iota, list.getItems().size());
+        if (index0 == index1) {
+            stack.push(new ListIota(java.util.Collections.<Iota>emptyList()));
+            return;
         }
+        int start = Math.min(index0, index1);
+        int end = Math.max(index0, index1);
         stack.push(new ListIota(list.getItems().subList(start, end)));
     });
 
@@ -932,7 +945,9 @@ public static final HexPattern BOOL_IF_PATTERN =
         DECONSTRUCT_ID, DECONSTRUCT_PATTERN, stack -> {
         ListIota list = stack.pop(ListIota.class);
         if (list.getItems().isEmpty()) {
-            throw new CastingException("Cannot uncons an empty list");
+            stack.push(list);
+            stack.push(new NullIota());
+            return;
         }
         java.util.List<Iota> items = list.getItems();
         stack.push(new ListIota(new java.util.ArrayList<>(items.subList(1, items.size()))));
@@ -1009,6 +1024,21 @@ public static final HexPattern BOOL_IF_PATTERN =
 
     private static HexAction register(ResourceLocation id, HexPattern pattern, HexAction action) {
         return HexActionRegistry.register(id, pattern, action);
+    }
+
+    private static int requireRoundedInteger(DoubleIota value) throws CastingException {
+        double raw = value.getValue();
+        if (Double.isNaN(raw) || Double.isInfinite(raw)) {
+            throw new CastingException("Expected a finite integer-like value but found " + raw);
+        }
+        long rounded = Math.round(raw);
+        if (rounded <= Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        if (rounded >= Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return (int) rounded;
     }
 
     private static int requireInteger(DoubleIota value, int maxInclusive) throws CastingException {
