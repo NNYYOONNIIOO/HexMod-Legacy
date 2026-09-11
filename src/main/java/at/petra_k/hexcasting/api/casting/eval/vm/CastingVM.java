@@ -211,6 +211,14 @@ public final class CastingVM {
         }
     }
 
+    /** Move one stack value into the currently captured parenthesized list. */
+    public void readIntoParen() throws CastingException {
+        if (parentheses.isEmpty()) {
+            throw new CastingException("Cannot read into parentheses when none is open");
+        }
+        parentheses.peek().values.add(stack.pop());
+    }
+
     /**
      * Serialize the complete resumable VM state for a player capability or
      * packaged casting item. Pending patterns are represented as PatternIotas

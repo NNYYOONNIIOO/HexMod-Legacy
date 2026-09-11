@@ -720,6 +720,16 @@ public static final HexPattern BOOL_IF_PATTERN =
         new at.petra_k.hexcasting.common.casting.ParenControlAction(
             at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.CLOSE_ALL));
 
+    /** Move one stack value into the current parenthesized code list. */
+    public static final ResourceLocation READ_INTO_PARENS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "read_into_parens");
+    public static final HexPattern READ_INTO_PARENS_PATTERN =
+        pattern(HexDir.EAST, "aqqqqqwded");
+    public static final HexAction READ_INTO_PARENS = register(
+        READ_INTO_PARENS_ID, READ_INTO_PARENS_PATTERN,
+        new at.petra_k.hexcasting.common.casting.ParenControlAction(
+            at.petra_k.hexcasting.common.casting.ParenControlAction.Kind.READ_INTO));
+
     /** Evaluate a list of executable Iotas in the active VM. */
     public static final ResourceLocation EVAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "eval");
