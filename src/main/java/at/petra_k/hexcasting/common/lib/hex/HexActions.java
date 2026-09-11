@@ -673,7 +673,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final ResourceLocation FOR_EACH_ID =
         new ResourceLocation(HexAPI.MOD_ID, "for_each");
     public static final HexPattern FOR_EACH_PATTERN =
-        pattern(HexDir.NORTH_WEST, "append");
+        pattern(HexDir.NORTH_WEST, "qaeaqeqedqde");
     public static final HexAction FOR_EACH = register(FOR_EACH_ID, FOR_EACH_PATTERN,
         new at.petra_k.hexcasting.common.casting.ForEachAction());
 
