@@ -48,7 +48,12 @@ public final class NumericArithmetics {
     }
 
     public static Iota power(List<Iota> arguments) throws CastingException {
-        return binary(arguments, "power", Math::pow);
+        double[] values = numbers(arguments, "power");
+        if (values[0] < 0.0D
+            && Math.abs(values[1] - Math.rint(values[1])) > 1.0E-5D) {
+            throw new CastingException("Cannot raise a negative number to a fractional power");
+        }
+        return new DoubleIota(Math.pow(values[0], values[1]));
     }
 
     public static Iota absolute(List<Iota> arguments) throws CastingException {
