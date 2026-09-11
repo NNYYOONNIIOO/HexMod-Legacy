@@ -3,6 +3,8 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
+import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ public final class HexArithmetics {
 
         if (left instanceof ListIota || right instanceof ListIota) {
             if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
-                throw new CastingException("add expects either two numeric Iotas or two lists");
+                throw new CastingException("add expects either two numeric Iotas, two vectors, or two lists");
             }
             ArrayList<Iota> result = new ArrayList<>();
             result.addAll(((ListIota) left).getItems());
@@ -36,11 +38,34 @@ public final class HexArithmetics {
             return new ListIota(result);
         }
 
+        if (left instanceof Vec3Iota || right instanceof Vec3Iota) {
+            return vectorBinary(left, right, "add", true);
+        }
+
         return NumericArithmetics.add(arguments);
     }
 
     public static Iota subtract(List<Iota> arguments) throws CastingException {
+        requireBinary(arguments, "subtract");
+        Iota left = arguments.get(0);
+        Iota right = arguments.get(1);
+        if (left instanceof Vec3Iota || right instanceof Vec3Iota) {
+            return vectorBinary(left, right, "subtract", false);
+        }
         return NumericArithmetics.subtract(arguments);
+    }
+
+    private static Iota vectorBinary(Iota left, Iota right, String name, boolean add)
+        throws CastingException {
+        if (!(left instanceof Vec3Iota) || !(right instanceof Vec3Iota)) {
+            throw new CastingException(name + " expects either two numeric Iotas or two vectors");
+        }
+        Vec3d leftVector = ((Vec3Iota) left).getValue();
+        Vec3d rightVector = ((Vec3Iota) right).getValue();
+        double x = add ? leftVector.x + rightVector.x : leftVector.x - rightVector.x;
+        double y = add ? leftVector.y + rightVector.y : leftVector.y - rightVector.y;
+        double z = add ? leftVector.z + rightVector.z : leftVector.z - rightVector.z;
+        return new Vec3Iota(new Vec3d(x, y, z));
     }
 
     public static Iota multiply(List<Iota> arguments) throws CastingException {
