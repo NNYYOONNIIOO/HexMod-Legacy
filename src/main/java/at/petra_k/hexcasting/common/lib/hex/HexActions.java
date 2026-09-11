@@ -135,41 +135,29 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "greater");
     public static final HexPattern GREATER_PATTERN =
         pattern(HexDir.SOUTH_EAST, "e");
-    public static final HexAction GREATER = register(GREATER_ID, GREATER_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new BooleanIota(left > right));
-    });
+    public static final HexAction GREATER = register(GREATER_ID, GREATER_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::greater));
 
     public static final ResourceLocation LESS_ID =
         new ResourceLocation(HexAPI.MOD_ID, "less");
     public static final HexPattern LESS_PATTERN =
         pattern(HexDir.SOUTH_WEST, "q");
-    public static final HexAction LESS = register(LESS_ID, LESS_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new BooleanIota(left < right));
-    });
+    public static final HexAction LESS = register(LESS_ID, LESS_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::less));
 
     public static final ResourceLocation GREATER_EQ_ID =
         new ResourceLocation(HexAPI.MOD_ID, "greater_eq");
     public static final HexPattern GREATER_EQ_PATTERN =
         pattern(HexDir.SOUTH_EAST, "ee");
-    public static final HexAction GREATER_EQ = register(GREATER_EQ_ID, GREATER_EQ_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new BooleanIota(left >= right));
-    });
+    public static final HexAction GREATER_EQ = register(GREATER_EQ_ID, GREATER_EQ_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::greaterEq));
 
     public static final ResourceLocation LESS_EQ_ID =
         new ResourceLocation(HexAPI.MOD_ID, "less_eq");
     public static final HexPattern LESS_EQ_PATTERN =
         pattern(HexDir.SOUTH_WEST, "qq");
-    public static final HexAction LESS_EQ = register(LESS_EQ_ID, LESS_EQ_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new BooleanIota(left <= right));
-    });
+    public static final HexAction LESS_EQ = register(LESS_EQ_ID, LESS_EQ_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::lessEq));
 
     /** Append one Iota to the end of a list. */
     public static final ResourceLocation APPEND_ID =
@@ -366,22 +354,16 @@ public static final HexPattern BOOL_IF_PATTERN =
         new ResourceLocation(HexAPI.MOD_ID, "and");
     public static final HexPattern AND_PATTERN =
         pattern(HexDir.NORTH_EAST, "wdw");
-    public static final HexAction AND = register(AND_ID, AND_PATTERN, stack -> {
-        boolean right = stack.pop(BooleanIota.class).getValue();
-        boolean left = stack.pop(BooleanIota.class).getValue();
-        stack.push(new BooleanIota(left && right));
-    });
+    public static final HexAction AND = register(AND_ID, AND_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::and));
 
     /** Ported pure action from the 1.20.1 registry: or. */
     public static final ResourceLocation OR_ID =
         new ResourceLocation(HexAPI.MOD_ID, "or");
     public static final HexPattern OR_PATTERN =
         pattern(HexDir.SOUTH_EAST, "waw");
-    public static final HexAction OR = register(OR_ID, OR_PATTERN, stack -> {
-        boolean right = stack.pop(BooleanIota.class).getValue();
-        boolean left = stack.pop(BooleanIota.class).getValue();
-        stack.push(new BooleanIota(left || right));
-    });
+    public static final HexAction OR = register(OR_ID, OR_PATTERN,
+        new OperationAction(2, at.petra_k.hexcasting.common.casting.IotaArithmetics::or));
     /** Read the spell-local value, defaulting to the Null Iota. */
     public static final ResourceLocation READ_LOCAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "read/local");
