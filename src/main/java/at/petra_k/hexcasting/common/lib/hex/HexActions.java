@@ -624,7 +624,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final ResourceLocation TWO_DUP_ID =
         new ResourceLocation(HexAPI.MOD_ID, "2dup");
     public static final HexPattern TWO_DUP_PATTERN =
-        pattern(HexDir.NORTH_WEST, "qwaeawqaeaqa");
+        pattern(HexDir.EAST, "aadadaaw");
     public static final HexAction TWO_DUP = register(TWO_DUP_ID, TWO_DUP_PATTERN, stack -> {
         Iota top = stack.pop();
         Iota belowTop = stack.pop();
@@ -634,29 +634,37 @@ public static final HexPattern BOOL_IF_PATTERN =
         stack.push(top);
     });
 
-    /** Duplicate the top stack value N times, where N is the numeric argument. */
+    /** Duplicate the top stack value N times, consuming the value and count. */
     public static final ResourceLocation DUPLICATE_N_ID =
         new ResourceLocation(HexAPI.MOD_ID, "duplicate_n");
     public static final HexPattern DUPLICATE_N_PATTERN =
         pattern(HexDir.EAST, "aadaadaa");
     public static final HexAction DUPLICATE_N = register(DUPLICATE_N_ID, DUPLICATE_N_PATTERN, stack -> {
-        int count = requireInteger(stack.pop(DoubleIota.class), stack.size());
-        Iota value = stack.peek();
+        int count = requireInteger(stack.pop(DoubleIota.class), Iota.MAX_SERIALIZATION_TOTAL);
+        Iota value = stack.pop();
         for (int i = 0; i < count; i++) {
             stack.push(value);
         }
     });
 
-    /** Move the top value below the next stack value (the Fisherman stack primitive). */
+    /** Move a stack value by the signed depth encoded on top of the stack. */
     public static final ResourceLocation FISHERMAN_ID =
         new ResourceLocation(HexAPI.MOD_ID, "fisherman");
     public static final HexPattern FISHERMAN_PATTERN =
         pattern(HexDir.WEST, "ddad");
     public static final HexAction FISHERMAN = register(FISHERMAN_ID, FISHERMAN_PATTERN, stack -> {
-        Iota top = stack.pop();
-        Iota belowTop = stack.pop();
-        stack.push(top);
-        stack.push(belowTop);
+        DoubleIota depthIota = stack.pop(DoubleIota.class);
+        int maxDepth = stack.size() - 1;
+        int depth = requireSignedInteger(depthIota, maxDepth);
+        java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
+        if (depth >= 0) {
+            Iota fish = values.remove(values.size() - 1 - depth);
+            values.add(fish);
+        } else {
+            Iota lure = values.remove(values.size() - 1);
+            values.add(values.size() + depth, lure);
+        }
+        stack.restore(values);
     });
     private HexActions() {
     }
@@ -683,6 +691,16 @@ public static final HexPattern BOOL_IF_PATTERN =
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < 0.0D || raw > maxInclusive || raw > Integer.MAX_VALUE) {
             throw new CastingException("Expected an integer in [0, " + maxInclusive
+                + "] but found " + raw);
+        }
+        return (int) raw;
+    }
+
+    private static int requireSignedInteger(DoubleIota value, int maxAbs) throws CastingException {
+        double raw = value.getValue();
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
+            || raw < -maxAbs || raw > maxAbs) {
+            throw new CastingException("Expected an integer in [" + (-maxAbs) + ", " + maxAbs
                 + "] but found " + raw);
         }
         return (int) raw;
