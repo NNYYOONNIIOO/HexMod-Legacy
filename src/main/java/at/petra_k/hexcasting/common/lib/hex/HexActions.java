@@ -106,6 +106,17 @@ public static final HexPattern EQUALITY_PATTERN =
         stack.push(new BooleanIota(Iota.tolerates(left, right)));
     });
 
+    /** Tolerant value inequality, complementary to equals. */
+    public static final ResourceLocation NOT_EQUALS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "not_equals");
+    public static final HexPattern NOT_EQUALS_PATTERN =
+        pattern(HexDir.EAST, "da");
+    public static final HexAction NOT_EQUALS = register(NOT_EQUALS_ID, NOT_EQUALS_PATTERN, stack -> {
+        Iota right = stack.pop();
+        Iota left = stack.pop();
+        stack.push(new BooleanIota(!Iota.tolerates(left, right)));
+    });
+
     /** Compare only the kinds of two stack values, ignoring their payloads. */
     public static final ResourceLocation TYPE_EQUALITY_ID = new ResourceLocation(HexAPI.MOD_ID, "type_equals");
 public static final HexPattern TYPE_EQUALITY_PATTERN =
@@ -115,6 +126,18 @@ public static final HexPattern TYPE_EQUALITY_PATTERN =
         Iota left = stack.pop();
         stack.push(new BooleanIota(left.getType() == right.getType()));
     });
+
+    /** Inequality of Iota kinds, ignoring payloads. */
+    public static final ResourceLocation TYPE_NOT_EQUALS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "type_not_equals");
+    public static final HexPattern TYPE_NOT_EQUALS_PATTERN =
+        pattern(HexDir.EAST, "wdwaw");
+    public static final HexAction TYPE_NOT_EQUALS = register(
+        TYPE_NOT_EQUALS_ID, TYPE_NOT_EQUALS_PATTERN, stack -> {
+            Iota right = stack.pop();
+            Iota left = stack.pop();
+            stack.push(new BooleanIota(left.getType() != right.getType()));
+        });
 
     /** Convert any Iota's truthiness to an explicit Boolean Iota. */
     public static final ResourceLocation COERCE_TO_BOOL_ID = new ResourceLocation(HexAPI.MOD_ID, "bool_coerce");
@@ -129,6 +152,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "awdd");
     public static final HexAction BOOL_IF = register(BOOL_IF_ID, BOOL_IF_PATTERN,
         new at.petra_k.hexcasting.common.casting.BranchAction());
+
+    /** Push a uniformly distributed double in the half-open interval [0, 1). */
+    public static final ResourceLocation RANDOM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "random");
+    public static final HexPattern RANDOM_PATTERN =
+        pattern(HexDir.NORTH_WEST, "eqqq");
+    public static final HexAction RANDOM = register(RANDOM_ID, RANDOM_PATTERN,
+        stack -> stack.push(new DoubleIota(Math.random())));
 
     /** Numeric comparison actions copied from the 1.20.1 pure stack semantics. */
     public static final ResourceLocation GREATER_ID =
@@ -823,7 +854,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         ARCTAN2_PATTERN, new OperationAction(2, HexArithmetics::arctangent2));
 
     public static final ResourceLocation LOG_ID =
-        new ResourceLocation(HexAPI.MOD_ID, "log");
+        new ResourceLocation(HexAPI.MOD_ID, "logarithm");
     public static final HexPattern LOG_PATTERN =
         pattern(HexDir.NORTH_WEST, "eqaqe");
     public static final HexAction LOG = register(LOG_ID,
