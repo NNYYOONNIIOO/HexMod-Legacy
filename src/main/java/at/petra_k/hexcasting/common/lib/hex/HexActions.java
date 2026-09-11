@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.action.OperationAction;
+import at.petra_k.hexcasting.api.casting.action.StackOperationAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
