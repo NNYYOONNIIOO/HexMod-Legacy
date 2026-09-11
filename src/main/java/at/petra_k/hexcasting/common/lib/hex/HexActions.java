@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
+import at.petra_k.hexcasting.api.casting.action.OperationAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
@@ -13,6 +14,7 @@ import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.casting.NumericArithmetics;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Arrays;
@@ -54,11 +56,8 @@ public static final HexPattern SWAP_PATTERN =
     public static final ResourceLocation ADD_ID = new ResourceLocation(HexAPI.MOD_ID, "add");
 public static final HexPattern ADD_PATTERN =
         pattern(HexDir.NORTH_EAST, "waaw");
-    public static final HexAction ADD = register(ADD_ID, ADD_PATTERN, stack -> {
-        double right = stack.pop(DoubleIota.class).getValue();
-        double left = stack.pop(DoubleIota.class).getValue();
-        stack.push(new DoubleIota(left + right));
-    });
+    public static final HexAction ADD = register(ADD_ID, ADD_PATTERN,
+        new OperationAction(2, NumericArithmetics::add));
 
     public static final ResourceLocation NOT_ID = new ResourceLocation(HexAPI.MOD_ID, "not");
 public static final HexPattern NOT_PATTERN =
