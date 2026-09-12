@@ -175,6 +175,14 @@ public final class GuiHexStaff extends GuiScreen {
             pixelPoints.add(new float[] {pixel[0], pixel[1]});
         }
         int nodeCount = pixelPoints.size();
+        Set<GridPoint> duplicateSpots = new HashSet<>();
+        Set<GridPoint> visitedSpots = new HashSet<>();
+        for (int i = 0; i < nodeCount; i++) {
+            GridPoint point = points.get(i);
+            if (!visitedSpots.add(point)) {
+                duplicateSpots.add(point);
+            }
+        }
         if (includeCursor) {
             pixelPoints.add(new float[] {cursorX, cursorY});
         }
@@ -195,7 +203,8 @@ public final class GuiHexStaff extends GuiScreen {
                 && samePixel(pixel, pixelPoints.get(0))) {
                 continue;
             }
-            drawConnectionSpot(pixel[0], pixel[1], glowColor, nodeColor);
+            drawConnectionSpot(pixel[0], pixel[1], glowColor, nodeColor,
+                duplicateSpots.contains(points.get(i)));
         }
     }
 
@@ -467,9 +476,16 @@ public final class GuiHexStaff extends GuiScreen {
      * an outer colored fade, a six-sided colored core, and a bright center.
      */
     private void drawConnectionSpot(float x, float y, int glowColor, int coreColor) {
-        drawCircle(x, y, 6.0F,
+        drawConnectionSpot(x, y, glowColor, coreColor, false);
+    }
+
+    private void drawConnectionSpot(float x, float y, int glowColor, int coreColor,
+                                    boolean duplicate) {
+        float glowRadius = duplicate ? 8.0F : 6.0F;
+        float coreRadius = duplicate ? 3.5F : 3.0F;
+        drawCircle(x, y, glowRadius,
             withAlpha(glowColor, 0x72), withAlpha(glowColor, 0x00));
-        drawHexSpot(x, y, 3.0F, withAlpha(coreColor, 0xE8));
+        drawHexSpot(x, y, coreRadius, withAlpha(coreColor, 0xE8));
         drawHexSpot(x, y, 1.15F, 0xFFF8FFFF);
     }
 

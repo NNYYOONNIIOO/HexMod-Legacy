@@ -53,38 +53,16 @@ public final class ItemHexStaff extends Item {
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
 
-        HexActionRegistry.bootstrap();
         if (player.isSneaking()) {
             clearProgram(player, hand, staff);
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_cleared")));
-            return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
 
-        List<HexPattern> program = getProgramPatterns(player, hand, staff);
-        if (program.isEmpty()) {
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocal("hexcasting.message.program_empty")));
-            return new ActionResult<>(EnumActionResult.SUCCESS, staff);
-        }
-
-        try {
-            CastingStack result = new CastingStack();
-            IHexCastingData data = HexCapabilities.CASTING_DATA == null
-                ? null
-                : player.getCapability(HexCapabilities.CASTING_DATA, null);
-            HexEvaluator.evaluate(program, result, data, player);
-            String resultText = result.isEmpty()
-                ? I18n.translateToLocal("hexcasting.message.empty_stack")
-                : result.peek().display();
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocalFormatted(
-                    "hexcasting.message.program_result", resultText)));
-        } catch (CastingException exception) {
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocalFormatted(
-                    "hexcasting.message.staff_error", localizeError(exception.getMessage()))));
-        }
+        // Modern Hex opens the spellcasting screen here. The saved pattern
+        // list is edited and evaluated through the spellcasting state as each
+        // pattern is drawn; right-clicking must not replay the whole list as a
+        // fresh cast (which loses the VM stack and causes false failures).
         return new ActionResult<>(EnumActionResult.SUCCESS, staff);
     }
 
