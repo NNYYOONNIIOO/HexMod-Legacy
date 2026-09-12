@@ -1341,3 +1341,6 @@ hexcasting.error.flight_duration=飞行时长必须在 0 到 3600 秒之间。
 hexcasting.error.circle_bounds_context=此动作需要有效的圆环上下文。
 hexcasting.error.circle_impetus_context=此动作需要有效的圆环或施法者上下文。
 hexcasting.error.flight_can_fly_context=此动作需要可检测飞行状态的目标。
+hexcasting.action.colorize=内化染色剂
+hexcasting.error.colorize_context=此动作需要有效的玩家施法上下文。
+hexcasting.error.colorize_dye=请在副手持有染色剂。

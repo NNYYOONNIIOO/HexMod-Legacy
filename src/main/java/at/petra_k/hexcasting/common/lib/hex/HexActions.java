@@ -2780,6 +2780,43 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Set the caster's persistent pigment from a dye held in the off hand. */
+    public static final ResourceLocation COLORIZE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "colorize");
+    public static final HexPattern COLORIZE_PATTERN =
+        pattern(HexDir.EAST, "awddwqawqwawq");
+    public static final HexAction COLORIZE = register(
+        COLORIZE_ID, COLORIZE_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.colorize_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.colorize_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.item.ItemStack dye = player.getHeldItemOffhand();
+                if (dye == null || dye.isEmpty()
+                    || dye.getItem() != net.minecraft.init.Items.DYE) {
+                    throw new CastingException("hexcasting.error.colorize_dye");
+                }
+                IHexCastingData data = player.getCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
+                if (data == null) {
+                    throw new CastingException("hexcasting.error.colorize_context");
+                }
+                net.minecraft.item.EnumDyeColor color =
+                    net.minecraft.item.EnumDyeColor.byDyeDamage(dye.getMetadata());
+                data.setPigment(color.getColorValue());
+                if (!player.capabilities.isCreativeMode) {
+                    dye.shrink(1);
+                }
+            }
+        });
+
     private HexActions() {
     }
 

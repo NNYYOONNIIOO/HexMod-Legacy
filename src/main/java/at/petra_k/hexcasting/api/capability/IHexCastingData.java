@@ -13,4 +13,8 @@ public interface IHexCastingData extends ADMediaHolder {
     NBTTagCompound serializeNBT();
 
     void deserializeNBT(NBTTagCompound nbt);
+
+    int getPigment();
+
+    void setPigment(int pigment);
 }

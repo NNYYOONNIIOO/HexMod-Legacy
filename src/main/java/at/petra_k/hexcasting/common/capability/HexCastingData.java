@@ -10,9 +10,12 @@ import at.petra_k.hexcasting.api.misc.MediaConstants;
 public final class HexCastingData implements IHexCastingData {
     private static final String KEY_STACK = "casting_stack";
     private static final String KEY_MEDIA = "media";
+    private static final String KEY_PIGMENT = "pigment";
+    private static final int DEFAULT_PIGMENT = 0xAA66FF;
 
     private final CastingStack castingStack = new CastingStack();
     private long media;
+    private int pigment = DEFAULT_PIGMENT;
 
     @Override
     public CastingStack getCastingStack() {
@@ -40,6 +43,16 @@ public final class HexCastingData implements IHexCastingData {
     }
 
     @Override
+    public int getPigment() {
+        return pigment;
+    }
+
+    @Override
+    public void setPigment(int pigment) {
+        this.pigment = pigment & 0xFFFFFF;
+    }
+
+    @Override
     public boolean canRecharge() {
         return true;
     }
@@ -64,6 +77,7 @@ public final class HexCastingData implements IHexCastingData {
         NBTTagCompound result = new NBTTagCompound();
         result.setTag(KEY_STACK, castingStack.serialize());
         result.setLong(KEY_MEDIA, media);
+        result.setInteger(KEY_PIGMENT, pigment);
         result.setTag("casting_state", castingStack.serializeState());
         return result;
     }
@@ -72,8 +86,12 @@ public final class HexCastingData implements IHexCastingData {
     public void deserializeNBT(NBTTagCompound nbt) {
         castingStack.clear();
         media = 0L;
+        pigment = DEFAULT_PIGMENT;
         if (nbt == null) return;
         media = clampMedia(nbt.getLong(KEY_MEDIA));
+        if (nbt.hasKey(KEY_PIGMENT, 3)) {
+            pigment = nbt.getInteger(KEY_PIGMENT) & 0xFFFFFF;
+        }
         if (nbt.hasKey("casting_state", 10)) {
             try {
                 CastingStack loaded = CastingStack.deserializeState(nbt.getCompoundTag("casting_state"));
