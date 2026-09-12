@@ -1916,6 +1916,32 @@ throw new CastingException("hexcasting.error.get_media_context");
         return new net.minecraft.util.math.BlockPos(value.x, value.y, value.z);
     }
 
+    /** Coerce a vector to the nearest signed axial unit vector. */
+    public static final ResourceLocation COERCE_AXIAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "coerce_axial");
+    public static final HexPattern COERCE_AXIAL_PATTERN =
+        pattern(HexDir.EAST, "qeeeee");
+    public static final HexAction COERCE_AXIAL = register(
+        COERCE_AXIAL_ID, COERCE_AXIAL_PATTERN, stack -> {
+            net.minecraft.util.math.Vec3d value = stack.pop(Vec3Iota.class).getValue();
+            double x = Math.abs(value.x);
+            double y = Math.abs(value.y);
+            double z = Math.abs(value.z);
+            if (x == 0.0D && y == 0.0D && z == 0.0D) {
+                throw new CastingException("hexcasting.error.coerce_axial_zero");
+            }
+            if (x >= y && x >= z) {
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    Math.copySign(1.0D, value.x), 0.0D, 0.0D)));
+            } else if (y >= z) {
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    0.0D, Math.copySign(1.0D, value.y), 0.0D)));
+            } else {
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    0.0D, 0.0D, Math.copySign(1.0D, value.z))));
+            }
+        });
+
     private HexActions() {
     }
 
