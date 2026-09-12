@@ -100,6 +100,28 @@ public final class InlineAPI {
         return result;
     }
 
+    /** Formats Inline placeholders for 1.12.2 APIs that accept plain strings. */
+    public static String formatPlainText(String text, MatchContext context) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        StringBuilder result = new StringBuilder(text.length());
+        int cursor = 0;
+        while (cursor < text.length()) {
+            InlineMatch next = findNext(text, cursor, context);
+            if (next == null) {
+                result.append(text.substring(cursor));
+                break;
+            }
+            result.append(text.substring(cursor, next.getStart()));
+            EntityContext entityContext = new EntityContext(context);
+            result.append(render(next.getData(),
+                new InlineRenderContext(entityContext.viewer, entityContext.client)));
+            cursor = next.getEnd();
+        }
+        return result.toString();
+    }
+
     private static InlineMatch findNext(String text, int fromIndex, MatchContext context) {
         InlineMatch best = null;
         synchronized (InlineAPI.class) {

@@ -35,6 +35,8 @@ public final class HexInline {
             builtins.getMethod("register").invoke(null);
             Class<?> events = Class.forName("com.samsthenerd.inline.client.InlineClientEvents");
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(events);
+            Class<?> tooltip = Class.forName("com.samsthenerd.inline.client.InlineTooltipEvents");
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(tooltip);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Unable to initialize Inline client integration", exception);
         }
