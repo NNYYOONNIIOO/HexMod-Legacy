@@ -1969,6 +1969,30 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
     });
 
+    /** Remove the block at a vector position without dropping items. */
+    public static final ResourceLocation ERASE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "erase");
+    public static final HexPattern ERASE_PATTERN =
+        pattern(HexDir.EAST, "qdqawwaww");
+    public static final HexAction ERASE = register(ERASE_ID, ERASE_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.erase_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+            if (player == null) {
+                throw new CastingException("hexcasting.error.erase_context");
+            }
+            net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+            if (!player.world.isRemote && !player.world.isAirBlock(position)) {
+                player.world.setBlockToAir(position);
+            }
+        }
+    });
+
     private HexActions() {
     }
 
