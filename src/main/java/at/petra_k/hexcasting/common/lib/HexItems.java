@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.item.ItemSpellbook;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
@@ -111,7 +112,8 @@ public final class HexItems {
 
     static {
         for (String id : EXTRA_ITEM_IDS) {
-            Item item = id.startsWith("staff/") ? new ItemHexStaff() : new Item();
+            Item item = id.equals("spellbook") ? new ItemSpellbook()
+                : (id.startsWith("staff/") ? new ItemHexStaff() : new Item());
             EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
                 .setCreativeTab(HexCreativeTab.HEX));
