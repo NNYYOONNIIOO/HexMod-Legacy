@@ -1,8 +1,7 @@
 {
   "variants": {
     "normal": {
-      "model": "hexcasting:block/slate"
+      "model": "hexcasting:slate"
     }
   }
 }
-

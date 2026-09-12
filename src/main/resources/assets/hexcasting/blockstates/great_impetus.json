@@ -1,8 +1,7 @@
 {
   "variants": {
     "normal": {
-      "model": "hexcasting:block/great_impetus"
+      "model": "hexcasting:great_impetus"
     }
   }
 }
-

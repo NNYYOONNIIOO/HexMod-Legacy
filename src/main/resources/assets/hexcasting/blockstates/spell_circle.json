@@ -1,8 +1,7 @@
 {
   "variants": {
     "normal": {
-      "model": "hexcasting:block/spell_circle"
+      "model": "hexcasting:spell_circle"
     }
   }
 }
-
