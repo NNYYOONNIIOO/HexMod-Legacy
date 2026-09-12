@@ -20,6 +20,7 @@ public final class HexCasting {
     public void preInit(FMLPreInitializationEvent event) {
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
+        at.petra_k.hexcasting.common.lib.hex.SentinelActions.register();
         PaucalAPI.init();
         HexInline.init();
     }
