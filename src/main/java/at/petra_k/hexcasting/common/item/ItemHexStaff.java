@@ -38,56 +38,50 @@ public final class ItemHexStaff extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack staff = player.getHeldItem(hand);
-        if (!world.isRemote) {
-            HexActionRegistry.bootstrap();
-            ItemStack scroll = player.getHeldItemOffhand();
-            if (isPatternScroll(scroll)) {
-                if (player.isSneaking()) {
-                    clearProgram(staff);
-                    player.sendMessage(new TextComponentString(
-                        I18n.translateToLocal("hexcasting.message.program_cleared")));
-                } else {
-                    ResourceLocation action = ItemPatternScroll.getActionId(scroll);
-                    if (appendAction(staff, action)) {
-                        player.sendMessage(new TextComponentString(
-                            I18n.translateToLocalFormatted(
-                                "hexcasting.message.program_added",
-                                localizeAction(action), getProgramSize(staff), MAX_PROGRAM_SIZE)));
-                    } else {
-                        player.sendMessage(new TextComponentString(
-                            I18n.translateToLocalFormatted(
-                                "hexcasting.message.program_full", MAX_PROGRAM_SIZE)));
-                    }
-                }
-                return new ActionResult<>(EnumActionResult.SUCCESS, staff);
-            }
+        if (world.isRemote) {
+            openStaffGui(hand);
+            return new ActionResult<>(EnumActionResult.SUCCESS, staff);
+        }
 
-            List<HexPattern> program = getProgramPatterns(staff);
-            if (program.isEmpty()) {
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocal("hexcasting.message.program_empty")));
-                return new ActionResult<>(EnumActionResult.SUCCESS, staff);
-            }
+        HexActionRegistry.bootstrap();
+        if (player.isSneaking()) {
+            clearProgram(staff);
+            player.sendMessage(new TextComponentString(
+                I18n.translateToLocal("hexcasting.message.program_cleared")));
+            return new ActionResult<>(EnumActionResult.SUCCESS, staff);
+        }
 
-            try {
-                CastingStack result = new CastingStack();
-                IHexCastingData data = HexCapabilities.CASTING_DATA == null
-                    ? null
-                    : player.getCapability(HexCapabilities.CASTING_DATA, null);
-                HexEvaluator.evaluate(program, result, data, player);
-                String resultText = result.isEmpty()
-                    ? I18n.translateToLocal("hexcasting.message.empty_stack")
-                    : result.peek().display();
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocalFormatted(
-                        "hexcasting.message.program_result", resultText)));
-            } catch (CastingException exception) {
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocalFormatted(
-                        "hexcasting.message.staff_error", localizeError(exception.getMessage()))));
-            }
+        List<HexPattern> program = getProgramPatterns(staff);
+        if (program.isEmpty()) {
+            player.sendMessage(new TextComponentString(
+                I18n.translateToLocal("hexcasting.message.program_empty")));
+            return new ActionResult<>(EnumActionResult.SUCCESS, staff);
+        }
+
+        try {
+            CastingStack result = new CastingStack();
+            IHexCastingData data = HexCapabilities.CASTING_DATA == null
+                ? null
+                : player.getCapability(HexCapabilities.CASTING_DATA, null);
+            HexEvaluator.evaluate(program, result, data, player);
+            String resultText = result.isEmpty()
+                ? I18n.translateToLocal("hexcasting.message.empty_stack")
+                : result.peek().display();
+            player.sendMessage(new TextComponentString(
+                I18n.translateToLocalFormatted(
+                    "hexcasting.message.program_result", resultText)));
+        } catch (CastingException exception) {
+            player.sendMessage(new TextComponentString(
+                I18n.translateToLocalFormatted(
+                    "hexcasting.message.staff_error", localizeError(exception.getMessage()))));
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, staff);
+    }
+
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    private static void openStaffGui(EnumHand hand) {
+        net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(
+            new at.petra_k.hexcasting.client.GuiHexStaff(hand));
     }
 
     @Override

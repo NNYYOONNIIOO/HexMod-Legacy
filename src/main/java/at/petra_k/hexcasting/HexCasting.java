@@ -22,6 +22,7 @@ public final class HexCasting {
         HexActionRegistry.bootstrap();
         at.petra_k.hexcasting.common.lib.hex.SentinelActions.register();
         PaucalAPI.init();
+        at.petra_k.hexcasting.common.network.MsgStaffPatternC2S.register();
         HexInline.init();
     }
 

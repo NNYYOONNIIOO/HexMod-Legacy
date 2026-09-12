@@ -250,3 +250,8 @@ You cannot summon lightning at that location.
 hexcasting.action.conjure_light=Conjure Light
 hexcasting.action.compare_item/lenient=Compare Items
 hexcasting.action.get_entity_height=Entity Height
+hexcasting.gui.staff.title=Hex Staff
+hexcasting.gui.staff.hint=Draw a pattern on the six-direction grid to write it into the staff
+hexcasting.gui.staff.clear=Clear program
+hexcasting.gui.staff.invalid=A pattern cannot backtrack or reuse a line
+hexcasting.gui.staff.unknown=No registered spell matches this pattern
