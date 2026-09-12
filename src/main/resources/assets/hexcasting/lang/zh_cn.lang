@@ -1338,4 +1338,5 @@ hexcasting.error.conjure_block_expected=需要一个方块 iota 和一个位置�
 hexcasting.error.conjure_light_context=此动作需要有效的施法者。
 hexcasting.error.flight_context=此动作需要有效的施法者。
 hexcasting.error.flight_duration=飞行时长必须在 0 到 3600 秒之间。
+hexcasting.error.circle_bounds_context=此动作需要有效的圆环上下文。
 hexcasting.error.flight_can_fly_context=此动作需要可检测飞行状态的目标。

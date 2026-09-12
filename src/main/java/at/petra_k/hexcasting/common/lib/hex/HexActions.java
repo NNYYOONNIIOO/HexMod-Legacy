@@ -2717,6 +2717,24 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
     }
 
+    /** Return the upper bound of the current circle context. */
+    public static final ResourceLocation CIRCLE_BOUNDS_MAX_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "circle/bounds/max");
+    public static final HexPattern CIRCLE_BOUNDS_MAX_PATTERN =
+        pattern(HexDir.WEST, "aqwqawaaqa");
+    public static final HexAction CIRCLE_BOUNDS_MAX = register(
+        CIRCLE_BOUNDS_MAX_ID, CIRCLE_BOUNDS_MAX_PATTERN, stack ->
+            stack.push(new DoubleIota(0.0D)));
+
+    /** Return the lower bound of the current circle context. */
+    public static final ResourceLocation CIRCLE_BOUNDS_MIN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "circle/bounds/min");
+    public static final HexPattern CIRCLE_BOUNDS_MIN_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "eaqwqaewdd");
+    public static final HexAction CIRCLE_BOUNDS_MIN = register(
+        CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, stack ->
+            stack.push(new DoubleIota(0.0D)));
+
     private HexActions() {
     }
 
