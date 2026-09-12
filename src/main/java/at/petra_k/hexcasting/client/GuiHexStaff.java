@@ -25,13 +25,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Hex's in-world spell drawing screen, adapted from the 1.20.1
- * GuiSpellcasting and PatternRenderer flow for the 1.12.2 GuiScreen API.
+ * Hex's transparent spell-drawing overlay, adapted from the 1.20.1
+ * GuiSpellcasting/PatternRenderer flow for the 1.12.2 GuiScreen API.
  */
 public final class GuiHexStaff extends GuiScreen {
     private static final int HEX_SIZE = 42;
     private static final int GUIDE_RADIUS = 3;
-    private static final int SEARCH_RADIUS = 32;
     private static final double SNAP_DISTANCE_FACTOR = 2.0D;
 
     private final EnumHand hand;
@@ -63,14 +62,24 @@ public final class GuiHexStaff extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        // Hex does not put a dark container panel over the world. Its spell
-        // screen is a transparent overlay rendered around the mouse position.
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(
+            GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableDepth();
+        GlStateManager.disableCull();
+        GlStateManager.disableTexture2D();
+
+        // This is the same order as Hex's renderer: the cursor guide is a
+        // separate, distance-faded layer; paths and their connection nodes are
+        // rendered above it.
+        drawGuideSpots(mouseX, mouseY);
         drawExistingPaths();
         drawWorkingPath(mouseX, mouseY);
-        drawGuideSpots(mouseX, mouseY);
+
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableCull();
         GlStateManager.enableDepth();
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
@@ -95,35 +104,37 @@ public final class GuiHexStaff extends GuiScreen {
                 double dx = pixel[0] - mouseX;
                 double dy = pixel[1] - mouseY;
                 double distance = Math.sqrt(dx * dx + dy * dy);
-                double scaled = clamp(
+                double scaledDistance = clamp(
                     1.0D - ((distance - HEX_SIZE) / (GUIDE_RADIUS * (double) HEX_SIZE)),
                     0.0D, 1.0D);
-                // The upstream renderer deliberately keeps the outer part of
-                // rangeAround(3) faint instead of removing those spots. This
-                // makes the guide grow/shrink continuously as the mouse moves.
-                drawSpot(pixel[0], pixel[1], (float) Math.max(0.12D, scaled));
+                // Upstream passes scaledDistance*2 as the spot size and fades
+                // the RGB channels together with the alpha.
+                drawSpot(pixel[0], pixel[1], (float) (scaledDistance * 2.0D),
+                    lerp(scaledDistance, 0.40D, 0.50D),
+                    lerp(scaledDistance, 0.80D, 1.00D),
+                    lerp(scaledDistance, 0.70D, 0.90D),
+                    (float) scaledDistance);
             }
         }
     }
 
-    private void drawSpot(int x, int y, float strength) {
-        float visible = Math.max(0.12F, Math.min(1.0F, strength));
-        int glowRadius = Math.max(2, Math.round(5.0F * visible));
-        int glowAlpha = Math.min(220, Math.max(32, Math.round(110.0F + 120.0F * visible)));
-        int glowColor = (glowAlpha << 24) | 0x70E8E8;
-        drawRect(x - glowRadius, y - glowRadius,
-            x + glowRadius + 1, y + glowRadius + 1, glowColor);
-
-        int coreRadius = Math.max(1, Math.round(2.0F * visible));
-        int coreAlpha = Math.min(255, Math.max(70, Math.round(180.0F + 75.0F * visible)));
-        int coreColor = (coreAlpha << 24) | 0xB8FFFF;
-        drawRect(x - coreRadius, y - coreRadius,
-            x + coreRadius + 1, y + coreRadius + 1, coreColor);
+    private void drawSpot(int x, int y, float size,
+                          double red, double green, double blue, float alpha) {
+        float visibility = Math.max(0.0F, Math.min(1.0F, alpha));
+        if (visibility <= 0.01F) {
+            return;
+        }
+        float coreHalf = 1.25F + Math.min(2.5F, size * 0.9F);
+        float glowHalf = coreHalf + 2.0F + 2.5F * visibility;
+        drawQuad(x, y, glowHalf, color(red, green, blue, visibility * 0.22F));
+        drawQuad(x, y, coreHalf, color(red, green, blue, visibility * 0.86F));
+        drawQuad(x, y, Math.max(1.0F, coreHalf * 0.48F),
+            color(0.82D, 1.0D, 1.0D, visibility));
     }
 
     private void drawExistingPaths() {
         for (DrawnPath path : drawnPaths) {
-            drawPath(path.points, 0xB090E8E8, 0xE0D8FFFF);
+            drawPath(path.points, 0x5038C8C8, 0xD078E8E8, 0xE0D8FFFF);
         }
     }
 
@@ -131,69 +142,83 @@ public final class GuiHexStaff extends GuiScreen {
         if (currentPoints.isEmpty()) {
             return;
         }
-        drawPath(currentPoints, 0xE090FFFF, 0xFFF0FFFF);
+        drawPath(currentPoints, 0x6040D8D8, 0xE090FFFF, 0xFFF0FFFF);
         if (drawing && current != null) {
             GridPoint hover = pxToCoord(mouseX, mouseY);
-            if (!hover.equals(current) && isAdjacent(current, hover)) {
-                drawLine(current, hover, 0x8080FFFF, 0xA0D8FFFF);
+            if (!hover.equals(current) && isAdjacent(current, hover)
+                && !usedSpots.contains(hover)) {
+                drawSegment(coordToPx(current), coordToPx(hover),
+                    8.0F, 0x4038D8D8);
+                drawSegment(coordToPx(current), coordToPx(hover),
+                    2.5F, 0xC0D8FFFF);
+                int[] pixel = coordToPx(hover);
+                drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.8F);
             }
         }
     }
 
-    private void drawPath(List<GridPoint> points, int lineColor, int nodeColor) {
-        if (points.size() < 2) {
-            if (points.size() == 1) {
-                int[] pixel = coordToPx(points.get(0));
-                drawSpot(pixel[0], pixel[1], 1.0F);
-            }
+    private void drawPath(List<GridPoint> points, int glowColor,
+                          int lineColor, int nodeColor) {
+        if (points.size() == 1) {
+            int[] pixel = coordToPx(points.get(0));
+            drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.9F);
             return;
         }
-        GlStateManager.disableTexture2D();
-        GL11.glLineWidth(3.0F);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-        for (GridPoint point : points) {
-            int[] pixel = coordToPx(point);
-            buffer.pos(pixel[0], pixel[1], 0).color(
-                (lineColor >> 16) & 0xFF,
-                (lineColor >> 8) & 0xFF,
-                lineColor & 0xFF,
-                (lineColor >> 24) & 0xFF).endVertex();
+        for (int i = 1; i < points.size(); i++) {
+            drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
+                8.0F, glowColor);
         }
-        tessellator.draw();
-        GL11.glLineWidth(1.0F);
-        GlStateManager.enableTexture2D();
-
+        for (int i = 1; i < points.size(); i++) {
+            drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
+                2.5F, lineColor);
+        }
         for (GridPoint point : points) {
             int[] pixel = coordToPx(point);
-            drawRect(pixel[0] - 2, pixel[1] - 2,
-                pixel[0] + 3, pixel[1] + 3, nodeColor);
+            drawSpot(pixel[0], pixel[1], 1.8F,
+                channel(nodeColor, 16) / 255.0D,
+                channel(nodeColor, 8) / 255.0D,
+                channel(nodeColor, 0) / 255.0D,
+                channel(nodeColor, 24) / 255.0F);
         }
     }
 
-    private void drawLine(GridPoint from, GridPoint to, int lineColor, int nodeColor) {
-        int[] a = coordToPx(from);
-        int[] b = coordToPx(to);
-        GlStateManager.disableTexture2D();
-        GL11.glLineWidth(2.0F);
+    /** Draws a smooth quad strip rather than relying on GL_LINE_STRIP width. */
+    private void drawSegment(int[] from, int[] to, float width, int argb) {
+        double dx = to[0] - from[0];
+        double dy = to[1] - from[1];
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length < 0.001D) {
+            return;
+        }
+        double px = -dy / length * width * 0.5D;
+        double py = dx / length * width * 0.5D;
+        int red = channel(argb, 16);
+        int green = channel(argb, 8);
+        int blue = channel(argb, 0);
+        int alpha = channel(argb, 24);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        buffer.pos(a[0], a[1], 0).color(
-            (lineColor >> 16) & 0xFF,
-            (lineColor >> 8) & 0xFF,
-            lineColor & 0xFF,
-            (lineColor >> 24) & 0xFF).endVertex();
-        buffer.pos(b[0], b[1], 0).color(
-            (lineColor >> 16) & 0xFF,
-            (lineColor >> 8) & 0xFF,
-            lineColor & 0xFF,
-            (lineColor >> 24) & 0xFF).endVertex();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(from[0] + px, from[1] + py, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(from[0] - px, from[1] - py, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(to[0] - px, to[1] - py, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(to[0] + px, to[1] + py, 0).color(red, green, blue, alpha).endVertex();
         tessellator.draw();
-        GL11.glLineWidth(1.0F);
-        GlStateManager.enableTexture2D();
-        drawRect(b[0] - 2, b[1] - 2, b[0] + 3, b[1] + 3, nodeColor);
+    }
+
+    private void drawQuad(float x, float y, float halfSize, int argb) {
+        int red = channel(argb, 16);
+        int green = channel(argb, 8);
+        int blue = channel(argb, 0);
+        int alpha = channel(argb, 24);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x - halfSize, y - halfSize, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(x - halfSize, y + halfSize, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(x + halfSize, y + halfSize, 0).color(red, green, blue, alpha).endVertex();
+        buffer.pos(x + halfSize, y - halfSize, 0).color(red, green, blue, alpha).endVertex();
+        tessellator.draw();
     }
 
     @Override
@@ -236,8 +261,8 @@ public final class GuiHexStaff extends GuiScreen {
         }
 
         double angle = Math.atan2(dy, dx);
-        int directionIndex = (int) Math.round(angle / (Math.PI * 2.0D) * 6.0D) + 1;
-        directionIndex %= 6;
+        int directionIndex = ((int) Math.round(
+            angle / (Math.PI * 2.0D) * 6.0D) + 1) % 6;
         if (directionIndex < 0) {
             directionIndex += 6;
         }
@@ -288,7 +313,6 @@ public final class GuiHexStaff extends GuiScreen {
             resetWorkingPath();
             return;
         }
-
         if (programCount >= ItemHexStaff.MAX_PROGRAM_SIZE) {
             status = I18n.format("hexcasting.message.program_full", ItemHexStaff.MAX_PROGRAM_SIZE);
             resetWorkingPath();
@@ -305,7 +329,8 @@ public final class GuiHexStaff extends GuiScreen {
             programIds.add(id);
         }
         programCount++;
-        drawnPaths.add(new DrawnPath(workingPattern, new ArrayList<>(currentPoints), id));
+        drawnPaths.add(new DrawnPath(workingPattern,
+            new ArrayList<>(currentPoints), id));
         usedSpots.addAll(currentPoints);
         currentPoints.clear();
         current = null;
@@ -380,23 +405,28 @@ public final class GuiHexStaff extends GuiScreen {
         workingPattern = null;
     }
 
-    private GridPoint pxToCoord(int x, int y) {
-        GridPoint best = new GridPoint(0, 0);
-        double bestDistance = Double.MAX_VALUE;
-        for (int q = -SEARCH_RADIUS; q <= SEARCH_RADIUS; q++) {
-            for (int r = -SEARCH_RADIUS; r <= SEARCH_RADIUS; r++) {
-                GridPoint candidate = new GridPoint(q, r);
-                int[] pixel = coordToPx(candidate);
-                double dx = x - pixel[0];
-                double dy = y - pixel[1];
-                double distance = dx * dx + dy * dy;
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    best = candidate;
-                }
-            }
+    /** Exact axial-to-cube rounding, matching Hex's pixel-to-coordinate snap. */
+    private GridPoint pxToCoord(int mouseX, int mouseY) {
+        double dx = (mouseX - width / 2.0D) / HEX_SIZE;
+        double r = (mouseY - height / 2.0D) / (HEX_SIZE * 0.866025403784D);
+        double q = dx - r * 0.5D;
+        double cubeX = q;
+        double cubeZ = r;
+        double cubeY = -cubeX - cubeZ;
+        double roundedX = Math.round(cubeX);
+        double roundedY = Math.round(cubeY);
+        double roundedZ = Math.round(cubeZ);
+        double xDiff = Math.abs(roundedX - cubeX);
+        double yDiff = Math.abs(roundedY - cubeY);
+        double zDiff = Math.abs(roundedZ - cubeZ);
+        if (xDiff > yDiff && xDiff > zDiff) {
+            roundedX = -roundedY - roundedZ;
+        } else if (yDiff > zDiff) {
+            roundedY = -roundedX - roundedZ;
+        } else {
+            roundedZ = -roundedX - roundedY;
         }
-        return best;
+        return new GridPoint((int) roundedX, (int) roundedZ);
     }
 
     private int[] coordToPx(GridPoint point) {
@@ -417,6 +447,21 @@ public final class GuiHexStaff extends GuiScreen {
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private static double lerp(double value, double from, double to) {
+        return from + (to - from) * value;
+    }
+
+    private static int color(double red, double green, double blue, float alpha) {
+        return ((int) (Math.max(0.0F, Math.min(1.0F, alpha)) * 255.0F) << 24)
+            | ((int) (Math.max(0.0D, Math.min(1.0D, red)) * 255.0D) << 16)
+            | ((int) (Math.max(0.0D, Math.min(1.0D, green)) * 255.0D) << 8)
+            | (int) (Math.max(0.0D, Math.min(1.0D, blue)) * 255.0D);
+    }
+
+    private static int channel(int color, int shift) {
+        return (color >> shift) & 0xFF;
     }
 
     private static String localizeAction(ResourceLocation id) {
@@ -474,3 +519,4 @@ public final class GuiHexStaff extends GuiScreen {
         }
     }
 }
+
