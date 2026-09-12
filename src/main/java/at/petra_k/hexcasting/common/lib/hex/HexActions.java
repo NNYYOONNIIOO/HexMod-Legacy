@@ -1553,14 +1553,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("get_caster requires a player casting context");
+throw new CastingException("hexcasting.error.get_caster_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw new CastingException("get_caster requires a player casting context");
+throw new CastingException("hexcasting.error.get_caster_context");
                 }
                 stack.push(new EntityIota(player));
             }
@@ -1576,7 +1576,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("entity_height requires a player casting context");
+throw new CastingException("hexcasting.error.entity_height_context");
             }
 
             @Override
@@ -1597,7 +1597,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("entity_pos/eye requires a player casting context");
+throw new CastingException("hexcasting.error.entity_pos_eye_context");
             }
 
             @Override
@@ -1618,7 +1618,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("entity_pos/foot requires a player casting context");
+throw new CastingException("hexcasting.error.entity_pos_foot_context");
             }
 
             @Override
@@ -1640,7 +1640,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("get_entity_look requires a player casting context");
+throw new CastingException("hexcasting.error.entity_look_context");
             }
 
             @Override
@@ -1661,7 +1661,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("get_entity_velocity requires a player casting context");
+throw new CastingException("hexcasting.error.entity_velocity_context");
             }
 
             @Override
@@ -1699,14 +1699,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("get_media requires a player casting context");
+throw new CastingException("hexcasting.error.get_media_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 IHexCastingData data = vm.getCastingData();
                 if (data == null) {
-                    throw new CastingException("get_media requires a player casting context");
+throw new CastingException("hexcasting.error.get_media_context");
                 }
                 long available = MediaInventoryHelper.getAvailableMedia(vm.getPlayer(), data);
                 stack.push(new DoubleIota(
@@ -1793,8 +1793,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < -maxAbs || raw > maxAbs) {
-            throw new CastingException("Expected an integer in [" + (-maxAbs) + ", " + maxAbs
-                + "] but found " + raw);
+throw new CastingException("hexcasting.error.bounded_integer");
         }
         return (int) raw;
     }
