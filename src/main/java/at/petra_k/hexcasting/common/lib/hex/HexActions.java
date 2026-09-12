@@ -1171,6 +1171,60 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
+    /** Summon rain in the current world. */
+    public static final ResourceLocation SUMMON_RAIN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "summon_rain");
+    public static final HexPattern SUMMON_RAIN_PATTERN =
+        pattern(HexDir.WEST, "wwweeewwweewdawdwad");
+    public static final HexAction SUMMON_RAIN = register(
+        SUMMON_RAIN_ID, SUMMON_RAIN_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.weather_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.weather_context");
+                }
+                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+                net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                info.setRaining(true);
+                info.setRainTime(6000);
+                info.setThundering(false);
+                info.setThunderTime(6000);
+            }
+        });
+
+    /** Dispel rain in the current world. */
+    public static final ResourceLocation DISPEL_RAIN_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "dispel_rain");
+    public static final HexPattern DISPEL_RAIN_PATTERN =
+        pattern(HexDir.EAST, "eeewwweeewwaqqddqdqd");
+    public static final HexAction DISPEL_RAIN = register(
+        DISPEL_RAIN_ID, DISPEL_RAIN_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.weather_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.weather_context");
+                }
+                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+                net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                info.setRaining(false);
+                info.setRainTime(6000);
+                info.setThundering(false);
+                info.setThunderTime(6000);
+            }
+        });
+
     public static final ResourceLocation BREAK_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "break_block");
     public static final HexPattern BREAK_BLOCK_PATTERN =
@@ -1628,7 +1682,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
