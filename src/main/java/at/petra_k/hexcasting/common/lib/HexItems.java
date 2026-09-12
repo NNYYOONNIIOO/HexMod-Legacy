@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
+import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
@@ -34,6 +35,21 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".battery")
         .setCreativeTab(HexCreativeTab.HEX);
 
+    public static final ItemPackagedSpell CYPHER = (ItemPackagedSpell) new ItemPackagedSpell()
+        .setRegistryName(HexAPI.MOD_ID, "cypher")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".cypher")
+        .setCreativeTab(HexCreativeTab.HEX);
+
+    public static final ItemPackagedSpell TRINKET = (ItemPackagedSpell) new ItemPackagedSpell()
+        .setRegistryName(HexAPI.MOD_ID, "trinket")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".trinket")
+        .setCreativeTab(HexCreativeTab.HEX);
+
+    public static final ItemPackagedSpell ARTIFACT = (ItemPackagedSpell) new ItemPackagedSpell()
+        .setRegistryName(HexAPI.MOD_ID, "artifact")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".artifact")
+        .setCreativeTab(HexCreativeTab.HEX);
+
     public static final ItemPatternScroll PATTERN_SCROLL = (ItemPatternScroll) new ItemPatternScroll()
         .setRegistryName(HexAPI.MOD_ID, "pattern_scroll")
         .setUnlocalizedName(HexAPI.MOD_ID + ".pattern_scroll")
@@ -48,6 +64,9 @@ public final class HexItems {
         event.getRegistry().register(STAFF);
         event.getRegistry().register(SCRYING_LENS);
         event.getRegistry().register(BATTERY);
+        event.getRegistry().register(CYPHER);
+        event.getRegistry().register(TRINKET);
+        event.getRegistry().register(ARTIFACT);
         event.getRegistry().register(PATTERN_SCROLL);
     }
 }

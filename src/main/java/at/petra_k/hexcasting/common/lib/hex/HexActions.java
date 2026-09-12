@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
@@ -3017,6 +3018,61 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
             }
         });
+
+    /** Package a spell list into a registered spell container item. */
+    private static HexAction packagedSpellAction(
+        final net.minecraft.item.Item output,
+        final long mediaCost,
+        final String errorKey) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException(errorKey);
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException(errorKey);
+                }
+                ListIota spell = stack.pop(ListIota.class);
+                vm.consumeMedia(mediaCost);
+                net.minecraft.item.ItemStack result =
+                    new net.minecraft.item.ItemStack(output, 1);
+                IotaDataHolder.write(result, spell);
+                stack.push(new ItemIota(result));
+            }
+        };
+    }
+
+    public static final ResourceLocation CRAFT_CYPHER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "craft/cypher");
+    public static final HexPattern CRAFT_CYPHER_PATTERN =
+        pattern(HexDir.EAST, "waqqqqq");
+    public static final HexAction CRAFT_CYPHER = register(
+        CRAFT_CYPHER_ID, CRAFT_CYPHER_PATTERN,
+        packagedSpellAction(HexItems.CYPHER, MediaConstants.CRYSTAL_UNIT,
+            "hexcasting.error.craft_cypher_context"));
+
+    public static final ResourceLocation CRAFT_TRINKET_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "craft/trinket");
+    public static final HexPattern CRAFT_TRINKET_PATTERN =
+        pattern(HexDir.EAST, "wwaqqqqqeaqeaeqqqeaeq");
+    public static final HexAction CRAFT_TRINKET = register(
+        CRAFT_TRINKET_ID, CRAFT_TRINKET_PATTERN,
+        packagedSpellAction(HexItems.TRINKET, 5L * MediaConstants.CRYSTAL_UNIT,
+            "hexcasting.error.craft_trinket_context"));
+
+    public static final ResourceLocation CRAFT_ARTIFACT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "craft/artifact");
+    public static final HexPattern CRAFT_ARTIFACT_PATTERN =
+        pattern(HexDir.EAST,
+            "wwaqqqqqeawqwqwqwqwqwwqqeadaeqqeqqeadaeqq");
+    public static final HexAction CRAFT_ARTIFACT = register(
+        CRAFT_ARTIFACT_ID, CRAFT_ARTIFACT_PATTERN,
+        packagedSpellAction(HexItems.ARTIFACT, 10L * MediaConstants.CRYSTAL_UNIT,
+            "hexcasting.error.craft_artifact_context"));
 
     private HexActions() {
     }
