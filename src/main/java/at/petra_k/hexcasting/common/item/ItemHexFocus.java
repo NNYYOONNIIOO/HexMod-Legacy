@@ -25,11 +25,7 @@ import java.util.List;
 import net.minecraft.util.text.translation.I18n;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 
-/**
- * Minimal 1.12.2 casting item used to exercise the migrated core end to end.
- * It currently evaluates the first portable action and reports its result;
- * drawn patterns and staff storage will be connected in the next slice.
- */
+/** Action-selectable portable casting item for the 1.12.2 port. */
 public final class ItemHexFocus extends Item {
     private static final String KEY_SELECTED_ACTION = "selected_action";
 
