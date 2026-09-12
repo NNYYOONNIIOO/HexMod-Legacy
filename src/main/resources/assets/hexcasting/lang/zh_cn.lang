@@ -1333,3 +1333,5 @@ hexcasting.error.compare_block_context=此动作需要处于世界中的施法�
 hexcasting.error.compare_block_expected=需要一个方块 iota 和一个位置。
 hexcasting.error.compare_item_context=此动作需要处于世界中的施法者。
 hexcasting.error.compare_item_expected=需要物品 iota 或携带物品的实体。
+hexcasting.error.conjure_block_context=此动作需要有效的施法者。
+hexcasting.error.conjure_block_expected=需要一个方块 iota 和一个位置。

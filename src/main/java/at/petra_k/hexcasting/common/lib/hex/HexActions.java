@@ -2559,9 +2559,47 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.cycle_variant_item");
                 }
                 final String key = "hexcasting_variant";
-                int current = held.hasTagCompound()
-                    ? held.getTagCompound().getInteger(key) : 0;
-                held.getOrCreateSubCompound(HexAPI.MOD_ID).setInteger(key, current + 1);
+                net.minecraft.nbt.NBTTagCompound variantData =
+                    held.getOrCreateSubCompound(HexAPI.MOD_ID);
+                int current = variantData.getInteger(key);
+                variantData.setInteger(key, current + 1);
+            }
+        });
+
+    /** Conjure a block state at a target position without consuming an item. */
+    public static final ResourceLocation CONJURE_BLOCK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "conjure_block");
+    public static final HexPattern CONJURE_BLOCK_PATTERN =
+        pattern(HexDir.NORTH_EAST, "qqd");
+    public static final HexAction CONJURE_BLOCK = register(
+        CONJURE_BLOCK_ID, CONJURE_BLOCK_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.conjure_block_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.conjure_block_context");
+                }
+                Iota first = stack.pop();
+                Iota second = stack.pop();
+                BlockIota block;
+                Vec3Iota position;
+                if (first instanceof BlockIota && second instanceof Vec3Iota) {
+                    block = (BlockIota) first;
+                    position = (Vec3Iota) second;
+                } else if (second instanceof BlockIota && first instanceof Vec3Iota) {
+                    block = (BlockIota) second;
+                    position = (Vec3Iota) first;
+                } else {
+                    throw new CastingException("hexcasting.error.conjure_block_expected");
+                }
+                net.minecraft.util.math.BlockPos target = blockPosition(position);
+                if (!vm.getPlayer().world.isRemote && vm.getPlayer().world.isAirBlock(target)) {
+                    vm.getPlayer().world.setBlockState(target, block.getState(), 3);
+                }
             }
         });
 
