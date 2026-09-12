@@ -2,10 +2,19 @@ package at.petra_k.hexcasting.interop.inline;
 
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import com.samsthenerd.inline.api.InlineRenderContext;
+import com.samsthenerd.inline.api.InlineRenderer;
 
 /** Deterministic fallback renderer for Inline-style pattern payloads. */
-public final class InlinePatternRenderer {
+public final class InlinePatternRenderer implements InlineRenderer<InlinePatternData> {
     private InlinePatternRenderer() {
+    }
+
+    public static final InlinePatternRenderer INSTANCE = new InlinePatternRenderer();
+
+    @Override
+    public String render(InlinePatternData data, InlineRenderContext context) {
+        return render(data == null ? null : data.getPattern());
     }
 
     /** Render a pattern without requiring a custom 1.20.1 font or renderer. */

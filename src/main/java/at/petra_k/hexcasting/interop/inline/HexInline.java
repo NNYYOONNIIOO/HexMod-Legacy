@@ -1,6 +1,8 @@
 package at.petra_k.hexcasting.interop.inline;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import com.samsthenerd.inline.api.InlineAPI;
+import com.samsthenerd.inline.client.InlineBuiltins;
 
 /**
  * Small Inline-compatible facade embedded for Minecraft 1.12.2.
@@ -14,7 +16,13 @@ public final class HexInline {
     }
 
     public static void init() {
-        initialized = true;
+        if (!initialized) {
+            InlineAPI.addDataType(InlinePatternData.TYPE);
+            InlineAPI.registerRenderer(InlinePatternData.class,
+                InlinePatternRenderer.INSTANCE);
+            InlineBuiltins.register();
+            initialized = true;
+        }
     }
 
     public static boolean isInitialized() {
@@ -26,6 +34,7 @@ public final class HexInline {
     }
 
     public static String formatPattern(HexPattern pattern) {
-        return pattern(pattern).asText();
+        init();
+        return InlineAPI.render(pattern(pattern));
     }
 }
