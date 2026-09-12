@@ -138,22 +138,23 @@ public final class ItemHexStaff extends Item {
     }
 
     public static int getProgramSize(ItemStack staff) {
-        if (!isStaff(staff) || staff.getTagCompound() == null) {
-            return 0;
-        }
-        return staff.getTagCompound().getTagList(KEY_PROGRAM, 8).tagCount();
+        return getProgramIds(staff).size();
     }
 
     public static List<ResourceLocation> getProgramIds(ItemStack staff) {
         if (!isStaff(staff) || staff.getTagCompound() == null) {
             return Collections.emptyList();
         }
+        HexActionRegistry.bootstrap();
         NBTTagList program = staff.getTagCompound().getTagList(KEY_PROGRAM, 8);
         List<ResourceLocation> result = new ArrayList<>(program.tagCount());
         for (int i = 0; i < program.tagCount(); i++) {
             String value = program.getStringTagAt(i);
             try {
-                result.add(new ResourceLocation(value));
+                ResourceLocation id = new ResourceLocation(value);
+                if (HexActionRegistry.get(id) != null) {
+                    result.add(id);
+                }
             } catch (RuntimeException ignored) {
                 // Invalid old data is ignored while the remaining program is preserved.
             }
