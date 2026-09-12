@@ -22,6 +22,7 @@ public final class HexInline {
         InlineAPI.addDataType(InlinePatternData.TYPE);
         InlineAPI.registerRenderer(InlinePatternData.class,
             InlinePatternRenderer.INSTANCE);
+        InlineAPI.addChatMatcher(new HexPatternInlineMatcher());
         com.samsthenerd.inline.common.InlineCommonBuiltins.register();
         if (net.minecraftforge.fml.common.FMLCommonHandler.instance().getSide().isClient()) {
             loadClientIntegration();
