@@ -1911,7 +1911,125 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         return null;
     }
 
-    /** Return available player media in dust units without consuming it. */
+
+    /** Read and write versioned Iotas through the off-hand item data holder. */
+    public static final ResourceLocation READ_ID = new ResourceLocation(HexAPI.MOD_ID, "read");
+    public static final HexPattern READ_PATTERN = pattern(HexDir.EAST, "aqqqqq");
+    public static final HexAction READ = register(READ_ID, READ_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.read_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            stack.push(readIota(offHand(vm)));
+        }
+    });
+
+    public static final ResourceLocation WRITE_ID = new ResourceLocation(HexAPI.MOD_ID, "write");
+    public static final HexPattern WRITE_PATTERN = pattern(HexDir.EAST, "deeeee");
+    public static final HexAction WRITE = register(WRITE_ID, WRITE_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.write_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            net.minecraft.item.ItemStack target = offHand(vm);
+            Iota value = stack.peek();
+            IotaDataHolder.write(target, value);
+            stack.pop();
+        }
+    });
+
+    public static final ResourceLocation READABLE_ID = new ResourceLocation(HexAPI.MOD_ID, "readable");
+    public static final HexPattern READABLE_PATTERN = pattern(HexDir.EAST, "aqqqqqe");
+    public static final HexAction READABLE = register(READABLE_ID, READABLE_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.readable_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            stack.push(new BooleanIota(IotaDataHolder.canRead(offHand(vm))));
+        }
+    });
+
+    public static final ResourceLocation WRITABLE_ID = new ResourceLocation(HexAPI.MOD_ID, "writable");
+    public static final HexPattern WRITABLE_PATTERN = pattern(HexDir.EAST, "deeeeeq");
+    public static final HexAction WRITABLE = register(WRITABLE_ID, WRITABLE_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.writable_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            stack.push(new BooleanIota(IotaDataHolder.canWrite(offHand(vm))));
+        }
+    });
+
+    public static final ResourceLocation READ_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "read/entity");
+    public static final HexPattern READ_ENTITY_PATTERN = pattern(HexDir.EAST, "wawqwqwqwqwqw");
+    public static final HexAction READ_ENTITY = register(READ_ENTITY_ID, READ_ENTITY_PATTERN, stack ->
+        stack.push(readIota(entityItem(stack.pop()))));
+
+    public static final ResourceLocation WRITE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "write/entity");
+    public static final HexPattern WRITE_ENTITY_PATTERN = pattern(HexDir.EAST, "wdwewewewewew");
+    public static final HexAction WRITE_ENTITY = register(WRITE_ENTITY_ID, WRITE_ENTITY_PATTERN, stack -> {
+        Iota value = stack.pop();
+        Iota entity = stack.pop();
+        IotaDataHolder.write(entityItem(entity), value);
+    });
+
+    public static final ResourceLocation READABLE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "readable/entity");
+    public static final HexPattern READABLE_ENTITY_PATTERN = pattern(HexDir.EAST, "wawqwqwqwqwqwew");
+    public static final HexAction READABLE_ENTITY = register(READABLE_ENTITY_ID, READABLE_ENTITY_PATTERN, stack ->
+        stack.push(new BooleanIota(IotaDataHolder.canRead(entityItem(stack.pop())))));
+
+    public static final ResourceLocation WRITABLE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "writable/entity");
+    public static final HexPattern WRITABLE_ENTITY_PATTERN = pattern(HexDir.EAST, "wdwewewewewewqw");
+    public static final HexAction WRITABLE_ENTITY = register(WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, stack ->
+        stack.push(new BooleanIota(IotaDataHolder.canWrite(entityItem(stack.pop())))));
+
+    private static net.minecraft.item.ItemStack offHand(CastingVM vm) throws CastingException {
+        if (vm == null || vm.getPlayer() == null) {
+            throw new CastingException("hexcasting.error.read_context");
+        }
+        net.minecraft.item.ItemStack stack = vm.getPlayer().getHeldItemOffhand();
+        if (stack == null || stack.isEmpty()) {
+            throw new CastingException("hexcasting.error.data_holder_missing");
+        }
+        return stack;
+    }
+
+    private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {
+        if (!IotaDataHolder.canRead(stack)) {
+            throw new CastingException("hexcasting.error.data_holder_missing");
+        }
+        return IotaDataHolder.read(stack);
+    }
+
+    private static net.minecraft.item.ItemStack entityItem(Iota value) throws CastingException {
+        net.minecraft.entity.Entity entity = getRechargeEntity(value);
+        if (entity instanceof net.minecraft.entity.item.EntityItem) {
+            return ((net.minecraft.entity.item.EntityItem) entity).getItem();
+        }
+        if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
+            net.minecraft.entity.player.EntityPlayer player = (net.minecraft.entity.player.EntityPlayer) entity;
+            net.minecraft.item.ItemStack main = player.getHeldItemMainhand();
+            return main == null || main.isEmpty() ? player.getHeldItemOffhand() : main;
+        }
+        if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
+            return ((net.minecraft.entity.item.EntityItemFrame) entity).getDisplayedItem();
+        }
+        throw new CastingException("hexcasting.error.data_holder_missing");
+    }
+
+   /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
     public static final HexPattern GET_MEDIA_PATTERN =
