@@ -4,10 +4,12 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
+import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSpellbook;
+import at.petra_k.hexcasting.common.item.ItemThoughtKnot;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
@@ -107,7 +109,23 @@ public final class HexItems {
         "dye_colorizer_brown",
         "dye_colorizer_green",
         "dye_colorizer_red",
-        "dye_colorizer_black"
+        "dye_colorizer_black",
+        "pride_colorizer_agender",
+        "pride_colorizer_aroace",
+        "pride_colorizer_aromantic",
+        "pride_colorizer_asexual",
+        "pride_colorizer_bisexual",
+        "pride_colorizer_demiboy",
+        "pride_colorizer_demigirl",
+        "pride_colorizer_gay",
+        "pride_colorizer_genderfluid",
+        "pride_colorizer_genderqueer",
+        "pride_colorizer_intersex",
+        "pride_colorizer_lesbian",
+        "pride_colorizer_nonbinary",
+        "pride_colorizer_pansexual",
+        "pride_colorizer_plural",
+        "pride_colorizer_transgender"
     };
     public static final java.util.Map<String, Item> EXTRA_ITEMS = new java.util.LinkedHashMap<>();
 
@@ -120,8 +138,12 @@ public final class HexItems {
                 item = new ItemPackagedSpell();
             } else if (id.equals("abacus")) {
                 item = new ItemAbacus();
+            } else if (id.equals("thought_knot")) {
+                item = new ItemThoughtKnot();
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll();
+            } else if (id.contains("colorizer")) {
+                item = new ItemColorizer(id);
             } else if (id.startsWith("staff/")) {
                 item = new ItemHexStaff();
             } else {
