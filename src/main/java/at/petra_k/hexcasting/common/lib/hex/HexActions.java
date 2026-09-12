@@ -1543,6 +1543,134 @@ public static final HexPattern BOOL_IF_PATTERN =
         };
     }
 
+    /** Select all matching entities within a radius of a position Iota. */
+    public static final ResourceLocation ZONE_ENTITY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity");
+    public static final HexPattern ZONE_ENTITY_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwded");
+    public static final HexAction ZONE_ENTITY = register(
+        ZONE_ENTITY_ID, ZONE_ENTITY_PATTERN, zoneEntitiesAction(entity -> true, false));
+
+    public static final ResourceLocation ZONE_ENTITY_ANIMAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/animal");
+    public static final HexPattern ZONE_ENTITY_ANIMAL_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwa");
+    public static final HexAction ZONE_ENTITY_ANIMAL = register(
+        ZONE_ENTITY_ANIMAL_ID, ZONE_ENTITY_ANIMAL_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal, false));
+
+    public static final ResourceLocation ZONE_ENTITY_NOT_ANIMAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_animal");
+    public static final HexPattern ZONE_ENTITY_NOT_ANIMAL_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eeeeewaqaawa");
+    public static final HexAction ZONE_ENTITY_NOT_ANIMAL = register(
+        ZONE_ENTITY_NOT_ANIMAL_ID, ZONE_ENTITY_NOT_ANIMAL_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal, true));
+
+    public static final ResourceLocation ZONE_ENTITY_MONSTER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/monster");
+    public static final HexPattern ZONE_ENTITY_MONSTER_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwq");
+    public static final HexAction ZONE_ENTITY_MONSTER = register(
+        ZONE_ENTITY_MONSTER_ID, ZONE_ENTITY_MONSTER_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.monster.IMob, false));
+
+    public static final ResourceLocation ZONE_ENTITY_NOT_MONSTER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_monster");
+    public static final HexPattern ZONE_ENTITY_NOT_MONSTER_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eeeeewaqaawq");
+    public static final HexAction ZONE_ENTITY_NOT_MONSTER = register(
+        ZONE_ENTITY_NOT_MONSTER_ID, ZONE_ENTITY_NOT_MONSTER_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.monster.IMob, true));
+
+    public static final ResourceLocation ZONE_ENTITY_ITEM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/item");
+    public static final HexPattern ZONE_ENTITY_ITEM_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwdeddww");
+    public static final HexAction ZONE_ENTITY_ITEM = register(
+        ZONE_ENTITY_ITEM_ID, ZONE_ENTITY_ITEM_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.item.EntityItem, false));
+
+    public static final ResourceLocation ZONE_ENTITY_NOT_ITEM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_item");
+    public static final HexPattern ZONE_ENTITY_NOT_ITEM_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eeeeewaqaaww");
+    public static final HexAction ZONE_ENTITY_NOT_ITEM = register(
+        ZONE_ENTITY_NOT_ITEM_ID, ZONE_ENTITY_NOT_ITEM_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.item.EntityItem, true));
+
+    public static final ResourceLocation ZONE_ENTITY_PLAYER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/player");
+    public static final HexPattern ZONE_ENTITY_PLAYER_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwe");
+    public static final HexAction ZONE_ENTITY_PLAYER = register(
+        ZONE_ENTITY_PLAYER_ID, ZONE_ENTITY_PLAYER_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.player.EntityPlayer, false));
+
+    public static final ResourceLocation ZONE_ENTITY_NOT_PLAYER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_player");
+    public static final HexPattern ZONE_ENTITY_NOT_PLAYER_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eeeeewaqaawe");
+    public static final HexAction ZONE_ENTITY_NOT_PLAYER = register(
+        ZONE_ENTITY_NOT_PLAYER_ID, ZONE_ENTITY_NOT_PLAYER_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.player.EntityPlayer, true));
+
+    public static final ResourceLocation ZONE_ENTITY_LIVING_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/living");
+    public static final HexPattern ZONE_ENTITY_LIVING_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwd");
+    public static final HexAction ZONE_ENTITY_LIVING = register(
+        ZONE_ENTITY_LIVING_ID, ZONE_ENTITY_LIVING_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase, false));
+
+    public static final ResourceLocation ZONE_ENTITY_NOT_LIVING_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_living");
+    public static final HexPattern ZONE_ENTITY_NOT_LIVING_PATTERN =
+        pattern(HexDir.NORTH_EAST, "eeeeewaqaawd");
+    public static final HexAction ZONE_ENTITY_NOT_LIVING = register(
+        ZONE_ENTITY_NOT_LIVING_ID, ZONE_ENTITY_NOT_LIVING_PATTERN,
+        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase, true));
+
+    private static HexAction zoneEntitiesAction(
+        final java.util.function.Predicate<net.minecraft.entity.Entity> predicate,
+        final boolean invert) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.zone_entity_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.zone_entity_context");
+                }
+                double radius = stack.pop(DoubleIota.class).getValue();
+                if (Double.isNaN(radius) || Double.isInfinite(radius)
+                    || radius < 0.0D || radius > 128.0D) {
+                    throw new CastingException("hexcasting.error.zone_entity_radius");
+                }
+                net.minecraft.util.math.Vec3d position = stack.pop(Vec3Iota.class).getValue();
+                net.minecraft.util.math.AxisAlignedBB area = new net.minecraft.util.math.AxisAlignedBB(
+                    position.x - radius, position.y - radius, position.z - radius,
+                    position.x + radius, position.y + radius, position.z + radius);
+                java.util.List<net.minecraft.entity.Entity> candidates =
+                    player.world.getEntitiesWithinAABB(net.minecraft.entity.Entity.class, area);
+                java.util.ArrayList<Iota> matches = new java.util.ArrayList<>();
+                for (net.minecraft.entity.Entity candidate : candidates) {
+                    if (candidate == null || candidate.isDead) {
+                        continue;
+                    }
+                    if (predicate.test(candidate) != invert) {
+                        matches.add(new EntityIota(candidate));
+                    }
+                }
+                stack.push(new ListIota(matches));
+            }
+        };
+    }
+
     /** Push the entity that initiated the current cast. */
     public static final ResourceLocation GET_CASTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_caster");
