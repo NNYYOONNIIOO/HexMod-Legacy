@@ -84,7 +84,7 @@ public final class ItemHexStaff extends Item {
             } catch (CastingException exception) {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
-                        "hexcasting.message.staff_error", exception.getMessage())));
+                        "hexcasting.message.staff_error", localizeError(exception.getMessage()))));
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, staff);
@@ -186,10 +186,17 @@ public final class ItemHexStaff extends Item {
         return tag;
     }
 
+    private static String localizeError(String message) {
+        if (message == null || message.isEmpty()) {
+            return I18n.translateToLocal("hexcasting.error.unknown");
+        }
+        String translated = I18n.translateToLocal(message);
+        return message.equals(translated) ? message : translated;
+    }
+
     private static String localizeAction(ResourceLocation id) {
         String key = "hexcasting.action." + id.getResourcePath();
         String translated = I18n.translateToLocal(key);
         return key.equals(translated) ? id.getResourcePath() : translated;
     }
 }
-

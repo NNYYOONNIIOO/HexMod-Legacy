@@ -1011,6 +1011,37 @@ public static final HexPattern BOOL_IF_PATTERN =
     }
 
     /** Raycast from an origin along a direction, returning a block position or Null. */
+    /** Break the block at a vector position and drop its contents. */
+    public static final ResourceLocation BREAK_BLOCK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "break_block");
+    public static final HexPattern BREAK_BLOCK_PATTERN =
+        pattern(HexDir.EAST, "qaqqqqq");
+    public static final HexAction BREAK_BLOCK = register(
+        BREAK_BLOCK_ID, BREAK_BLOCK_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.break_block_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.break_block_context");
+                }
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
+                    (int) Math.floor(position.x), (int) Math.floor(position.y),
+                    (int) Math.floor(position.z));
+                if (player.world.isBlockModifiable(player, blockPos)
+                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    player.world.destroyBlock(blockPos, true);
+                }
+            }
+        });
+
     public static final ResourceLocation RAYCAST_ID =
         new ResourceLocation(HexAPI.MOD_ID, "raycast");
     public static final HexPattern RAYCAST_PATTERN =
@@ -1437,7 +1468,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
