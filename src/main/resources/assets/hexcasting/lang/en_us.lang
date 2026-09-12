@@ -139,6 +139,7 @@ hexcasting.error.raycast_entity_context=Entity raycast requires a player casting
 hexcasting.error.raycast_entity_zero=Entity raycast direction cannot be zero.
 hexcasting.error.get_entity_context=Getting an entity requires a player casting context.
 hexcasting.error.halt_context=Halt requires an active casting VM.
+hexcasting.error.stack_underflow=Not enough Iotas on the casting stack.
 hexcasting.error.zone_entity_context=Finding entities requires a player casting context.
 hexcasting.error.zone_entity_radius=Entity search radius must be between 0 and 128 blocks.
 hexcasting.error.get_caster_context=Getting the caster requires a player casting context.

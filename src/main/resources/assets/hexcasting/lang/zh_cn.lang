@@ -1278,6 +1278,7 @@ hexcasting.error.raycast_entity_context=实体射线检测需要玩家施法上�
 hexcasting.error.raycast_entity_zero=实体射线检测方向不能为零。
 hexcasting.error.get_entity_context=获取实体需要玩家施法上下文。
 hexcasting.error.halt_context=停止动作需要活动的施法虚拟机。
+hexcasting.error.stack_underflow=施法栈中的 Iota 数量不足。
 hexcasting.error.zone_entity_context=获取区域实体需要玩家施法上下文。
 hexcasting.error.zone_entity_radius=实体搜索半径必须在 0 到 128 格之间。
 hexcasting.error.get_caster_context=获取施法者需要玩家施法上下文。
