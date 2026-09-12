@@ -107,12 +107,12 @@ public final class GuiHexStaff extends GuiScreen {
                 double scaledDistance = clamp(
                     1.0D - ((distance - HEX_SIZE) / (GUIDE_RADIUS * (double) HEX_SIZE)),
                     0.0D, 1.0D);
-                // Upstream passes scaledDistance*2 as the spot size and fades
-                // the RGB channels together with the alpha.
+                // Hex's guide spots are dynamic position-colour geometry.  Keep
+                // the source colour (0x64c8ff) and apply the same distance fade.
                 drawSpot(pixel[0], pixel[1], (float) (scaledDistance * 2.0D),
-                    lerp(scaledDistance, 0.40D, 0.50D),
-                    lerp(scaledDistance, 0.80D, 1.00D),
-                    lerp(scaledDistance, 0.70D, 0.90D),
+                    lerp(scaledDistance, 0.16D, 0.392D),
+                    lerp(scaledDistance, 0.34D, 0.784D),
+                    lerp(scaledDistance, 0.64D, 1.00D),
                     (float) scaledDistance);
             }
         }
@@ -124,17 +124,22 @@ public final class GuiHexStaff extends GuiScreen {
         if (visibility <= 0.01F) {
             return;
         }
-        float coreHalf = 1.25F + Math.min(2.5F, size * 0.9F);
-        float glowHalf = coreHalf + 2.0F + 2.5F * visibility;
-        drawQuad(x, y, glowHalf, color(red, green, blue, visibility * 0.22F));
-        drawQuad(x, y, coreHalf, color(red, green, blue, visibility * 0.86F));
-        drawQuad(x, y, Math.max(1.0F, coreHalf * 0.48F),
-            color(0.82D, 1.0D, 1.0D, visibility));
+        float coreRadius = 1.25F + Math.min(2.5F, size * 0.9F);
+        float glowRadius = coreRadius + 2.0F + 2.5F * visibility;
+        drawCircle(x, y, glowRadius,
+            color(red, green, blue, visibility * 0.30F),
+            color(red, green, blue, 0.0F));
+        drawCircle(x, y, coreRadius,
+            color(red, green, blue, visibility * 0.96F),
+            color(red, green, blue, visibility * 0.22F));
+        drawCircle(x, y, Math.max(1.0F, coreRadius * 0.40F),
+            color(0.82D, 1.0D, 1.0D, visibility),
+            color(0.82D, 1.0D, 1.0D, visibility * 0.20F));
     }
 
     private void drawExistingPaths() {
         for (DrawnPath path : drawnPaths) {
-            drawPath(path.points, 0x5038C8C8, 0xD078E8E8, 0xE0D8FFFF);
+            drawPath(path.points, 0x5064C8FF, 0xE064C8FF, 0xF064C8FF);
         }
     }
 
@@ -142,15 +147,15 @@ public final class GuiHexStaff extends GuiScreen {
         if (currentPoints.isEmpty()) {
             return;
         }
-        drawPath(currentPoints, 0x6040D8D8, 0xE090FFFF, 0xFFF0FFFF);
+        drawPath(currentPoints, 0x7064C8FF, 0xFF64C8FF, 0xFF64C8FF);
         if (drawing && current != null) {
             GridPoint hover = pxToCoord(mouseX, mouseY);
             if (!hover.equals(current) && isAdjacent(current, hover)
                 && !usedSpots.contains(hover)) {
                 drawSegment(coordToPx(current), coordToPx(hover),
-                    8.0F, 0x4038D8D8);
+                    8.0F, 0x7064C8FF);
                 drawSegment(coordToPx(current), coordToPx(hover),
-                    2.5F, 0xC0D8FFFF);
+                    2.5F, 0xFF64C8FF);
                 int[] pixel = coordToPx(hover);
                 drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.8F);
             }
@@ -206,18 +211,30 @@ public final class GuiHexStaff extends GuiScreen {
         tessellator.draw();
     }
 
-    private void drawQuad(float x, float y, float halfSize, int argb) {
-        int red = channel(argb, 16);
-        int green = channel(argb, 8);
-        int blue = channel(argb, 0);
-        int alpha = channel(argb, 24);
+    /** Hex renders spots as dynamic position-colour geometry, not a texture. */
+    private void drawCircle(float x, float y, float radius, int centerArgb, int edgeArgb) {
+        if (radius <= 0.0F) {
+            return;
+        }
+        int centerRed = channel(centerArgb, 16);
+        int centerGreen = channel(centerArgb, 8);
+        int centerBlue = channel(centerArgb, 0);
+        int centerAlpha = channel(centerArgb, 24);
+        int edgeRed = channel(edgeArgb, 16);
+        int edgeGreen = channel(edgeArgb, 8);
+        int edgeBlue = channel(edgeArgb, 0);
+        int edgeAlpha = channel(edgeArgb, 24);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        buffer.pos(x - halfSize, y - halfSize, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(x - halfSize, y + halfSize, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(x + halfSize, y + halfSize, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(x + halfSize, y - halfSize, 0).color(red, green, blue, alpha).endVertex();
+        buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x, y, 0).color(centerRed, centerGreen, centerBlue, centerAlpha).endVertex();
+        final int segments = 24;
+        for (int i = 0; i <= segments; i++) {
+            double angle = Math.PI * 2.0D * (double) i / (double) segments;
+            buffer.pos(x + (float) Math.cos(angle) * radius,
+                    y + (float) Math.sin(angle) * radius, 0)
+                .color(edgeRed, edgeGreen, edgeBlue, edgeAlpha).endVertex();
+        }
         tessellator.draw();
     }
 
@@ -519,4 +536,3 @@ public final class GuiHexStaff extends GuiScreen {
         }
     }
 }
-
