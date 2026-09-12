@@ -1,11 +1,14 @@
 package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
+import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
+import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemJewelerHammer;
@@ -140,6 +143,16 @@ public final class HexItems {
                 item = new ItemJewelerHammer();
             } else if (id.equals("sub_sandwich")) {
                 item = new ItemSubSandwich();
+            } else if (id.equals("amethyst_dust")) {
+                item = new ItemMediaMaterial(MediaConstants.DUST_UNIT, "amethyst_dust", 3000);
+            } else if (id.equals("charged_amethyst")) {
+                item = new ItemMediaMaterial(MediaConstants.CRYSTAL_UNIT, "charged_amethyst", 1000);
+            } else if (id.equals("quenched_allay_shard")) {
+                item = new ItemMediaMaterial(MediaConstants.SHARD_UNIT * 3L, "quenched_allay_shard", 800);
+            } else if (id.equals("lore_fragment")) {
+                item = new ItemKnowledgeFragment("lore_fragment");
+            } else if (id.equals("creative_unlocker")) {
+                item = new ItemKnowledgeFragment("creative_unlocker");
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll();
             } else if (id.contains("colorizer")) {
