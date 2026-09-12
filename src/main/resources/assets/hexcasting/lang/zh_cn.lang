@@ -1386,3 +1386,6 @@ hexcasting.error.sentinel_wrong_dimension=哨卫位于其他维度
 hexcasting.error.sentinel_vector=无法读取向量
 落雷目标超出范围。
 你不能在该位置召唤落雷。
+hexcasting.action.conjure_light=召唤光源
+hexcasting.action.compare_item/lenient=比较物品
+hexcasting.action.get_entity_height=实体高度

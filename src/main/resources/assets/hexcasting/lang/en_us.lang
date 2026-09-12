@@ -247,3 +247,6 @@ hexcasting.error.sentinel_wrong_dimension=The sentinel is in another dimension
 hexcasting.error.sentinel_vector=Unable to read a vector iota
 The lightning target is out of range.
 You cannot summon lightning at that location.
+hexcasting.action.conjure_light=Conjure Light
+hexcasting.action.compare_item/lenient=Compare Items
+hexcasting.action.get_entity_height=Entity Height

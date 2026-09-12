@@ -515,6 +515,31 @@ public static final HexPattern BOOL_IF_PATTERN =
         stack.push(new DoubleIota(value.y));
         stack.push(new DoubleIota(value.z));
     });
+    /** Coerce a vector to the nearest signed axial unit vector. */
+    public static final ResourceLocation COERCE_AXIAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "coerce_axial");
+    public static final HexPattern COERCE_AXIAL_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qqqqqaww");
+    public static final HexAction COERCE_AXIAL = register(COERCE_AXIAL_ID, COERCE_AXIAL_PATTERN, stack -> {
+        net.minecraft.util.math.Vec3d value = stack.pop(Vec3Iota.class).getValue();
+        double x = Math.abs(value.x);
+        double y = Math.abs(value.y);
+        double z = Math.abs(value.z);
+        if (x == 0.0D && y == 0.0D && z == 0.0D) {
+            throw new CastingException("hexcasting.error.coerce_axial_zero");
+        }
+        if (x >= y && x >= z) {
+            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                Math.copySign(1.0D, value.x), 0.0D, 0.0D)));
+        } else if (y >= z) {
+            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                0.0D, Math.copySign(1.0D, value.y), 0.0D)));
+        } else {
+            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                0.0D, 0.0D, Math.copySign(1.0D, value.z))));
+        }
+    });
+
     /** Find the first equal Iota in a list, or -1 when absent. */
     public static final ResourceLocation INDEX_OF_ID =
         new ResourceLocation(HexAPI.MOD_ID, "index_of");
@@ -772,7 +797,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final ResourceLocation FOR_EACH_ID =
         new ResourceLocation(HexAPI.MOD_ID, "for_each");
     public static final HexPattern FOR_EACH_PATTERN =
-        pattern(HexDir.NORTH_WEST, "qaeaqeqedqde");
+        pattern(HexDir.NORTH_EAST, "dadad");
     public static final HexAction FOR_EACH = register(FOR_EACH_ID, FOR_EACH_PATTERN,
         new at.petra_k.hexcasting.common.casting.ForEachAction());
 
@@ -1702,7 +1727,7 @@ throw new CastingException("hexcasting.error.get_caster_context");
 
     /** Return the height of an entity Iota in blocks. */
     public static final ResourceLocation ENTITY_HEIGHT_ID =
-        new ResourceLocation(HexAPI.MOD_ID, "entity_height");
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity_height");
     public static final HexPattern ENTITY_HEIGHT_PATTERN =
         pattern(HexDir.NORTH_EAST, "awq");
     public static final HexAction ENTITY_HEIGHT = register(
@@ -2203,6 +2228,13 @@ throw new CastingException("hexcasting.error.get_media_context");
         COMPARE_BLOCK_STRICT_ID, COMPARE_BLOCK_STRICT_PATTERN, compareBlockAction(true));
 
     /** Compare item identity, metadata, and NBT tags. */
+    public static final ResourceLocation COMPARE_ITEM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_item/lenient");
+    public static final HexPattern COMPARE_ITEM_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qaeaqeqedqde");
+    public static final HexAction COMPARE_ITEM = register(
+        COMPARE_ITEM_ID, COMPARE_ITEM_PATTERN, compareItemAction(false));
+
     public static final ResourceLocation COMPARE_ITEM_STRICT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "compare_item/strict");
     public static final HexPattern COMPARE_ITEM_STRICT_PATTERN =
@@ -2535,7 +2567,7 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final ResourceLocation CONJURE_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "conjure_block");
     public static final HexPattern CONJURE_BLOCK_PATTERN =
-        pattern(HexDir.NORTH_EAST, "qqd");
+        pattern(HexDir.NORTH_EAST, "qqa");
     public static final HexAction CONJURE_BLOCK = register(
         CONJURE_BLOCK_ID, CONJURE_BLOCK_PATTERN, new HexAction() {
             @Override
@@ -2564,6 +2596,32 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
                 if (!vm.getPlayer().world.isRemote && vm.getPlayer().world.isAirBlock(target)) {
                     vm.getPlayer().world.setBlockState(target, block.getState(), 3);
+                }
+            }
+        });
+
+    /** Conjure a temporary light-emitting block at a target position. */
+    public static final ResourceLocation CONJURE_LIGHT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "conjure_light");
+    public static final HexPattern CONJURE_LIGHT_PATTERN =
+        pattern(HexDir.NORTH_EAST, "qqd");
+    public static final HexAction CONJURE_LIGHT = register(
+        CONJURE_LIGHT_ID, CONJURE_LIGHT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.conjure_light_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.conjure_light_context");
+                }
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                if (!vm.getPlayer().world.isRemote && vm.getPlayer().world.isAirBlock(target)) {
+                    vm.getPlayer().world.setBlockState(
+                        target, net.minecraft.init.Blocks.GLOWSTONE.getDefaultState(), 3);
                 }
             }
         });
