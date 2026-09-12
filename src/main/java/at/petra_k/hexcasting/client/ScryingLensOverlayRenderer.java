@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
+import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.IProperty;
@@ -82,7 +83,7 @@ public final class ScryingLensOverlayRenderer {
 
         // BaublesEX keeps the same public API name as Baubles, but reflecting
         // it keeps this client class usable when the optional mod is absent.
-        return isWearingBaubleLens(player);
+        return BaublesExCompat.contains(player, ScryingLensOverlayRenderer::isLensStack);
     }
 
     private static boolean isLensStack(ItemStack stack) {

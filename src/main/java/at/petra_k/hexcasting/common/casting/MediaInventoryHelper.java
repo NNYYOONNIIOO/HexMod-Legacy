@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
+import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -33,7 +34,8 @@ public final class MediaInventoryHelper {
         // player list. Reflecting the small API keeps this bridge compatible
         // with both Baubles and BaublesEX without making the casting core
         // depend on a client-only implementation detail.
-        total = saturatingAdd(total, getBaublesMedia(player));
+        total = saturatingAdd(total, BaublesExCompat.getAvailableMedia(
+            player, MediaInventoryHelper::isMediaHolder, MediaInventoryHelper::getAvailable));
         return total;
     }
 
@@ -65,6 +67,11 @@ public final class MediaInventoryHelper {
             // remain fully functional if the handler API is unavailable.
         }
         return 0L;
+    }
+
+    private static boolean isMediaHolder(ItemStack stack) {
+        return stack != null && !stack.isEmpty()
+            && stack.getItem() instanceof MediaHolderItem;
     }
 
     private static long getAvailable(ItemStack stack) {
