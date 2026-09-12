@@ -31,7 +31,6 @@ import java.util.Set;
  * GuiSpellcasting/PatternRenderer flow for the 1.12.2 GuiScreen API.
  */
 public final class GuiHexStaff extends GuiScreen {
-    private static final int HEX_SIZE = 42;
     private static final int GUIDE_RADIUS = 3;
     private static final double SNAP_DISTANCE_FACTOR = 2.0D;
 
@@ -95,6 +94,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     private void drawGuideSpots(int mouseX, int mouseY) {
         GridPoint mouseCoord = pxToCoord(mouseX, mouseY);
+        double hexSize = hexSize();
         for (int q = -GUIDE_RADIUS; q <= GUIDE_RADIUS; q++) {
             for (int r = -GUIDE_RADIUS; r <= GUIDE_RADIUS; r++) {
                 if (hexDistance(q, r) > GUIDE_RADIUS) {
@@ -109,7 +109,7 @@ public final class GuiHexStaff extends GuiScreen {
                 double dy = pixel[1] - mouseY;
                 double distance = Math.sqrt(dx * dx + dy * dy);
                 double scaledDistance = clamp(
-                    1.0D - ((distance - HEX_SIZE) / (GUIDE_RADIUS * (double) HEX_SIZE)),
+                    1.0D - ((distance - hexSize) / (GUIDE_RADIUS * hexSize)),
                     0.0D, 1.0D);
                 // Hex's guide spots are dynamic position-colour geometry.  Keep
                 // the source colour (0x64c8ff) and apply the same distance fade.
@@ -538,7 +538,8 @@ public final class GuiHexStaff extends GuiScreen {
         int[] anchorPixel = coordToPx(current);
         double dx = mouseX - anchorPixel[0];
         double dy = mouseY - anchorPixel[1];
-        double snapDistance = HEX_SIZE * (double) HEX_SIZE * SNAP_DISTANCE_FACTOR;
+        double hexSize = hexSize();
+        double snapDistance = hexSize * hexSize * SNAP_DISTANCE_FACTOR;
         if (dx * dx + dy * dy < snapDistance) {
             return;
         }
@@ -769,10 +770,24 @@ public final class GuiHexStaff extends GuiScreen {
         workingPattern = null;
     }
 
+    /**
+     * Match GuiSpellcasting.hexSize(): the grid is sized from the available
+     * screen area instead of using a fixed pixel distance. This keeps the
+     * angular snap sectors, connection nodes, and preview path proportional on
+     * both small and large 1.12.2 windows.
+     */
+    private float hexSize() {
+        if (width <= 0 || height <= 0) {
+            return 42.0F;
+        }
+        return (float) Math.sqrt(width * (double) height / 512.0D);
+    }
+
     /** Exact axial-to-cube rounding, matching Hex's pixel-to-coordinate snap. */
     private GridPoint pxToCoord(int mouseX, int mouseY) {
-        double dx = (mouseX - width / 2.0D) / HEX_SIZE;
-        double r = (mouseY - height / 2.0D) / (HEX_SIZE * 0.866025403784D);
+        double hexSize = hexSize();
+        double dx = (mouseX - width / 2.0D) / hexSize;
+        double r = (mouseY - height / 2.0D) / (hexSize * 0.866025403784D);
         double q = dx - r * 0.5D;
         double cubeX = q;
         double cubeZ = r;
@@ -794,8 +809,9 @@ public final class GuiHexStaff extends GuiScreen {
     }
 
     private int[] coordToPx(GridPoint point) {
-        double x = width / 2.0D + (point.q + point.r * 0.5D) * HEX_SIZE;
-        double y = height / 2.0D + point.r * HEX_SIZE * 0.866025403784D;
+        double hexSize = hexSize();
+        double x = width / 2.0D + (point.q + point.r * 0.5D) * hexSize;
+        double y = height / 2.0D + point.r * hexSize * 0.866025403784D;
         return new int[] {(int) Math.round(x), (int) Math.round(y)};
     }
 
