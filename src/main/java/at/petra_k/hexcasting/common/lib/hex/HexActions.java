@@ -1120,6 +1120,57 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
+    /** Play a note at a vector position using an instrument and note number. */
+    public static final ResourceLocation BEEP_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "beep");
+    public static final HexPattern BEEP_PATTERN =
+        pattern(HexDir.WEST, "adaa");
+    public static final HexAction BEEP = register(
+        BEEP_ID, BEEP_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.beep_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.beep_context");
+                }
+                DoubleIota noteIota = stack.pop(DoubleIota.class);
+                DoubleIota instrumentIota = stack.pop(DoubleIota.class);
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                int note = (int) Math.rint(noteIota.getValue());
+                int instrument = (int) Math.rint(instrumentIota.getValue());
+                if (note < 0 || note > 24 || instrument < 0 || instrument > 9
+                    || Double.isNaN(noteIota.getValue()) || Double.isNaN(instrumentIota.getValue())) {
+                    throw new CastingException("hexcasting.error.beep_args");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+                net.minecraft.util.SoundEvent sound;
+                switch (instrument) {
+                    case 1: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASS; break;
+                    case 2: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASEDRUM; break;
+                    case 3: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_SNARE; break;
+                    case 4: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HAT; break;
+                    case 5: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_GUITAR; break;
+                    case 6: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_FLUTE; break;
+                    case 7: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BELL; break;
+                    case 8: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_CHIME; break;
+                    case 9: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_XYLOPHONE; break;
+                    default: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HARP; break;
+                }
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
+                    (int) Math.floor(position.x), (int) Math.floor(position.y),
+                    (int) Math.floor(position.z));
+                float pitch = (float) Math.pow(2.0D, (note - 12) / 12.0D);
+                player.world.playSound(null, blockPos, sound,
+                    net.minecraft.util.SoundCategory.RECORDS, 3.0F, pitch);
+            }
+        });
+
     public static final ResourceLocation BREAK_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "break_block");
     public static final HexPattern BREAK_BLOCK_PATTERN =
@@ -1577,7 +1628,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
