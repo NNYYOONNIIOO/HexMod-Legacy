@@ -1,5 +1,6 @@
 package com.samsthenerd.inline.api.data;
 
+import com.google.gson.JsonObject;
 import com.samsthenerd.inline.api.InlineData;
 import com.samsthenerd.inline.api.InlineDataType;
 import net.minecraft.entity.Entity;
@@ -15,6 +16,25 @@ public final class EntityInlineData implements InlineData<EntityInlineData> {
             @Override
             public ResourceLocation getId() {
                 return new ResourceLocation("inline", "entity");
+            }
+
+            @Override
+            public JsonObject serialize(EntityInlineData data) {
+                JsonObject result = new JsonObject();
+                result.addProperty("entity_type", data.getTypeId().toString());
+                if (data.getEntity() != null) {
+                    result.addProperty("uuid", data.getEntity().getUniqueID().toString());
+                }
+                return result;
+            }
+
+            @Override
+            public EntityInlineData deserialize(JsonObject data) {
+                if (!data.has("entity_type")) {
+                    throw new IllegalArgumentException("Entity Inline payload has no entity_type");
+                }
+                return new EntityInlineData(new ResourceLocation(
+                    data.get("entity_type").getAsString()));
             }
         };
 

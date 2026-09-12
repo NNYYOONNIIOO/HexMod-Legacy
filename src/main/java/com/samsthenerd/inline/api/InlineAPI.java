@@ -1,5 +1,7 @@
 package com.samsthenerd.inline.api;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -40,6 +42,41 @@ public final class InlineAPI {
 
     public static synchronized boolean hasDataType(ResourceLocation id) {
         return DATA_TYPES.containsKey(id);
+    }
+
+    public static synchronized InlineDataType<?> getDataType(ResourceLocation id) {
+        return DATA_TYPES.get(id);
+    }
+
+    /**
+     * Serializes an Inline payload using its registered type id. The type id
+     * is kept in the same object so the result can be sent through old Forge
+     * network and NBT bridges without a second registry field.
+     */
+    public static JsonObject serialize(InlineData<?> data) {
+        if (data == null) {
+            return null;
+        }
+        InlineDataType<?> type = data.getType();
+        JsonObject result = serializeRegistered(type, data);
+        if (result == null) {
+            result = new JsonObject();
+        }
+        result.addProperty("type", type.getId().toString());
+        return result;
+    }
+
+    /** Deserializes a payload previously produced by {@link #serialize}. */
+    public static InlineData<?> deserialize(JsonObject serialized) {
+        if (serialized == null || !serialized.has("type")) {
+            throw new IllegalArgumentException("Inline payload has no type id");
+        }
+        JsonElement typeElement = serialized.get("type");
+        InlineDataType<?> type = getDataType(new ResourceLocation(typeElement.getAsString()));
+        if (type == null) {
+            throw new IllegalArgumentException("Unknown Inline data type: " + typeElement.getAsString());
+        }
+        return deserializeRegistered(type, serialized);
     }
 
     public static synchronized boolean hasRenderer(Class<?> dataClass) {
@@ -154,6 +191,18 @@ public final class InlineAPI {
                                            InlineData<?> data,
                                            InlineRenderContext context) {
         return ((InlineRenderer) renderer).render(data, context);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static JsonObject serializeRegistered(InlineDataType<?> type,
+                                                   InlineData<?> data) {
+        return ((InlineDataType) type).serialize(data);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static InlineData<?> deserializeRegistered(InlineDataType<?> type,
+                                                       JsonObject data) {
+        return (InlineData<?>) ((InlineDataType) type).deserialize(data);
     }
 
     private static final class EntityContext {
