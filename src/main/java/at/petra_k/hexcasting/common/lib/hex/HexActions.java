@@ -2286,19 +2286,36 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
 
             @Override
-            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                if (vm == null || vm.getPlayer() == null) {
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null
+                    || vm.getPlayer().world == null || vm.getPlayer().world.isRemote) {
                     throw new CastingException("hexcasting.error.lightning_context");
                 }
-                net.minecraft.util.math.BlockPos position = blockPosition(
-                    stack.pop(Vec3Iota.class));
-                if (!vm.getPlayer().world.isRemote) {
-                    net.minecraft.entity.effect.EntityLightningBolt bolt =
-                        new net.minecraft.entity.effect.EntityLightningBolt(
-                            vm.getPlayer().world, position.getX() + 0.5D,
-                            position.getY(), position.getZ() + 0.5D, false);
-                    vm.getPlayer().world.addWeatherEffect(bolt);
+                net.minecraft.util.math.Vec3d target = stack.pop(Vec3Iota.class).getValue();
+                if (Double.isNaN(target.x) || Double.isInfinite(target.x)
+                    || Double.isNaN(target.y) || Double.isInfinite(target.y)
+                    || Double.isNaN(target.z) || Double.isInfinite(target.z)) {
+                    throw new CastingException("hexcasting.error.lightning_out_of_range");
                 }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                double dx = target.x - player.posX;
+                double dy = target.y - player.posY;
+                double dz = target.z - player.posZ;
+                if (dx * dx + dy * dy + dz * dz > 64.0D * 64.0D) {
+                    throw new CastingException("hexcasting.error.lightning_out_of_range");
+                }
+                net.minecraft.util.math.BlockPos blockPos =
+                    new net.minecraft.util.math.BlockPos(target.x, target.y, target.z);
+                if (!player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                    net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.lightning_forbidden");
+                }
+                vm.consumeMedia(3L * MediaConstants.SHARD_UNIT);
+                net.minecraft.entity.effect.EntityLightningBolt bolt =
+                    new net.minecraft.entity.effect.EntityLightningBolt(
+                        player.world, target.x, target.y, target.z, false);
+                player.world.addWeatherEffect(bolt);
             }
         });
 

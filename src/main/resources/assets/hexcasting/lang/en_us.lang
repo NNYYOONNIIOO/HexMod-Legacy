@@ -245,3 +245,5 @@ hexcasting.error.sentinel_context=Sentinel actions require a server-side caster
 hexcasting.error.sentinel_out_of_range=The sentinel position is out of range
 hexcasting.error.sentinel_wrong_dimension=The sentinel is in another dimension
 hexcasting.error.sentinel_vector=Unable to read a vector iota
+The lightning target is out of range.
+You cannot summon lightning at that location.

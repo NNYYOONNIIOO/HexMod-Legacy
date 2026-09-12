@@ -1384,3 +1384,5 @@ hexcasting.error.sentinel_context=哨卫法术只能在服务端施放
 hexcasting.error.sentinel_out_of_range=哨卫位置超出范围
 hexcasting.error.sentinel_wrong_dimension=哨卫位于其他维度
 hexcasting.error.sentinel_vector=无法读取向量
+落雷目标超出范围。
+你不能在该位置召唤落雷。
