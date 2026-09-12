@@ -1225,6 +1225,52 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
+    /** Create a non-flaming explosion at a vector position. */
+    public static final ResourceLocation EXPLODE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "explode");
+    public static final HexPattern EXPLODE_PATTERN =
+        pattern(HexDir.EAST, "aawaawaa");
+    public static final HexAction EXPLODE = register(
+        EXPLODE_ID, EXPLODE_PATTERN, explosionAction(false));
+
+    /** Create a flaming explosion at a vector position. */
+    public static final ResourceLocation EXPLODE_FIRE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "explode/fire");
+    public static final HexPattern EXPLODE_FIRE_PATTERN =
+        pattern(HexDir.EAST, "ddwddwdd");
+    public static final HexAction EXPLODE_FIRE = register(
+        EXPLODE_FIRE_ID, EXPLODE_FIRE_PATTERN, explosionAction(true));
+
+    private static HexAction explosionAction(final boolean fire) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.explode_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.explode_context");
+                }
+                DoubleIota strengthIota = stack.pop(DoubleIota.class);
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                double strength = strengthIota.getValue();
+                if (Double.isNaN(strength) || Double.isInfinite(strength)
+                    || strength < 0.0D || strength > 10.0D) {
+                    throw new CastingException("hexcasting.error.explode_args");
+                }
+                long mediaCost = (fire ? MediaConstants.DUST_UNIT : MediaConstants.DUST_UNIT / 100L)
+                    + Math.max(0L, (long) Math.floor(strength * 3.0D)) * MediaConstants.DUST_UNIT;
+                vm.consumeMedia(mediaCost);
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                player.world.newExplosion(player, position.x, position.y, position.z,
+                    (float) strength, fire, true);
+            }
+        };
+    }
+
     public static final ResourceLocation BREAK_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "break_block");
     public static final HexPattern BREAK_BLOCK_PATTERN =
@@ -1682,7 +1728,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
