@@ -4,6 +4,7 @@ item.hexcasting.battery.name=Media Battery
 hexcasting.action.get_caster=Get Caster
 hexcasting.action.entity_height=Entity Height
 hexcasting.action.raycast=Archer's Distillation
+hexcasting.action.raycast/axis=Compass Purification
 hexcasting.action.compare_entity=Compare Entity Types
 hexcasting.action.entity_pos/eye=Entity Eye Position
 hexcasting.action.entity_pos/foot=Entity Feet Position

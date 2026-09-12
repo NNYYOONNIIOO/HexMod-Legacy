@@ -1047,6 +1047,45 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
             }
         });
+    /** Return the hit block face normal as a vector, or Null when no block is hit. */
+    public static final ResourceLocation RAYCAST_AXIS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "raycast/axis");
+    public static final HexPattern RAYCAST_AXIS_PATTERN =
+        pattern(HexDir.EAST, "weddwaa");
+    public static final HexAction RAYCAST_AXIS = register(
+        RAYCAST_AXIS_ID, RAYCAST_AXIS_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("raycast/axis requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm.getPlayer() == null) {
+                    throw new CastingException("raycast/axis requires a player casting context");
+                }
+                Vec3Iota direction = stack.pop(Vec3Iota.class);
+                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d start = origin.getValue();
+                net.minecraft.util.math.Vec3d vector = direction.getValue();
+                if (vector.lengthVector() == 0.0D) {
+                    throw new CastingException("raycast/axis direction cannot be zero");
+                }
+                net.minecraft.util.math.Vec3d end = start.add(
+                    vector.normalize().scale(64.0D));
+                net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
+                    start, end, false, false, false);
+                if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
+                    || hit.sideHit == null) {
+                    stack.push(new NullIota());
+                } else {
+                    net.minecraft.util.EnumFacing face = hit.sideHit;
+                    stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                        face.getFrontOffsetX(), face.getFrontOffsetY(), face.getFrontOffsetZ())));
+                }
+            }
+        });
     /** Push the entity that initiated the current cast. */
     public static final ResourceLocation GET_CASTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_caster");
@@ -1238,9 +1277,9 @@ public static final HexPattern BOOL_IF_PATTERN =
             || EQUALITY == null || TYPE_EQUALITY == null || COERCE_TO_BOOL == null
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
-            || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || GET_CASTER == null
-            || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null || ENTITY_POS_FOOT == null
-            || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
+            || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
+            || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
+            || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
             || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
