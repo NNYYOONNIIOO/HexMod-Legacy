@@ -1261,8 +1261,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     || strength < 0.0D || strength > 10.0D) {
                     throw new CastingException("hexcasting.error.explode_args");
                 }
-                long mediaCost = (fire ? MediaConstants.DUST_UNIT : MediaConstants.DUST_UNIT / 100L)
-                    + Math.max(0L, (long) Math.floor(strength * 3.0D)) * MediaConstants.DUST_UNIT;
+                long mediaCost = (long) Math.ceil(MediaConstants.DUST_UNIT
+                    * (3.0D * strength + (fire ? 1.0D : 0.125D)));
                 vm.consumeMedia(mediaCost);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
                 player.world.newExplosion(player, position.x, position.y, position.z,
