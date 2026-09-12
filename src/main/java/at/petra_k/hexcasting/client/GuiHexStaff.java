@@ -14,6 +14,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
@@ -681,6 +683,9 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
         if (typedChar == 'c' || typedChar == 'C') {
+            if (mc != null && mc.player != null) {
+                ItemHexStaff.clearProgram(mc.player, mc.player.getHeldItem(hand));
+            }
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, (ResourceLocation) null));
             programIds.clear();
             programCount = 0;
@@ -702,6 +707,19 @@ public final class GuiHexStaff extends GuiScreen {
         for (GridPoint origin : savedOrigins) {
             originQ.add(origin.q);
             originR.add(origin.r);
+        }
+        if (mc != null && mc.player != null) {
+            NBTTagList snapshot = new NBTTagList();
+            for (int i = 0; i < savedPatterns.size(); i++) {
+                HexPattern pattern = savedPatterns.get(i);
+                GridPoint origin = i < savedOrigins.size()
+                    ? savedOrigins.get(i) : new GridPoint(0, 0);
+                NBTTagCompound entry = pattern.serializeToNBT();
+                entry.setInteger("origin_q", origin.q);
+                entry.setInteger("origin_r", origin.r);
+                snapshot.appendTag(entry);
+            }
+            ItemHexStaff.replaceProgram(mc.player, mc.player.getHeldItem(hand), snapshot);
         }
         PaucalAPI.sendToServer(new MsgStaffPatternC2S(
             hand, new ArrayList<>(savedPatterns), originQ, originR));

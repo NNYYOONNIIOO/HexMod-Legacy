@@ -174,7 +174,12 @@ public final class ItemHexStaff extends Item {
     public static void replaceProgram(EntityPlayer player, ItemStack staff,
                                       NBTTagList incoming) {
         replaceProgram(staff, incoming);
-        StaffProgramData.replace(player, incoming);
+        if (isStaff(staff) && staff.getTagCompound() != null) {
+            StaffProgramData.replace(player,
+                staff.getTagCompound().getTagList(KEY_PATTERN_PROGRAM, 10));
+        } else {
+            StaffProgramData.clear(player);
+        }
     }
 
     public static void clearProgram(ItemStack staff) {
