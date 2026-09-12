@@ -147,13 +147,33 @@ public final class ItemSpellbook extends Item {
             return;
         }
         NBTTagCompound tag = getOrCreateTag(stack);
-        NBTTagList pages = ensurePages(tag);
+        NBTTagList pages = tag.getTagList(KEY_PAGES, 8);
+        if (pages.tagCount() == 0) {
+            pages.appendTag(new NBTTagString(action.toString()));
+            tag.setTag(KEY_PAGES, pages);
+            tag.setInteger(KEY_ACTIVE, 0);
+            return;
+        }
+
         int active = getPageIndex(stack);
+        if (pages.tagCount() >= MAX_PAGES) {
+            NBTTagList replacement = new NBTTagList();
+            for (int i = 0; i < pages.tagCount(); i++) {
+                replacement.appendTag(new NBTTagString(i == active ? action.toString() : pages.getStringTagAt(i)));
+            }
+            tag.setTag(KEY_PAGES, replacement);
+            return;
+        }
+
         NBTTagList replacement = new NBTTagList();
         for (int i = 0; i < pages.tagCount(); i++) {
-            replacement.appendTag(new NBTTagString(i == active ? action.toString() : pages.getStringTagAt(i)));
+            replacement.appendTag(new NBTTagString(pages.getStringTagAt(i)));
+            if (i == active) {
+                replacement.appendTag(new NBTTagString(action.toString()));
+            }
         }
         tag.setTag(KEY_PAGES, replacement);
+        tag.setInteger(KEY_ACTIVE, Math.min(active + 1, MAX_PAGES - 1));
     }
 
     private static NBTTagList getPages(ItemStack stack) {
@@ -202,4 +222,3 @@ public final class ItemSpellbook extends Item {
         return key.equals(translated) ? id.getResourcePath() : translated;
     }
 }
-
