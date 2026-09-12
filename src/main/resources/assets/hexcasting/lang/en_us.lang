@@ -196,3 +196,4 @@ hexcasting.error.compare_item_context=This action requires a world-aware caster.
 hexcasting.error.compare_item_expected=Expected item Iotas or item-bearing entities.
 hexcasting.error.conjure_block_context=This action requires an active caster.
 hexcasting.error.conjure_block_expected=Expected a block Iota and a position.
+hexcasting.error.conjure_light_context=This action requires an active caster.

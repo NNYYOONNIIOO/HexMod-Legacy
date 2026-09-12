@@ -2603,6 +2603,33 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Conjure a temporary light-emitting block at a target position. */
+    public static final ResourceLocation CONJURE_LIGHT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "conjure_light");
+    public static final HexPattern CONJURE_LIGHT_PATTERN =
+        pattern(HexDir.NORTH_EAST, "qqd");
+    public static final HexAction CONJURE_LIGHT = register(
+        CONJURE_LIGHT_ID, CONJURE_LIGHT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.conjure_light_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.conjure_light_context");
+                }
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                if (!vm.getPlayer().world.isRemote
+                    && vm.getPlayer().world.isAirBlock(target)) {
+                    vm.getPlayer().world.setBlockState(target,
+                        net.minecraft.init.Blocks.GLOWSTONE.getDefaultState(), 3);
+                }
+            }
+        });
+
     private HexActions() {
     }
 
