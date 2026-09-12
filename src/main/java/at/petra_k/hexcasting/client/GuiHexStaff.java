@@ -28,9 +28,9 @@ import java.util.Map;
 public final class GuiHexStaff extends GuiScreen {
     private static final int CLEAR_BUTTON = 1;
     private static final int CLOSE_BUTTON = 2;
-    private static final int GRID_RADIUS = 5;
-    private static final int CELL = 34;
-    private static final int GRID_TOP = 64;
+    private static final int GRID_RADIUS = 1;
+    private static final int CELL = 36;
+    private static final int CENTER_Y_OFFSET = 2;
 
     private final EnumHand hand;
     private final List<GridPoint> points = new ArrayList<>();
@@ -45,12 +45,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     @Override
     public void initGui() {
-        buttonList.clear();
         refreshProgram();
-        buttonList.add(new GuiButton(CLEAR_BUTTON, width / 2 - 120, height - 34, 110, 20,
-            I18n.format("hexcasting.gui.staff.clear")));
-        buttonList.add(new GuiButton(CLOSE_BUTTON, width / 2 + 10, height - 34, 110, 20,
-            I18n.format("gui.done")));
     }
 
     @Override
@@ -60,31 +55,28 @@ public final class GuiHexStaff extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawDefaultBackground();
         int centerX = width / 2;
-        drawRect(18, 18, width - 18, height - 18, 0xD0101010);
-        drawCenteredString(fontRenderer, I18n.format("hexcasting.gui.staff.title"), centerX, 26, 0xFFFFFF);
-        drawCenteredString(fontRenderer, I18n.format("hexcasting.gui.staff.hint"), centerX, 42, 0xB0D0D0D0);
-
-        drawProgramSummary();
-        drawGrid(centerX);
+        int centerY = height / 2 + CENTER_Y_OFFSET;
+        drawGrid(centerX, centerY);
         if (!points.isEmpty()) {
-            drawPath(centerX, GRID_TOP);
+            drawPath(centerX, centerY);
         }
         if (!status.isEmpty()) {
-            drawCenteredString(fontRenderer, status, centerX, height - 55, 0xFFFFA0A0);
+            drawCenteredString(fontRenderer, status, centerX, height - 24, 0xFFFFD0D0);
         }
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
-    private void drawGrid(int centerX) {
+    private void drawGrid(int centerX, int centerY) {
         for (int q = -GRID_RADIUS; q <= GRID_RADIUS; q++) {
             for (int r = -GRID_RADIUS; r <= GRID_RADIUS; r++) {
                 if (Math.abs(q + r) > GRID_RADIUS) {
                     continue;
                 }
-                int[] px = toPixel(centerX, GRID_TOP, new GridPoint(q, r));
-                drawRect(px[0] - 3, px[1] - 3, px[0] + 4, px[1] + 4, 0xFF707070);
+                GridPoint point = new GridPoint(q, r);
+                int[] px = toPixel(centerX, centerY, point);
+                int color = points.contains(point) ? 0xFFF2FFFF : 0xD090E8E8;
+                drawRect(px[0] - 3, px[1] - 3, px[0] + 4, px[1] + 4, color);
             }
         }
     }
@@ -145,7 +137,7 @@ public final class GuiHexStaff extends GuiScreen {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (mouseButton != 0 || mouseY < GRID_TOP - 18 || mouseY > height - 45) {
+        if (mouseButton != 0) {
             return;
         }
         GridPoint start = nearestPoint(mouseX, mouseY);
@@ -237,7 +229,7 @@ public final class GuiHexStaff extends GuiScreen {
                     continue;
                 }
                 GridPoint candidate = new GridPoint(q, r);
-                int[] px = toPixel(width / 2, GRID_TOP, candidate);
+                int[] px = toPixel(width / 2, height / 2 + CENTER_Y_OFFSET, candidate);
                 double dx = mouseX - px[0];
                 double dy = mouseY - px[1];
                 double distance = dx * dx + dy * dy;
