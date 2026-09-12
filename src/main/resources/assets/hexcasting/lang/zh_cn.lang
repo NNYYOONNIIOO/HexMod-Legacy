@@ -1253,3 +1253,5 @@ hexcasting.page.interop.gravity.set=设置所给实体所受引力的主方向�
 hexcasting.page.interop.pehkui.1=我发现了改变实体大小，和得知它们相较原本究竟变了多少的方法。
 hexcasting.page.interop.pehkui.get=获取实体的大小倍数，也即当前大小和原本大小的比值。对大多数实体而言，此值为 1。
 hexcasting.page.interop.pehkui.set=设置实体的大小倍数，需传入一个与其原本大小的比值。消耗大约 1 个$(l:items/amethyst)$(item)紫水晶碎片/$。
+hexcasting.error.entity_unavailable=实体已不再存在。
+hexcasting.error.expected_finite_integer=需要有限的整数样式数值。

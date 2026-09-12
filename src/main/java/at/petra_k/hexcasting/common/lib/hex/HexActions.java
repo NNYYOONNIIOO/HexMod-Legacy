@@ -1685,7 +1685,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             net.minecraft.entity.Entity rightEntity = right.getEntity();
             net.minecraft.entity.Entity leftEntity = left.getEntity();
             if (rightEntity == null || leftEntity == null) {
-                throw new CastingException("The entity is no longer available");
+                throw new CastingException("hexcasting.error.entity_unavailable");
             }
             stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
         });
@@ -1755,7 +1755,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         }
         if (entity == null) {
-            throw new CastingException("The entity is no longer available");
+            throw new CastingException("hexcasting.error.entity_unavailable");
         }
         return entity;
     }
@@ -1767,7 +1767,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     private static int requireRoundedInteger(DoubleIota value) throws CastingException {
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw)) {
-            throw new CastingException("Expected a finite integer-like value but found " + raw);
+            throw new CastingException("hexcasting.error.expected_finite_integer");
         }
         long rounded = Math.round(raw);
         if (rounded <= Integer.MIN_VALUE) {

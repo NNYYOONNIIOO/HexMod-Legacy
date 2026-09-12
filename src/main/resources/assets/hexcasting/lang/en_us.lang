@@ -114,3 +114,5 @@ hexcasting.message.scroll_result=Hex Scroll [%s]: %s
 hexcasting.message.empty_stack=empty stack
 hexcasting.message.error=Hex Casting error: %s
 hexcasting.message.scroll_error=Hex scroll error: %s
+hexcasting.error.entity_unavailable=The entity is no longer available.
+hexcasting.error.expected_finite_integer=Expected a finite integer-like value.
