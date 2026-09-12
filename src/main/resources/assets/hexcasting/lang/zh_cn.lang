@@ -1437,3 +1437,5 @@ hexcasting.gui.staff.hint=在六向网格上绘制图案；绘制完成后会写
 hexcasting.gui.staff.clear=清除程序
 hexcasting.gui.staff.invalid=图案不能回头或重复经过线段
 hexcasting.gui.staff.unknown=未找到对应的已注册咒法图案
+hexcasting.message.lens_enabled=透镜已启用
+hexcasting.message.lens_disabled=透镜已停用

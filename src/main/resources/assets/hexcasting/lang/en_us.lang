@@ -310,3 +310,5 @@ hexcasting.gui.staff.hint=Draw a pattern on the six-direction grid to write it i
 hexcasting.gui.staff.clear=Clear program
 hexcasting.gui.staff.invalid=A pattern cannot backtrack or reuse a line
 hexcasting.gui.staff.unknown=No registered spell matches this pattern
+hexcasting.message.lens_enabled=Scrying lens enabled
+hexcasting.message.lens_disabled=Scrying lens disabled
