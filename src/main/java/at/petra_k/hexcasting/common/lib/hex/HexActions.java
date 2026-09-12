@@ -1032,6 +1032,20 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
+    /** Return the height of an entity Iota in blocks. */
+    public static final ResourceLocation ENTITY_HEIGHT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "entity_height");
+    public static final HexPattern ENTITY_HEIGHT_PATTERN =
+        pattern(HexDir.EAST, "wa");
+    public static final HexAction ENTITY_HEIGHT = register(
+        ENTITY_HEIGHT_ID, ENTITY_HEIGHT_PATTERN, stack -> {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = entityIota.getEntity();
+            if (entity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new DoubleIota(entity.height));
+        });
     /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
@@ -1078,7 +1092,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
             || REVERSE == null || LAST_N_LIST == null || GET_CASTER == null
-            || GET_MEDIA == null) {
+            || ENTITY_HEIGHT == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }

@@ -1,6 +1,8 @@
 item.hexcasting.focus.name=法术焦点
 item.hexcasting.scrying_lens.name=窥视透镜
 item.hexcasting.battery.name=媒质电池
+hexcasting.action.get_caster=获取施法者
+hexcasting.action.entity_height=实体高度
 hexcasting.tooltip.media=媒质：%s / %s
 item.hexcasting.pattern_scroll.name=图案卷轴
 hexcasting.book.name=Hex Casting
