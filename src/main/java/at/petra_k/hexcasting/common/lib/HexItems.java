@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.lib;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
@@ -117,6 +118,8 @@ public final class HexItems {
                 item = new ItemSpellbook();
             } else if (id.equals("ancient_cypher")) {
                 item = new ItemPackagedSpell();
+            } else if (id.equals("abacus")) {
+                item = new ItemAbacus();
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll();
             } else if (id.startsWith("staff/")) {
