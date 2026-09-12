@@ -36,6 +36,8 @@ public final class GuiHexStaff extends GuiScreen {
     private final EnumHand hand;
     private final List<ResourceLocation> programIds = new ArrayList<>();
     private final List<DrawnPath> drawnPaths = new ArrayList<>();
+    private final List<HexPattern> savedPatterns = new ArrayList<>();
+    private final List<GridPoint> savedOrigins = new ArrayList<>();
     private final Set<GridPoint> usedSpots = new HashSet<>();
     private final List<GridPoint> currentPoints = new ArrayList<>();
 
@@ -139,7 +141,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     private void drawExistingPaths() {
         for (DrawnPath path : drawnPaths) {
-            drawPath(path.points, 0xFF64C8FF, 0xFFF4FBFF, 0xFFFFFFFF);
+            drawPath(path.points, 0xFF64C8FF, 0xFFFECBE6, 0xFFFECBE6);
         }
     }
 
@@ -147,19 +149,21 @@ public final class GuiHexStaff extends GuiScreen {
         if (currentPoints.isEmpty()) {
             return;
         }
-        List<GridPoint> preview = new ArrayList<>(currentPoints);
-        if (drawing && current != null && !isClosedStroke()) {
-            GridPoint hover = pxToCoord(mouseX, mouseY);
-            if (!hover.equals(current) && isAdjacent(current, hover)
-                && (!usedSpots.contains(hover) || hover.equals(currentPoints.get(0)))) {
-                preview.add(hover);
-            }
-        }
-        drawPath(preview, 0xFF64C8FF, 0xFFF4FBFF, 0xFFFFFFFF);
+        // Hex renders the snapped path and the unsnapped cursor as one
+        // continuous preview. The cursor segment is important both for
+        // readable connections and for seeing the next snapped direction.
+        drawPath(currentPoints, 0xFF64C8FF, 0xFFFECBE6, 0xFFFECBE6,
+            mouseX, mouseY, drawing && current != null);
     }
 
     private void drawPath(List<GridPoint> points, int glowColor,
                           int lineColor, int nodeColor) {
+        drawPath(points, glowColor, lineColor, nodeColor, -1, -1, false);
+    }
+
+    private void drawPath(List<GridPoint> points, int glowColor,
+                          int lineColor, int nodeColor,
+                          int cursorX, int cursorY, boolean includeCursor) {
         if (points.isEmpty()) {
             return;
         }
@@ -168,6 +172,10 @@ public final class GuiHexStaff extends GuiScreen {
             int[] pixel = coordToPx(point);
             pixelPoints.add(new float[] {pixel[0], pixel[1]});
         }
+        int nodeCount = pixelPoints.size();
+        if (includeCursor) {
+            pixelPoints.add(new float[] {cursorX, cursorY});
+        }
         if (pixelPoints.size() > 1) {
             // RenderLib.drawPatternFromPoints expands segments with makeZappy
             // before the 5 px outer and 2 px inner drawLineSeq passes.
@@ -175,9 +183,9 @@ public final class GuiHexStaff extends GuiScreen {
             drawLineSequence(zappyPoints, 5.0F, glowColor, glowColor);
             drawLineSequence(zappyPoints, 2.0F, lineColor, lineColor);
         }
-        for (int i = 0; i < pixelPoints.size(); i++) {
+        for (int i = 0; i < nodeCount; i++) {
             float[] pixel = pixelPoints.get(i);
-            if (i == pixelPoints.size() - 1 && pixelPoints.size() > 1
+            if (i == nodeCount - 1 && nodeCount > 1
                 && samePixel(pixel, pixelPoints.get(0))) {
                 continue;
             }
@@ -503,21 +511,31 @@ public final class GuiHexStaff extends GuiScreen {
     }
 
     private void drawMove(int mouseX, int mouseY) {
-        if (!drawing || current == null || isClosedStroke()) {
+        if (!drawing || current == null) {
             return;
         }
         int[] anchorPixel = coordToPx(current);
         double dx = mouseX - anchorPixel[0];
         double dy = mouseY - anchorPixel[1];
-        GridPoint next = pxToCoord(mouseX, mouseY);
-        boolean closing = next.equals(currentPoints.get(0)) && currentPoints.size() > 2;
         double snapDistance = HEX_SIZE * (double) HEX_SIZE * SNAP_DISTANCE_FACTOR;
-        // The origin remains selectable inside the normal snap dead-zone so a
-        // closed stroke can record its final edge.
-        if (!closing && dx * dx + dy * dy < snapDistance) {
+        if (dx * dx + dy * dy < snapDistance) {
             return;
         }
-        if (next.equals(current) || !isAdjacent(current, next)) {
+
+        // Hex snaps the mouse vector into one of six angular sectors. Rounding
+        // the mouse position to an axial cell first changes direction at the
+        // sector boundaries and produces different patterns from Hex.
+        double normalizedAngle = Math.atan2(dy, dx) / (Math.PI * 2.0D);
+        normalizedAngle -= Math.floor(normalizedAngle);
+        int directionIndex = (int) Math.round(
+            normalizedAngle * HexDir.values().length + 1.0D)
+            % HexDir.values().length;
+        if (directionIndex < 0) {
+            directionIndex += HexDir.values().length;
+        }
+        HexDir direction = HexDir.values()[directionIndex];
+        GridPoint next = current.add(direction);
+        if (usedSpots.contains(next)) {
             return;
         }
         appendSnappedPoint(next);
@@ -528,14 +546,6 @@ public final class GuiHexStaff extends GuiScreen {
         super.mouseReleased(mouseX, mouseY, state);
         if (state != 0 || !drawing) {
             return;
-        }
-        // GuiSpellcasting commits the final snapped point on release. Returning
-        // to the active stroke's origin is a closing edge, not a backtrack.
-        if (workingPattern != null && current != null && !isClosedStroke()) {
-            GridPoint releasePoint = pxToCoord(mouseX, mouseY);
-            if (!releasePoint.equals(current) && isAdjacent(current, releasePoint)) {
-                appendSnappedPoint(releasePoint);
-            }
         }
         drawing = false;
         if (workingPattern == null || currentPoints.size() < 2) {
@@ -549,16 +559,17 @@ public final class GuiHexStaff extends GuiScreen {
         }
 
         GridPoint origin = currentPoints.get(0);
-        PaucalAPI.sendToServer(new MsgStaffPatternC2S(
-            hand, workingPattern, origin.q, origin.r));
+        HexPattern submittedPattern = workingPattern;
+        savedPatterns.add(submittedPattern);
+        savedOrigins.add(origin);
+        sendProgramSnapshot();
         HexActionRegistry.bootstrap();
-        HexAction action = HexActionRegistry.get(workingPattern);
+        HexAction action = HexActionRegistry.get(submittedPattern);
         ResourceLocation id = action == null ? null : HexActionRegistry.idFor(action);
         if (id != null) {
             programIds.add(id);
         }
         programCount++;
-        HexPattern submittedPattern = workingPattern;
         drawnPaths.add(new DrawnPath(submittedPattern,
             new ArrayList<>(currentPoints), id));
         usedSpots.addAll(currentPoints);
@@ -651,10 +662,12 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
         if (typedChar == 'c' || typedChar == 'C') {
-            PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, null));
+            PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, (ResourceLocation) null));
             programIds.clear();
             programCount = 0;
             drawnPaths.clear();
+            savedPatterns.clear();
+            savedOrigins.clear();
             usedSpots.clear();
             resetWorkingPath();
             drawing = false;
@@ -664,11 +677,24 @@ public final class GuiHexStaff extends GuiScreen {
         super.keyTyped(typedChar, keyCode);
     }
 
+    private void sendProgramSnapshot() {
+        List<Integer> originQ = new ArrayList<>();
+        List<Integer> originR = new ArrayList<>();
+        for (GridPoint origin : savedOrigins) {
+            originQ.add(origin.q);
+            originR.add(origin.r);
+        }
+        PaucalAPI.sendToServer(new MsgStaffPatternC2S(
+            hand, new ArrayList<>(savedPatterns), originQ, originR));
+    }
+
     private void refreshProgram() {
         HexActionRegistry.bootstrap();
         programIds.clear();
         programCount = 0;
         drawnPaths.clear();
+        savedPatterns.clear();
+        savedOrigins.clear();
         usedSpots.clear();
         if (mc == null || mc.player == null) {
             return;
@@ -681,6 +707,8 @@ public final class GuiHexStaff extends GuiScreen {
                 programIds.add(id);
             }
             GridPoint origin = new GridPoint(entry.getOriginQ(), entry.getOriginR());
+            savedPatterns.add(entry.getPattern());
+            savedOrigins.add(origin);
             List<GridPoint> points = patternPoints(entry.getPattern(), origin);
             drawnPaths.add(new DrawnPath(entry.getPattern(), points, id));
             usedSpots.addAll(points);

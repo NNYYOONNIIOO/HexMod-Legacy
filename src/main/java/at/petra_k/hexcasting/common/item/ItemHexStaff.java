@@ -137,6 +137,32 @@ public final class ItemHexStaff extends Item {
         return true;
     }
 
+    /** Replace the complete spell layout sent by the staff GUI. */
+    public static void replaceProgram(ItemStack staff, NBTTagList incoming) {
+        if (!isStaff(staff)) {
+            return;
+        }
+        NBTTagList normalized = new NBTTagList();
+        if (incoming != null) {
+            int limit = Math.min(incoming.tagCount(), MAX_PROGRAM_SIZE);
+            for (int i = 0; i < limit; i++) {
+                try {
+                    NBTTagCompound raw = incoming.getCompoundTagAt(i);
+                    HexPattern pattern = HexPattern.fromNBT(raw);
+                    NBTTagCompound entry = pattern.serializeToNBT();
+                    entry.setInteger(KEY_ORIGIN_Q, raw.getInteger(KEY_ORIGIN_Q));
+                    entry.setInteger(KEY_ORIGIN_R, raw.getInteger(KEY_ORIGIN_R));
+                    normalized.appendTag(entry);
+                } catch (RuntimeException ignored) {
+                    // Ignore only malformed entries in the submitted snapshot.
+                }
+            }
+        }
+        NBTTagCompound tag = getOrCreateTag(staff);
+        tag.removeTag(KEY_PROGRAM);
+        tag.setTag(KEY_PATTERN_PROGRAM, normalized);
+    }
+
     public static void clearProgram(ItemStack staff) {
         if (!isStaff(staff)) {
             return;
