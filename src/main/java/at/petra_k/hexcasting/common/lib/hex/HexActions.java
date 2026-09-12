@@ -2346,6 +2346,63 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
     });
 
+    /** Place one block from the player's inventory at a replaceable position. */
+    public static final ResourceLocation PLACE_BLOCK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "place_block");
+    public static final HexPattern PLACE_BLOCK_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "eeeeede");
+    public static final HexAction PLACE_BLOCK = register(
+        PLACE_BLOCK_ID, PLACE_BLOCK_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.place_block_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.place_block_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.BlockPos position = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                if (player.world.isRemote) {
+                    return;
+                }
+                if (!player.world.getBlockState(position).getBlock()
+                    .isReplaceable(player.world, position)) {
+                    throw new CastingException("hexcasting.error.place_block_target");
+                }
+                int slot = findPlaceableBlockSlot(player);
+                if (slot < 0) {
+                    throw new CastingException("hexcasting.error.place_block_item");
+                }
+                net.minecraft.item.ItemStack source = player.inventory.getStackInSlot(slot);
+                if (source == null || source.isEmpty()
+                    || !(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
+                    throw new CastingException("hexcasting.error.place_block_item");
+                }
+                net.minecraft.item.ItemStack previousMain = player.getHeldItemMainhand();
+                net.minecraft.item.ItemStack useStack = source.copy();
+                useStack.setCount(1);
+                net.minecraft.util.EnumActionResult result;
+                player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, useStack);
+                try {
+                    result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
+                        player, player.world, position, net.minecraft.util.EnumHand.MAIN_HAND,
+                        net.minecraft.util.EnumFacing.UP, 0.5F, 0.5F, 0.5F);
+                } finally {
+                    player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, previousMain);
+                }
+                if (result != net.minecraft.util.EnumActionResult.SUCCESS) {
+                    throw new CastingException("hexcasting.error.place_block_failed");
+                }
+                if (!player.capabilities.isCreativeMode) {
+                    source.shrink(1);
+                }
+            }
+        });
+
     private HexActions() {
     }
 
@@ -2441,6 +2498,18 @@ throw new CastingException("hexcasting.error.get_media_context");
                 ? player.getHeldItemOffhand().copy() : main.copy();
         }
         throw new CastingException("hexcasting.error.compare_item_expected");
+    }
+
+    private static int findPlaceableBlockSlot(
+        net.minecraft.entity.player.EntityPlayer player) {
+        for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
+            net.minecraft.item.ItemStack candidate = player.inventory.getStackInSlot(slot);
+            if (candidate != null && !candidate.isEmpty()
+                && candidate.getItem() instanceof net.minecraft.item.ItemBlock) {
+                return slot;
+            }
+        }
+        return -1;
     }
 
     public static void touch() {
