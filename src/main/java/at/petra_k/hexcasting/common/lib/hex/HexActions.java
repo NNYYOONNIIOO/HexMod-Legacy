@@ -1012,6 +1012,74 @@ public static final HexPattern BOOL_IF_PATTERN =
 
     /** Raycast from an origin along a direction, returning a block position or Null. */
     /** Break the block at a vector position and drop its contents. */
+    /** Ignite an air block at a vector position. */
+    public static final ResourceLocation IGNITE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "ignite");
+    public static final HexPattern IGNITE_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "aaqawawa");
+    public static final HexAction IGNITE = register(
+        IGNITE_ID, IGNITE_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.ignite_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.ignite_context");
+                }
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
+                    (int) Math.floor(position.x), (int) Math.floor(position.y),
+                    (int) Math.floor(position.z));
+                if (player.world.isAirBlock(blockPos)
+                    && player.world.isBlockModifiable(player, blockPos)
+                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    vm.consumeMedia(MediaConstants.DUST_UNIT);
+                    player.world.setBlockState(blockPos,
+                        net.minecraft.init.Blocks.FIRE.getDefaultState(), 3);
+                }
+            }
+        });
+
+    /** Extinguish a fire block at a vector position. */
+    public static final ResourceLocation EXTINGUISH_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "extinguish");
+    public static final HexPattern EXTINGUISH_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "ddedwdwd");
+    public static final HexAction EXTINGUISH = register(
+        EXTINGUISH_ID, EXTINGUISH_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.extinguish_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.extinguish_context");
+                }
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
+                    (int) Math.floor(position.x), (int) Math.floor(position.y),
+                    (int) Math.floor(position.z));
+                if (player.world.getBlockState(blockPos).getBlock()
+                    == net.minecraft.init.Blocks.FIRE
+                    && player.world.isBlockModifiable(player, blockPos)
+                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+                    player.world.setBlockToAir(blockPos);
+                }
+            }
+        });
+
     public static final ResourceLocation BREAK_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "break_block");
     public static final HexPattern BREAK_BLOCK_PATTERN =
@@ -1469,7 +1537,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
