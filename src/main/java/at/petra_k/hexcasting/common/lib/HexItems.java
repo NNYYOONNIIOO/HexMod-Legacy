@@ -55,6 +55,83 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".pattern_scroll")
         .setCreativeTab(HexCreativeTab.HEX);
 
+
+    /** Generic item registrations for content whose specialized behavior is ported later. */
+    private static final String[] EXTRA_ITEM_IDS = new String[] {
+        "amethyst_dust",
+        "charged_amethyst",
+        "quenched_allay_shard",
+        "staff/oak",
+        "staff/spruce",
+        "staff/birch",
+        "staff/jungle",
+        "staff/acacia",
+        "staff/dark_oak",
+        "staff/crimson",
+        "staff/warped",
+        "staff/mangrove",
+        "staff/cherry",
+        "staff/bamboo",
+        "staff/edified",
+        "staff/quenched",
+        "staff/mindsplice",
+        "lens",
+        "abacus",
+        "thought_knot",
+        "spellbook",
+        "ancient_cypher",
+        "jeweler_hammer",
+        "scroll_small",
+        "scroll_medium",
+        "scroll",
+        "uuid_colorizer",
+        "default_colorizer",
+        "ancient_colorizer",
+        "sub_sandwich",
+        "lore_fragment",
+        "creative_unlocker",
+        "dye_colorizer_white",
+        "dye_colorizer_orange",
+        "dye_colorizer_magenta",
+        "dye_colorizer_light_blue",
+        "dye_colorizer_yellow",
+        "dye_colorizer_lime",
+        "dye_colorizer_pink",
+        "dye_colorizer_gray",
+        "dye_colorizer_light_gray",
+        "dye_colorizer_cyan",
+        "dye_colorizer_purple",
+        "dye_colorizer_blue",
+        "dye_colorizer_brown",
+        "dye_colorizer_green",
+        "dye_colorizer_red",
+        "dye_colorizer_black"
+    };
+    public static final java.util.Map<String, Item> EXTRA_ITEMS = new java.util.LinkedHashMap<>();
+
+    static {
+        for (String id : EXTRA_ITEM_IDS) {
+            Item item = id.startsWith("staff/") ? new ItemHexStaff() : new Item();
+            EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
+                .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
+                .setCreativeTab(HexCreativeTab.HEX));
+        }
+    }
+
+    public static java.util.List<Item> allItems() {
+        java.util.List<Item> items = new java.util.ArrayList<>();
+        items.add(FOCUS);
+        items.add(STAFF);
+        items.add(SCRYING_LENS);
+        items.add(BATTERY);
+        items.add(CYPHER);
+        items.add(TRINKET);
+        items.add(ARTIFACT);
+        items.add(PATTERN_SCROLL);
+        items.addAll(EXTRA_ITEMS.values());
+        return items;
+    }
+
     private HexItems() {
     }
 
@@ -68,5 +145,6 @@ public final class HexItems {
         event.getRegistry().register(TRINKET);
         event.getRegistry().register(ARTIFACT);
         event.getRegistry().register(PATTERN_SCROLL);
+        EXTRA_ITEMS.values().forEach(event.getRegistry()::register);
     }
 }

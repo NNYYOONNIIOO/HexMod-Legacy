@@ -30,6 +30,26 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 public final class ItemPatternScroll extends Item {
     private static final String KEY_ACTION = "action";
 
+    private static final java.util.Set<String> CREATIVE_SCROLL_IDS =
+        new java.util.HashSet<>(java.util.Arrays.asList(
+            "brainsweep",
+            "craft/battery",
+            "create_lava",
+            "dispel_rain",
+            "flight",
+            "hexcasting/tags/action",
+            "lightning",
+            "potion/absorption",
+            "potion/haste",
+            "potion/night_vision",
+            "potion/regeneration",
+            "potion/strength",
+            "sentinel/create/great",
+            "summon_rain",
+            "teleport/great"
+        ));
+
+
     public ItemPatternScroll() {
         setMaxStackSize(1);
     }
@@ -113,6 +133,9 @@ public final class ItemPatternScroll extends Item {
         }
         HexActionRegistry.bootstrap();
         for (ResourceLocation id : HexActionRegistry.byId().keySet()) {
+            if (!CREATIVE_SCROLL_IDS.contains(id.getResourcePath())) {
+                continue;
+            }
             ItemStack scroll = new ItemStack(this);
             setActionId(scroll, id);
             items.add(scroll);

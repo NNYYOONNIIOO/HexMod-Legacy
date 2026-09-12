@@ -2,6 +2,8 @@ package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.lib.HexBlocks;
+import net.minecraft.item.Item;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -49,5 +51,18 @@ public final class HexItemModels {
             0,
             new ModelResourceLocation(new ResourceLocation(HexAPI.MOD_ID, "patchouli_book"), "inventory")
         );
+
+        for (Item item : HexItems.allItems()) {
+            if (item.getRegistryName() != null) {
+                ModelLoader.setCustomModelResourceLocation(
+                    item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+            }
+        }
+        for (Item item : HexBlocks.blockItems()) {
+            if (item.getRegistryName() != null) {
+                ModelLoader.setCustomModelResourceLocation(
+                    item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+            }
+        }
     }
 }
