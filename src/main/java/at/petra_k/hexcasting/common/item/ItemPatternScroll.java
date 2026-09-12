@@ -40,6 +40,24 @@ public final class ItemPatternScroll extends Item {
         if (!world.isRemote) {
             HexActionRegistry.bootstrap();
             ResourceLocation current = getActionId(stack);
+            if (!player.isSneaking() && ItemHexStaff.isStaff(player.getHeldItemOffhand())) {
+                boolean added = ItemHexStaff.appendAction(
+                    player.getHeldItemOffhand(), current);
+                if (added) {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocalFormatted(
+                            "hexcasting.message.program_added",
+                            localizeAction(current),
+                            ItemHexStaff.getProgramSize(player.getHeldItemOffhand()),
+                            ItemHexStaff.MAX_PROGRAM_SIZE)));
+                } else {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocalFormatted(
+                            "hexcasting.message.program_full",
+                            ItemHexStaff.MAX_PROGRAM_SIZE)));
+                }
+                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            }
             if (player.isSneaking()) {
                 ResourceLocation next = HexActionRegistry.nextId(current);
                 if (next != null) {
@@ -117,10 +135,12 @@ public final class ItemPatternScroll extends Item {
     @Override
     public String getItemStackDisplayName(ItemStack stack) {
         ResourceLocation id = getActionId(stack);
-        return super.getItemStackDisplayName(stack) + " [" + id.getResourcePath() + "]";
+        return I18n.translateToLocalFormatted(
+            "hexcasting.item.pattern_scroll.variant",
+            super.getItemStackDisplayName(stack), localizeAction(id));
     }
 
-    private static ResourceLocation getActionId(ItemStack stack) {
+    public static ResourceLocation getActionId(ItemStack stack) {
         ResourceLocation fallback = HexActions.PUSH_ONE_ID;
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_ACTION, 8)) {

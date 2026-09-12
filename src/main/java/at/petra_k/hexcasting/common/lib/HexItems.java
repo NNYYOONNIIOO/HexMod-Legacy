@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
+import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
@@ -16,6 +17,11 @@ public final class HexItems {
     public static final ItemHexFocus FOCUS = (ItemHexFocus) new ItemHexFocus()
         .setRegistryName(HexAPI.MOD_ID, "focus")
         .setUnlocalizedName(HexAPI.MOD_ID + ".focus")
+        .setCreativeTab(HexCreativeTab.HEX);
+
+    public static final ItemHexStaff STAFF = (ItemHexStaff) new ItemHexStaff()
+        .setRegistryName(HexAPI.MOD_ID, "staff")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".staff")
         .setCreativeTab(HexCreativeTab.HEX);
 
     public static final ItemScryingLens SCRYING_LENS = (ItemScryingLens) new ItemScryingLens()
@@ -39,6 +45,7 @@ public final class HexItems {
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(FOCUS);
+        event.getRegistry().register(STAFF);
         event.getRegistry().register(SCRYING_LENS);
         event.getRegistry().register(BATTERY);
         event.getRegistry().register(PATTERN_SCROLL);

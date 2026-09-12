@@ -25,6 +25,11 @@ public final class HexItemModels {
             new ModelResourceLocation(HexItems.FOCUS.getRegistryName(), "inventory")
         );
         ModelLoader.setCustomModelResourceLocation(
+            HexItems.STAFF,
+            0,
+            new ModelResourceLocation(HexItems.STAFF.getRegistryName(), "inventory")
+        );
+        ModelLoader.setCustomModelResourceLocation(
             HexItems.SCRYING_LENS,
             0,
             new ModelResourceLocation(HexItems.SCRYING_LENS.getRegistryName(), "inventory")
