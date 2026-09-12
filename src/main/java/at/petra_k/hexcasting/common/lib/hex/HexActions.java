@@ -1149,6 +1149,100 @@ public static final HexPattern BOOL_IF_PATTERN =
                 stack.push(nearest == null ? new NullIota() : new EntityIota(nearest));
             }
         });
+    /** Select the nearest entity centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity");
+    public static final HexPattern GET_ENTITY_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqa");
+    public static final HexAction GET_ENTITY = register(
+        GET_ENTITY_ID, GET_ENTITY_PATTERN, entityAtAction(entity -> true));
+
+    /** Select the nearest animal centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_ANIMAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity/animal");
+    public static final HexPattern GET_ENTITY_ANIMAL_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawa");
+    public static final HexAction GET_ENTITY_ANIMAL = register(
+        GET_ENTITY_ANIMAL_ID, GET_ENTITY_ANIMAL_PATTERN,
+        entityAtAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal));
+
+    /** Select the nearest monster centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_MONSTER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity/monster");
+    public static final HexPattern GET_ENTITY_MONSTER_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawq");
+    public static final HexAction GET_ENTITY_MONSTER = register(
+        GET_ENTITY_MONSTER_ID, GET_ENTITY_MONSTER_PATTERN,
+        entityAtAction(entity -> entity instanceof net.minecraft.entity.monster.IMob));
+
+    /** Select the nearest dropped item centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_ITEM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity/item");
+    public static final HexPattern GET_ENTITY_ITEM_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqaaww");
+    public static final HexAction GET_ENTITY_ITEM = register(
+        GET_ENTITY_ITEM_ID, GET_ENTITY_ITEM_PATTERN,
+        entityAtAction(entity -> entity instanceof net.minecraft.entity.item.EntityItem));
+
+    /** Select the nearest player centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_PLAYER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity/player");
+    public static final HexPattern GET_ENTITY_PLAYER_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawe");
+    public static final HexAction GET_ENTITY_PLAYER = register(
+        GET_ENTITY_PLAYER_ID, GET_ENTITY_PLAYER_PATTERN,
+        entityAtAction(entity -> entity instanceof net.minecraft.entity.player.EntityPlayer));
+
+    /** Select the nearest living entity centered on a position Iota. */
+    public static final ResourceLocation GET_ENTITY_LIVING_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity/living");
+    public static final HexPattern GET_ENTITY_LIVING_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawd");
+    public static final HexAction GET_ENTITY_LIVING = register(
+        GET_ENTITY_LIVING_ID, GET_ENTITY_LIVING_PATTERN,
+        entityAtAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase));
+
+    private static HexAction entityAtAction(
+        final java.util.function.Predicate<net.minecraft.entity.Entity> predicate) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("get_entity requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("get_entity requires a player casting context");
+                }
+                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                net.minecraft.util.math.AxisAlignedBB area =
+                    new net.minecraft.util.math.AxisAlignedBB(
+                        position.x - 0.5D, position.y - 0.5D, position.z - 0.5D,
+                        position.x + 0.5D, position.y + 0.5D, position.z + 0.5D);
+                net.minecraft.entity.Entity nearest = null;
+                double nearestDistance = Double.MAX_VALUE;
+                for (net.minecraft.entity.Entity candidate : player.world.getEntitiesWithinAABB(
+                    net.minecraft.entity.Entity.class, area)) {
+                    if (candidate == null || candidate.isDead || !predicate.test(candidate)) {
+                        continue;
+                    }
+                    double dx = candidate.posX - position.x;
+                    double dy = candidate.posY - position.y;
+                    double dz = candidate.posZ - position.z;
+                    double distance = dx * dx + dy * dy + dz * dz;
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearest = candidate;
+                    }
+                }
+                stack.push(nearest == null ? new NullIota() : new EntityIota(nearest));
+            }
+        };
+    }
+
     /** Push the entity that initiated the current cast. */
     public static final ResourceLocation GET_CASTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_caster");
