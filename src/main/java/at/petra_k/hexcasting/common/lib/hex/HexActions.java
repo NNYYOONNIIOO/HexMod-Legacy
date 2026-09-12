@@ -1942,6 +1942,33 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Apply bonemeal to a sapling or growable block at a position. */
+    public static final ResourceLocation EDIFY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "edify");
+    public static final HexPattern EDIFY_PATTERN =
+        pattern(HexDir.NORTH_EAST, "wqaqwd");
+    public static final HexAction EDIFY = register(EDIFY_ID, EDIFY_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.edify_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+            if (player == null) {
+                throw new CastingException("hexcasting.error.edify_context");
+            }
+            net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+            if (!player.world.isRemote) {
+                net.minecraft.item.ItemStack boneMeal = new net.minecraft.item.ItemStack(
+                    net.minecraft.init.Items.DYE, 1, 15);
+                net.minecraft.item.ItemDye.applyBonemeal(
+                    boneMeal, player.world, position, player, net.minecraft.util.EnumHand.MAIN_HAND);
+            }
+        }
+    });
+
     private HexActions() {
     }
 
