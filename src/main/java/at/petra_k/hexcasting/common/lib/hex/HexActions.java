@@ -2817,6 +2817,69 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Recipe-driven brainsweep action ported from the upstream registry. */
+    public static final ResourceLocation BRAINSWEEP_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "brainsweep");
+    public static final HexPattern BRAINSWEEP_PATTERN =
+        pattern(HexDir.NORTH_EAST, "qeqwqwqwqwqeqaeqeaqeqaeqaqded");
+    public static final HexAction BRAINSWEEP = register(
+        BRAINSWEEP_ID, BRAINSWEEP_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.brainsweep_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.brainsweep_context");
+                }
+                Iota first = stack.pop();
+                Iota second = stack.pop();
+                EntityIota entityIota;
+                Vec3Iota positionIota;
+                if (first instanceof EntityIota && second instanceof Vec3Iota) {
+                    entityIota = (EntityIota) first;
+                    positionIota = (Vec3Iota) second;
+                } else if (second instanceof EntityIota && first instanceof Vec3Iota) {
+                    entityIota = (EntityIota) second;
+                    positionIota = (Vec3Iota) first;
+                } else {
+                    throw new CastingException("hexcasting.error.brainsweep_expected");
+                }
+                net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+                if (!(entity instanceof net.minecraft.entity.EntityLiving)) {
+                    throw new CastingException("hexcasting.error.brainsweep_mob");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
+                if (player.getDistanceSq(entity) > 32.0D * 32.0D
+                    || player.getDistanceSq(target.getX() + 0.5D, target.getY() + 0.5D,
+                        target.getZ() + 0.5D) > 32.0D * 32.0D) {
+                    throw new CastingException("hexcasting.error.brainsweep_range");
+                }
+                if (!player.world.isBlockModifiable(player, target)) {
+                    throw new CastingException("hexcasting.error.brainsweep_location");
+                }
+                net.minecraft.nbt.NBTTagCompound entityData = entity.getEntityData();
+                if (entityData.getBoolean("hexcasting.brainswept")) {
+                    throw new CastingException("hexcasting.error.brainsweep_already");
+                }
+                net.minecraft.block.state.IBlockState input = player.world.getBlockState(target);
+                BrainsweepMatch match = brainsweepMatch(input, entity);
+                if (match == null || match.result == null) {
+                    throw new CastingException("hexcasting.error.brainsweep_recipe");
+                }
+                vm.consumeMedia(match.mediaCost);
+                if (!player.world.isRemote) {
+                    player.world.setBlockState(target, match.result, 3);
+                    entityData.setBoolean("hexcasting.brainswept", true);
+                    ((net.minecraft.entity.EntityLiving) entity).setNoAI(true);
+                }
+            }
+        });
+
     private HexActions() {
     }
 
@@ -2961,6 +3024,44 @@ throw new CastingException("hexcasting.error.get_media_context");
 
     private static HexAction register(ResourceLocation id, HexPattern pattern, HexAction action) {
         return HexActionRegistry.register(id, pattern, action);
+    }
+
+    private static final class BrainsweepMatch {
+        private final net.minecraft.block.state.IBlockState result;
+        private final long mediaCost;
+
+        private BrainsweepMatch(net.minecraft.block.state.IBlockState result, long mediaCost) {
+            this.result = result;
+            this.mediaCost = mediaCost;
+        }
+    }
+
+    private static BrainsweepMatch brainsweepMatch(
+        net.minecraft.block.state.IBlockState input,
+        net.minecraft.entity.Entity entity) {
+        String blockId = input.getBlock().getRegistryName() == null
+            ? "" : input.getBlock().getRegistryName().toString();
+        String entityId = net.minecraft.entity.EntityList.getEntityString(entity);
+        if (entityId == null) {
+            entityId = "";
+        }
+        // The upstream recipe is Allay + amethyst block -> quenched Allay.
+        // The checks are retained here so the recipe becomes active automatically
+        // if the corresponding 1.12.2 compatibility content is supplied.
+        if (("minecraft:allay".equals(entityId) || "allay".equals(entityId)
+            || "Allay".equals(entityId))
+            && "minecraft:amethyst_block".equals(blockId)) {
+            return new BrainsweepMatch(
+                resolveBrainsweepBlock("hexcasting:quenched_allay"), 100000L);
+        }
+        return null;
+    }
+
+    private static net.minecraft.block.state.IBlockState resolveBrainsweepBlock(String id) {
+        net.minecraft.block.Block block = net.minecraft.block.Block.REGISTRY.getObject(
+            new net.minecraft.util.ResourceLocation(id));
+        return block == null || block == net.minecraft.init.Blocks.AIR
+            ? null : block.getDefaultState();
     }
 
     private static int requireRoundedInteger(DoubleIota value) throws CastingException {
