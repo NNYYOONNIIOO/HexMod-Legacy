@@ -1817,6 +1817,100 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
             stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
         });
 
+    /** Recharge a media-bearing item in the caster's off hand from a dropped amethyst stack. */
+    public static final ResourceLocation RECHARGE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "recharge");
+    public static final HexPattern RECHARGE_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qqqqqwaeaeaeaeaea");
+    public static final HexAction RECHARGE = register(RECHARGE_ID, RECHARGE_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.recharge_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.recharge_context");
+                }
+
+                Object entityIota = stack.pop();
+                net.minecraft.entity.Entity entity = getRechargeEntity(entityIota);
+                if (!(entity instanceof net.minecraft.entity.item.EntityItem)) {
+                    throw new CastingException("hexcasting.error.recharge_entity");
+                }
+
+                net.minecraft.entity.item.EntityItem droppedEntity =
+                    (net.minecraft.entity.item.EntityItem) entity;
+                net.minecraft.item.ItemStack dropped = droppedEntity.getItem();
+                if (dropped == null || dropped.isEmpty()) {
+                    throw new CastingException("hexcasting.error.recharge_item");
+                }
+
+                ResourceLocation itemId = dropped.getItem().getRegistryName();
+                if (itemId == null || !HexAPI.MOD_ID.equals(itemId.getResourceDomain())
+                    || !itemId.getResourcePath().contains("amethyst")) {
+                    throw new CastingException("hexcasting.error.recharge_item");
+                }
+
+                net.minecraft.item.ItemStack offHand = vm.getPlayer().getHeldItemOffhand();
+                if (offHand == null || offHand.isEmpty()
+                    || !(offHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
+                    throw new CastingException("hexcasting.error.recharge_holder");
+                }
+
+                at.petra_k.hexcasting.api.item.MediaHolderItem holder =
+                    (at.petra_k.hexcasting.api.item.MediaHolderItem) offHand.getItem();
+                if (!holder.canRecharge(offHand)) {
+                    throw new CastingException("hexcasting.error.recharge_holder");
+                }
+
+                long requested = Math.max(0L, (long) dropped.getCount() * MediaConstants.SHARD_UNIT);
+                long inserted = holder.insertMedia(offHand, requested, false);
+                if (inserted <= 0L) {
+                    throw new CastingException("hexcasting.error.recharge_full");
+                }
+
+                long units = (inserted + MediaConstants.SHARD_UNIT - 1L) / MediaConstants.SHARD_UNIT;
+                int consumed = (int) Math.min((long) dropped.getCount(), Math.max(1L, units));
+                dropped.shrink(consumed);
+                if (dropped.isEmpty()) {
+                    droppedEntity.setDead();
+                }
+            }
+        });
+
+    private static net.minecraft.entity.Entity getRechargeEntity(Object value) {
+        if (value == null || !"EntityIota".equals(value.getClass().getSimpleName())) {
+            return null;
+        }
+
+        try {
+            java.lang.reflect.Method method = value.getClass().getMethod("getEntity");
+            Object entity = method.invoke(value);
+            if (entity instanceof net.minecraft.entity.Entity) {
+                return (net.minecraft.entity.Entity) entity;
+            }
+        } catch (Exception ignored) {
+            // Fall through to the field-based compatibility path below.
+        }
+
+        Class<?> type = value.getClass();
+        while (type != null) {
+            try {
+                java.lang.reflect.Field field = type.getDeclaredField("entity");
+                field.setAccessible(true);
+                Object entity = field.get(value);
+                return entity instanceof net.minecraft.entity.Entity
+                    ? (net.minecraft.entity.Entity) entity : null;
+            } catch (Exception ignored) {
+                type = type.getSuperclass();
+            }
+        }
+        return null;
+    }
+
     /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
