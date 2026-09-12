@@ -2318,6 +2318,34 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Teleport the casting player to a finite target position. */
+    public static final ResourceLocation BLINK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "blink");
+    public static final HexPattern BLINK_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "awqqqwaq");
+    public static final HexAction BLINK = register(BLINK_ID, BLINK_PATTERN, new HexAction() {
+        @Override
+        public void execute(CastingStack stack) throws CastingException {
+            throw new CastingException("hexcasting.error.blink_context");
+        }
+
+        @Override
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            if (vm == null || vm.getPlayer() == null) {
+                throw new CastingException("hexcasting.error.blink_context");
+            }
+            net.minecraft.util.math.Vec3d target = stack.pop(Vec3Iota.class).getValue();
+            if (Double.isNaN(target.x) || Double.isNaN(target.y) || Double.isNaN(target.z)
+                || Double.isInfinite(target.x) || Double.isInfinite(target.y)
+                || Double.isInfinite(target.z)) {
+                throw new CastingException("hexcasting.error.blink_position");
+            }
+            if (!vm.getPlayer().world.isRemote) {
+                vm.getPlayer().setPositionAndUpdate(target.x, target.y, target.z);
+            }
+        }
+    });
+
     private HexActions() {
     }
 
@@ -2426,7 +2454,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null) {
+            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null || BLINK == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
