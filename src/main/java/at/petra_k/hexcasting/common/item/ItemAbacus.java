@@ -1,5 +1,8 @@
 package at.petra_k.hexcasting.common.item;
 
+import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.entity.player.EntityPlayer;
@@ -59,6 +62,14 @@ public final class ItemAbacus extends Item {
     }
 
     public static String getDisplayValue(ItemStack stack) {
+        if (IotaDataHolder.canRead(stack)) {
+            try {
+                Iota value = IotaDataHolder.read(stack);
+                return value.getType().getId() + ": " + value.display();
+            } catch (CastingException ignored) {
+                return I18n.translateToLocal("hexcasting.error.data_holder_invalid");
+            }
+        }
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
         if (tag == null || !tag.hasKey(KEY_VALUE, 8)) {
             return I18n.translateToLocal("hexcasting.tooltip.none");

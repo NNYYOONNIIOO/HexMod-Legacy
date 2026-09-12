@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,7 +20,8 @@ public final class IotaDataHolder {
     }
 
     public static boolean canWrite(ItemStack stack) {
-        return stack != null && !stack.isEmpty();
+        return stack != null && !stack.isEmpty()
+            && !(stack.getItem() instanceof ItemAbacus);
     }
 
     public static Iota read(ItemStack stack) throws CastingException {
