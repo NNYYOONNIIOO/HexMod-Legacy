@@ -27,12 +27,14 @@ import java.util.Map;
 /** A 1.12.2 native drawing screen for programming a Hex staff. */
 public final class GuiHexStaff extends GuiScreen {
     private static final int CLEAR_BUTTON = 1;
+    private static final int CLOSE_BUTTON = 2;
     private static final int GRID_RADIUS = 5;
     private static final int CELL = 34;
     private static final int GRID_TOP = 64;
 
     private final EnumHand hand;
     private final List<GridPoint> points = new ArrayList<>();
+    private final List<ResourceLocation> programIds = new ArrayList<>();
     private boolean drawing;
     private HexPattern workingPattern;
     private String status = "";
@@ -44,8 +46,11 @@ public final class GuiHexStaff extends GuiScreen {
     @Override
     public void initGui() {
         buttonList.clear();
-        buttonList.add(new GuiButton(CLEAR_BUTTON, width / 2 - 55, height - 34, 110, 20,
+        refreshProgram();
+        buttonList.add(new GuiButton(CLEAR_BUTTON, width / 2 - 120, height - 34, 110, 20,
             I18n.format("hexcasting.gui.staff.clear")));
+        buttonList.add(new GuiButton(CLOSE_BUTTON, width / 2 + 10, height - 34, 110, 20,
+            I18n.format("gui.done")));
     }
 
     @Override
@@ -56,6 +61,7 @@ public final class GuiHexStaff extends GuiScreen {
         drawCenteredString(fontRenderer, I18n.format("hexcasting.gui.staff.title"), centerX, 26, 0xFFFFFF);
         drawCenteredString(fontRenderer, I18n.format("hexcasting.gui.staff.hint"), centerX, 42, 0xB0D0D0D0);
 
+        drawProgramSummary();
         drawGrid(centerX);
         if (!points.isEmpty()) {
             drawPath(centerX, GRID_TOP);
@@ -75,6 +81,24 @@ public final class GuiHexStaff extends GuiScreen {
                 int[] px = toPixel(centerX, GRID_TOP, new GridPoint(q, r));
                 drawRect(px[0] - 3, px[1] - 3, px[0] + 4, px[1] + 4, 0xFF707070);
             }
+        }
+    }
+
+    private void drawProgramSummary() {
+        int x = 24;
+        int y = 62;
+        drawString(fontRenderer,
+            I18n.format("hexcasting.tooltip.staff_program", programIds.size(), ItemHexStaff.MAX_PROGRAM_SIZE),
+            x, y, 0xFFE0E0E0);
+        int shown = Math.min(programIds.size(), 8);
+        for (int i = 0; i < shown; i++) {
+            drawString(fontRenderer, (i + 1) + ". " + localizeAction(programIds.get(i)),
+                x, y + 14 + i * 12, 0xFFC0C0C0);
+        }
+        if (programIds.size() > shown) {
+            drawString(fontRenderer,
+                I18n.format("hexcasting.tooltip.staff_more", programIds.size() - shown),
+                x, y + 14 + shown * 12, 0xFF909090);
         }
     }
 
@@ -103,6 +127,12 @@ public final class GuiHexStaff extends GuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button.id == CLEAR_BUTTON) {
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, null));
+            programIds.clear();
+            points.clear();
+            workingPattern = null;
+            drawing = false;
+            status = I18n.format("hexcasting.message.program_cleared");
+        } else if (button.id == CLOSE_BUTTON) {
             mc.displayGuiScreen(null);
         }
     }
@@ -166,8 +196,16 @@ public final class GuiHexStaff extends GuiScreen {
             status = I18n.format("hexcasting.gui.staff.unknown");
             return;
         }
+        if (programIds.size() >= ItemHexStaff.MAX_PROGRAM_SIZE) {
+            status = I18n.format("hexcasting.message.program_full", ItemHexStaff.MAX_PROGRAM_SIZE);
+            return;
+        }
         PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, id));
-        mc.displayGuiScreen(null);
+        programIds.add(id);
+        points.clear();
+        workingPattern = null;
+        status = I18n.format("hexcasting.message.program_added",
+            localizeAction(id), programIds.size(), ItemHexStaff.MAX_PROGRAM_SIZE);
     }
 
     @Override
@@ -217,6 +255,20 @@ public final class GuiHexStaff extends GuiScreen {
         if (dq == 0 && dr == -1) return HexDir.NORTH_WEST;
         if (dq == 1 && dr == -1) return HexDir.NORTH_EAST;
         return null;
+    }
+
+    private void refreshProgram() {
+        programIds.clear();
+        if (mc == null || mc.player == null) {
+            return;
+        }
+        programIds.addAll(ItemHexStaff.getProgramIds(mc.player.getHeldItem(hand)));
+    }
+
+    private static String localizeAction(ResourceLocation id) {
+        String key = "hexcasting.action." + id.getResourcePath();
+        String translated = I18n.format(key);
+        return key.equals(translated) ? id.getResourcePath() : translated;
     }
 
     private static final class GridPoint {
