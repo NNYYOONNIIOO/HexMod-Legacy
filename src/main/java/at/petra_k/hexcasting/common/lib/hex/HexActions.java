@@ -26,6 +26,7 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
+import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 
 /**
  * First portable action slice of Hex Casting.
