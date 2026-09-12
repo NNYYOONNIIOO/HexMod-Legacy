@@ -141,15 +141,22 @@ public final class ItemPatternScroll extends Item {
     }
 
     public static ResourceLocation getActionId(ItemStack stack) {
+        HexActionRegistry.bootstrap();
         ResourceLocation fallback = HexActions.PUSH_ONE_ID;
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_ACTION, 8)) {
-            ResourceLocation stored = new ResourceLocation(tag.getString(KEY_ACTION));
-            if (HexActionRegistry.get(stored) != null) {
-                return stored;
+            try {
+                ResourceLocation stored = new ResourceLocation(tag.getString(KEY_ACTION));
+                if (HexActionRegistry.get(stored) != null) {
+                    return stored;
+                }
+            } catch (RuntimeException ignored) {
+                // Invalid or stale NBT falls back to a registered action.
             }
         }
-        return HexActionRegistry.get(fallback) == null ? HexActionRegistry.firstId() : fallback;
+        ResourceLocation defaultId = HexActionRegistry.get(fallback) == null
+            ? HexActionRegistry.firstId() : fallback;
+        return defaultId == null ? fallback : defaultId;
     }
 
     private static void setActionId(ItemStack stack, ResourceLocation id) {
