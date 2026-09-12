@@ -48,11 +48,13 @@ public final class HexItemModels {
             0,
             new ModelResourceLocation(HexItems.BATTERY.getRegistryName(), "inventory")
         );
-        ModelLoader.setCustomModelResourceLocation(
-            PatchouliItems.book,
-            0,
-            new ModelResourceLocation(new ResourceLocation(HexAPI.MOD_ID, "patchouli_book"), "inventory")
-        );
+        if (PatchouliItems.book != null) {
+            ModelLoader.setCustomModelResourceLocation(
+                PatchouliItems.book,
+                0,
+                new ModelResourceLocation(new ResourceLocation(HexAPI.MOD_ID, "patchouli_book"), "inventory")
+            );
+        }
 
         for (Item item : HexItems.allItems()) {
             if (item.getRegistryName() != null) {
@@ -60,11 +62,15 @@ public final class HexItemModels {
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
         }
-        Minecraft.getMinecraft().getItemColors().registerItemColorHandler(
-            (stack, tintIndex) -> tintIndex == 0 ? colorFor(stack) : -1,
-            HexItems.FOCUS, HexItems.STAFF);
+        net.minecraft.client.renderer.color.ItemColors itemColors =
+            Minecraft.getMinecraft().getItemColors();
+        if (itemColors != null) {
+            itemColors.registerItemColorHandler(
+                (stack, tintIndex) -> tintIndex == 0 ? colorFor(stack) : -1,
+                HexItems.FOCUS, HexItems.STAFF);
+        }
         for (Item item : HexBlocks.blockItems()) {
-            if (item.getRegistryName() != null) {
+            if (item != null && item.getRegistryName() != null) {
                 ModelLoader.setCustomModelResourceLocation(
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
