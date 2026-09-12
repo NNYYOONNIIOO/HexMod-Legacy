@@ -62,6 +62,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        super.drawScreen(mouseX, mouseY, partialTicks);
         // Hex does not put a dark container panel over the world. Its spell
         // screen is a transparent overlay rendered around the mouse position.
         GlStateManager.pushMatrix();
@@ -77,7 +78,6 @@ public final class GuiHexStaff extends GuiScreen {
         if (!status.isEmpty()) {
             drawCenteredString(fontRenderer, status, width / 2, height - 18, 0xFFFFD0D0);
         }
-        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     private void drawGuideSpots(int mouseX, int mouseY) {
@@ -98,23 +98,24 @@ public final class GuiHexStaff extends GuiScreen {
                 double scaled = clamp(
                     1.0D - ((distance - HEX_SIZE) / (GUIDE_RADIUS * (double) HEX_SIZE)),
                     0.0D, 1.0D);
-                if (scaled <= 0.0D) {
-                    continue;
-                }
-                drawSpot(pixel[0], pixel[1], (float) scaled);
+                // The upstream renderer deliberately keeps the outer part of
+                // rangeAround(3) faint instead of removing those spots. This
+                // makes the guide grow/shrink continuously as the mouse moves.
+                drawSpot(pixel[0], pixel[1], (float) Math.max(0.12D, scaled));
             }
         }
     }
 
     private void drawSpot(int x, int y, float strength) {
-        int glowRadius = Math.max(1, Math.round(4.0F * strength));
-        int glowAlpha = Math.min(210, Math.max(1, Math.round(150.0F * strength)));
+        float visible = Math.max(0.12F, Math.min(1.0F, strength));
+        int glowRadius = Math.max(2, Math.round(5.0F * visible));
+        int glowAlpha = Math.min(220, Math.max(32, Math.round(110.0F + 120.0F * visible)));
         int glowColor = (glowAlpha << 24) | 0x70E8E8;
         drawRect(x - glowRadius, y - glowRadius,
             x + glowRadius + 1, y + glowRadius + 1, glowColor);
 
-        int coreRadius = Math.max(1, Math.round(2.0F * strength));
-        int coreAlpha = Math.min(255, Math.max(1, Math.round(230.0F * strength)));
+        int coreRadius = Math.max(1, Math.round(2.0F * visible));
+        int coreAlpha = Math.min(255, Math.max(70, Math.round(180.0F + 75.0F * visible)));
         int coreColor = (coreAlpha << 24) | 0xB8FFFF;
         drawRect(x - coreRadius, y - coreRadius,
             x + coreRadius + 1, y + coreRadius + 1, coreColor);
@@ -122,7 +123,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     private void drawExistingPaths() {
         for (DrawnPath path : drawnPaths) {
-            drawPath(path.points, 0xA0A8FFFF, 0xE0D8FFFF);
+            drawPath(path.points, 0xB090E8E8, 0xE0D8FFFF);
         }
     }
 
@@ -130,7 +131,7 @@ public final class GuiHexStaff extends GuiScreen {
         if (currentPoints.isEmpty()) {
             return;
         }
-        drawPath(currentPoints, 0xD080FFFF, 0xFFF0FFFF);
+        drawPath(currentPoints, 0xE090FFFF, 0xFFF0FFFF);
         if (drawing && current != null) {
             GridPoint hover = pxToCoord(mouseX, mouseY);
             if (!hover.equals(current) && isAdjacent(current, hover)) {
