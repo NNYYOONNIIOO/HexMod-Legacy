@@ -727,8 +727,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
             int width = swizzleWidth(code);
             if (width > values.size()) {
-                throw new CastingException("Swizzle code requires " + width
-                    + " stack values, but only " + values.size() + " are available");
+                throw new CastingException("hexcasting.error.swizzle_width");
             }
             int start = values.size() - width;
             java.util.ArrayList<Iota> selected = new java.util.ArrayList<>(
@@ -1783,8 +1782,7 @@ throw new CastingException("hexcasting.error.get_media_context");
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < 0.0D || raw > maxInclusive || raw > Integer.MAX_VALUE) {
-            throw new CastingException("Expected an integer in [0, " + maxInclusive
-                + "] but found " + raw);
+            throw new CastingException("hexcasting.error.bounded_integer");
         }
         return (int) raw;
     }
