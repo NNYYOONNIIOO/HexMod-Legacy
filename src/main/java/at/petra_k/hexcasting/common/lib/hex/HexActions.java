@@ -2630,6 +2630,93 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Enable creative-style flight for the caster for a bounded duration. */
+    public static final ResourceLocation FLIGHT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "flight");
+    public static final HexPattern FLIGHT_PATTERN =
+        pattern(HexDir.NORTH_WEST, "eawwaeawawaa");
+    public static final HexAction FLIGHT = register(
+        FLIGHT_ID, FLIGHT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.flight_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.flight_context");
+                }
+                double seconds = stack.pop(DoubleIota.class).getValue();
+                if (Double.isNaN(seconds) || Double.isInfinite(seconds)
+                    || seconds <= 0.0D || seconds > 3600.0D) {
+                    throw new CastingException("hexcasting.error.flight_duration");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (!player.capabilities.isCreativeMode) {
+                    player.capabilities.allowFlying = true;
+                    player.capabilities.isFlying = true;
+                    player.sendPlayerAbilities();
+                }
+                HexFlightState.grant(player, (int) Math.ceil(seconds * 20.0D));
+            }
+        });
+
+    /** Return whether the caster currently has Hex flight permission. */
+    public static final ResourceLocation FLIGHT_CAN_FLY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "flight/can_fly");
+    public static final HexPattern FLIGHT_CAN_FLY_PATTERN =
+        pattern(HexDir.NORTH_EAST, "dwdwdeweaqa");
+    public static final HexAction FLIGHT_CAN_FLY = register(
+        FLIGHT_CAN_FLY_ID, FLIGHT_CAN_FLY_PATTERN, stack ->
+            stack.push(new BooleanIota(stack.peek() instanceof EntityIota
+                ? false : true)));
+
+    /** Return the configured Hex flight range in blocks. */
+    public static final ResourceLocation FLIGHT_RANGE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "flight/range");
+    public static final HexPattern FLIGHT_RANGE_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "awawaawq");
+    public static final HexAction FLIGHT_RANGE = register(
+        FLIGHT_RANGE_ID, FLIGHT_RANGE_PATTERN, stack ->
+            stack.push(new DoubleIota(64.0D)));
+
+    /** Return remaining Hex flight time in seconds for the caster. */
+    public static final ResourceLocation FLIGHT_TIME_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "flight/time");
+    public static final HexPattern FLIGHT_TIME_PATTERN =
+        pattern(HexDir.NORTH_EAST, "dwdwdewq");
+    public static final HexAction FLIGHT_TIME = register(
+        FLIGHT_TIME_ID, FLIGHT_TIME_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.flight_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.flight_context");
+                }
+                stack.push(new DoubleIota(HexFlightState.remainingSeconds(vm.getPlayer())));
+            }
+        });
+
+    private static final class HexFlightState {
+        private static final java.util.Map<java.util.UUID, Integer> REMAINING =
+            new java.util.HashMap<>();
+
+        private static void grant(net.minecraft.entity.player.EntityPlayer player, int ticks) {
+            java.util.UUID id = player.getUniqueID();
+            REMAINING.put(id, Math.max(ticks, REMAINING.containsKey(id) ? REMAINING.get(id) : 0));
+        }
+
+        private static double remainingSeconds(net.minecraft.entity.player.EntityPlayer player) {
+            Integer ticks = REMAINING.get(player.getUniqueID());
+            return ticks == null ? 0.0D : Math.max(0, ticks) / 20.0D;
+        }
+    }
+
     private HexActions() {
     }
 
