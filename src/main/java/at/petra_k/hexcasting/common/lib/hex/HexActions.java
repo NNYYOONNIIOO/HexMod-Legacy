@@ -1080,6 +1080,46 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
         });
 
+    /** Add a motion vector to an entity's current velocity. */
+    public static final ResourceLocation ADD_MOTION_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "add_motion");
+    public static final HexPattern ADD_MOTION_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "awqqqwaqw");
+    public static final HexAction ADD_MOTION = register(
+        ADD_MOTION_ID, ADD_MOTION_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.add_motion_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.add_motion_context");
+                }
+                Iota first = stack.pop();
+                Iota second = stack.pop();
+                Vec3Iota motionIota;
+                EntityIota entityIota;
+                if (first instanceof Vec3Iota && second instanceof EntityIota) {
+                    motionIota = (Vec3Iota) first;
+                    entityIota = (EntityIota) second;
+                } else if (first instanceof EntityIota && second instanceof Vec3Iota) {
+                    entityIota = (EntityIota) first;
+                    motionIota = (Vec3Iota) second;
+                } else {
+                    throw new CastingException("hexcasting.error.add_motion_args");
+                }
+                net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+                net.minecraft.util.math.Vec3d motion = motionIota.getValue();
+                entity.motionX += motion.x;
+                entity.motionY += motion.y;
+                entity.motionZ += motion.z;
+                entity.velocityChanged = true;
+            }
+        });
+
     public static final ResourceLocation BREAK_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "break_block");
     public static final HexPattern BREAK_BLOCK_PATTERN =
@@ -1537,7 +1577,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
