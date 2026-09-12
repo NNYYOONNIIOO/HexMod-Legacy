@@ -116,6 +116,7 @@ hexcasting.tooltip.staff_more=... %s more
 hexcasting.item.pattern_scroll.variant=%s [%s]
 hexcasting.message.program_added=Added %s to the staff (%s/%s).
 hexcasting.message.program_full=The staff program is full (%s patterns).
+hexcasting.message.pattern_unregistered=This pattern has no meaning: %s
 hexcasting.message.program_cleared=The staff program was cleared.
 hexcasting.message.program_empty=The staff has no programmed patterns.
 hexcasting.message.program_result=Cast result: %s

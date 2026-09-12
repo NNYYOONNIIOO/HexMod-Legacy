@@ -260,7 +260,15 @@ public final class ItemHexStaff extends Item {
 
     private static String localizeError(String message) {
         if (message == null || message.isEmpty()) {
-            return I18n.translateToLocal("hexcasting.error.unknown");
+            return I18n.translateToLocal("hexcasting.message.staff_error");
+        }
+        String lower = message.toLowerCase();
+        String marker = "no action is registered for pattern";
+        int markerIndex = lower.indexOf(marker);
+        if (markerIndex >= 0) {
+            String signature = message.substring(markerIndex + marker.length()).trim();
+            return I18n.translateToLocalFormatted(
+                "hexcasting.message.pattern_unregistered", signature);
         }
         String translated = I18n.translateToLocal(message);
         return message.equals(translated) ? message : translated;

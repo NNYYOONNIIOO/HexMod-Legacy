@@ -148,10 +148,10 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
         List<GridPoint> preview = new ArrayList<>(currentPoints);
-        if (drawing && current != null) {
+        if (drawing && current != null && !isClosedStroke()) {
             GridPoint hover = pxToCoord(mouseX, mouseY);
             if (!hover.equals(current) && isAdjacent(current, hover)
-                && !usedSpots.contains(hover)) {
+                && (!usedSpots.contains(hover) || hover.equals(currentPoints.get(0)))) {
                 preview.add(hover);
             }
         }
@@ -168,17 +168,20 @@ public final class GuiHexStaff extends GuiScreen {
             int[] pixel = coordToPx(point);
             pixelPoints.add(new float[] {pixel[0], pixel[1]});
         }
-        // Hex draws the same point sequence twice: a 5 px translucent outer
-        // stroke, then a 2 px bright inner stroke. Drawing each complete
-        // polyline in one batch is what makes angled joins continuous.
         if (pixelPoints.size() > 1) {
-            drawLineSequence(pixelPoints, 5.0F, glowColor, glowColor);
-            drawLineSequence(pixelPoints, 2.0F, lineColor, lineColor);
+            // RenderLib.drawPatternFromPoints expands segments with makeZappy
+            // before the 5 px outer and 2 px inner drawLineSeq passes.
+            List<float[]> zappyPoints = makeZappyPoints(pixelPoints, points.size());
+            drawLineSequence(zappyPoints, 5.0F, glowColor, glowColor);
+            drawLineSequence(zappyPoints, 2.0F, lineColor, lineColor);
         }
         for (int i = 0; i < pixelPoints.size(); i++) {
             float[] pixel = pixelPoints.get(i);
-            float radius = i == 0 || i == pixelPoints.size() - 1 ? 1.8F : 1.8F;
-            drawHexSpot(pixel[0], pixel[1], radius, nodeColor);
+            if (i == pixelPoints.size() - 1 && pixelPoints.size() > 1
+                && samePixel(pixel, pixelPoints.get(0))) {
+                continue;
+            }
+            drawHexSpot(pixel[0], pixel[1], 1.8F, nodeColor);
         }
     }
 
@@ -187,6 +190,46 @@ public final class GuiHexStaff extends GuiScreen {
      * The 1.12.2 BufferBuilder has no Matrix4f vertex helper, so the screen
      * coordinates are supplied directly while retaining the source join math.
      */
+    private static List<float[]> makeZappyPoints(List<float[]> points, int seedSalt) {
+        if (points.size() < 2) {
+            return points;
+        }
+        List<float[]> result = new ArrayList<>();
+        result.add(new float[] {points.get(0)[0], points.get(0)[1]});
+        long seed = 0x5DEECE66DL ^ (long) seedSalt * 0x9E3779B97F4A7C15L;
+        for (int i = 0; i < points.size() - 1; i++) {
+            float[] from = points.get(i);
+            float[] to = points.get(i + 1);
+            double dx = to[0] - from[0];
+            double dy = to[1] - from[1];
+            double length = Math.sqrt(dx * dx + dy * dy);
+            if (length < 0.001D) {
+                continue;
+            }
+            for (int hop = 1; hop < 10; hop++) {
+                float t = hop / 10.0F;
+                double envelope = Math.sin(Math.PI * t);
+                long hopSeed = seed ^ (long) i * 0xBF58476D1CE4E5B9L
+                    ^ (long) hop * 0x94D049BB133111EBL;
+                double offset = zappyNoise(hopSeed) * 2.5D * envelope;
+                result.add(new float[] {
+                    (float) (from[0] + dx * t - dy / length * offset),
+                    (float) (from[1] + dy * t + dx / length * offset)
+                });
+            }
+            result.add(new float[] {to[0], to[1]});
+        }
+        return result;
+    }
+
+    private static double zappyNoise(long value) {
+        value = (value ^ (value >>> 30)) * 0xBF58476D1CE4E5B9L;
+        value = (value ^ (value >>> 27)) * 0x94D049BB133111EBL;
+        value ^= value >>> 31;
+        return ((value >>> 11) / (double) (1L << 53)) * 2.0D - 1.0D;
+    }
+
+
     private void drawLineSequence(List<float[]> points, float width,
                                   int tailColor, int headColor) {
         if (points.size() < 2 || width <= 0.0F) {
@@ -194,6 +237,7 @@ public final class GuiHexStaff extends GuiScreen {
         }
         final float halfWidth = width * 0.5F;
         final int count = points.size();
+        final boolean closed = count > 2 && samePixel(points.get(0), points.get(count - 1));
         float[] normalsX = new float[count - 1];
         float[] normalsY = new float[count - 1];
         for (int i = 0; i < count - 1; i++) {
@@ -231,23 +275,17 @@ public final class GuiHexStaff extends GuiScreen {
         for (int i = 0; i < count - 1; i++) {
             float[] from = points.get(i);
             float[] to = points.get(i + 1);
-            float startOffset = i == 0 ? 0.0F : joinOffset(normalsX[i - 1], normalsY[i - 1],
-                normalsX[i], normalsY[i], halfWidth);
-            float endOffset = i == count - 2 ? 0.0F : joinOffset(normalsX[i], normalsY[i],
-                normalsX[i + 1], normalsY[i + 1], halfWidth);
-            float startNormalX = i == 0 ? normalsX[i] : joinNormalX(normalsX[i - 1], normalsX[i], startOffset);
-            float startNormalY = i == 0 ? normalsY[i] : joinNormalY(normalsY[i - 1], normalsY[i], startOffset);
-            float endNormalX = i == count - 2 ? normalsX[i] : joinNormalX(normalsX[i], normalsX[i + 1], endOffset);
-            float endNormalY = i == count - 2 ? normalsY[i] : joinNormalY(normalsY[i], normalsY[i + 1], endOffset);
+            float[] startOffset = lineOffset(points, i, normalsX, normalsY, halfWidth);
+            float[] endOffset = lineOffset(points, i + 1, normalsX, normalsY, halfWidth);
 
-            float sx = from[0] + startNormalX * halfWidth;
-            float sy = from[1] + startNormalY * halfWidth;
-            float slx = from[0] - startNormalX * halfWidth;
-            float sly = from[1] - startNormalY * halfWidth;
-            float ex = to[0] + endNormalX * halfWidth;
-            float ey = to[1] + endNormalY * halfWidth;
-            float elx = to[0] - endNormalX * halfWidth;
-            float ely = to[1] - endNormalY * halfWidth;
+            float sx = from[0] + startOffset[0];
+            float sy = from[1] + startOffset[1];
+            float slx = from[0] - startOffset[0];
+            float sly = from[1] - startOffset[1];
+            float ex = to[0] + endOffset[0];
+            float ey = to[1] + endOffset[1];
+            float elx = to[0] - endOffset[0];
+            float ely = to[1] - endOffset[1];
 
             putColorVertex(buffer, sx, sy, tailR, tailG, tailB, tailA);
             putColorVertex(buffer, slx, sly, tailR, tailG, tailB, tailA);
@@ -265,10 +303,16 @@ public final class GuiHexStaff extends GuiScreen {
             drawJoinFan(points.get(i)[0], points.get(i)[1], halfWidth,
                 tailColor, normalsX[i - 1], normalsY[i - 1], normalsX[i], normalsY[i]);
         }
-        drawCapFan(points.get(0)[0], points.get(0)[1], halfWidth,
-            tailColor, normalsX[0], normalsY[0], false);
-        drawCapFan(points.get(count - 1)[0], points.get(count - 1)[1], halfWidth,
-            headColor, normalsX[count - 2], normalsY[count - 2], true);
+        if (closed) {
+            int last = normalsX.length - 1;
+            drawJoinFan(points.get(0)[0], points.get(0)[1], halfWidth,
+                tailColor, normalsX[last], normalsY[last], normalsX[0], normalsY[0]);
+        } else {
+            drawCapFan(points.get(0)[0], points.get(0)[1], halfWidth,
+                tailColor, normalsX[0], normalsY[0], false);
+            drawCapFan(points.get(count - 1)[0], points.get(count - 1)[1], halfWidth,
+                headColor, normalsX[count - 2], normalsY[count - 2], true);
+        }
 
         GlStateManager.depthMask(true);
         GlStateManager.enableDepth();
@@ -277,32 +321,67 @@ public final class GuiHexStaff extends GuiScreen {
         GlStateManager.popMatrix();
     }
 
-    private static float joinOffset(float ax, float ay, float bx, float by, float halfWidth) {
-        float mx = ax + bx;
-        float my = ay + by;
-        float length = (float) Math.sqrt(mx * mx + my * my);
-        if (length < 0.001F) {
-            return 0.0F;
+    /**
+     * Returns the signed miter vector at one vertex. This is the 2-D
+     * equivalent of RenderLib's joinAngles/joinOffsets calculation: the two
+     * adjacent normals are merged, then the miter is clamped so a near-180°
+     * turn cannot create an unbounded spike.
+     */
+    private static float[] lineOffset(List<float[]> points, int index,
+                                      float[] normalsX, float[] normalsY,
+                                      float halfWidth) {
+        boolean closed = points.size() > 2 && samePixel(points.get(0), points.get(points.size() - 1));
+        if (closed && (index == 0 || index == points.size() - 1)) {
+            int last = normalsX.length - 1;
+            return miterOffset(normalsX[last], normalsY[last], normalsX[0], normalsY[0], halfWidth);
         }
-        float dot = Math.max(-0.98F, Math.min(0.98F, ax * bx + ay * by));
-        float sin = ax * by - ay * bx;
-        float miter = halfWidth / Math.max(0.25F, (float) Math.sqrt((1.0F + dot) * 0.5F));
-        float sign = sin < 0.0F ? -1.0F : 1.0F;
-        return sign * Math.min(halfWidth * 2.5F, miter);
+        if (index <= 0) {
+            return new float[] {normalsX[0] * halfWidth, normalsY[0] * halfWidth};
+        }
+        if (index >= points.size() - 1) {
+            int last = normalsX.length - 1;
+            return new float[] {normalsX[last] * halfWidth, normalsY[last] * halfWidth};
+        }
+
+        float mx = normalsX[index - 1] + normalsX[index];
+        float my = normalsY[index - 1] + normalsY[index];
+        float miterLength = (float) Math.sqrt(mx * mx + my * my);
+        if (miterLength < 0.001F) {
+            return new float[] {normalsX[index] * halfWidth, normalsY[index] * halfWidth};
+        }
+
+        float miterX = mx / miterLength;
+        float miterY = my / miterLength;
+        float denominator = miterX * normalsY[index] - miterY * normalsX[index];
+        if (Math.abs(denominator) < 0.25F) {
+            return new float[] {normalsX[index] * halfWidth, normalsY[index] * halfWidth};
+        }
+        float scale = Math.min(halfWidth * 2.5F, Math.abs(halfWidth / denominator));
+        float turn = normalsX[index - 1] * normalsY[index]
+            - normalsY[index - 1] * normalsX[index];
+        if (turn < 0.0F) {
+            scale = -scale;
+        }
+        return new float[] {miterX * scale, miterY * scale};
     }
 
-    private static float joinNormalX(float ax, float bx, float offset) {
-        float x = ax + bx;
-        float y = -0.0F;
-        float length = (float) Math.sqrt(x * x + y * y);
-        return length < 0.001F ? bx : x / length;
-    }
-
-    private static float joinNormalY(float ay, float by, float offset) {
-        float x = 0.0F;
-        float y = ay + by;
-        float length = (float) Math.sqrt(x * x + y * y);
-        return length < 0.001F ? by : y / length;
+    private static float[] miterOffset(float previousX, float previousY,
+                                       float nextX, float nextY, float halfWidth) {
+        float miterX = previousX + nextX;
+        float miterY = previousY + nextY;
+        float length = (float) Math.sqrt(miterX * miterX + miterY * miterY);
+        if (length < 0.001F) {
+            return new float[] {nextX * halfWidth, nextY * halfWidth};
+        }
+        miterX /= length;
+        miterY /= length;
+        float denominator = miterX * nextX + miterY * nextY;
+        if (Math.abs(denominator) < 0.25F) {
+            return new float[] {nextX * halfWidth, nextY * halfWidth};
+        }
+        float scale = halfWidth / denominator;
+        scale = Math.max(-halfWidth * 2.5F, Math.min(halfWidth * 2.5F, scale));
+        return new float[] {miterX * scale, miterY * scale};
     }
 
     private void drawJoinFan(float x, float y, float radius, int color,
@@ -424,57 +503,24 @@ public final class GuiHexStaff extends GuiScreen {
     }
 
     private void drawMove(int mouseX, int mouseY) {
-        if (!drawing || current == null) {
+        if (!drawing || current == null || isClosedStroke()) {
             return;
         }
         int[] anchorPixel = coordToPx(current);
         double dx = mouseX - anchorPixel[0];
         double dy = mouseY - anchorPixel[1];
+        GridPoint next = pxToCoord(mouseX, mouseY);
+        boolean closing = next.equals(currentPoints.get(0)) && currentPoints.size() > 2;
         double snapDistance = HEX_SIZE * (double) HEX_SIZE * SNAP_DISTANCE_FACTOR;
-        if (dx * dx + dy * dy < snapDistance) {
+        // The origin remains selectable inside the normal snap dead-zone so a
+        // closed stroke can record its final edge.
+        if (!closing && dx * dx + dy * dy < snapDistance) {
             return;
         }
-
-        double angle = Math.atan2(dy, dx);
-        int directionIndex = ((int) Math.round(
-            angle / (Math.PI * 2.0D) * 6.0D) + 1) % 6;
-        if (directionIndex < 0) {
-            directionIndex += 6;
-        }
-        HexDir newDir = HexDir.values()[directionIndex];
-        GridPoint idealNext = current.add(newDir);
-        if (usedSpots.contains(idealNext)) {
+        if (next.equals(current) || !isAdjacent(current, next)) {
             return;
         }
-
-        if (workingPattern == null) {
-            workingPattern = new HexPattern(newDir);
-            currentPoints.add(idealNext);
-            current = idealNext;
-            return;
-        }
-
-        HexDir lastDir = workingPattern.finalDir();
-        if (newDir == lastDir.rotatedBy(HexAngle.BACK)) {
-            if (workingPattern.getAngles().isEmpty()) {
-                currentPoints.clear();
-                currentPoints.add(idealNext);
-                current = idealNext;
-                workingPattern = null;
-            } else {
-                workingPattern.getAngles().remove(workingPattern.getAngles().size() - 1);
-                if (currentPoints.size() > 1) {
-                    currentPoints.remove(currentPoints.size() - 1);
-                }
-                current = idealNext;
-            }
-            return;
-        }
-
-        if (workingPattern.tryAppendDir(newDir)) {
-            currentPoints.add(idealNext);
-            current = idealNext;
-        }
+        appendSnappedPoint(next);
     }
 
     @Override
@@ -483,8 +529,16 @@ public final class GuiHexStaff extends GuiScreen {
         if (state != 0 || !drawing) {
             return;
         }
+        // GuiSpellcasting commits the final snapped point on release. Returning
+        // to the active stroke's origin is a closing edge, not a backtrack.
+        if (workingPattern != null && current != null && !isClosedStroke()) {
+            GridPoint releasePoint = pxToCoord(mouseX, mouseY);
+            if (!releasePoint.equals(current) && isAdjacent(current, releasePoint)) {
+                appendSnappedPoint(releasePoint);
+            }
+        }
         drawing = false;
-        if (workingPattern == null) {
+        if (workingPattern == null || currentPoints.size() < 2) {
             resetWorkingPath();
             return;
         }
@@ -504,16 +558,86 @@ public final class GuiHexStaff extends GuiScreen {
             programIds.add(id);
         }
         programCount++;
-        drawnPaths.add(new DrawnPath(workingPattern,
+        HexPattern submittedPattern = workingPattern;
+        drawnPaths.add(new DrawnPath(submittedPattern,
             new ArrayList<>(currentPoints), id));
         usedSpots.addAll(currentPoints);
         currentPoints.clear();
         current = null;
         workingPattern = null;
-        status = I18n.format("hexcasting.message.program_added",
-            id == null ? I18n.format("hexcasting.tooltip.pattern") : localizeAction(id),
-            programCount, ItemHexStaff.MAX_PROGRAM_SIZE);
+        if (id == null) {
+            status = I18n.format("hexcasting.message.pattern_unregistered",
+                patternDescription(submittedPattern));
+        } else {
+            status = I18n.format("hexcasting.message.program_added", localizeAction(id),
+                programCount, ItemHexStaff.MAX_PROGRAM_SIZE);
+        }
     }
+
+    private boolean isClosedStroke() {
+        return currentPoints.size() > 2 && current != null
+            && current.equals(currentPoints.get(0));
+    }
+
+    private void appendSnappedPoint(GridPoint next) {
+        if (next == null || current == null || !isAdjacent(current, next)) {
+            return;
+        }
+        boolean closing = next.equals(currentPoints.get(0));
+        if (!closing && usedSpots.contains(next)) {
+            return;
+        }
+        HexDir direction = directionBetween(current, next);
+        if (direction == null) {
+            return;
+        }
+        if (workingPattern == null) {
+            workingPattern = new HexPattern(direction);
+            currentPoints.add(next);
+            current = next;
+            return;
+        }
+        HexDir last = workingPattern.finalDir();
+        if (!closing && direction == last.rotatedBy(HexAngle.BACK)) {
+            if (workingPattern.getAngles().isEmpty()) {
+                currentPoints.clear();
+                currentPoints.add(next);
+                current = next;
+                workingPattern = null;
+            } else {
+                workingPattern.getAngles().remove(workingPattern.getAngles().size() - 1);
+                if (currentPoints.size() > 1) {
+                    currentPoints.remove(currentPoints.size() - 1);
+                }
+                current = currentPoints.get(currentPoints.size() - 1);
+            }
+            return;
+        }
+        if (workingPattern.tryAppendDir(direction)) {
+            currentPoints.add(next);
+            current = next;
+        }
+    }
+
+    private static HexDir directionBetween(GridPoint from, GridPoint to) {
+        for (HexDir direction : HexDir.values()) {
+            if (from.add(direction).equals(to)) {
+                return direction;
+            }
+        }
+        return null;
+    }
+
+    private static String patternDescription(HexPattern pattern) {
+        return pattern == null ? I18n.format("hexcasting.tooltip.pattern") : pattern.signature();
+    }
+
+    private static boolean samePixel(float[] first, float[] second) {
+        return first != null && second != null
+            && Math.abs(first[0] - second[0]) < 0.01F
+            && Math.abs(first[1] - second[1]) < 0.01F;
+    }
+
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {

@@ -102,6 +102,7 @@ hexcasting.tooltip.staff_more=……还有 %s 个图案
 hexcasting.item.pattern_scroll.variant=%s【%s】
 hexcasting.message.program_added=已将 %s 添加到法杖（%s/%s）。
 hexcasting.message.program_full=法杖中的法术程序已满（最多 %s 个图案）。
+hexcasting.message.pattern_unregistered=图案没有对应的含义：%s
 hexcasting.message.program_cleared=已清空法杖中的法术程序。
 hexcasting.message.program_empty=法杖中没有已编程的图案。
 hexcasting.message.program_result=施法结果：%s
