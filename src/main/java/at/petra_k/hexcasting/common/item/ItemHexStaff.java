@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.StaffProgramData;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -46,7 +47,7 @@ public final class ItemHexStaff extends Item {
             // client copy first so the GUI is opened only after the old
             // program has disappeared from the visible hand stack.
             if (player.isSneaking()) {
-                clearProgram(staff);
+                clearProgram(player, staff);
             }
             openStaffGui(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
@@ -54,13 +55,13 @@ public final class ItemHexStaff extends Item {
 
         HexActionRegistry.bootstrap();
         if (player.isSneaking()) {
-            clearProgram(staff);
+            clearProgram(player, staff);
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_cleared")));
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
 
-        List<HexPattern> program = getProgramPatterns(staff);
+        List<HexPattern> program = getProgramPatterns(player, staff);
         if (program.isEmpty()) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_empty")));
@@ -169,6 +170,13 @@ public final class ItemHexStaff extends Item {
         tag.setTag(KEY_PATTERN_PROGRAM, normalized);
     }
 
+    /** Update both the player-scoped program and the client compatibility cache. */
+    public static void replaceProgram(EntityPlayer player, ItemStack staff,
+                                      NBTTagList incoming) {
+        replaceProgram(staff, incoming);
+        StaffProgramData.replace(player, incoming);
+    }
+
     public static void clearProgram(ItemStack staff) {
         if (!isStaff(staff)) {
             return;
@@ -178,6 +186,11 @@ public final class ItemHexStaff extends Item {
             tag.removeTag(KEY_PROGRAM);
             tag.removeTag(KEY_PATTERN_PROGRAM);
         }
+    }
+
+    public static void clearProgram(EntityPlayer player, ItemStack staff) {
+        clearProgram(staff);
+        StaffProgramData.clear(player);
     }
 
     public static int getProgramSize(ItemStack staff) {
@@ -202,6 +215,22 @@ public final class ItemHexStaff extends Item {
         return result;
     }
 
+    public static List<HexPattern> getProgramPatterns(EntityPlayer player, ItemStack staff) {
+        List<HexPattern> result = new ArrayList<>();
+        for (ProgramEntry entry : getProgramEntries(player, staff)) {
+            result.add(entry.getPattern());
+        }
+        return result;
+    }
+
+    /** Read the player-side program first, falling back to legacy item NBT. */
+    public static List<ProgramEntry> getProgramEntries(EntityPlayer player, ItemStack staff) {
+        if (player != null && isStaff(staff) && StaffProgramData.hasPatterns(player)) {
+            return getPatternEntries(StaffProgramData.getPatterns(player));
+        }
+        return getProgramEntries(staff);
+    }
+
     /** Returns the pattern, action id, and origin needed to reconstruct the GUI. */
     public static List<ProgramEntry> getProgramEntries(ItemStack staff) {
         if (!isStaff(staff) || staff.getTagCompound() == null) {
@@ -211,21 +240,7 @@ public final class ItemHexStaff extends Item {
         NBTTagCompound tag = staff.getTagCompound();
         List<ProgramEntry> result = new ArrayList<>();
         if (tag.hasKey(KEY_PATTERN_PROGRAM)) {
-            NBTTagList patterns = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
-            for (int i = 0; i < patterns.tagCount(); i++) {
-                try {
-                    NBTTagCompound entry = patterns.getCompoundTagAt(i);
-                    HexPattern pattern = HexPattern.fromNBT(entry);
-                    HexAction action = HexActionRegistry.get(pattern);
-                    ResourceLocation actionId = action == null
-                        ? null : HexActionRegistry.idFor(action);
-                    result.add(new ProgramEntry(pattern, actionId,
-                        entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
-                } catch (RuntimeException ignored) {
-                    // Ignore malformed entries without discarding the rest of the program.
-                }
-            }
-            return result;
+            return getPatternEntries(tag.getTagList(KEY_PATTERN_PROGRAM, 10));
         }
 
         // Read the pre-pattern-format string list created by older builds.
@@ -241,6 +256,25 @@ public final class ItemHexStaff extends Item {
                 }
             } catch (RuntimeException ignored) {
                 // Invalid old data is ignored while the remaining program is preserved.
+            }
+        }
+        return result;
+    }
+
+    private static List<ProgramEntry> getPatternEntries(NBTTagList patterns) {
+        HexActionRegistry.bootstrap();
+        List<ProgramEntry> result = new ArrayList<>();
+        for (int i = 0; i < patterns.tagCount(); i++) {
+            try {
+                NBTTagCompound entry = patterns.getCompoundTagAt(i);
+                HexPattern pattern = HexPattern.fromNBT(entry);
+                HexAction action = HexActionRegistry.get(pattern);
+                ResourceLocation actionId = action == null
+                    ? null : HexActionRegistry.idFor(action);
+                result.add(new ProgramEntry(pattern, actionId,
+                    entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
+            } catch (RuntimeException ignored) {
+                // Ignore malformed entries without discarding the rest of the program.
             }
         }
         return result;

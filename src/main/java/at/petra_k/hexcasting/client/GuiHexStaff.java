@@ -719,7 +719,7 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
         for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(
-            mc.player.getHeldItem(hand))) {
+            mc.player, mc.player.getHeldItem(hand))) {
             programCount++;
             ResourceLocation id = entry.getActionId();
             if (id != null) {
