@@ -3,6 +3,11 @@ package at.petra_k.hexcasting.common.lib;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
+import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
+import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
+import at.petra_k.hexcasting.common.block.BlockImpetus;
+import at.petra_k.hexcasting.common.block.BlockSlate;
+import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -34,7 +39,17 @@ public final class HexBlocks {
     static {
         for (String id : BLOCK_IDS) {
             Block block;
-            if ("conjured_light".equals(id)) {
+            if ("slate".equals(id)) {
+                block = new BlockSlate();
+            } else if ("akashic_record".equals(id)) {
+                block = new BlockAkashicRecord();
+            } else if ("impetus".equals(id)) {
+                block = new BlockImpetus();
+            } else if ("great_impetus".equals(id)) {
+                block = new BlockGreatImpetus();
+            } else if ("spell_circle".equals(id)) {
+                block = new BlockSpellCircle();
+            } else if ("conjured_light".equals(id)) {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
