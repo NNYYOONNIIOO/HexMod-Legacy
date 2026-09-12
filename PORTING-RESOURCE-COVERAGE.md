@@ -1,5 +1,7 @@
 # 1.12.2 资源覆盖检查
 
+> 更正（2026-09-12）：上一版检查因 Windows 路径分隔符误报模型为 0/缺失 6；实际模型文件已存在，本次纹理核验见 `PORTING-RESOURCE-TEXTURE-FIX.md`。
+
 生成日期：2026-09-12。检查基线：2508076 docs: record resource and action audit; 50db687 docs: add 1.12.2 porting audit; 673bbe6 feat: add Inline payload serialization
 
 ## 检查结果
@@ -29,4 +31,3 @@
 - 该检查只处理资源文件，不把本地化文本写进 Java/Kotlin 代码。
 - 模型使用现有 1.12.2 item 模型的纹理目录风格；如果某个纹理仍显示 missingno，需要在客户端新启动日志中进一步核对实际 PNG 文件名。
 - 现有客户端日志中的 Realms、JEI 旧书签和 CraftTweaker 报错不属于 HexCasting 资源加载错误。
-
