@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
+import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
@@ -22,6 +23,11 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".scrying_lens")
         .setCreativeTab(HexCreativeTab.HEX);
 
+    public static final ItemMediaBattery BATTERY = (ItemMediaBattery) new ItemMediaBattery()
+        .setRegistryName(HexAPI.MOD_ID, "battery")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".battery")
+        .setCreativeTab(HexCreativeTab.HEX);
+
     public static final ItemPatternScroll PATTERN_SCROLL = (ItemPatternScroll) new ItemPatternScroll()
         .setRegistryName(HexAPI.MOD_ID, "pattern_scroll")
         .setUnlocalizedName(HexAPI.MOD_ID + ".pattern_scroll")
@@ -34,6 +40,7 @@ public final class HexItems {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(FOCUS);
         event.getRegistry().register(SCRYING_LENS);
+        event.getRegistry().register(BATTERY);
         event.getRegistry().register(PATTERN_SCROLL);
     }
 }

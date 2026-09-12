@@ -30,6 +30,11 @@ public final class HexItemModels {
             new ModelResourceLocation(HexItems.SCRYING_LENS.getRegistryName(), "inventory")
         );
         ModelLoader.setCustomModelResourceLocation(
+            HexItems.BATTERY,
+            0,
+            new ModelResourceLocation(HexItems.BATTERY.getRegistryName(), "inventory")
+        );
+        ModelLoader.setCustomModelResourceLocation(
             HexItems.PATTERN_SCROLL,
             0,
             new ModelResourceLocation(HexItems.PATTERN_SCROLL.getRegistryName(), "inventory")

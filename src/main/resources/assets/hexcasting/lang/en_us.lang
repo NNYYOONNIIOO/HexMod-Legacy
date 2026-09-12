@@ -1,5 +1,7 @@
 item.hexcasting.focus.name=Spell Focus
 item.hexcasting.scrying_lens.name=Scrying Lens
+item.hexcasting.battery.name=Media Battery
+hexcasting.tooltip.media=Media: %s / %s
 item.hexcasting.pattern_scroll.name=Pattern Scroll
 item.patchouli.guide_book.name=Hex Casting Guide
 item.patchouli.book.name=Hex Casting Guide
