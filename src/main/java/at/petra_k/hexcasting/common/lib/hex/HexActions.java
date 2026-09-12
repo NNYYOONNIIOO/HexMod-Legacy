@@ -1865,7 +1865,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
