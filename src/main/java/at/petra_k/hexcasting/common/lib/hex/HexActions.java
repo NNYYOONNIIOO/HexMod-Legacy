@@ -1038,13 +1038,19 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern ENTITY_HEIGHT_PATTERN =
         pattern(HexDir.NORTH_EAST, "awq");
     public static final HexAction ENTITY_HEIGHT = register(
-        ENTITY_HEIGHT_ID, ENTITY_HEIGHT_PATTERN, stack -> {
-            EntityIota entityIota = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity entity = entityIota.getEntity();
-            if (entity == null) {
-                throw new CastingException("The entity is no longer available");
+        ENTITY_HEIGHT_ID, ENTITY_HEIGHT_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("entity_height requires a player casting context");
             }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             stack.push(new DoubleIota(entity.height));
+            }
         });
 
     /** Return an entity's eye position as a vector Iota. */
@@ -1053,13 +1059,19 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern ENTITY_POS_EYE_PATTERN =
         pattern(HexDir.EAST, "aa");
     public static final HexAction ENTITY_POS_EYE = register(
-        ENTITY_POS_EYE_ID, ENTITY_POS_EYE_PATTERN, stack -> {
-            EntityIota entityIota = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity entity = entityIota.getEntity();
-            if (entity == null) {
-                throw new CastingException("The entity is no longer available");
+        ENTITY_POS_EYE_ID, ENTITY_POS_EYE_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("entity_pos/eye requires a player casting context");
             }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             stack.push(new Vec3Iota(entity.getPositionEyes(1.0F)));
+            }
         });
 
     /** Return an entity's feet position as a vector Iota. */
@@ -1068,14 +1080,20 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern ENTITY_POS_FOOT_PATTERN =
         pattern(HexDir.NORTH_EAST, "dd");
     public static final HexAction ENTITY_POS_FOOT = register(
-        ENTITY_POS_FOOT_ID, ENTITY_POS_FOOT_PATTERN, stack -> {
-            EntityIota entityIota = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity entity = entityIota.getEntity();
-            if (entity == null) {
-                throw new CastingException("The entity is no longer available");
+        ENTITY_POS_FOOT_ID, ENTITY_POS_FOOT_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("entity_pos/foot requires a player casting context");
             }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ)));
+            }
         });
 
     /** Return an entity's look direction as a vector Iota. */
@@ -1084,13 +1102,19 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern GET_ENTITY_LOOK_PATTERN =
         pattern(HexDir.EAST, "wa");
     public static final HexAction GET_ENTITY_LOOK = register(
-        GET_ENTITY_LOOK_ID, GET_ENTITY_LOOK_PATTERN, stack -> {
-            EntityIota entityIota = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity entity = entityIota.getEntity();
-            if (entity == null) {
-                throw new CastingException("The entity is no longer available");
+        GET_ENTITY_LOOK_ID, GET_ENTITY_LOOK_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("get_entity_look requires a player casting context");
             }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             stack.push(new Vec3Iota(entity.getLookVec()));
+            }
         });
 
     /** Return an entity's velocity as a vector Iota. */
@@ -1099,14 +1123,20 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern GET_ENTITY_VELOCITY_PATTERN =
         pattern(HexDir.EAST, "wq");
     public static final HexAction GET_ENTITY_VELOCITY = register(
-        GET_ENTITY_VELOCITY_ID, GET_ENTITY_VELOCITY_PATTERN, stack -> {
-            EntityIota entityIota = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity entity = entityIota.getEntity();
-            if (entity == null) {
-                throw new CastingException("The entity is no longer available");
+        GET_ENTITY_VELOCITY_ID, GET_ENTITY_VELOCITY_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("get_entity_velocity requires a player casting context");
             }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
                 entity.motionX, entity.motionY, entity.motionZ)));
+            }
         });
 
     /** Compare two entity Iotas by entity type, matching the upstream action. */
@@ -1177,6 +1207,23 @@ public static final HexPattern BOOL_IF_PATTERN =
             || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
+    }
+
+    private static net.minecraft.entity.Entity resolveEntity(EntityIota entityIota, CastingVM vm)
+        throws CastingException {
+        net.minecraft.entity.Entity entity = entityIota.getEntity();
+        if (entity == null && vm != null && vm.getPlayer() != null) {
+            for (net.minecraft.entity.Entity candidate : vm.getPlayer().world.loadedEntityList) {
+                if (entityIota.getUuid().equals(candidate.getUniqueID())) {
+                    entity = candidate;
+                    break;
+                }
+            }
+        }
+        if (entity == null) {
+            throw new CastingException("The entity is no longer available");
+        }
+        return entity;
     }
 
     private static HexAction register(ResourceLocation id, HexPattern pattern, HexAction action) {
