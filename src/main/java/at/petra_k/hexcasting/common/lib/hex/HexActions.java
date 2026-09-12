@@ -2403,6 +2403,108 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Apply the vanilla potion/absorption effect to the caster. */
+    public static final ResourceLocation POTION_ABSORPTION_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/absorption");
+    public static final HexPattern POTION_ABSORPTION_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "qqaawawaeqqdd");
+    public static final HexAction POTION_ABSORPTION = register(
+        POTION_ABSORPTION_ID, POTION_ABSORPTION_PATTERN, potionAction(net.minecraft.init.MobEffects.ABSORPTION));
+
+    /** Apply the vanilla potion/haste effect to the caster. */
+    public static final ResourceLocation POTION_HASTE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/haste");
+    public static final HexPattern POTION_HASTE_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qaawawaeqqqdd");
+    public static final HexAction POTION_HASTE = register(
+        POTION_HASTE_ID, POTION_HASTE_PATTERN, potionAction(net.minecraft.init.MobEffects.HASTE));
+
+    /** Apply the vanilla potion/levitation effect to the caster. */
+    public static final ResourceLocation POTION_LEVITATION_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/levitation");
+    public static final HexPattern POTION_LEVITATION_PATTERN =
+        pattern(HexDir.WEST, "qqqqqawwawawd");
+    public static final HexAction POTION_LEVITATION = register(
+        POTION_LEVITATION_ID, POTION_LEVITATION_PATTERN, potionAction(net.minecraft.init.MobEffects.LEVITATION));
+
+    /** Apply the vanilla potion/night_vision effect to the caster. */
+    public static final ResourceLocation POTION_NIGHT_VISION_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/night_vision");
+    public static final HexPattern POTION_NIGHT_VISION_PATTERN =
+        pattern(HexDir.WEST, "qqqaawawaeqdd");
+    public static final HexAction POTION_NIGHT_VISION = register(
+        POTION_NIGHT_VISION_ID, POTION_NIGHT_VISION_PATTERN, potionAction(net.minecraft.init.MobEffects.NIGHT_VISION));
+
+    /** Apply the vanilla potion/poison effect to the caster. */
+    public static final ResourceLocation POTION_POISON_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/poison");
+    public static final HexPattern POTION_POISON_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqadwawaww");
+    public static final HexAction POTION_POISON = register(
+        POTION_POISON_ID, POTION_POISON_PATTERN, potionAction(net.minecraft.init.MobEffects.POISON));
+
+    /** Apply the vanilla potion/regeneration effect to the caster. */
+    public static final ResourceLocation POTION_REGENERATION_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/regeneration");
+    public static final HexPattern POTION_REGENERATION_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qqqqaawawaedd");
+    public static final HexAction POTION_REGENERATION = register(
+        POTION_REGENERATION_ID, POTION_REGENERATION_PATTERN, potionAction(net.minecraft.init.MobEffects.REGENERATION));
+
+    /** Apply the vanilla potion/slowness effect to the caster. */
+    public static final ResourceLocation POTION_SLOWNESS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/slowness");
+    public static final HexPattern POTION_SLOWNESS_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "qqqqqadwawaw");
+    public static final HexAction POTION_SLOWNESS = register(
+        POTION_SLOWNESS_ID, POTION_SLOWNESS_PATTERN, potionAction(net.minecraft.init.MobEffects.SLOWNESS));
+
+    /** Apply the vanilla potion/strength effect to the caster. */
+    public static final ResourceLocation POTION_STRENGTH_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/strength");
+    public static final HexPattern POTION_STRENGTH_PATTERN =
+        pattern(HexDir.EAST, "aawawaeqqqqdd");
+    public static final HexAction POTION_STRENGTH = register(
+        POTION_STRENGTH_ID, POTION_STRENGTH_PATTERN, potionAction(net.minecraft.init.MobEffects.STRENGTH));
+
+    /** Apply the vanilla potion/weakness effect to the caster. */
+    public static final ResourceLocation POTION_WEAKNESS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/weakness");
+    public static final HexPattern POTION_WEAKNESS_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qqqqqaqwawaw");
+    public static final HexAction POTION_WEAKNESS = register(
+        POTION_WEAKNESS_ID, POTION_WEAKNESS_PATTERN, potionAction(net.minecraft.init.MobEffects.WEAKNESS));
+
+    /** Apply the vanilla potion/wither effect to the caster. */
+    public static final ResourceLocation POTION_WITHER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "potion/wither");
+    public static final HexPattern POTION_WITHER_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "qqqqqaewawawe");
+    public static final HexAction POTION_WITHER = register(
+        POTION_WITHER_ID, POTION_WITHER_PATTERN, potionAction(net.minecraft.init.MobEffects.WITHER));
+
+    private static HexAction potionAction(
+        final net.minecraft.potion.Potion potion) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.potion_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.potion_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (!player.world.isRemote) {
+                    player.addPotionEffect(new net.minecraft.potion.PotionEffect(
+                        potion, 20 * 30, 0, false, true));
+                }
+            }
+        };
+    }
+
     private HexActions() {
     }
 
