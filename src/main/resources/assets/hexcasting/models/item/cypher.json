@@ -2,5 +2,11 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "hexcasting:items/cypher"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": { "hexcasting:filled": 1.0 },
+      "model": "hexcasting:item/cypher_filled"
+    }
+  ]
 }

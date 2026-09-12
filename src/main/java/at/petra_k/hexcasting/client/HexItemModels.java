@@ -3,9 +3,12 @@ package at.petra_k.hexcasting.client;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.ItemStack;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -24,6 +27,7 @@ public final class HexItemModels {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        registerPackagedSpellProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
             0,
@@ -69,6 +73,18 @@ public final class HexItemModels {
                 ModelLoader.setCustomModelResourceLocation(
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
+        }
+    }
+
+    private static void registerPackagedSpellProperties() {
+        IItemPropertyGetter filled =
+            (stack, world, entity) -> ItemPackagedSpell.getPackagedAction(stack) == null ? 0.0F : 1.0F;
+        HexItems.CYPHER.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
+        HexItems.TRINKET.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
+        HexItems.ARTIFACT.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
+        Item ancient = HexItems.EXTRA_ITEMS.get("ancient_cypher");
+        if (ancient != null) {
+            ancient.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         }
     }
 

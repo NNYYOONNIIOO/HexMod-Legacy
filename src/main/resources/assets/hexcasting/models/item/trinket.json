@@ -2,5 +2,11 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "hexcasting:items/trinket"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": { "hexcasting:filled": 1.0 },
+      "model": "hexcasting:item/trinket_filled"
+    }
+  ]
 }
