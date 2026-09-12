@@ -1086,6 +1086,69 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
             }
         });
+    /** Raycast from an origin along a direction, returning the nearest entity or Null. */
+    public static final ResourceLocation RAYCAST_ENTITY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "raycast/entity");
+    public static final HexPattern RAYCAST_ENTITY_PATTERN =
+        pattern(HexDir.EAST, "weaqa");
+    public static final HexAction RAYCAST_ENTITY = register(
+        RAYCAST_ENTITY_ID, RAYCAST_ENTITY_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("raycast/entity requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
+                if (caster == null) {
+                    throw new CastingException("raycast/entity requires a player casting context");
+                }
+                Vec3Iota direction = stack.pop(Vec3Iota.class);
+                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d start = origin.getValue();
+                net.minecraft.util.math.Vec3d vector = direction.getValue();
+                double length = vector.lengthVector();
+                if (length == 0.0D) {
+                    throw new CastingException("raycast/entity direction cannot be zero");
+                }
+                net.minecraft.util.math.Vec3d end = start.add(
+                    vector.scale(64.0D / length));
+                net.minecraft.util.math.AxisAlignedBB search = new net.minecraft.util.math.AxisAlignedBB(
+                    Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z),
+                    Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z))
+                    .grow(1.0D);
+                java.util.List<net.minecraft.entity.Entity> candidates =
+                    caster.world.getEntitiesWithinAABBExcludingEntity(caster, search);
+                net.minecraft.entity.Entity nearest = null;
+                double nearestDistance = Double.MAX_VALUE;
+                for (net.minecraft.entity.Entity candidate : candidates) {
+                    if (candidate == null || !candidate.canBeCollidedWith()) {
+                        continue;
+                    }
+                    net.minecraft.util.math.AxisAlignedBB box = candidate.getEntityBoundingBox();
+                    if (box == null) {
+                        continue;
+                    }
+                    float border = candidate.getCollisionBorderSize();
+                    if (border > 0.0F) {
+                        box = box.grow(border);
+                    }
+                    net.minecraft.util.math.RayTraceResult intercept =
+                        box.calculateIntercept(start, end);
+                    if (intercept == null || intercept.hitVec == null) {
+                        continue;
+                    }
+                    double distance = start.squareDistanceTo(intercept.hitVec);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearest = candidate;
+                    }
+                }
+                stack.push(nearest == null ? new NullIota() : new EntityIota(nearest));
+            }
+        });
     /** Push the entity that initiated the current cast. */
     public static final ResourceLocation GET_CASTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_caster");
@@ -1280,7 +1343,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || COMPARE_ENTITY == null || GET_MEDIA == null) {
+            || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
