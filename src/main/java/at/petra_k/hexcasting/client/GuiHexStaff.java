@@ -742,7 +742,7 @@ public final class GuiHexStaff extends GuiScreen {
             hand, new ArrayList<>(savedPatterns), originQ, originR));
     }
 
-    private void refreshProgram() {
+    public void refreshProgram() {
         HexActionRegistry.bootstrap();
         programIds.clear();
         programCount = 0;
@@ -766,6 +766,12 @@ public final class GuiHexStaff extends GuiScreen {
             List<GridPoint> points = patternPoints(entry.getPattern(), origin);
             drawnPaths.add(new DrawnPath(entry.getPattern(), points, id));
             usedSpots.addAll(points);
+        }
+    }
+
+    public void refreshFromServer() {
+        if (!drawing) {
+            refreshProgram();
         }
     }
 

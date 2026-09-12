@@ -61,6 +61,13 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
         }
         ItemHexStaff.replaceProgram(staff, patternsData);
         StaffProgramData.replace(player, hand, patternsData);
+        try {
+            Class<?> bridge = Class.forName(
+                "at.petra_k.hexcasting.client.HexStaffClientSync");
+            bridge.getMethod("refresh").invoke(null);
+        } catch (ReflectiveOperationException ignored) {
+            // The client-only bridge is intentionally absent on a dedicated server.
+        }
     }
 
     public static void register() {
