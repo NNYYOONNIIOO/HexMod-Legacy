@@ -1,6 +1,8 @@
 package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
+import at.petra_k.hexcasting.common.block.BlockConjured;
+import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -31,11 +33,18 @@ public final class HexBlocks {
 
     static {
         for (String id : BLOCK_IDS) {
-            Block block = new Block(Material.ROCK)
-                .setRegistryName(HexAPI.MOD_ID, id)
+            Block block;
+            if ("conjured_light".equals(id)) {
+                block = new BlockConjuredLight();
+            } else if ("conjured_block".equals(id)) {
+                block = new BlockConjured();
+            } else {
+                block = new Block(Material.ROCK)
+                    .setHardness(2.0F)
+                    .setResistance(6.0F);
+            }
+            block.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
-                .setHardness(2.0F)
-                .setResistance(6.0F)
                 .setCreativeTab(HexCreativeTab.HEX);
             BLOCKS.put(id, block);
         }
