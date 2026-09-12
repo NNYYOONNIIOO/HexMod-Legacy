@@ -1037,6 +1037,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player.world.isBlockModifiable(player, blockPos)
                     && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
+                    vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
                     player.world.destroyBlock(blockPos, true);
                 }
             }

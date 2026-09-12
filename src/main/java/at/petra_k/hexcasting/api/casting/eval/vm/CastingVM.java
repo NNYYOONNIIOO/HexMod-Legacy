@@ -420,6 +420,21 @@ public final class CastingVM {
     }
 
     /** Drain all pending work using the default operation budget. */
+    /** Consume persistent player media for a contextual spell action. */
+    public void consumeMedia(long amount) throws CastingException {
+        if (amount <= 0L) {
+            return;
+        }
+        if (castingData == null) {
+            throw new CastingException("hexcasting.error.no_media_context");
+        }
+        long available = castingData.getMedia();
+        if (available < amount) {
+            throw new CastingException("hexcasting.error.not_enough_media");
+        }
+        castingData.setMedia(available - amount);
+    }
+
     public CastingStack run() throws CastingException {
         return run(activeOperationLimit);
     }
