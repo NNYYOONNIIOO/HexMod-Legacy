@@ -1,4 +1,11 @@
 package at.petra_k.hexcasting.common.item;
+import at.petra_k.hexcasting.api.capability.IHexCastingData;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.text.TextComponentString;
 
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
@@ -53,6 +60,33 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
         ItemStack battery = new ItemStack(this);
         setMedia(battery, media);
         items.add(battery);
+    }
+
+    /** Transfer stored battery media into the player's persistent reserve. */
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        ItemStack battery = player.getHeldItem(hand);
+        if (!world.isRemote) {
+            IHexCastingData data = HexCapabilities.CASTING_DATA == null
+                ? null : player.getCapability(HexCapabilities.CASTING_DATA, null);
+            if (data == null) {
+                player.sendMessage(new TextComponentString(I18n.translateToLocal("hexcasting.message.media_unavailable")));
+            } else {
+                long stored = getMedia(battery);
+                long room = Math.max(0L, data.getMaxMedia() - data.getMedia());
+                long transfer = Math.min(stored, room);
+                if (transfer > 0L) {
+                    setMedia(battery, stored - transfer);
+                    data.setMedia(data.getMedia() + transfer);
+                    player.sendMessage(new TextComponentString(I18n.translateToLocalFormatted("hexcasting.message.media_recharged", transfer, data.getMedia(), data.getMaxMedia())));
+                } else if (stored <= 0L) {
+                    player.sendMessage(new TextComponentString(I18n.translateToLocal("hexcasting.message.media_empty")));
+                } else {
+                    player.sendMessage(new TextComponentString(I18n.translateToLocal("hexcasting.message.media_full")));
+                }
+            }
+        }
+        return new ActionResult<>(EnumActionResult.SUCCESS, battery);
     }
 
     @Override
