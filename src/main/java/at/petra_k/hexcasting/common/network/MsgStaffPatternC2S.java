@@ -112,10 +112,10 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
             return;
         }
         if (patternsData == null) {
-            ItemHexStaff.clearProgram(player, staff);
+            ItemHexStaff.clearProgram(player, hand, staff);
             return;
         }
-        ItemHexStaff.replaceProgram(player, staff, patternsData);
+        ItemHexStaff.replaceProgram(player, hand, staff, patternsData);
     }
 
     public static void register() {

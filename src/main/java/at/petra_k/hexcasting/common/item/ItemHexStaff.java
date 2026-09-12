@@ -47,7 +47,7 @@ public final class ItemHexStaff extends Item {
             // client copy first so the GUI is opened only after the old
             // program has disappeared from the visible hand stack.
             if (player.isSneaking()) {
-                clearProgram(player, staff);
+                clearProgram(player, hand, staff);
             }
             openStaffGui(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
@@ -55,13 +55,13 @@ public final class ItemHexStaff extends Item {
 
         HexActionRegistry.bootstrap();
         if (player.isSneaking()) {
-            clearProgram(player, staff);
+            clearProgram(player, hand, staff);
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_cleared")));
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
 
-        List<HexPattern> program = getProgramPatterns(player, staff);
+        List<HexPattern> program = getProgramPatterns(player, hand, staff);
         if (program.isEmpty()) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_empty")));
@@ -173,12 +173,17 @@ public final class ItemHexStaff extends Item {
     /** Update both the player-scoped program and the client compatibility cache. */
     public static void replaceProgram(EntityPlayer player, ItemStack staff,
                                       NBTTagList incoming) {
+        replaceProgram(player, EnumHand.MAIN_HAND, staff, incoming);
+    }
+
+    public static void replaceProgram(EntityPlayer player, EnumHand hand,
+                                      ItemStack staff, NBTTagList incoming) {
         replaceProgram(staff, incoming);
         if (isStaff(staff) && staff.getTagCompound() != null) {
-            StaffProgramData.replace(player,
+            StaffProgramData.replace(player, hand,
                 staff.getTagCompound().getTagList(KEY_PATTERN_PROGRAM, 10));
         } else {
-            StaffProgramData.clear(player);
+            StaffProgramData.clear(player, hand);
         }
     }
 
@@ -194,8 +199,12 @@ public final class ItemHexStaff extends Item {
     }
 
     public static void clearProgram(EntityPlayer player, ItemStack staff) {
+        clearProgram(player, EnumHand.MAIN_HAND, staff);
+    }
+
+    public static void clearProgram(EntityPlayer player, EnumHand hand, ItemStack staff) {
         clearProgram(staff);
-        StaffProgramData.clear(player);
+        StaffProgramData.clear(player, hand);
     }
 
     public static int getProgramSize(ItemStack staff) {
@@ -221,8 +230,13 @@ public final class ItemHexStaff extends Item {
     }
 
     public static List<HexPattern> getProgramPatterns(EntityPlayer player, ItemStack staff) {
+        return getProgramPatterns(player, EnumHand.MAIN_HAND, staff);
+    }
+
+    public static List<HexPattern> getProgramPatterns(EntityPlayer player, EnumHand hand,
+                                                      ItemStack staff) {
         List<HexPattern> result = new ArrayList<>();
-        for (ProgramEntry entry : getProgramEntries(player, staff)) {
+        for (ProgramEntry entry : getProgramEntries(player, hand, staff)) {
             result.add(entry.getPattern());
         }
         return result;
@@ -230,8 +244,13 @@ public final class ItemHexStaff extends Item {
 
     /** Read the player-side program first, falling back to legacy item NBT. */
     public static List<ProgramEntry> getProgramEntries(EntityPlayer player, ItemStack staff) {
-        if (player != null && isStaff(staff) && StaffProgramData.hasPatterns(player)) {
-            return getPatternEntries(StaffProgramData.getPatterns(player));
+        return getProgramEntries(player, EnumHand.MAIN_HAND, staff);
+    }
+
+    public static List<ProgramEntry> getProgramEntries(EntityPlayer player, EnumHand hand,
+                                                       ItemStack staff) {
+        if (player != null && isStaff(staff) && StaffProgramData.hasPatterns(player, hand)) {
+            return getPatternEntries(StaffProgramData.getPatterns(player, hand));
         }
         return getProgramEntries(staff);
     }

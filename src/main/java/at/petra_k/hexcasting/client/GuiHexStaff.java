@@ -684,7 +684,7 @@ public final class GuiHexStaff extends GuiScreen {
         }
         if (typedChar == 'c' || typedChar == 'C') {
             if (mc != null && mc.player != null) {
-                ItemHexStaff.clearProgram(mc.player, mc.player.getHeldItem(hand));
+                ItemHexStaff.clearProgram(mc.player, hand, mc.player.getHeldItem(hand));
             }
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, (ResourceLocation) null));
             programIds.clear();
@@ -719,7 +719,7 @@ public final class GuiHexStaff extends GuiScreen {
                 entry.setInteger("origin_r", origin.r);
                 snapshot.appendTag(entry);
             }
-            ItemHexStaff.replaceProgram(mc.player, mc.player.getHeldItem(hand), snapshot);
+            ItemHexStaff.replaceProgram(mc.player, hand, mc.player.getHeldItem(hand), snapshot);
         }
         PaucalAPI.sendToServer(new MsgStaffPatternC2S(
             hand, new ArrayList<>(savedPatterns), originQ, originR));
@@ -737,7 +737,7 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
         for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(
-            mc.player, mc.player.getHeldItem(hand))) {
+            mc.player, hand, mc.player.getHeldItem(hand))) {
             programCount++;
             ResourceLocation id = entry.getActionId();
             if (id != null) {
