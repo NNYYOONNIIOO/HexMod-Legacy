@@ -180,6 +180,10 @@ public final class GuiHexStaff extends GuiScreen {
             // RenderLib.drawPatternFromPoints expands segments with makeZappy
             // before the 5 px outer and 2 px inner drawLineSeq passes.
             List<float[]> zappyPoints = makeZappyPoints(pixelPoints, points.size());
+            // Hex's blue outer ribbon is surrounded by a soft additive-looking
+            // halo before the narrow blue ribbon and pink readability core.
+            drawLineSequence(zappyPoints, 8.0F,
+                withAlpha(glowColor, 0x58), withAlpha(glowColor, 0x58));
             drawLineSequence(zappyPoints, 5.0F, glowColor, glowColor);
             drawLineSequence(zappyPoints, 2.0F, lineColor, lineColor);
         }
@@ -189,7 +193,7 @@ public final class GuiHexStaff extends GuiScreen {
                 && samePixel(pixel, pixelPoints.get(0))) {
                 continue;
             }
-            drawHexSpot(pixel[0], pixel[1], 2.5F, nodeColor);
+            drawConnectionSpot(pixel[0], pixel[1], glowColor, nodeColor);
         }
     }
 
@@ -454,6 +458,21 @@ public final class GuiHexStaff extends GuiScreen {
                 y + Math.sin(angle) * radius, 0).color(red, green, blue, alpha).endVertex();
         }
         Tessellator.getInstance().draw();
+    }
+
+    /**
+     * Hex's connection points are layered geometry rather than a flat dot:
+     * an outer colored fade, a six-sided colored core, and a bright center.
+     */
+    private void drawConnectionSpot(float x, float y, int glowColor, int coreColor) {
+        drawCircle(x, y, 6.0F,
+            withAlpha(glowColor, 0x72), withAlpha(glowColor, 0x00));
+        drawHexSpot(x, y, 3.0F, withAlpha(coreColor, 0xE8));
+        drawHexSpot(x, y, 1.15F, 0xFFF8FFFF);
+    }
+
+    private static int withAlpha(int argb, int alpha) {
+        return ((alpha & 0xFF) << 24) | (argb & 0x00FFFFFF);
     }
 
     /** Hex renders the guide glow as dynamic position-colour geometry, not a texture. */

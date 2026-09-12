@@ -42,6 +42,12 @@ public final class ItemHexStaff extends Item {
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack staff = player.getHeldItem(hand);
         if (world.isRemote) {
+            // The server clears the authoritative program below. Clear the
+            // client copy first so the GUI is opened only after the old
+            // program has disappeared from the visible hand stack.
+            if (player.isSneaking()) {
+                clearProgram(staff);
+            }
             openStaffGui(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
