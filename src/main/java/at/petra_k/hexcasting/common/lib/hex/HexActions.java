@@ -8,6 +8,8 @@ import at.petra_k.hexcasting.api.casting.action.StackOperationAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
+import at.petra_k.hexcasting.common.item.ItemHexFocus;
+import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
@@ -2527,6 +2529,39 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (!vm.getPlayer().world.isRemote) {
                     target.setDead();
                 }
+            }
+        });
+
+    /** Cycle the selected pattern variant stored on a focus or staff item. */
+    public static final ResourceLocation CYCLE_VARIANT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "cycle_variant");
+    public static final HexPattern CYCLE_VARIANT_PATTERN =
+        pattern(HexDir.WEST, "dwaawedwewdwe");
+    public static final HexAction CYCLE_VARIANT = register(
+        CYCLE_VARIANT_ID, CYCLE_VARIANT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.cycle_variant_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.cycle_variant_context");
+                }
+                net.minecraft.item.ItemStack held = vm.getPlayer().getHeldItemMainhand();
+                if (!(held.getItem() instanceof ItemHexFocus)
+                    && !(held.getItem() instanceof ItemHexStaff)) {
+                    held = vm.getPlayer().getHeldItemOffhand();
+                }
+                if (!(held.getItem() instanceof ItemHexFocus)
+                    && !(held.getItem() instanceof ItemHexStaff)) {
+                    throw new CastingException("hexcasting.error.cycle_variant_item");
+                }
+                final String key = "hexcasting_variant";
+                int current = held.hasTagCompound()
+                    ? held.getTagCompound().getInteger(key) : 0;
+                held.getOrCreateSubCompound(HexAPI.MOD_ID).setInteger(key, current + 1);
             }
         });
 
