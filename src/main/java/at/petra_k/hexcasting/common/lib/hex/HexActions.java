@@ -2240,6 +2240,84 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexAction COMPARE_ITEM_STRICT = register(
         COMPARE_ITEM_STRICT_ID, COMPARE_ITEM_STRICT_PATTERN, compareItemAction(true));
 
+    /** Apply vanilla bonemeal behavior at a vector position. */
+    public static final ResourceLocation BONEMEAL_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "bonemeal");
+    public static final HexPattern BONEMEAL_PATTERN =
+        pattern(HexDir.NORTH_EAST, "wqaqwawqaqw");
+    public static final HexAction BONEMEAL = register(
+        BONEMEAL_ID, BONEMEAL_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.bonemeal_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.bonemeal_context");
+                }
+                net.minecraft.util.math.BlockPos position = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                if (!vm.getPlayer().world.isRemote) {
+                    net.minecraft.item.ItemStack boneMeal = new net.minecraft.item.ItemStack(
+                        net.minecraft.init.Items.DYE, 1, 15);
+                    net.minecraft.item.ItemDye.applyBonemeal(
+                        boneMeal, vm.getPlayer().world, position, vm.getPlayer(),
+                        net.minecraft.util.EnumHand.MAIN_HAND);
+                }
+            }
+        });
+
+    /** Summon a lightning bolt at a vector position. */
+    public static final ResourceLocation LIGHTNING_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "lightning");
+    public static final HexPattern LIGHTNING_PATTERN =
+        pattern(HexDir.EAST, "waadwawdaaweewq");
+    public static final HexAction LIGHTNING = register(
+        LIGHTNING_ID, LIGHTNING_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.lightning_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.lightning_context");
+                }
+                net.minecraft.util.math.BlockPos position = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                if (!vm.getPlayer().world.isRemote) {
+                    net.minecraft.entity.effect.EntityLightningBolt bolt =
+                        new net.minecraft.entity.effect.EntityLightningBolt(
+                            vm.getPlayer().world, position.getX() + 0.5D,
+                            position.getY(), position.getZ() + 0.5D, false);
+                    vm.getPlayer().world.addWeatherEffect(bolt);
+                }
+            }
+        });
+
+    /** Return an entity's bounding-box height. */
+    public static final ResourceLocation GET_ENTITY_HEIGHT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity_height");
+    public static final HexPattern GET_ENTITY_HEIGHT_PATTERN =
+        pattern(HexDir.NORTH_EAST, "awq");
+    public static final HexAction GET_ENTITY_HEIGHT = register(
+        GET_ENTITY_HEIGHT_ID, GET_ENTITY_HEIGHT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.get_entity_height_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                EntityIota value = stack.pop(EntityIota.class);
+                stack.push(new DoubleIota(resolveEntity(value, vm).getEntityBoundingBox().maxY
+                    - resolveEntity(value, vm).getEntityBoundingBox().minY));
+            }
+        });
+
     private HexActions() {
     }
 
