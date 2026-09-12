@@ -2,8 +2,11 @@ package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -58,11 +61,19 @@ public final class HexItemModels {
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
         }
+        Minecraft.getMinecraft().getItemColors().registerItemColorHandler(
+            (stack, tintIndex) -> tintIndex == 0 ? colorFor(stack) : -1,
+            HexItems.FOCUS, HexItems.STAFF);
         for (Item item : HexBlocks.blockItems()) {
             if (item.getRegistryName() != null) {
                 ModelLoader.setCustomModelResourceLocation(
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
         }
+    }
+
+    private static int colorFor(ItemStack stack) {
+        int color = ItemColorizer.getColor(stack);
+        return color < 0 ? 0xFFFFFF : color;
     }
 }
