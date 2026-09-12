@@ -110,9 +110,9 @@ public final class GuiHexStaff extends GuiScreen {
                 // Hex's guide spots are dynamic position-colour geometry.  Keep
                 // the source colour (0x64c8ff) and apply the same distance fade.
                 drawSpot(pixel[0], pixel[1], (float) (scaledDistance * 2.0D),
-                    lerp(scaledDistance, 0.16D, 0.392D),
-                    lerp(scaledDistance, 0.34D, 0.784D),
-                    lerp(scaledDistance, 0.64D, 1.00D),
+                    lerp(scaledDistance, 0.40D, 0.50D),
+                    lerp(scaledDistance, 0.80D, 1.00D),
+                    lerp(scaledDistance, 0.70D, 0.90D),
                     (float) scaledDistance);
             }
         }
