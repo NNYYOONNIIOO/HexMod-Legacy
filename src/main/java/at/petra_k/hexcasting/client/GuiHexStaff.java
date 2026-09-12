@@ -44,6 +44,7 @@ public final class GuiHexStaff extends GuiScreen {
     private GridPoint current;
     private HexPattern workingPattern;
     private String status = "";
+    private int programCount;
 
     public GuiHexStaff(EnumHand hand) {
         this.hand = hand == null ? EnumHand.MAIN_HAND : hand;
@@ -287,15 +288,7 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
 
-        HexActionRegistry.bootstrap();
-        HexAction action = HexActionRegistry.get(workingPattern);
-        ResourceLocation id = action == null ? null : HexActionRegistry.idFor(action);
-        if (id == null) {
-            status = I18n.format("hexcasting.gui.staff.unknown");
-            resetWorkingPath();
-            return;
-        }
-        if (programIds.size() >= ItemHexStaff.MAX_PROGRAM_SIZE) {
+        if (programCount >= ItemHexStaff.MAX_PROGRAM_SIZE) {
             status = I18n.format("hexcasting.message.program_full", ItemHexStaff.MAX_PROGRAM_SIZE);
             resetWorkingPath();
             return;
@@ -304,14 +297,21 @@ public final class GuiHexStaff extends GuiScreen {
         GridPoint origin = currentPoints.get(0);
         PaucalAPI.sendToServer(new MsgStaffPatternC2S(
             hand, workingPattern, origin.q, origin.r));
-        programIds.add(id);
+        HexActionRegistry.bootstrap();
+        HexAction action = HexActionRegistry.get(workingPattern);
+        ResourceLocation id = action == null ? null : HexActionRegistry.idFor(action);
+        if (id != null) {
+            programIds.add(id);
+        }
+        programCount++;
         drawnPaths.add(new DrawnPath(workingPattern, new ArrayList<>(currentPoints), id));
         usedSpots.addAll(currentPoints);
         currentPoints.clear();
         current = null;
         workingPattern = null;
         status = I18n.format("hexcasting.message.program_added",
-            localizeAction(id), programIds.size(), ItemHexStaff.MAX_PROGRAM_SIZE);
+            id == null ? I18n.format("hexcasting.tooltip.pattern") : localizeAction(id),
+            programCount, ItemHexStaff.MAX_PROGRAM_SIZE);
     }
 
     @Override
@@ -328,6 +328,7 @@ public final class GuiHexStaff extends GuiScreen {
         if (typedChar == 'c' || typedChar == 'C') {
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, null));
             programIds.clear();
+            programCount = 0;
             drawnPaths.clear();
             usedSpots.clear();
             resetWorkingPath();
@@ -341,15 +342,15 @@ public final class GuiHexStaff extends GuiScreen {
     private void refreshProgram() {
         HexActionRegistry.bootstrap();
         programIds.clear();
+        programCount = 0;
         drawnPaths.clear();
         usedSpots.clear();
         if (mc == null || mc.player == null) {
             return;
         }
-        programIds.addAll(ItemHexStaff.getProgramIds(mc.player.getHeldItem(hand)));
-
         for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(
             mc.player.getHeldItem(hand))) {
+            programCount++;
             ResourceLocation id = entry.getActionId();
             if (id != null) {
                 programIds.add(id);

@@ -124,7 +124,7 @@ public final class ItemHexStaff extends Item {
             return false;
         }
         HexActionRegistry.bootstrap();
-        if (HexActionRegistry.get(pattern) == null || getProgramSize(staff) >= MAX_PROGRAM_SIZE) {
+        if (getProgramSize(staff) >= MAX_PROGRAM_SIZE) {
             return false;
         }
         NBTTagCompound tag = getOrCreateTag(staff);
@@ -187,10 +187,8 @@ public final class ItemHexStaff extends Item {
                     HexAction action = HexActionRegistry.get(pattern);
                     ResourceLocation actionId = action == null
                         ? null : HexActionRegistry.idFor(action);
-                    if (actionId != null) {
-                        result.add(new ProgramEntry(pattern, actionId,
-                            entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
-                    }
+                    result.add(new ProgramEntry(pattern, actionId,
+                        entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
                 } catch (RuntimeException ignored) {
                     // Ignore malformed entries without discarding the rest of the program.
                 }
