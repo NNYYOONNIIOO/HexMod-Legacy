@@ -153,9 +153,9 @@ public final class GuiHexStaff extends GuiScreen {
             if (!hover.equals(current) && isAdjacent(current, hover)
                 && !usedSpots.contains(hover)) {
                 drawSegment(coordToPx(current), coordToPx(hover),
-                    8.0F, 0x7064C8FF);
+                    5.0F, 0x7064C8FF);
                 drawSegment(coordToPx(current), coordToPx(hover),
-                    2.5F, 0xFF64C8FF);
+                    2.0F, 0xFF64C8FF);
                 int[] pixel = coordToPx(hover);
                 drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.8F);
             }
@@ -171,11 +171,11 @@ public final class GuiHexStaff extends GuiScreen {
         }
         for (int i = 1; i < points.size(); i++) {
             drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
-                8.0F, glowColor);
+                5.0F, glowColor);
         }
         for (int i = 1; i < points.size(); i++) {
             drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
-                2.5F, lineColor);
+                2.0F, lineColor);
         }
         for (GridPoint point : points) {
             int[] pixel = coordToPx(point);
