@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
+import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
@@ -1009,6 +1010,28 @@ public static final HexPattern BOOL_IF_PATTERN =
         return reordered;
     }
 
+    /** Push the entity that initiated the current cast. */
+    public static final ResourceLocation GET_CASTER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_caster");
+    public static final HexPattern GET_CASTER_PATTERN =
+        pattern(HexDir.NORTH_EAST, "qaq");
+    public static final HexAction GET_CASTER = register(GET_CASTER_ID, GET_CASTER_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("get_caster requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("get_caster requires a player casting context");
+                }
+                stack.push(new EntityIota(player));
+            }
+        });
+
     /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
@@ -1054,7 +1077,8 @@ public static final HexPattern BOOL_IF_PATTERN =
             || EQUALITY == null || TYPE_EQUALITY == null || COERCE_TO_BOOL == null
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
-            || REVERSE == null || LAST_N_LIST == null || GET_MEDIA == null) {
+            || REVERSE == null || LAST_N_LIST == null || GET_CASTER == null
+            || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
