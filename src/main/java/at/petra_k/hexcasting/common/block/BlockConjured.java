@@ -8,9 +8,13 @@ import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.world.World;
 
 /** The translucent temporary block created by Hex Casting. */
-public final class BlockConjured extends Block {
+public class BlockConjured extends Block {
     public BlockConjured() {
-        super(Material.GLASS);
+        this(Material.GLASS);
+    }
+
+    protected BlockConjured(Material material) {
+        super(material);
         setHardness(0.3F);
         setResistance(0.3F);
         setLightOpacity(0);

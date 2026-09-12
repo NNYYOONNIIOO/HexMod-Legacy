@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.lib.hex;
 
 import at.petra_k.hexcasting.api.casting.action.HexAction;
+import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import net.minecraft.util.ResourceLocation;
 
@@ -14,6 +15,8 @@ import java.util.Map;
 public final class HexActionRegistry {
     private static final Map<ResourceLocation, HexAction> BY_ID = new LinkedHashMap<>();
     private static final Map<HexPattern, HexAction> BY_PATTERN = new LinkedHashMap<>();
+    /** Modern Hex resolves a drawn pattern by its relative turn sequence. */
+    private static final Map<List<HexAngle>, HexAction> BY_SHAPE = new LinkedHashMap<>();
     private static final Map<ResourceLocation, HexPattern> PATTERN_BY_ID = new LinkedHashMap<>();
 
     private HexActionRegistry() {
@@ -28,6 +31,7 @@ public final class HexActionRegistry {
         }
         BY_ID.put(id, action);
         BY_PATTERN.put(pattern, action);
+        BY_SHAPE.putIfAbsent(shapeOf(pattern), action);
         PATTERN_BY_ID.put(id, pattern);
         return action;
     }
@@ -37,7 +41,11 @@ public final class HexActionRegistry {
     }
 
     public static HexAction get(HexPattern pattern) {
-        return BY_PATTERN.get(pattern);
+        if (pattern == null) {
+            return null;
+        }
+        HexAction exact = BY_PATTERN.get(pattern);
+        return exact == null ? BY_SHAPE.get(shapeOf(pattern)) : exact;
     }
 
     public static HexPattern getPattern(ResourceLocation id) {
@@ -72,6 +80,10 @@ public final class HexActionRegistry {
 
     public static Map<HexPattern, HexAction> byPattern() {
         return Collections.unmodifiableMap(BY_PATTERN);
+    }
+
+    private static List<HexAngle> shapeOf(HexPattern pattern) {
+        return Collections.unmodifiableList(new ArrayList<>(pattern.getAngles()));
     }
 
     public static void bootstrap() {

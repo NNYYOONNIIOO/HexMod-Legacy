@@ -1,15 +1,13 @@
 package at.petra_k.hexcasting.common.block;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
 /** An invisible, non-colliding light source created by Hex Casting. */
-public final class BlockConjuredLight extends Block {
+public final class BlockConjuredLight extends BlockConjured {
     public BlockConjuredLight() {
         super(Material.AIR);
         setLightLevel(1.0F);
@@ -30,12 +28,6 @@ public final class BlockConjuredLight extends Block {
     @Override
     public boolean isCollidable() {
         return false;
-    }
-
-    /** Hex's conjured light is a logical light source and has no visible model. */
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.INVISIBLE;
     }
 
     @Override
