@@ -2,8 +2,6 @@ package at.petra_k.hexcasting.interop.inline;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import com.samsthenerd.inline.api.InlineAPI;
-import com.samsthenerd.inline.client.InlineBuiltins;
-import com.samsthenerd.inline.client.InlineClientEvents;
 import net.minecraftforge.common.MinecraftForge;
 
 /**
@@ -18,13 +16,27 @@ public final class HexInline {
     }
 
     public static void init() {
-        if (!initialized) {
-            InlineAPI.addDataType(InlinePatternData.TYPE);
-            InlineAPI.registerRenderer(InlinePatternData.class,
-                InlinePatternRenderer.INSTANCE);
-            InlineBuiltins.register();
-            MinecraftForge.EVENT_BUS.register(InlineClientEvents.class);
-            initialized = true;
+        if (initialized) {
+            return;
+        }
+        InlineAPI.addDataType(InlinePatternData.TYPE);
+        InlineAPI.registerRenderer(InlinePatternData.class,
+            InlinePatternRenderer.INSTANCE);
+        com.samsthenerd.inline.common.InlineCommonBuiltins.register();
+        if (net.minecraftforge.fml.common.FMLCommonHandler.instance().getSide().isClient()) {
+            loadClientIntegration();
+        }
+        initialized = true;
+    }
+
+    private static void loadClientIntegration() {
+        try {
+            Class<?> builtins = Class.forName("com.samsthenerd.inline.client.InlineBuiltins");
+            builtins.getMethod("register").invoke(null);
+            Class<?> events = Class.forName("com.samsthenerd.inline.client.InlineClientEvents");
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(events);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Unable to initialize Inline client integration", exception);
         }
     }
 

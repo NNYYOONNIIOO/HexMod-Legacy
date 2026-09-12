@@ -4,12 +4,10 @@ import com.samsthenerd.inline.api.InlineAPI;
 import com.samsthenerd.inline.api.MatchContext;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Registers the 1.12.2 client-side bridge for Inline chat placeholders. */
 public final class InlineClientEvents {
-    private static final String TOKEN_PREFIX = "\u0000inline:";
     private InlineClientEvents() {
     }
 

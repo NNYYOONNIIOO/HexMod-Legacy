@@ -42,36 +42,15 @@ public final class InlineBuiltins {
         if (registered) {
             return;
         }
-        InlineAPI.addDataType(ItemInlineData.TYPE);
-        InlineAPI.addDataType(EntityInlineData.TYPE);
-        InlineAPI.addDataType(PlayerHeadData.TYPE);
-        InlineAPI.addDataType(ModIconData.TYPE);
+        com.samsthenerd.inline.common.InlineCommonBuiltins.register();
         InlineAPI.registerRenderer(ItemInlineData.class,
-                (data, context) -> renderItem(data));
+            (data, context) -> renderItem(data));
         InlineAPI.registerRenderer(EntityInlineData.class,
-                (data, context) -> renderEntity(data));
+            (data, context) -> renderEntity(data));
         InlineAPI.registerRenderer(PlayerHeadData.class,
-                (data, context) -> renderPlayer(data));
+            (data, context) -> renderPlayer(data));
         InlineAPI.registerRenderer(ModIconData.class,
             (data, context) -> renderMod(data));
-
-        InlineAPI.addChatMatcher(new RegexInlineMatcher(
-            Pattern.compile("\\[item:([^\\]]+)\\]"),
-            (matcher, context) -> item(matcher.group(1))));
-        InlineAPI.addChatMatcher(new RegexInlineMatcher(
-            Pattern.compile("\\[entity:([^\\]]+)\\]"),
-            (matcher, context) -> entity(matcher.group(1))));
-        InlineAPI.addChatMatcher(new RegexInlineMatcher(
-            Pattern.compile("\\[face:([^\\]]+)\\]"),
-            (matcher, context) -> new PlayerHeadData(
-                new com.mojang.authlib.GameProfile(
-                    UUID.nameUUIDFromBytes(matcher.group(1).getBytes()), matcher.group(1)))));
-        InlineAPI.addChatMatcher(new RegexInlineMatcher(
-            Pattern.compile("\\[mod:([^\\]]+)\\]"),
-            (matcher, context) -> new ModIconData(matcher.group(1))));
-        InlineAPI.addChatMatcher(new RegexInlineMatcher(
-            Pattern.compile("\\[show:(hand|offhand)\\]"),
-            InlineBuiltins::heldItem));
         registered = true;
     }
 
