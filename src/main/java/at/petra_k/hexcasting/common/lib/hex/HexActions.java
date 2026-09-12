@@ -1111,8 +1111,10 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.add_motion_args");
                 }
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
-                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
                 net.minecraft.util.math.Vec3d motion = motionIota.getValue();
+                double motionCost = Math.min(8192.0D,
+                    motion.x * motion.x + motion.y * motion.y + motion.z * motion.z);
+                vm.consumeMedia((long) (MediaConstants.DUST_UNIT * motionCost));
                 entity.motionX += motion.x;
                 entity.motionY += motion.y;
                 entity.motionZ += motion.z;
@@ -1189,12 +1191,14 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player == null) {
                     throw new CastingException("hexcasting.error.weather_context");
                 }
-                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                int rainTime = (30 + player.world.rand.nextInt(60)) * 20 * 60;
+                info.setCleanWeatherTime(0);
                 info.setRaining(true);
-                info.setRainTime(6000);
-                info.setThundering(false);
-                info.setThunderTime(6000);
+                info.setRainTime(rainTime);
+                info.setThundering(player.world.rand.nextDouble() < 0.05D);
+                info.setThunderTime(rainTime);
             }
         });
 
@@ -1218,10 +1222,12 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                int clearTime = (60 + player.world.rand.nextInt(120)) * 20 * 60;
+                info.setCleanWeatherTime(clearTime);
                 info.setRaining(false);
-                info.setRainTime(6000);
+                info.setRainTime(0);
                 info.setThundering(false);
-                info.setThunderTime(6000);
+                info.setThunderTime(0);
             }
         });
 
