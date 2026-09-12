@@ -21,7 +21,6 @@ public final class HexJeiPlugin implements IModPlugin {
         registry.addRecipeCatalyst(new ItemStack(HexItems.STAFF), CRAFTING_UID);
         registry.addRecipeCatalyst(new ItemStack(HexItems.SCRYING_LENS), CRAFTING_UID);
         registry.addRecipeCatalyst(new ItemStack(HexItems.BATTERY), CRAFTING_UID);
-        registry.addRecipeCatalyst(new ItemStack(HexItems.PATTERN_SCROLL), CRAFTING_UID);
+        registry.addRecipeCatalyst(new ItemStack(HexItems.EXTRA_ITEMS.get("scroll")), CRAFTING_UID);
     }
 }
-

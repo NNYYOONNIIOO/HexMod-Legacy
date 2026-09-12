@@ -56,12 +56,6 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".artifact")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemPatternScroll PATTERN_SCROLL = (ItemPatternScroll) new ItemPatternScroll()
-        .setRegistryName(HexAPI.MOD_ID, "pattern_scroll")
-        .setUnlocalizedName(HexAPI.MOD_ID + ".pattern_scroll")
-        .setCreativeTab(HexCreativeTab.HEX);
-
-
     /** Generic item registrations for content whose specialized behavior is ported later. */
     private static final String[] EXTRA_ITEM_IDS = new String[] {
         "amethyst_dust",
@@ -170,7 +164,6 @@ public final class HexItems {
         items.add(CYPHER);
         items.add(TRINKET);
         items.add(ARTIFACT);
-        items.add(PATTERN_SCROLL);
         items.addAll(EXTRA_ITEMS.values());
         return items;
     }
@@ -187,7 +180,6 @@ public final class HexItems {
         event.getRegistry().register(CYPHER);
         event.getRegistry().register(TRINKET);
         event.getRegistry().register(ARTIFACT);
-        event.getRegistry().register(PATTERN_SCROLL);
         EXTRA_ITEMS.values().forEach(event.getRegistry()::register);
     }
 }

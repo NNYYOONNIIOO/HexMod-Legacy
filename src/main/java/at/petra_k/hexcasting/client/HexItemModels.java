@@ -49,11 +49,6 @@ public final class HexItemModels {
             new ModelResourceLocation(HexItems.BATTERY.getRegistryName(), "inventory")
         );
         ModelLoader.setCustomModelResourceLocation(
-            HexItems.PATTERN_SCROLL,
-            0,
-            new ModelResourceLocation(HexItems.PATTERN_SCROLL.getRegistryName(), "inventory")
-        );
-        ModelLoader.setCustomModelResourceLocation(
             PatchouliItems.book,
             0,
             new ModelResourceLocation(new ResourceLocation(HexAPI.MOD_ID, "patchouli_book"), "inventory")
