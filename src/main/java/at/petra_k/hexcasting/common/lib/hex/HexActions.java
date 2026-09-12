@@ -2942,6 +2942,82 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Create a media battery from a media item entity and one empty bottle. */
+    public static final ResourceLocation CRAFT_BATTERY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "craft/battery");
+    public static final HexPattern CRAFT_BATTERY_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "aqqqaqwwaqqqqqeqaqqqawwqwqwqwqwqw");
+    public static final HexAction CRAFT_BATTERY = register(
+        CRAFT_BATTERY_ID, CRAFT_BATTERY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.craft_battery_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.craft_battery_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                EntityIota entityIota = stack.pop(EntityIota.class);
+                net.minecraft.entity.Entity sourceEntity = resolveEntity(entityIota, vm);
+                if (!(sourceEntity instanceof net.minecraft.entity.item.EntityItem)) {
+                    throw new CastingException("hexcasting.error.craft_battery_media_item");
+                }
+                net.minecraft.entity.item.EntityItem itemEntity =
+                    (net.minecraft.entity.item.EntityItem) sourceEntity;
+                if (player.getDistanceSq(itemEntity) > 32.0D * 32.0D) {
+                    throw new CastingException("hexcasting.error.craft_battery_range");
+                }
+                net.minecraft.item.ItemStack bottle = player.getHeldItemOffhand();
+                net.minecraft.util.EnumHand hand = net.minecraft.util.EnumHand.OFF_HAND;
+                if (bottle == null || bottle.isEmpty()
+                    || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE) {
+                    bottle = player.getHeldItemMainhand();
+                    hand = net.minecraft.util.EnumHand.MAIN_HAND;
+                }
+                if (bottle == null || bottle.isEmpty()
+                    || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE
+                    || bottle.getCount() != 1) {
+                    throw new CastingException("hexcasting.error.craft_battery_base");
+                }
+                net.minecraft.item.ItemStack source = itemEntity.getItem();
+                if (source == null || source.isEmpty()
+                    || !(source.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
+                    throw new CastingException("hexcasting.error.craft_battery_media_item");
+                }
+                at.petra_k.hexcasting.api.item.MediaHolderItem holder =
+                    (at.petra_k.hexcasting.api.item.MediaHolderItem) source.getItem();
+                if (!holder.canProvide(source)) {
+                    throw new CastingException("hexcasting.error.craft_battery_media");
+                }
+                long mediaAmount = holder.withdrawMedia(source, -1L, true);
+                if (mediaAmount <= 0L) {
+                    throw new CastingException("hexcasting.error.craft_battery_media");
+                }
+                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+                long drained = holder.withdrawMedia(source, mediaAmount, false);
+                if (drained <= 0L) {
+                    throw new CastingException("hexcasting.error.craft_battery_media");
+                }
+                net.minecraft.item.ItemStack result = new net.minecraft.item.ItemStack(
+                    at.petra_k.hexcasting.common.lib.HexItems.BATTERY, 1);
+                at.petra_k.hexcasting.common.item.ItemMediaBattery battery =
+                    at.petra_k.hexcasting.common.lib.HexItems.BATTERY;
+                battery.setMedia(result, drained);
+                player.setHeldItem(hand, result);
+                if (!player.world.isRemote) {
+                    if (source.isEmpty()) {
+                        itemEntity.setDead();
+                    } else {
+                        itemEntity.setItem(source);
+                    }
+                }
+            }
+        });
+
     private HexActions() {
     }
 
