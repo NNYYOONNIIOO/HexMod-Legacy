@@ -12,6 +12,7 @@ import com.samsthenerd.inline.matching.RegexInlineMatcher;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.I18n;
 
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -38,7 +39,7 @@ public final class InlineBuiltins {
         InlineAPI.registerRenderer(PlayerHeadData.class,
             (data, context) -> renderPlayer(data));
         InlineAPI.registerRenderer(ModIconData.class,
-            (data, context) -> "[mod:" + data.getModId() + "]");
+            (data, context) -> renderMod(data));
 
         InlineAPI.addChatMatcher(new RegexInlineMatcher(
             Pattern.compile("\\[item:([^\\]]+)\\]"),
@@ -101,5 +102,11 @@ public final class InlineBuiltins {
 
     private static String renderPlayer(PlayerHeadData data) {
         return "[face:" + data.getProfile().getName() + "]";
+    }
+
+    private static String renderMod(ModIconData data) {
+        String name = I18n.format("mod." + data.getModId() + ".name");
+        return "[" + (name.equals("mod." + data.getModId() + ".name")
+            ? data.getModId() : name) + "]";
     }
 }

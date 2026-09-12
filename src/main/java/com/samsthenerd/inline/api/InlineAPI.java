@@ -3,6 +3,8 @@ package com.samsthenerd.inline.api;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -98,6 +100,26 @@ public final class InlineAPI {
             cursor = next.getEnd();
         }
         return result;
+    }
+
+    /**
+     * Forge 1.12.2 client hook. It preserves the original event style and
+     * replaces registered textual placeholders before Minecraft displays the
+     * chat line. This is deliberately event-based because the 1.12.2 text
+     * renderer has no 1.20 style-component attachment point.
+     */
+    @SubscribeEvent
+    public static void onClientChat(ClientChatReceivedEvent event) {
+        if (event == null || event.getMessage() == null) {
+            return;
+        }
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
+        net.minecraft.entity.player.EntityPlayer player = minecraft.player;
+        net.minecraft.world.World world = minecraft.world;
+        ITextComponent formatted = formatChat(event.getMessage(), new MatchContext(player, world));
+        if (formatted != null && !formatted.getUnformattedText().equals(event.getMessage().getUnformattedText())) {
+            event.setMessage(formatted);
+        }
     }
 
     private static InlineMatch findNext(String text, int fromIndex, MatchContext context) {

@@ -3,6 +3,8 @@ package at.petra_k.hexcasting.interop.inline;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import com.samsthenerd.inline.api.InlineAPI;
 import com.samsthenerd.inline.client.InlineBuiltins;
+import com.samsthenerd.inline.client.InlineClientEvents;
+import net.minecraftforge.common.MinecraftForge;
 
 /**
  * Small Inline-compatible facade embedded for Minecraft 1.12.2.
@@ -21,6 +23,7 @@ public final class HexInline {
             InlineAPI.registerRenderer(InlinePatternData.class,
                 InlinePatternRenderer.INSTANCE);
             InlineBuiltins.register();
+            MinecraftForge.EVENT_BUS.register(InlineClientEvents.class);
             initialized = true;
         }
     }
