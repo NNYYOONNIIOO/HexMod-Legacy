@@ -1112,9 +1112,13 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 net.minecraft.util.math.Vec3d motion = motionIota.getValue();
-                double motionCost = Math.min(8192.0D,
-                    motion.x * motion.x + motion.y * motion.y + motion.z * motion.z);
+                double motionLengthSquared = motion.x * motion.x
+                    + motion.y * motion.y + motion.z * motion.z;
+                double motionCost = Math.min(8192.0D, motionLengthSquared);
                 vm.consumeMedia((long) (MediaConstants.DUST_UNIT * motionCost));
+                if (motionLengthSquared > 8192.0D * 8192.0D) {
+                    motion = motion.scale(8192.0D / Math.sqrt(motionLengthSquared));
+                }
                 entity.motionX += motion.x;
                 entity.motionY += motion.y;
                 entity.motionZ += motion.z;
