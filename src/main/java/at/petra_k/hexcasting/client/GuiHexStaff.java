@@ -301,7 +301,9 @@ public final class GuiHexStaff extends GuiScreen {
             return;
         }
 
-        PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, id));
+        GridPoint origin = currentPoints.get(0);
+        PaucalAPI.sendToServer(new MsgStaffPatternC2S(
+            hand, workingPattern, origin.q, origin.r));
         programIds.add(id);
         drawnPaths.add(new DrawnPath(workingPattern, new ArrayList<>(currentPoints), id));
         usedSpots.addAll(currentPoints);
@@ -346,20 +348,16 @@ public final class GuiHexStaff extends GuiScreen {
         }
         programIds.addAll(ItemHexStaff.getProgramIds(mc.player.getHeldItem(hand)));
 
-        // 1.12.2 stores the action id rather than the modern resolved-pattern
-        // origin. Reconstruct a stable display layout for already written
-        // entries; newly drawn entries retain their exact positions this GUI
-        // session, just like Hex's usedSpots set.
-        GridPoint origin = new GridPoint(0, 0);
-        for (ResourceLocation id : programIds) {
-            HexPattern pattern = HexActionRegistry.getPattern(id);
-            if (pattern == null) {
-                continue;
+        for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(
+            mc.player.getHeldItem(hand))) {
+            ResourceLocation id = entry.getActionId();
+            if (id != null) {
+                programIds.add(id);
             }
-            List<GridPoint> points = patternPoints(pattern, origin);
-            drawnPaths.add(new DrawnPath(pattern, points, id));
+            GridPoint origin = new GridPoint(entry.getOriginQ(), entry.getOriginR());
+            List<GridPoint> points = patternPoints(entry.getPattern(), origin);
+            drawnPaths.add(new DrawnPath(entry.getPattern(), points, id));
             usedSpots.addAll(points);
-            origin = points.get(points.size() - 1).add(HexDir.EAST);
         }
     }
 
@@ -474,4 +472,3 @@ public final class GuiHexStaff extends GuiScreen {
         }
     }
 }
-

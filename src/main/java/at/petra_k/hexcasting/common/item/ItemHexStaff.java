@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
+import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
@@ -29,6 +30,9 @@ import java.util.List;
 public final class ItemHexStaff extends Item {
     public static final int MAX_PROGRAM_SIZE = 64;
     private static final String KEY_PROGRAM = "program";
+    private static final String KEY_PATTERN_PROGRAM = "patterns";
+    private static final String KEY_ORIGIN_Q = "origin_q";
+    private static final String KEY_ORIGIN_R = "origin_r";
 
     public ItemHexStaff() {
         setMaxStackSize(1);
@@ -110,13 +114,26 @@ public final class ItemHexStaff extends Item {
             return false;
         }
         HexActionRegistry.bootstrap();
-        if (HexActionRegistry.getPattern(action) == null || getProgramSize(staff) >= MAX_PROGRAM_SIZE) {
+        return appendPattern(staff, HexActionRegistry.getPattern(action), 0, 0);
+    }
+
+    /** Stores the drawable pattern and its screen-space origin, as Hex does. */
+    public static boolean appendPattern(ItemStack staff, HexPattern pattern,
+                                        int originQ, int originR) {
+        if (!isStaff(staff) || pattern == null) {
+            return false;
+        }
+        HexActionRegistry.bootstrap();
+        if (HexActionRegistry.get(pattern) == null || getProgramSize(staff) >= MAX_PROGRAM_SIZE) {
             return false;
         }
         NBTTagCompound tag = getOrCreateTag(staff);
-        NBTTagList program = tag.getTagList(KEY_PROGRAM, 8);
-        program.appendTag(new NBTTagString(action.toString()));
-        tag.setTag(KEY_PROGRAM, program);
+        NBTTagList patterns = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
+        NBTTagCompound entry = pattern.serializeToNBT();
+        entry.setInteger(KEY_ORIGIN_Q, originQ);
+        entry.setInteger(KEY_ORIGIN_R, originR);
+        patterns.appendTag(entry);
+        tag.setTag(KEY_PATTERN_PROGRAM, patterns);
         return true;
     }
 
@@ -127,26 +144,70 @@ public final class ItemHexStaff extends Item {
         NBTTagCompound tag = staff.getTagCompound();
         if (tag != null) {
             tag.removeTag(KEY_PROGRAM);
+            tag.removeTag(KEY_PATTERN_PROGRAM);
         }
     }
 
     public static int getProgramSize(ItemStack staff) {
-        return getProgramIds(staff).size();
+        return getProgramEntries(staff).size();
     }
 
     public static List<ResourceLocation> getProgramIds(ItemStack staff) {
+        List<ResourceLocation> result = new ArrayList<>();
+        for (ProgramEntry entry : getProgramEntries(staff)) {
+            if (entry.getActionId() != null) {
+                result.add(entry.getActionId());
+            }
+        }
+        return result;
+    }
+
+    public static List<HexPattern> getProgramPatterns(ItemStack staff) {
+        List<HexPattern> result = new ArrayList<>();
+        for (ProgramEntry entry : getProgramEntries(staff)) {
+            result.add(entry.getPattern());
+        }
+        return result;
+    }
+
+    /** Returns the pattern, action id, and origin needed to reconstruct the GUI. */
+    public static List<ProgramEntry> getProgramEntries(ItemStack staff) {
         if (!isStaff(staff) || staff.getTagCompound() == null) {
             return Collections.emptyList();
         }
         HexActionRegistry.bootstrap();
-        NBTTagList program = staff.getTagCompound().getTagList(KEY_PROGRAM, 8);
-        List<ResourceLocation> result = new ArrayList<>(program.tagCount());
-        for (int i = 0; i < program.tagCount(); i++) {
-            String value = program.getStringTagAt(i);
+        NBTTagCompound tag = staff.getTagCompound();
+        List<ProgramEntry> result = new ArrayList<>();
+        if (tag.hasKey(KEY_PATTERN_PROGRAM)) {
+            NBTTagList patterns = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
+            for (int i = 0; i < patterns.tagCount(); i++) {
+                try {
+                    NBTTagCompound entry = patterns.getCompoundTagAt(i);
+                    HexPattern pattern = HexPattern.fromNBT(entry);
+                    HexAction action = HexActionRegistry.get(pattern);
+                    ResourceLocation actionId = action == null
+                        ? null : HexActionRegistry.idFor(action);
+                    if (actionId != null) {
+                        result.add(new ProgramEntry(pattern, actionId,
+                            entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
+                    }
+                } catch (RuntimeException ignored) {
+                    // Ignore malformed entries without discarding the rest of the program.
+                }
+            }
+            return result;
+        }
+
+        // Read the pre-pattern-format string list created by older builds.
+        NBTTagList legacy = tag.getTagList(KEY_PROGRAM, 8);
+        int legacyOriginQ = 0;
+        for (int i = 0; i < legacy.tagCount(); i++) {
             try {
-                ResourceLocation id = new ResourceLocation(value);
-                if (HexActionRegistry.get(id) != null) {
-                    result.add(id);
+                ResourceLocation actionId = new ResourceLocation(legacy.getStringTagAt(i));
+                HexPattern pattern = HexActionRegistry.getPattern(actionId);
+                if (pattern != null) {
+                    result.add(new ProgramEntry(pattern, actionId, legacyOriginQ, 0));
+                    legacyOriginQ += 4;
                 }
             } catch (RuntimeException ignored) {
                 // Invalid old data is ignored while the remaining program is preserved.
@@ -155,16 +216,35 @@ public final class ItemHexStaff extends Item {
         return result;
     }
 
-    public static List<HexPattern> getProgramPatterns(ItemStack staff) {
-        HexActionRegistry.bootstrap();
-        List<HexPattern> result = new ArrayList<>();
-        for (ResourceLocation id : getProgramIds(staff)) {
-            HexPattern pattern = HexActionRegistry.getPattern(id);
-            if (pattern != null) {
-                result.add(pattern);
-            }
+    public static final class ProgramEntry {
+        private final HexPattern pattern;
+        private final ResourceLocation actionId;
+        private final int originQ;
+        private final int originR;
+
+        private ProgramEntry(HexPattern pattern, ResourceLocation actionId,
+                             int originQ, int originR) {
+            this.pattern = pattern;
+            this.actionId = actionId;
+            this.originQ = originQ;
+            this.originR = originR;
         }
-        return result;
+
+        public HexPattern getPattern() {
+            return pattern;
+        }
+
+        public ResourceLocation getActionId() {
+            return actionId;
+        }
+
+        public int getOriginQ() {
+            return originQ;
+        }
+
+        public int getOriginR() {
+            return originR;
+        }
     }
 
     private static boolean isPatternScroll(ItemStack stack) {

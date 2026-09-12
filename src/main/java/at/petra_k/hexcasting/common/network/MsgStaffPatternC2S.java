@@ -1,10 +1,13 @@
 package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petrak.paucal.api.PaucalMessage;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -13,28 +16,47 @@ import net.minecraftforge.fml.relauncher.Side;
 /** Client-to-server result of drawing one registered pattern in the staff GUI. */
 public final class MsgStaffPatternC2S implements PaucalMessage {
     private int handOrdinal;
-    private String actionId;
+    private NBTTagCompound patternData;
 
     public MsgStaffPatternC2S() {
         this.handOrdinal = EnumHand.MAIN_HAND.ordinal();
-        this.actionId = "";
+        this.patternData = null;
     }
 
     public MsgStaffPatternC2S(EnumHand hand, ResourceLocation action) {
         this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
-        this.actionId = action == null ? "" : action.toString();
+        this.patternData = null;
+        if (action != null) {
+            HexActionRegistry.bootstrap();
+            HexPattern pattern = HexActionRegistry.getPattern(action);
+            if (pattern != null) {
+                this.patternData = pattern.serializeToNBT();
+            }
+        }
+    }
+
+    public MsgStaffPatternC2S(EnumHand hand, HexPattern pattern, int originQ, int originR) {
+        this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.patternData = pattern == null ? null : pattern.serializeToNBT();
+        if (this.patternData != null) {
+            this.patternData.setInteger("origin_q", originQ);
+            this.patternData.setInteger("origin_r", originR);
+        }
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         handOrdinal = buf.readByte();
-        actionId = ByteBufUtils.readUTF8String(buf);
+        patternData = buf.readBoolean() ? ByteBufUtils.readTag(buf) : null;
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeByte(handOrdinal);
-        ByteBufUtils.writeUTF8String(buf, actionId == null ? "" : actionId);
+        buf.writeBoolean(patternData != null);
+        if (patternData != null) {
+            ByteBufUtils.writeTag(buf, patternData);
+        }
     }
 
     @Override
@@ -53,12 +75,14 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         if (!ItemHexStaff.isStaff(staff)) {
             return;
         }
-        if (actionId == null || actionId.isEmpty()) {
+        if (patternData == null) {
             ItemHexStaff.clearProgram(staff);
             return;
         }
         try {
-            ItemHexStaff.appendAction(staff, new ResourceLocation(actionId));
+            HexPattern pattern = HexPattern.fromNBT(patternData);
+            ItemHexStaff.appendPattern(staff, pattern,
+                patternData.getInteger("origin_q"), patternData.getInteger("origin_r"));
         } catch (RuntimeException ignored) {
             // Invalid client data is rejected without changing the held item.
         }
