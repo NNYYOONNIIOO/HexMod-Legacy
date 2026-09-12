@@ -8,9 +8,11 @@ import at.petra_k.hexcasting.api.casting.action.StackOperationAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
+import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.ItemIota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
@@ -2206,6 +2208,38 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
     });
 
+    /** Compare the block at a vector position with a block Iota. */
+    public static final ResourceLocation COMPARE_BLOCK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_block/lenient");
+    public static final HexPattern COMPARE_BLOCK_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qqqqqeqeeeee");
+    public static final HexAction COMPARE_BLOCK = register(
+        COMPARE_BLOCK_ID, COMPARE_BLOCK_PATTERN, compareBlockAction(false));
+
+    /** Compare a complete block state, including metadata, with a block Iota. */
+    public static final ResourceLocation COMPARE_BLOCK_STRICT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_block/strict");
+    public static final HexPattern COMPARE_BLOCK_STRICT_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qwawqwadadwewdwe");
+    public static final HexAction COMPARE_BLOCK_STRICT = register(
+        COMPARE_BLOCK_STRICT_ID, COMPARE_BLOCK_STRICT_PATTERN, compareBlockAction(true));
+
+    /** Compare item identity and metadata, ignoring NBT tags. */
+    public static final ResourceLocation COMPARE_ITEM_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_item/lenient");
+    public static final HexPattern COMPARE_ITEM_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qaeaqeqedqde");
+    public static final HexAction COMPARE_ITEM = register(
+        COMPARE_ITEM_ID, COMPARE_ITEM_PATTERN, compareItemAction(false));
+
+    /** Compare item identity, metadata, and NBT tags. */
+    public static final ResourceLocation COMPARE_ITEM_STRICT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_item/strict");
+    public static final HexPattern COMPARE_ITEM_STRICT_PATTERN =
+        pattern(HexDir.NORTH_WEST, "qaeaqewqedqde");
+    public static final HexAction COMPARE_ITEM_STRICT = register(
+        COMPARE_ITEM_STRICT_ID, COMPARE_ITEM_STRICT_PATTERN, compareItemAction(true));
+
     private HexActions() {
     }
 
@@ -2216,6 +2250,91 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         }
         return false;
+    }
+
+    private static HexAction compareBlockAction(final boolean strict) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.compare_block_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                Iota first = stack.pop();
+                Iota second = stack.pop();
+                Vec3Iota position;
+                BlockIota expected;
+                if (first instanceof Vec3Iota && second instanceof BlockIota) {
+                    position = (Vec3Iota) first;
+                    expected = (BlockIota) second;
+                } else if (second instanceof Vec3Iota && first instanceof BlockIota) {
+                    position = (Vec3Iota) second;
+                    expected = (BlockIota) first;
+                } else {
+                    throw new CastingException("hexcasting.error.compare_block_expected");
+                }
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.compare_block_context");
+                }
+                net.minecraft.block.state.IBlockState actual = vm.getPlayer().world
+                    .getBlockState(blockPosition(position));
+                boolean matches = strict
+                    ? actual.equals(expected.getState())
+                    : actual.getBlock() == expected.getBlock();
+                stack.push(new BooleanIota(matches));
+            }
+        };
+    }
+
+    private static HexAction compareItemAction(final boolean strict) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.compare_item_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.item.ItemStack right = itemStack(stack.pop(), vm);
+                net.minecraft.item.ItemStack left = itemStack(stack.pop(), vm);
+                boolean matches;
+                if (strict) {
+                    matches = net.minecraft.item.ItemStack.areItemStacksEqual(left, right);
+                } else if (left.isEmpty() || right.isEmpty()) {
+                    matches = left.isEmpty() && right.isEmpty();
+                } else {
+                    matches = left.getItem() == right.getItem()
+                        && left.getMetadata() == right.getMetadata();
+                }
+                stack.push(new BooleanIota(matches));
+            }
+        };
+    }
+
+    private static net.minecraft.item.ItemStack itemStack(Iota value, CastingVM vm)
+        throws CastingException {
+        if (value instanceof ItemIota) {
+            return ((ItemIota) value).getStack();
+        }
+        if (!(value instanceof EntityIota)) {
+            throw new CastingException("hexcasting.error.compare_item_expected");
+        }
+        net.minecraft.entity.Entity entity = resolveEntity((EntityIota) value, vm);
+        if (entity instanceof net.minecraft.entity.item.EntityItem) {
+            return ((net.minecraft.entity.item.EntityItem) entity).getItem().copy();
+        }
+        if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
+            return ((net.minecraft.entity.item.EntityItemFrame) entity).getDisplayedItem().copy();
+        }
+        if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
+            net.minecraft.entity.player.EntityPlayer player =
+                (net.minecraft.entity.player.EntityPlayer) entity;
+            net.minecraft.item.ItemStack main = player.getHeldItemMainhand();
+            return (main == null || main.isEmpty())
+                ? player.getHeldItemOffhand().copy() : main.copy();
+        }
+        throw new CastingException("hexcasting.error.compare_item_expected");
     }
 
     public static void touch() {

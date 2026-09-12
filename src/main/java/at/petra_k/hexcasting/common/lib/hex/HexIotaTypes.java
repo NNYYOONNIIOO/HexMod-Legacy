@@ -1,11 +1,13 @@
 package at.petra_k.hexcasting.common.lib.hex;
 
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
+import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.GarbageIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.IotaType;
+import at.petra_k.hexcasting.api.casting.iota.ItemIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
@@ -27,11 +29,13 @@ public final class HexIotaTypes {
         register(NullIota.TYPE);
         register(DoubleIota.TYPE);
         register(BooleanIota.TYPE);
+        register(BlockIota.TYPE);
         register(GarbageIota.TYPE);
         register(PatternIota.TYPE);
         register(ListIota.TYPE);
         register(Vec3Iota.TYPE);
         register(EntityIota.TYPE);
+        register(ItemIota.TYPE);
     }
 
     private HexIotaTypes() {
