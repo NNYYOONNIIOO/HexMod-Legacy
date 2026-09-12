@@ -147,71 +147,229 @@ public final class GuiHexStaff extends GuiScreen {
         if (currentPoints.isEmpty()) {
             return;
         }
-        drawPath(currentPoints, 0x7064C8FF, 0xFF64C8FF, 0xFF64C8FF);
+        List<GridPoint> preview = new ArrayList<>(currentPoints);
         if (drawing && current != null) {
             GridPoint hover = pxToCoord(mouseX, mouseY);
             if (!hover.equals(current) && isAdjacent(current, hover)
                 && !usedSpots.contains(hover)) {
-                drawSegment(coordToPx(current), coordToPx(hover),
-                    5.0F, 0x7064C8FF);
-                drawSegment(coordToPx(current), coordToPx(hover),
-                    2.0F, 0xFF64C8FF);
-                int[] pixel = coordToPx(hover);
-                drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.8F);
+                preview.add(hover);
             }
         }
+        drawPath(preview, 0x7064C8FF, 0xFF64C8FF, 0xFF64C8FF);
     }
 
     private void drawPath(List<GridPoint> points, int glowColor,
                           int lineColor, int nodeColor) {
-        if (points.size() == 1) {
-            int[] pixel = coordToPx(points.get(0));
-            drawSpot(pixel[0], pixel[1], 1.4F, 0.50D, 1.0D, 0.95D, 0.9F);
+        if (points.isEmpty()) {
             return;
         }
-        for (int i = 1; i < points.size(); i++) {
-            drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
-                5.0F, glowColor);
-        }
-        for (int i = 1; i < points.size(); i++) {
-            drawSegment(coordToPx(points.get(i - 1)), coordToPx(points.get(i)),
-                2.0F, lineColor);
-        }
+        List<float[]> pixelPoints = new ArrayList<>();
         for (GridPoint point : points) {
             int[] pixel = coordToPx(point);
-            drawSpot(pixel[0], pixel[1], 1.8F,
-                channel(nodeColor, 16) / 255.0D,
-                channel(nodeColor, 8) / 255.0D,
-                channel(nodeColor, 0) / 255.0D,
-                channel(nodeColor, 24) / 255.0F);
+            pixelPoints.add(new float[] {pixel[0], pixel[1]});
+        }
+        // Hex draws the same point sequence twice: a 5 px translucent outer
+        // stroke, then a 2 px bright inner stroke. Drawing each complete
+        // polyline in one batch is what makes angled joins continuous.
+        if (pixelPoints.size() > 1) {
+            drawLineSequence(pixelPoints, 5.0F, glowColor, glowColor);
+            drawLineSequence(pixelPoints, 2.0F, lineColor, lineColor);
+        }
+        for (int i = 0; i < pixelPoints.size(); i++) {
+            float[] pixel = pixelPoints.get(i);
+            float radius = i == 0 || i == pixelPoints.size() - 1 ? 1.8F : 1.8F;
+            drawHexSpot(pixel[0], pixel[1], radius, nodeColor);
         }
     }
 
-    /** Draws a smooth quad strip rather than relying on GL_LINE_STRIP width. */
-    private void drawSegment(int[] from, int[] to, float width, int argb) {
-        double dx = to[0] - from[0];
-        double dy = to[1] - from[1];
-        double length = Math.sqrt(dx * dx + dy * dy);
-        if (length < 0.001D) {
+    /**
+     * Port of RenderLib.drawLineSeq's continuous triangle strip/fan geometry.
+     * The 1.12.2 BufferBuilder has no Matrix4f vertex helper, so the screen
+     * coordinates are supplied directly while retaining the source join math.
+     */
+    private void drawLineSequence(List<float[]> points, float width,
+                                  int tailColor, int headColor) {
+        if (points.size() < 2 || width <= 0.0F) {
             return;
         }
-        double px = -dy / length * width * 0.5D;
-        double py = dx / length * width * 0.5D;
+        final float halfWidth = width * 0.5F;
+        final int count = points.size();
+        float[] normalsX = new float[count - 1];
+        float[] normalsY = new float[count - 1];
+        for (int i = 0; i < count - 1; i++) {
+            float dx = points.get(i + 1)[0] - points.get(i)[0];
+            float dy = points.get(i + 1)[1] - points.get(i)[1];
+            float length = (float) Math.sqrt(dx * dx + dy * dy);
+            if (length < 0.001F) {
+                return;
+            }
+            normalsX[i] = -dy / length;
+            normalsY[i] = dx / length;
+        }
+
+        int tailA = channel(tailColor, 24);
+        int tailR = channel(tailColor, 16);
+        int tailG = channel(tailColor, 8);
+        int tailB = channel(tailColor, 0);
+        int headA = channel(headColor, 24);
+        int headR = channel(headColor, 16);
+        int headG = channel(headColor, 8);
+        int headB = channel(headColor, 0);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(
+            GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < count - 1; i++) {
+            float[] from = points.get(i);
+            float[] to = points.get(i + 1);
+            float startOffset = i == 0 ? 0.0F : joinOffset(normalsX[i - 1], normalsY[i - 1],
+                normalsX[i], normalsY[i], halfWidth);
+            float endOffset = i == count - 2 ? 0.0F : joinOffset(normalsX[i], normalsY[i],
+                normalsX[i + 1], normalsY[i + 1], halfWidth);
+            float startNormalX = i == 0 ? normalsX[i] : joinNormalX(normalsX[i - 1], normalsX[i], startOffset);
+            float startNormalY = i == 0 ? normalsY[i] : joinNormalY(normalsY[i - 1], normalsY[i], startOffset);
+            float endNormalX = i == count - 2 ? normalsX[i] : joinNormalX(normalsX[i], normalsX[i + 1], endOffset);
+            float endNormalY = i == count - 2 ? normalsY[i] : joinNormalY(normalsY[i], normalsY[i + 1], endOffset);
+
+            float sx = from[0] + startNormalX * halfWidth;
+            float sy = from[1] + startNormalY * halfWidth;
+            float slx = from[0] - startNormalX * halfWidth;
+            float sly = from[1] - startNormalY * halfWidth;
+            float ex = to[0] + endNormalX * halfWidth;
+            float ey = to[1] + endNormalY * halfWidth;
+            float elx = to[0] - endNormalX * halfWidth;
+            float ely = to[1] - endNormalY * halfWidth;
+
+            putColorVertex(buffer, sx, sy, tailR, tailG, tailB, tailA);
+            putColorVertex(buffer, slx, sly, tailR, tailG, tailB, tailA);
+            putColorVertex(buffer, ex, ey, headR, headG, headB, headA);
+            putColorVertex(buffer, slx, sly, tailR, tailG, tailB, tailA);
+            putColorVertex(buffer, elx, ely, headR, headG, headB, headA);
+            putColorVertex(buffer, ex, ey, headR, headG, headB, headA);
+        }
+        tessellator.draw();
+
+        // RenderLib uses triangle fans for caps and rounded/miter joins. The
+        // six-sided spot pass below supplies the visible node, while these
+        // small fans remove the gaps at sharp corners of the ribbon.
+        for (int i = 1; i < count - 1; i++) {
+            drawJoinFan(points.get(i)[0], points.get(i)[1], halfWidth,
+                tailColor, normalsX[i - 1], normalsY[i - 1], normalsX[i], normalsY[i]);
+        }
+        drawCapFan(points.get(0)[0], points.get(0)[1], halfWidth,
+            tailColor, normalsX[0], normalsY[0], false);
+        drawCapFan(points.get(count - 1)[0], points.get(count - 1)[1], halfWidth,
+            headColor, normalsX[count - 2], normalsY[count - 2], true);
+
+        GlStateManager.depthMask(true);
+        GlStateManager.enableDepth();
+        GlStateManager.disableBlend();
+        GlStateManager.enableTexture2D();
+        GlStateManager.popMatrix();
+    }
+
+    private static float joinOffset(float ax, float ay, float bx, float by, float halfWidth) {
+        float mx = ax + bx;
+        float my = ay + by;
+        float length = (float) Math.sqrt(mx * mx + my * my);
+        if (length < 0.001F) {
+            return 0.0F;
+        }
+        float dot = Math.max(-0.98F, Math.min(0.98F, ax * bx + ay * by));
+        float sin = ax * by - ay * bx;
+        float miter = halfWidth / Math.max(0.25F, (float) Math.sqrt((1.0F + dot) * 0.5F));
+        float sign = sin < 0.0F ? -1.0F : 1.0F;
+        return sign * Math.min(halfWidth * 2.5F, miter);
+    }
+
+    private static float joinNormalX(float ax, float bx, float offset) {
+        float x = ax + bx;
+        float y = -0.0F;
+        float length = (float) Math.sqrt(x * x + y * y);
+        return length < 0.001F ? bx : x / length;
+    }
+
+    private static float joinNormalY(float ay, float by, float offset) {
+        float x = 0.0F;
+        float y = ay + by;
+        float length = (float) Math.sqrt(x * x + y * y);
+        return length < 0.001F ? by : y / length;
+    }
+
+    private void drawJoinFan(float x, float y, float radius, int color,
+                             float previousNormalX, float previousNormalY,
+                             float nextNormalX, float nextNormalY) {
+        drawFan(x, y, radius, color, previousNormalX, previousNormalY,
+            nextNormalX, nextNormalY, false);
+    }
+
+    private void drawCapFan(float x, float y, float radius, int color,
+                            float normalX, float normalY, boolean end) {
+        drawFan(x, y, radius, color, normalX, normalY, -normalX, -normalY, true);
+    }
+
+    private void drawFan(float x, float y, float radius, int color,
+                         float fromNormalX, float fromNormalY,
+                         float toNormalX, float toNormalY, boolean cap) {
+        int red = channel(color, 16);
+        int green = channel(color, 8);
+        int blue = channel(color, 0);
+        int alpha = channel(color, 24);
+        double fromAngle = Math.atan2(fromNormalY, fromNormalX);
+        double toAngle = Math.atan2(toNormalY, toNormalX);
+        double delta = toAngle - fromAngle;
+        while (delta <= -Math.PI) delta += Math.PI * 2.0D;
+        while (delta > Math.PI) delta -= Math.PI * 2.0D;
+        if (cap) {
+            delta = Math.PI;
+        }
+        int steps = Math.max(1, (int) Math.ceil(Math.abs(delta) / (Math.PI / 6.0D)));
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x, y, 0).color(red, green, blue, alpha).endVertex();
+        for (int i = 0; i <= steps; i++) {
+            double angle = fromAngle + delta * i / steps;
+            buffer.pos(x + Math.cos(angle) * radius,
+                y + Math.sin(angle) * radius, 0).color(red, green, blue, alpha).endVertex();
+        }
+        Tessellator.getInstance().draw();
+    }
+
+    private static void putColorVertex(BufferBuilder buffer, double x, double y,
+                                       int red, int green, int blue, int alpha) {
+        buffer.pos(x, y, 0.0D).color(red, green, blue, alpha).endVertex();
+    }
+
+    /** Hex's drawSpot is a dynamic triangle fan, not a texture lookup. */
+    private void drawHexSpot(float x, float y, float radius, int argb) {
+        if (radius <= 0.0F) {
+            return;
+        }
         int red = channel(argb, 16);
         int green = channel(argb, 8);
         int blue = channel(argb, 0);
         int alpha = channel(argb, 24);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        buffer.pos(from[0] + px, from[1] + py, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(from[0] - px, from[1] - py, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(to[0] - px, to[1] - py, 0).color(red, green, blue, alpha).endVertex();
-        buffer.pos(to[0] + px, to[1] + py, 0).color(red, green, blue, alpha).endVertex();
-        tessellator.draw();
+        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x, y, 0).color(red, green, blue, alpha).endVertex();
+        for (int i = 0; i <= 6; i++) {
+            double angle = Math.PI * 2.0D * i / 6.0D;
+            buffer.pos(x + Math.cos(angle) * radius,
+                y + Math.sin(angle) * radius, 0).color(red, green, blue, alpha).endVertex();
+        }
+        Tessellator.getInstance().draw();
     }
 
-    /** Hex renders spots as dynamic position-colour geometry, not a texture. */
+    /** Hex renders the guide glow as dynamic position-colour geometry, not a texture. */
     private void drawCircle(float x, float y, float radius, int centerArgb, int edgeArgb) {
         if (radius <= 0.0F) {
             return;
@@ -228,7 +386,7 @@ public final class GuiHexStaff extends GuiScreen {
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
         buffer.pos(x, y, 0).color(centerRed, centerGreen, centerBlue, centerAlpha).endVertex();
-        final int segments = 24;
+        final int segments = 6;
         for (int i = 0; i <= segments; i++) {
             double angle = Math.PI * 2.0D * (double) i / (double) segments;
             buffer.pos(x + (float) Math.cos(angle) * radius,
