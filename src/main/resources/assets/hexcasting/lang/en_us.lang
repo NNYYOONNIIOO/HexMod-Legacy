@@ -3,6 +3,7 @@ item.hexcasting.scrying_lens.name=Scrying Lens
 item.hexcasting.battery.name=Media Battery
 hexcasting.action.get_caster=Get Caster
 hexcasting.action.entity_height=Entity Height
+hexcasting.action.compare_entity=Compare Entity Types
 hexcasting.action.entity_pos/eye=Entity Eye Position
 hexcasting.action.entity_pos/foot=Entity Feet Position
 hexcasting.action.get_entity_look=Entity Look

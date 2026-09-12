@@ -1109,6 +1109,23 @@ public static final HexPattern BOOL_IF_PATTERN =
                 entity.motionX, entity.motionY, entity.motionZ)));
         });
 
+    /** Compare two entity Iotas by entity type, matching the upstream action. */
+    public static final ResourceLocation COMPARE_ENTITY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "compare_entity");
+    public static final HexPattern COMPARE_ENTITY_PATTERN =
+        pattern(HexDir.NORTH_WEST, "aqaeqded");
+    public static final HexAction COMPARE_ENTITY = register(
+        COMPARE_ENTITY_ID, COMPARE_ENTITY_PATTERN, stack -> {
+            EntityIota right = stack.pop(EntityIota.class);
+            EntityIota left = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity rightEntity = right.getEntity();
+            net.minecraft.entity.Entity leftEntity = left.getEntity();
+            if (rightEntity == null || leftEntity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
+        });
+
     /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
@@ -1156,7 +1173,8 @@ public static final HexPattern BOOL_IF_PATTERN =
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
             || REVERSE == null || LAST_N_LIST == null || GET_CASTER == null
             || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null || ENTITY_POS_FOOT == null
-            || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null || GET_MEDIA == null) {
+            || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
+            || COMPARE_ENTITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
