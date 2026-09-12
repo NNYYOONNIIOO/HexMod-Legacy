@@ -1010,6 +1010,43 @@ public static final HexPattern BOOL_IF_PATTERN =
         return reordered;
     }
 
+    /** Raycast from an origin along a direction, returning a block position or Null. */
+    public static final ResourceLocation RAYCAST_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "raycast");
+    public static final HexPattern RAYCAST_PATTERN =
+        pattern(HexDir.EAST, "wqaawdd");
+    public static final HexAction RAYCAST = register(RAYCAST_ID, RAYCAST_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("raycast requires a player casting context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm.getPlayer() == null) {
+                    throw new CastingException("raycast requires a player casting context");
+                }
+                Vec3Iota direction = stack.pop(Vec3Iota.class);
+                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d start = origin.getValue();
+                net.minecraft.util.math.Vec3d vector = direction.getValue();
+                if (vector.lengthVector() == 0.0D) {
+                    throw new CastingException("raycast direction cannot be zero");
+                }
+                net.minecraft.util.math.Vec3d end = start.add(vector.normalize().scale(64.0D));
+                net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
+                    start, end, false, false, false);
+                if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
+                    || hit.getBlockPos() == null) {
+                    stack.push(new NullIota());
+                } else {
+                    net.minecraft.util.math.BlockPos pos = hit.getBlockPos();
+                    stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                        pos.getX(), pos.getY(), pos.getZ())));
+                }
+            }
+        });
     /** Push the entity that initiated the current cast. */
     public static final ResourceLocation GET_CASTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_caster");
@@ -1201,7 +1238,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             || EQUALITY == null || TYPE_EQUALITY == null || COERCE_TO_BOOL == null
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
-            || REVERSE == null || LAST_N_LIST == null || GET_CASTER == null
+            || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || GET_CASTER == null
             || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null || ENTITY_POS_FOOT == null
             || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
             || COMPARE_ENTITY == null || GET_MEDIA == null) {

@@ -3,6 +3,7 @@ item.hexcasting.scrying_lens.name=窥视透镜
 item.hexcasting.battery.name=媒质电池
 hexcasting.action.get_caster=获取施法者
 hexcasting.action.entity_height=实体高度
+hexcasting.action.raycast=弓箭手之馏化
 hexcasting.action.compare_entity=比较实体类型
 hexcasting.action.entity_pos/eye=实体眼睛位置
 hexcasting.action.entity_pos/foot=实体脚部位置
