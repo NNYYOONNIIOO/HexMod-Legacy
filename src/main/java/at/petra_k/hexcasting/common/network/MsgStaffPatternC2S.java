@@ -120,5 +120,6 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
 
     public static void register() {
         at.petrak.paucal.api.PaucalAPI.registerMessage(MsgStaffPatternC2S.class, Side.SERVER);
+        MsgStaffProgramS2C.register();
     }
 }

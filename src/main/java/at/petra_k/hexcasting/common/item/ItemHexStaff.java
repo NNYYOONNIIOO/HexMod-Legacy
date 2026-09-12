@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.casting.StaffProgramData;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -57,6 +58,11 @@ public final class ItemHexStaff extends Item {
             clearProgram(player, hand, staff);
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_cleared")));
+        }
+
+        if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            at.petrak.paucal.api.PaucalAPI.sendTo(
+                new MsgStaffProgramS2C(hand, StaffProgramData.getPatterns(player, hand)), player);
         }
 
         // Modern Hex opens the spellcasting screen here. The saved pattern
