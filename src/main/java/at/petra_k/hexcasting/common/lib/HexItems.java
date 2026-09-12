@@ -8,7 +8,9 @@ import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.item.ItemJewelerHammer;
 import at.petra_k.hexcasting.common.item.ItemSpellbook;
+import at.petra_k.hexcasting.common.item.ItemSubSandwich;
 import at.petra_k.hexcasting.common.item.ItemThoughtKnot;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import net.minecraft.item.Item;
@@ -140,6 +142,10 @@ public final class HexItems {
                 item = new ItemAbacus();
             } else if (id.equals("thought_knot")) {
                 item = new ItemThoughtKnot();
+            } else if (id.equals("jeweler_hammer")) {
+                item = new ItemJewelerHammer();
+            } else if (id.equals("sub_sandwich")) {
+                item = new ItemSubSandwich();
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll();
             } else if (id.contains("colorizer")) {

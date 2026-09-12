@@ -54,6 +54,11 @@ public final class GuiHexStaff extends GuiScreen {
     }
 
     @Override
+    public boolean doesGuiPauseGame() {
+        return false;
+    }
+
+    @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
         int centerX = width / 2;
@@ -166,17 +171,23 @@ public final class GuiHexStaff extends GuiScreen {
         if (next == null || next.equals(previous)) {
             return;
         }
-        HexDir direction = directionBetween(previous, next);
-        if (direction == null) {
-            return;
+        GridPoint cursor = previous;
+        int guard = 0;
+        while (!cursor.equals(next) && guard++ < 16) {
+            GridPoint step = stepToward(cursor, next);
+            HexDir direction = directionBetween(cursor, step);
+            if (direction == null) {
+                return;
+            }
+            if (workingPattern == null) {
+                workingPattern = new HexPattern(direction);
+            } else if (!workingPattern.tryAppendDir(direction)) {
+                status = I18n.format("hexcasting.gui.staff.invalid");
+                return;
+            }
+            points.add(step);
+            cursor = step;
         }
-        if (workingPattern == null) {
-            workingPattern = new HexPattern(direction);
-        } else if (!workingPattern.tryAppendDir(direction)) {
-            status = I18n.format("hexcasting.gui.staff.invalid");
-            return;
-        }
-        points.add(next);
     }
 
     @Override
@@ -255,6 +266,17 @@ public final class GuiHexStaff extends GuiScreen {
         if (dq == 0 && dr == -1) return HexDir.NORTH_WEST;
         if (dq == 1 && dr == -1) return HexDir.NORTH_EAST;
         return null;
+    }
+
+    private static GridPoint stepToward(GridPoint from, GridPoint to) {
+        int dq = to.q - from.q;
+        int dr = to.r - from.r;
+        if (dq > 0 && dr < 0) return new GridPoint(from.q + 1, from.r - 1);
+        if (dq < 0 && dr > 0) return new GridPoint(from.q - 1, from.r + 1);
+        if (Math.abs(dq) >= Math.abs(dr) && dq != 0) {
+            return new GridPoint(from.q + Integer.signum(dq), from.r);
+        }
+        return new GridPoint(from.q, from.r + Integer.signum(dr));
     }
 
     private void refreshProgram() {
