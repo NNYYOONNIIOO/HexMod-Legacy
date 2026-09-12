@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.samsthenerd.inline.api.InlineData;
 import com.samsthenerd.inline.api.InlineDataType;
 import net.minecraft.util.ResourceLocation;
+import java.util.UUID;
 
 /** Inline data for a player profile. */
 public final class PlayerHeadData implements InlineData<PlayerHeadData> {
@@ -16,6 +17,10 @@ public final class PlayerHeadData implements InlineData<PlayerHeadData> {
 
     public PlayerHeadData(GameProfile profile) {
         this.profile = profile;
+    }
+
+    public PlayerHeadData(String name) {
+        this(new GameProfile(UUID.nameUUIDFromBytes(name.getBytes(java.nio.charset.StandardCharsets.UTF_8)), name));
     }
 
     public GameProfile getProfile() {

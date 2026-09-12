@@ -3,6 +3,7 @@ package com.samsthenerd.inline.api.data;
 import com.samsthenerd.inline.api.InlineData;
 import com.samsthenerd.inline.api.InlineDataType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 
 /** Inline data for an entity instance or an entity type identifier. */
@@ -30,12 +31,20 @@ public final class EntityInlineData implements InlineData<EntityInlineData> {
         this.typeId = typeId;
     }
 
+    public EntityInlineData(EntityLivingBase entity) {
+        this((Entity) entity);
+    }
+
     public Entity getEntity() {
         return entity;
     }
 
     public ResourceLocation getTypeId() {
         return typeId;
+    }
+
+    public String getDisplayName() {
+        return entity == null ? typeId.toString() : entity.getDisplayName().getUnformattedText();
     }
 
     @Override
