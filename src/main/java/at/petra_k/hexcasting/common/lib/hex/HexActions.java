@@ -1850,6 +1850,14 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexAction CREATE_WATER = register(CREATE_WATER_ID, CREATE_WATER_PATTERN,
         fluidAction(net.minecraft.init.Blocks.WATER.getDefaultState()));
 
+    /** Place a source lava block at a position. */
+    public static final ResourceLocation CREATE_LAVA_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "create_lava");
+    public static final HexPattern CREATE_LAVA_PATTERN =
+        pattern(HexDir.EAST, "eaqawqadaqd");
+    public static final HexAction CREATE_LAVA = register(CREATE_LAVA_ID, CREATE_LAVA_PATTERN,
+        fluidAction(net.minecraft.init.Blocks.LAVA.getDefaultState()));
+
     /** Remove a water source block at a position. */
     public static final ResourceLocation DESTROY_WATER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "destroy_water");
