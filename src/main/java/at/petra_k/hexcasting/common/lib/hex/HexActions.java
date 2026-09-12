@@ -1036,7 +1036,7 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final ResourceLocation ENTITY_HEIGHT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "entity_height");
     public static final HexPattern ENTITY_HEIGHT_PATTERN =
-        pattern(HexDir.EAST, "wa");
+        pattern(HexDir.NORTH_EAST, "awq");
     public static final HexAction ENTITY_HEIGHT = register(
         ENTITY_HEIGHT_ID, ENTITY_HEIGHT_PATTERN, stack -> {
             EntityIota entityIota = stack.pop(EntityIota.class);
@@ -1046,6 +1046,69 @@ public static final HexPattern BOOL_IF_PATTERN =
             }
             stack.push(new DoubleIota(entity.height));
         });
+
+    /** Return an entity's eye position as a vector Iota. */
+    public static final ResourceLocation ENTITY_POS_EYE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "entity_pos/eye");
+    public static final HexPattern ENTITY_POS_EYE_PATTERN =
+        pattern(HexDir.EAST, "aa");
+    public static final HexAction ENTITY_POS_EYE = register(
+        ENTITY_POS_EYE_ID, ENTITY_POS_EYE_PATTERN, stack -> {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = entityIota.getEntity();
+            if (entity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new Vec3Iota(entity.getPositionEyes(1.0F)));
+        });
+
+    /** Return an entity's feet position as a vector Iota. */
+    public static final ResourceLocation ENTITY_POS_FOOT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "entity_pos/foot");
+    public static final HexPattern ENTITY_POS_FOOT_PATTERN =
+        pattern(HexDir.NORTH_EAST, "dd");
+    public static final HexAction ENTITY_POS_FOOT = register(
+        ENTITY_POS_FOOT_ID, ENTITY_POS_FOOT_PATTERN, stack -> {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = entityIota.getEntity();
+            if (entity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                entity.posX, entity.posY, entity.posZ)));
+        });
+
+    /** Return an entity's look direction as a vector Iota. */
+    public static final ResourceLocation GET_ENTITY_LOOK_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity_look");
+    public static final HexPattern GET_ENTITY_LOOK_PATTERN =
+        pattern(HexDir.EAST, "wa");
+    public static final HexAction GET_ENTITY_LOOK = register(
+        GET_ENTITY_LOOK_ID, GET_ENTITY_LOOK_PATTERN, stack -> {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = entityIota.getEntity();
+            if (entity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new Vec3Iota(entity.getLookVec()));
+        });
+
+    /** Return an entity's velocity as a vector Iota. */
+    public static final ResourceLocation GET_ENTITY_VELOCITY_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "get_entity_velocity");
+    public static final HexPattern GET_ENTITY_VELOCITY_PATTERN =
+        pattern(HexDir.EAST, "wq");
+    public static final HexAction GET_ENTITY_VELOCITY = register(
+        GET_ENTITY_VELOCITY_ID, GET_ENTITY_VELOCITY_PATTERN, stack -> {
+            EntityIota entityIota = stack.pop(EntityIota.class);
+            net.minecraft.entity.Entity entity = entityIota.getEntity();
+            if (entity == null) {
+                throw new CastingException("The entity is no longer available");
+            }
+            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                entity.motionX, entity.motionY, entity.motionZ)));
+        });
+
     /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
@@ -1092,7 +1155,8 @@ public static final HexPattern BOOL_IF_PATTERN =
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null
             || LESS_EQ == null || APPEND == null || UNAPPEND == null || INDEX == null
             || REVERSE == null || LAST_N_LIST == null || GET_CASTER == null
-            || ENTITY_HEIGHT == null || GET_MEDIA == null) {
+            || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null || ENTITY_POS_FOOT == null
+            || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null || GET_MEDIA == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
