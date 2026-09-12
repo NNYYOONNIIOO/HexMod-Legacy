@@ -24,6 +24,7 @@ import java.util.Collections;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
+import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 
 /**
  * First portable action slice of Hex Casting.
@@ -1026,7 +1027,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (data == null) {
                     throw new CastingException("get_media requires a player casting context");
                 }
-                long available = data.withdrawMedia(-1L, true);
+                long available = MediaInventoryHelper.getAvailableMedia(vm.getPlayer(), data);
                 stack.push(new DoubleIota(
                     ((double) available) / (double) MediaConstants.DUST_UNIT
                 ));

@@ -16,6 +16,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
+import net.minecraft.entity.player.EntityPlayer;
 
 /**
  * Small, server-safe casting VM for the 1.12.2 port.
@@ -60,6 +61,7 @@ public final class CastingVM {
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
     private IHexCastingData castingData;
+    private EntityPlayer player;
 
     public CastingVM() {
         this(new CastingStack());
@@ -158,6 +160,14 @@ public final class CastingVM {
 
     public void setCastingData(IHexCastingData castingData) {
         this.castingData = castingData;
+    }
+
+    public EntityPlayer getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(EntityPlayer player) {
+        this.player = player;
     }
 
     public CastingStack getStack() {

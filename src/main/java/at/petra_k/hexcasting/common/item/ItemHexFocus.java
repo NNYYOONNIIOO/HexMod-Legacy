@@ -82,7 +82,7 @@ public final class ItemHexFocus extends Item {
                 if (data == null) {
                     result = HexEvaluator.evaluate(Collections.singletonList(pattern));
                 } else {
-                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data);
+                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data, player);
                     result = data.getCastingStack();
                 }
                 String resultText = result.isEmpty()

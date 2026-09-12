@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
+import net.minecraft.entity.player.EntityPlayer;
 
 /** Server-safe evaluator for a sequence of registered Hex patterns. */
 public final class HexEvaluator {
@@ -32,8 +33,16 @@ public final class HexEvaluator {
     /** Evaluate with player/environment state available to contextual actions. */
     public static void evaluate(List<HexPattern> patterns, CastingStack stack,
                                 IHexCastingData castingData) throws CastingException {
+        evaluate(patterns, stack, castingData, null);
+    }
+
+    /** Evaluate with both persistent casting data and the source player. */
+    public static void evaluate(List<HexPattern> patterns, CastingStack stack,
+                                IHexCastingData castingData, EntityPlayer player)
+        throws CastingException {
         CastingVM vm = new CastingVM(stack).enqueue(patterns);
         vm.setCastingData(castingData);
+        vm.setPlayer(player);
         vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
     }
 
