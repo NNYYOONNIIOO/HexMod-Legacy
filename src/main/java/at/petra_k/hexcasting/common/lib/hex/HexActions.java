@@ -18,6 +18,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ItemIota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
@@ -3073,6 +3074,68 @@ throw new CastingException("hexcasting.error.get_media_context");
         CRAFT_ARTIFACT_ID, CRAFT_ARTIFACT_PATTERN,
         packagedSpellAction(HexItems.ARTIFACT, 10L * MediaConstants.CRYSTAL_UNIT,
             "hexcasting.error.craft_artifact_context"));
+
+    /** Read a stored iota from the world-persistent Akashic bridge. */
+    public static final ResourceLocation AKASHIC_READ_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "akashic/read");
+    public static final HexPattern AKASHIC_READ_PATTERN =
+        pattern(HexDir.WEST, "qqqwqqqqqaq");
+    public static final HexAction AKASHIC_READ = register(
+        AKASHIC_READ_ID, AKASHIC_READ_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.akashic_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.akashic_context");
+                }
+                PatternIota key = stack.pop(PatternIota.class);
+                Vec3Iota position = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.BlockPos target = blockPosition(position);
+                net.minecraft.nbt.NBTTagCompound stored =
+                    at.petra_k.hexcasting.common.world.AkashicRecordData.get(
+                        vm.getPlayer().world).read(target, key.getPattern().signature());
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                if (stored == null) {
+                    stack.push(new NullIota());
+                } else {
+                    stack.push(HexIotaTypes.deserialize(stored));
+                }
+            }
+        });
+
+    /** Write an iota to the world-persistent Akashic bridge. */
+    public static final ResourceLocation AKASHIC_WRITE_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "akashic/write");
+    public static final HexPattern AKASHIC_WRITE_PATTERN =
+        pattern(HexDir.EAST, "eeeweeeeede");
+    public static final HexAction AKASHIC_WRITE = register(
+        AKASHIC_WRITE_ID, AKASHIC_WRITE_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.akashic_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.akashic_context");
+                }
+                Iota value = stack.pop();
+                PatternIota key = stack.pop(PatternIota.class);
+                Vec3Iota position = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.BlockPos target = blockPosition(position);
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                at.petra_k.hexcasting.common.world.AkashicRecordData.get(
+                    vm.getPlayer().world).write(target, key.getPattern().signature(),
+                    value.serialize());
+            }
+        });
 
     private HexActions() {
     }
