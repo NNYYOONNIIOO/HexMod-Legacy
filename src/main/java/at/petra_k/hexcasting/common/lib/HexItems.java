@@ -112,8 +112,18 @@ public final class HexItems {
 
     static {
         for (String id : EXTRA_ITEM_IDS) {
-            Item item = id.equals("spellbook") ? new ItemSpellbook()
-                : (id.startsWith("staff/") ? new ItemHexStaff() : new Item());
+            Item item;
+            if (id.equals("spellbook")) {
+                item = new ItemSpellbook();
+            } else if (id.equals("ancient_cypher")) {
+                item = new ItemPackagedSpell();
+            } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
+                item = new ItemPatternScroll();
+            } else if (id.startsWith("staff/")) {
+                item = new ItemHexStaff();
+            } else {
+                item = new Item();
+            }
             EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
                 .setCreativeTab(HexCreativeTab.HEX));
