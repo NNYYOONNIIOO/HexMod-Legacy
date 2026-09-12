@@ -78,6 +78,16 @@ public final class ItemPatternScroll extends Item {
                 }
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
+            if (!player.isSneaking()
+                && !player.getHeldItemOffhand().isEmpty()
+                && player.getHeldItemOffhand().getItem() instanceof ItemHexFocus) {
+                ItemHexFocus.setSelectedAction(player.getHeldItemOffhand(), current);
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.program_added",
+                        localizeAction(current), 1, 1)));
+                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            }
             if (player.isSneaking()) {
                 ResourceLocation next = HexActionRegistry.nextId(current);
                 if (next != null) {

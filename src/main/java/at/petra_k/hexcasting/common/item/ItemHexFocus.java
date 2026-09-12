@@ -59,6 +59,17 @@ public final class ItemHexFocus extends Item {
         if (!world.isRemote) {
             HexActionRegistry.bootstrap();
             ResourceLocation selected = resolveSelectedAction(held);
+            ItemStack offhand = player.getHeldItemOffhand();
+            if (!player.isSneaking() && !offhand.isEmpty()
+                && offhand.getItem() instanceof ItemPatternScroll) {
+                ResourceLocation action = ItemPatternScroll.getActionId(offhand);
+                setSelectedAction(held, action);
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocalFormatted(
+                        "hexcasting.message.program_added",
+                        localizeAction(action), 1, 1)));
+                return new ActionResult<>(EnumActionResult.SUCCESS, held);
+            }
             if (player.isSneaking()) {
                 ResourceLocation next = HexActionRegistry.nextId(selected);
                 if (next != null) {
@@ -119,7 +130,7 @@ public final class ItemHexFocus extends Item {
         return HexActionRegistry.get(fallback) == null ? HexActionRegistry.firstId() : fallback;
     }
 
-    private static void setSelectedAction(ItemStack stack, ResourceLocation id) {
+    public static void setSelectedAction(ItemStack stack, ResourceLocation id) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
