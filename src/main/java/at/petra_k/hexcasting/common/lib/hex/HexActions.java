@@ -2735,6 +2735,51 @@ throw new CastingException("hexcasting.error.get_media_context");
         CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, stack ->
             stack.push(new DoubleIota(0.0D)));
 
+    /** Return the current caster position as a circle impetus fallback. */
+    public static final ResourceLocation CIRCLE_IMPETUS_POS_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "circle/impetus_pos");
+    public static final HexPattern CIRCLE_IMPETUS_POS_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "eaqwqae");
+    public static final HexAction CIRCLE_IMPETUS_POS = register(
+        CIRCLE_IMPETUS_POS_ID, CIRCLE_IMPETUS_POS_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.circle_impetus_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.circle_impetus_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    player.posX, player.posY, player.posZ)));
+            }
+        });
+
+    /** Return the current caster look direction as a circle impetus fallback. */
+    public static final ResourceLocation CIRCLE_IMPETUS_DIR_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "circle/impetus_dir");
+    public static final HexPattern CIRCLE_IMPETUS_DIR_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "eaqwqaewede");
+    public static final HexAction CIRCLE_IMPETUS_DIR = register(
+        CIRCLE_IMPETUS_DIR_ID, CIRCLE_IMPETUS_DIR_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.circle_impetus_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.circle_impetus_context");
+                }
+                net.minecraft.util.math.Vec3d look = vm.getPlayer().getLookVec();
+                stack.push(new Vec3Iota(look));
+            }
+        });
+
     private HexActions() {
     }
 
