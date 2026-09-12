@@ -3,9 +3,11 @@ package at.petra_k.hexcasting.common.item;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
@@ -34,7 +36,24 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
         tag.setLong(KEY_MEDIA, clamp(media));
     }
 
-    @Override public int getConsumptionPriority(ItemStack stack) { return 3000; }
+    @Override public int getConsumptionPriority(ItemStack stack) { return 4000; }
+
+    @Override
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+        if (tab != getCreativeTab()) {
+            return;
+        }
+        items.add(new ItemStack(this));
+        addFilledVariant(items, MediaConstants.DUST_UNIT * 64L);
+        addFilledVariant(items, MediaConstants.SHARD_UNIT * 64L);
+        addFilledVariant(items, MediaConstants.CRYSTAL_UNIT * 64L);
+    }
+
+    private void addFilledVariant(NonNullList<ItemStack> items, long media) {
+        ItemStack battery = new ItemStack(this);
+        setMedia(battery, media);
+        items.add(battery);
+    }
 
     @Override
     public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag flag) {
