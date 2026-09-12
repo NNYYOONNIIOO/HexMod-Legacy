@@ -76,5 +76,9 @@ public final class HexActionRegistry {
 
     public static void bootstrap() {
         HexActions.touch();
+        // Sentinel actions live in their own source file because they also
+        // own the 1.12.2 WorldSavedData implementation. Keep them in the
+        // same bootstrap path as the core action table.
+        SentinelActions.register();
     }
 }
