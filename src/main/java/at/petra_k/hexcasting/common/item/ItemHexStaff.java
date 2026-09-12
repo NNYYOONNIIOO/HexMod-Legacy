@@ -6,7 +6,6 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
-import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -103,7 +102,7 @@ public final class ItemHexStaff extends Item {
     }
 
     public static boolean isStaff(ItemStack stack) {
-        return stack != null && !stack.isEmpty() && stack.getItem() == HexItems.STAFF;
+        return stack != null && !stack.isEmpty() && stack.getItem() instanceof ItemHexStaff;
     }
 
     public static boolean appendAction(ItemStack staff, ResourceLocation action) {
@@ -169,7 +168,7 @@ public final class ItemHexStaff extends Item {
     }
 
     private static boolean isPatternScroll(ItemStack stack) {
-        return stack != null && !stack.isEmpty() && stack.getItem() == HexItems.PATTERN_SCROLL;
+        return stack != null && !stack.isEmpty() && stack.getItem() instanceof ItemPatternScroll;
     }
 
     private static NBTTagCompound getOrCreateTag(ItemStack stack) {
