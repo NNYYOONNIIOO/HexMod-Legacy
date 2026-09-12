@@ -139,7 +139,7 @@ public final class GuiHexStaff extends GuiScreen {
 
     private void drawExistingPaths() {
         for (DrawnPath path : drawnPaths) {
-            drawPath(path.points, 0x5064C8FF, 0xE064C8FF, 0xF064C8FF);
+            drawPath(path.points, 0xFF64C8FF, 0xFFF4FBFF, 0xFFFFFFFF);
         }
     }
 
@@ -155,7 +155,7 @@ public final class GuiHexStaff extends GuiScreen {
                 preview.add(hover);
             }
         }
-        drawPath(preview, 0x7064C8FF, 0xFF64C8FF, 0xFF64C8FF);
+        drawPath(preview, 0xFF64C8FF, 0xFFF4FBFF, 0xFFFFFFFF);
     }
 
     private void drawPath(List<GridPoint> points, int glowColor,
@@ -181,7 +181,7 @@ public final class GuiHexStaff extends GuiScreen {
                 && samePixel(pixel, pixelPoints.get(0))) {
                 continue;
             }
-            drawHexSpot(pixel[0], pixel[1], 1.8F, nodeColor);
+            drawHexSpot(pixel[0], pixel[1], 2.5F, nodeColor);
         }
     }
 
