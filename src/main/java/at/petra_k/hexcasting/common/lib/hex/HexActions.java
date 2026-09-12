@@ -1842,6 +1842,72 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Place a source water block at a position. */
+    public static final ResourceLocation CREATE_WATER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "create_water");
+    public static final HexPattern CREATE_WATER_PATTERN =
+        pattern(HexDir.SOUTH_EAST, "aqawqadaq");
+    public static final HexAction CREATE_WATER = register(CREATE_WATER_ID, CREATE_WATER_PATTERN,
+        fluidAction(net.minecraft.init.Blocks.WATER.getDefaultState()));
+
+    /** Remove a water source block at a position. */
+    public static final ResourceLocation DESTROY_WATER_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "destroy_water");
+    public static final HexPattern DESTROY_WATER_PATTERN =
+        pattern(HexDir.SOUTH_WEST, "dedwedade");
+    public static final HexAction DESTROY_WATER = register(DESTROY_WATER_ID, DESTROY_WATER_PATTERN,
+        new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.fluid_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.fluid_context");
+                }
+                net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+                if (!player.world.isRemote
+                    && player.world.getBlockState(position).getBlock() == net.minecraft.init.Blocks.WATER) {
+                    player.world.setBlockToAir(position);
+                }
+            }
+        });
+
+    private static HexAction fluidAction(final net.minecraft.block.state.IBlockState state) {
+        return new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.fluid_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (player == null) {
+                    throw new CastingException("hexcasting.error.fluid_context");
+                }
+                net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+                if (!player.world.isRemote && player.world.isAirBlock(position)) {
+                    player.world.setBlockState(position, state, 3);
+                }
+            }
+        };
+    }
+
+    private static net.minecraft.util.math.BlockPos blockPosition(Vec3Iota vector)
+        throws CastingException {
+        net.minecraft.util.math.Vec3d value = vector.getValue();
+        if (Double.isNaN(value.x) || Double.isNaN(value.y) || Double.isNaN(value.z)
+            || Double.isInfinite(value.x) || Double.isInfinite(value.y)
+            || Double.isInfinite(value.z)) {
+            throw new CastingException("hexcasting.error.fluid_position");
+        }
+        return new net.minecraft.util.math.BlockPos(value.x, value.y, value.z);
+    }
+
     private HexActions() {
     }
 
