@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "hexcasting:blocks/scroll_paper_lantern"
+  }
+}
