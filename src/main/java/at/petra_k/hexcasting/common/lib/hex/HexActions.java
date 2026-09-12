@@ -2880,6 +2880,68 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
+    /** Teleport an entity by a finite displacement vector. */
+    public static final ResourceLocation TELEPORT_GREAT_ID =
+        new ResourceLocation(HexAPI.MOD_ID, "teleport/great");
+    public static final HexPattern TELEPORT_GREAT_PATTERN =
+        pattern(HexDir.EAST, "wwwqqqwwwqqeqqwwwqqwqqdqqqqqdqq");
+    public static final HexAction TELEPORT_GREAT = register(
+        TELEPORT_GREAT_ID, TELEPORT_GREAT_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.teleport_great_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.teleport_great_context");
+                }
+                Iota first = stack.pop();
+                Iota second = stack.pop();
+                EntityIota entityIota;
+                Vec3Iota deltaIota;
+                if (first instanceof EntityIota && second instanceof Vec3Iota) {
+                    entityIota = (EntityIota) first;
+                    deltaIota = (Vec3Iota) second;
+                } else if (second instanceof EntityIota && first instanceof Vec3Iota) {
+                    entityIota = (EntityIota) second;
+                    deltaIota = (Vec3Iota) first;
+                } else {
+                    throw new CastingException("hexcasting.error.teleport_great_expected");
+                }
+                net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
+                net.minecraft.util.math.Vec3d delta = deltaIota.getValue();
+                if (Double.isNaN(delta.x) || Double.isNaN(delta.y)
+                    || Double.isNaN(delta.z) || Double.isInfinite(delta.x)
+                    || Double.isInfinite(delta.y) || Double.isInfinite(delta.z)) {
+                    throw new CastingException("hexcasting.error.teleport_great_position");
+                }
+                if (target.world != vm.getPlayer().world) {
+                    throw new CastingException("hexcasting.error.teleport_great_dimension");
+                }
+                double x = target.posX + delta.x;
+                double y = target.posY + delta.y;
+                double z = target.posZ + delta.z;
+                if (Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)
+                    || Math.abs(x) > 30000000.0D || Math.abs(y) > 30000000.0D
+                    || Math.abs(z) > 30000000.0D) {
+                    throw new CastingException("hexcasting.error.teleport_great_position");
+                }
+                if (!vm.getPlayer().world.isRemote) {
+                    target.setPosition(x, y, z);
+                    target.motionX = 0.0D;
+                    target.motionY = 0.0D;
+                    target.motionZ = 0.0D;
+                    if (target instanceof net.minecraft.entity.player.EntityPlayer) {
+                        ((net.minecraft.entity.player.EntityPlayer) target).setPositionAndUpdate(
+                            x, y, z);
+                    }
+                }
+            }
+        });
+
     private HexActions() {
     }
 
