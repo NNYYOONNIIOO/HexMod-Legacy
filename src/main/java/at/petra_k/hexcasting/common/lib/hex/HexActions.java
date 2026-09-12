@@ -574,7 +574,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE);
         ListIota list = stack.pop(ListIota.class);
         if (index >= list.getItems().size()) {
-            throw new CastingException("List index out of bounds: " + index);
+            throw new CastingException("hexcasting.error.list_index_out_of_bounds");
         }
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>(list.getItems());
         items.set(index, value);
@@ -970,7 +970,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < 0.0D || raw > 9.007199254740991E15D) {
-            throw new CastingException("Expected a non-negative integer code but found " + raw);
+            throw new CastingException("hexcasting.error.non_negative_integer");
         }
         return (long) raw;
     }
@@ -983,7 +983,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         while (factorial <= code) {
             width++;
             if (width >= 20 || factorial > Long.MAX_VALUE / multiplier) {
-                throw new CastingException("Swizzle code is too large");
+                throw new CastingException("hexcasting.error.swizzle_too_large");
             }
             factorial *= multiplier;
             multiplier++;
@@ -1320,20 +1320,20 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("raycast requires a player casting context");
+                throw new CastingException("hexcasting.error.raycast_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm.getPlayer() == null) {
-                    throw new CastingException("raycast requires a player casting context");
+                    throw new CastingException("hexcasting.error.raycast_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 if (vector.lengthVector() == 0.0D) {
-                    throw new CastingException("raycast direction cannot be zero");
+                    throw new CastingException("hexcasting.error.raycast_zero");
                 }
                 net.minecraft.util.math.Vec3d end = start.add(vector.normalize().scale(64.0D));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
@@ -1358,20 +1358,20 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("raycast/axis requires a player casting context");
+                throw new CastingException("hexcasting.error.raycast_axis_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm.getPlayer() == null) {
-                    throw new CastingException("raycast/axis requires a player casting context");
+                    throw new CastingException("hexcasting.error.raycast_axis_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 if (vector.lengthVector() == 0.0D) {
-                    throw new CastingException("raycast/axis direction cannot be zero");
+                    throw new CastingException("hexcasting.error.raycast_axis_zero");
                 }
                 net.minecraft.util.math.Vec3d end = start.add(
                     vector.normalize().scale(64.0D));
@@ -1397,14 +1397,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("raycast/entity requires a player casting context");
+                throw new CastingException("hexcasting.error.raycast_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
                 if (caster == null) {
-                    throw new CastingException("raycast/entity requires a player casting context");
+                    throw new CastingException("hexcasting.error.raycast_entity_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
@@ -1412,7 +1412,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 double length = vector.lengthVector();
                 if (length == 0.0D) {
-                    throw new CastingException("raycast/entity direction cannot be zero");
+                    throw new CastingException("hexcasting.error.raycast_entity_zero");
                 }
                 net.minecraft.util.math.Vec3d end = start.add(
                     vector.scale(64.0D / length));
@@ -1508,14 +1508,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("get_entity requires a player casting context");
+                throw new CastingException("hexcasting.error.get_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw new CastingException("get_entity requires a player casting context");
+                    throw new CastingException("hexcasting.error.get_entity_context");
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
