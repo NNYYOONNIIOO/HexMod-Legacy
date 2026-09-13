@@ -7,6 +7,8 @@ import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.BlockAkashicConnector;
 import at.petra_k.hexcasting.common.block.BlockHexDecorative;
+import at.petra_k.hexcasting.common.block.BlockHexLeaves;
+import at.petra_k.hexcasting.common.block.BlockHexLight;
 import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
 import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
 import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
@@ -110,6 +112,12 @@ public final class HexBlocks {
                 block = new BlockAkashicBookshelf();
             } else if ("akashic_connector".equals(id)) {
                 block = new BlockAkashicConnector();
+            } else if ("amethyst_edified_leaves".equals(id)
+                || "aventurine_edified_leaves".equals(id)
+                || "citrine_edified_leaves".equals(id)) {
+                block = new BlockHexLeaves();
+            } else if (id.endsWith("_lantern") || id.endsWith("_sconce")) {
+                block = new BlockHexLight(id);
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
                     ? BlockImpetus.TriggerMode.REDSTONE
