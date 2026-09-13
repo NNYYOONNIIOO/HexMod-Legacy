@@ -4,6 +4,7 @@ import net.minecraft.block.BlockSlab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.item.ItemStack;
 
@@ -26,6 +27,17 @@ public final class BlockHexSlab extends BlockSlab {
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, HALF);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(HALF,
+            (meta & 8) == 0 ? EnumBlockHalf.BOTTOM : EnumBlockHalf.TOP);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(HALF) == EnumBlockHalf.TOP ? 8 : 0;
     }
 
     @Override
