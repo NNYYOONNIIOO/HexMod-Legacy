@@ -81,6 +81,9 @@ public final class ItemSlate extends ItemBlock {
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos,
                                       EnumHand hand, EnumFacing facing,
                                       float hitX, float hitY, float hitZ) {
+        // ItemBlock may consume or replace the held stack during placement;
+        // capture the written block-entity data before delegating to it.
+        HexPattern writtenPattern = getPattern(player.getHeldItem(hand).copy());
         IBlockState clickedState = world.getBlockState(pos);
         BlockPos placementPos = clickedState.getBlock().isReplaceable(world, pos)
             ? pos : pos.offset(facing);
@@ -89,9 +92,8 @@ public final class ItemSlate extends ItemBlock {
         if (result == EnumActionResult.SUCCESS && !world.isRemote) {
             TileEntity tileEntity = world.getTileEntity(placementPos);
             if (tileEntity instanceof TileEntitySlate) {
-                HexPattern pattern = getPattern(player.getHeldItem(hand));
-                if (pattern != null) {
-                    ((TileEntitySlate) tileEntity).setPattern(pattern);
+                if (writtenPattern != null) {
+                    ((TileEntitySlate) tileEntity).setPattern(writtenPattern);
                 }
             }
         }

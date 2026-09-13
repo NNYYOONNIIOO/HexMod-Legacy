@@ -102,26 +102,25 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     @Override
     public void fromBytes(ByteBuf buf) {
         handOrdinal = buf.readByte();
-        if (buf.readBoolean()) {
-            NBTTagCompound payload = ByteBufUtils.readTag(buf);
-            staffInstanceId = payload == null ? "" : payload.getString("staff_id");
-            patternsData = payload == null ? null : payload.getTagList("patterns", 10);
-        } else {
-            staffInstanceId = "";
-            patternsData = null;
-        }
+        boolean hasPatterns = buf.readBoolean();
+        NBTTagCompound payload = ByteBufUtils.readTag(buf);
+        staffInstanceId = payload == null ? "" : payload.getString("staff_id");
+        patternsData = !hasPatterns || payload == null
+            ? null : payload.getTagList("patterns", 10);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeByte(handOrdinal);
         buf.writeBoolean(patternsData != null);
+        NBTTagCompound payload = new NBTTagCompound();
+        payload.setString("staff_id", staffInstanceId == null ? "" : staffInstanceId);
         if (patternsData != null) {
-            NBTTagCompound payload = new NBTTagCompound();
-            payload.setString("staff_id", staffInstanceId == null ? "" : staffInstanceId);
             payload.setTag("patterns", patternsData);
-            ByteBufUtils.writeTag(buf, payload);
         }
+        // Send the identity even for a clear request. Otherwise a delayed
+        // clear packet could affect whichever other staff occupies this hand.
+        ByteBufUtils.writeTag(buf, payload);
     }
 
     @Override
