@@ -1,6 +1,16 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:items/focus"
-  }
+    "layer0": "hexcasting:items/focus_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "hexcasting:filled": 1.0 },
+      "model": "hexcasting:item/focus_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0 },
+      "model": "hexcasting:item/focus_sealed"
+    }
+  ]
 }

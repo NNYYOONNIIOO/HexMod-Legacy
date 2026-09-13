@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.client;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.item.Item;
@@ -28,6 +29,7 @@ public final class HexItemModels {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         registerPackagedSpellProperties();
+        registerFocusProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
             0,
@@ -87,6 +89,15 @@ public final class HexItemModels {
         if (ancient != null) {
             ancient.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         }
+    }
+
+    private static void registerFocusProperties() {
+        ResourceLocation filledId = new ResourceLocation(HexAPI.MOD_ID, "filled");
+        ResourceLocation sealedId = new ResourceLocation(HexAPI.MOD_ID, "sealed");
+        HexItems.FOCUS.addPropertyOverride(filledId, (stack, world, entity) ->
+            !ItemHexFocus.isSealed(stack) && HexItems.FOCUS.readIotaTag(stack) != null ? 1.0F : 0.0F);
+        HexItems.FOCUS.addPropertyOverride(sealedId, (stack, world, entity) ->
+            ItemHexFocus.isSealed(stack) ? 1.0F : 0.0F);
     }
 
     private static int colorFor(ItemStack stack) {
