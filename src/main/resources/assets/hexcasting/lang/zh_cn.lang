@@ -1568,3 +1568,7 @@ hexcasting.message.akashic_record_requires_iota=请在另一只手持有 Iota �
 hexcasting.message.akashic_shelf_read=已读取阿卡夏书架映射：%s。
 hexcasting.message.akashic_shelf_written=已存储阿卡夏书架映射：%s。
 item.patchouli:guide_book.name=Hex 咒法指南
+hexcasting.message.lore_fragment=你研究了传说碎片。
+hexcasting.message.creative_unlocker=已解锁知识。
+hexcasting.tooltip.lore_fragment=包含一段咒法知识。
+hexcasting.tooltip.creative_unlocker=用于创造模式测试时解锁咒法知识。

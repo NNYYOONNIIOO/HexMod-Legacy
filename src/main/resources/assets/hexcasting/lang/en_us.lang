@@ -441,3 +441,7 @@ hexcasting.message.akashic_record_requires_iota=Hold an Iota container in the ot
 hexcasting.message.akashic_shelf_read=Read the Akashic bookshelf mapping for %s.
 hexcasting.message.akashic_shelf_written=Stored an Akashic bookshelf mapping for %s.
 item.patchouli:guide_book.name=Hex Casting Guide
+hexcasting.message.lore_fragment=Lore fragment examined.
+hexcasting.message.creative_unlocker=Knowledge unlocked.
+hexcasting.tooltip.lore_fragment=Contains a fragment of Hex knowledge.
+hexcasting.tooltip.creative_unlocker=Unlocks Hex knowledge in creative testing.

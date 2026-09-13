@@ -8,6 +8,7 @@ import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
 import at.petra_k.hexcasting.common.item.ItemHexKnowledge;
+import at.petra_k.hexcasting.common.item.ItemAncientCypher;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
@@ -137,7 +138,7 @@ public final class HexItems {
             if (id.equals("spellbook")) {
                 item = new ItemSpellbook();
             } else if (id.equals("ancient_cypher")) {
-                item = new ItemPackagedSpell();
+                item = new ItemAncientCypher();
             } else if (id.equals("abacus")) {
                 item = new ItemAbacus();
             } else if (id.equals("thought_knot")) {
@@ -153,7 +154,7 @@ public final class HexItems {
             } else if (id.equals("quenched_allay_shard")) {
                 item = new ItemMediaMaterial(MediaConstants.SHARD_UNIT * 3L, "quenched_allay_shard", 800);
             } else if (id.equals("lore_fragment")) {
-                item = new ItemKnowledgeFragment("lore_fragment");
+                item = new ItemHexKnowledge("lore_fragment");
             } else if (id.equals("creative_unlocker")) {
                 item = new ItemHexKnowledge("creative_unlocker");
             } else if (id.equals("lore_fragment")) {
