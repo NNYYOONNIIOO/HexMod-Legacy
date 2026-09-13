@@ -6,10 +6,12 @@ import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.item.ItemSpellbook;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -31,6 +33,7 @@ public final class HexItemModels {
     public static void registerModels(ModelRegistryEvent event) {
         registerPackagedSpellProperties();
         registerFocusProperties();
+        registerSpellbookProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
             0,
@@ -116,6 +119,42 @@ public final class HexItemModels {
             ItemHexFocus.getVariant(stack) / 7.0F);
     }
 
+
+    private static void registerSpellbookProperties() {
+        Item spellbook = HexItems.EXTRA_ITEMS.get("spellbook");
+        if (spellbook == null) {
+            return;
+        }
+        spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"),
+            (stack, world, entity) -> ItemSpellbook.getPattern(stack) != null ? 1.0F : 0.0F);
+        spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "sealed"),
+            (stack, world, entity) -> ItemSpellbook.isSealed(stack) ? 1.0F : 0.0F);
+        spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"),
+            (stack, world, entity) -> spellbookVariant(stack));
+    }
+
+    private static boolean spellbookHasPayload(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null) {
+            return false;
+        }
+        return tag.hasKey("pattern", 10) || tag.hasKey("patterns", 9)
+            || tag.hasKey("iota", 10) || tag.hasKey("selected_action", 8)
+            || tag.hasKey("action", 8);
+    }
+
+    private static boolean spellbookIsSealed(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        return tag != null && tag.getBoolean("sealed");
+    }
+
+    private static float spellbookVariant(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null) {
+            return 0.0F;
+        }
+        return Math.max(0, Math.min(7, tag.getInteger("variant"))) / 7.0F;
+    }
     private static int colorFor(ItemStack stack) {
         int color = ItemColorizer.getColor(stack);
         return color < 0 ? 0xFFFFFF : color;

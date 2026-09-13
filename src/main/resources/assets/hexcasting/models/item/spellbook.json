@@ -2,5 +2,199 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "hexcasting:items/cad/0_spellbook_empty"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0
+      },
+      "model": "hexcasting:item/spellbook"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0
+      },
+      "model": "hexcasting:item/spellbook_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0
+      },
+      "model": "hexcasting:item/spellbook_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.142857
+      },
+      "model": "hexcasting:item/spellbook_variant_1_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.142857
+      },
+      "model": "hexcasting:item/spellbook_variant_1_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.142857
+      },
+      "model": "hexcasting:item/spellbook_variant_1_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.285714
+      },
+      "model": "hexcasting:item/spellbook_variant_2_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.285714
+      },
+      "model": "hexcasting:item/spellbook_variant_2_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.285714
+      },
+      "model": "hexcasting:item/spellbook_variant_2_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.428571
+      },
+      "model": "hexcasting:item/spellbook_variant_3_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.428571
+      },
+      "model": "hexcasting:item/spellbook_variant_3_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.428571
+      },
+      "model": "hexcasting:item/spellbook_variant_3_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.571429
+      },
+      "model": "hexcasting:item/spellbook_variant_4_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.571429
+      },
+      "model": "hexcasting:item/spellbook_variant_4_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.571429
+      },
+      "model": "hexcasting:item/spellbook_variant_4_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.714286
+      },
+      "model": "hexcasting:item/spellbook_variant_5_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.714286
+      },
+      "model": "hexcasting:item/spellbook_variant_5_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.714286
+      },
+      "model": "hexcasting:item/spellbook_variant_5_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.857143
+      },
+      "model": "hexcasting:item/spellbook_variant_6_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 0.857143
+      },
+      "model": "hexcasting:item/spellbook_variant_6_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 0.857143
+      },
+      "model": "hexcasting:item/spellbook_variant_6_sealed"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 1
+      },
+      "model": "hexcasting:item/spellbook_variant_7_empty"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:sealed": 0,
+        "hexcasting:variant": 1
+      },
+      "model": "hexcasting:item/spellbook_variant_7_filled"
+    },
+    {
+      "predicate": {
+        "hexcasting:filled": 0,
+        "hexcasting:sealed": 1,
+        "hexcasting:variant": 1
+      },
+      "model": "hexcasting:item/spellbook_variant_7_sealed"
+    }
+  ]
 }
