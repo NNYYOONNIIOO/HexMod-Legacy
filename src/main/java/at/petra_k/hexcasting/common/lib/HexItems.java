@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexKnowledge;
+import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
 import at.petra_k.hexcasting.common.item.ItemAncientCypher;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
@@ -153,7 +154,7 @@ public final class HexItems {
             } else if (id.equals("quenched_allay_shard")) {
                 item = new ItemMediaMaterial(MediaConstants.SHARD_UNIT * 3L, "quenched_allay_shard", 800);
             } else if (id.equals("lore_fragment")) {
-                item = new ItemHexKnowledge("lore_fragment");
+                item = new ItemKnowledgeFragment(id);
             } else if (id.equals("creative_unlocker")) {
                 item = new ItemHexKnowledge("creative_unlocker");
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
