@@ -55,12 +55,6 @@ public final class GuiHexStaff extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        if (mc.player != null && ItemHexStaff.isStaff(mc.player.getHeldItem(hand))) {
-            ItemStack staff = mc.player.getHeldItem(hand);
-            ItemHexStaff.clearProgram(staff);
-            String staffId = ItemHexStaff.getInstanceId(staff);
-            PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, staffId));
-        }
         super.onGuiClosed();
     }
 
