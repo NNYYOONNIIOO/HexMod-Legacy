@@ -4,7 +4,9 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,6 +16,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -25,6 +28,13 @@ public final class ItemSlate extends ItemBlock {
     public ItemSlate(Block block) {
         super(block);
         setMaxStackSize(16);
+        addPropertyOverride(new ResourceLocation("hexcasting", "written"),
+            new IItemPropertyGetter() {
+                @Override
+                public float apply(ItemStack stack, World world, EntityLivingBase entity) {
+                    return getPattern(stack) == null ? 0.0F : 1.0F;
+                }
+            });
     }
 
     public static HexPattern getPattern(ItemStack stack) {
