@@ -6,9 +6,47 @@ import net.minecraft.util.ITickable;
 
 /** Client-side particle fallback for Hex's invisible conjured block. */
 public final class TileEntityConjured extends TileEntity implements ITickable {
+    private static final String KEY_REMAINING_TICKS = "remaining_ticks";
+    private static final int DEFAULT_LIFETIME = 200;
+    private int remainingTicks = DEFAULT_LIFETIME;
+
+    public void setLifetime(int ticks) {
+        remainingTicks = Math.max(1, ticks);
+        markDirty();
+    }
+
+    public int getRemainingTicks() {
+        return remainingTicks;
+    }
+
+    @Override
+    public net.minecraft.nbt.NBTTagCompound writeToNBT(net.minecraft.nbt.NBTTagCompound compound) {
+        super.writeToNBT(compound);
+        compound.setInteger(KEY_REMAINING_TICKS, remainingTicks);
+        return compound;
+    }
+
+    @Override
+    public void readFromNBT(net.minecraft.nbt.NBTTagCompound compound) {
+        super.readFromNBT(compound);
+        remainingTicks = compound.hasKey(KEY_REMAINING_TICKS, 3)
+            ? Math.max(1, compound.getInteger(KEY_REMAINING_TICKS)) : DEFAULT_LIFETIME;
+    }
+
     @Override
     public void update() {
-        if (world == null || !world.isRemote || world.rand.nextInt(5) != 0) {
+        if (world == null) {
+            return;
+        }
+        if (!world.isRemote) {
+            if (remainingTicks-- <= 0) {
+                world.setBlockToAir(pos);
+            } else if ((remainingTicks & 15) == 0) {
+                markDirty();
+            }
+            return;
+        }
+        if (world.rand.nextInt(5) != 0) {
             return;
         }
         world.spawnParticle(
