@@ -1,5 +1,6 @@
 package at.petra_k.hexcasting.client;
 
+import net.minecraft.item.ItemStack;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
@@ -50,6 +51,17 @@ public final class GuiHexStaff extends GuiScreen {
 
     public GuiHexStaff(EnumHand hand) {
         this.hand = hand == null ? EnumHand.MAIN_HAND : hand;
+    }
+
+    @Override
+    public void onGuiClosed() {
+        if (mc.player != null && ItemHexStaff.isStaff(mc.player.getHeldItem(hand))) {
+            ItemStack staff = mc.player.getHeldItem(hand);
+            ItemHexStaff.clearProgram(staff);
+            String staffId = ItemHexStaff.getInstanceId(staff);
+            PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, staffId));
+        }
+        super.onGuiClosed();
     }
 
     @Override

@@ -27,6 +27,12 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     private String staffInstanceId;
     private NBTTagList patternsData;
 
+    public MsgStaffPatternC2S(EnumHand hand, String staffInstanceId) {
+        this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.staffInstanceId = staffInstanceId == null ? "" : staffInstanceId;
+        this.patternsData = null;
+    }
+
     public MsgStaffPatternC2S() {
         this.handOrdinal = EnumHand.MAIN_HAND.ordinal();
         this.staffInstanceId = "";
@@ -211,3 +217,4 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         MsgStaffCastResultS2C.register();
     }
 }
+

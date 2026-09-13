@@ -1,5 +1,5 @@
 {
-  "parent": "block/template_trapdoor_top",
+  "parent": "block/trapdoor_top",
   "textures": {
     "texture": "hexcasting:blocks/edified_trapdoor"
   }
