@@ -14,7 +14,10 @@ public final class TileEntityAkashicRecord extends TileEntity {
     }
 
     public void clearAll() {
-        AkashicRecordData.get(world).clearAt(pos);
+        if (world != null && world.getBlockState(pos).getBlock() instanceof BlockAkashicRecord) {
+            ((BlockAkashicRecord) world.getBlockState(pos).getBlock())
+                .clearMappings(world, pos);
+        }
         markDirty();
     }
 }

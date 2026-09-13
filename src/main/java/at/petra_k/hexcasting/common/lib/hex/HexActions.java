@@ -3090,9 +3090,14 @@ throw new CastingException("hexcasting.error.get_media_context");
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
+                net.minecraft.block.Block targetBlock =
+                    vm.getPlayer().world.getBlockState(target).getBlock();
+                if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
+                    throw new CastingException("hexcasting.error.no_akashic_record");
+                }
                 net.minecraft.nbt.NBTTagCompound stored =
-                    at.petra_k.hexcasting.common.world.AkashicRecordData.get(
-                        vm.getPlayer().world).read(target, key.getPattern().signature());
+                    ((at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock)
+                        .lookupPattern(vm.getPlayer().world, target, key.getPattern());
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (stored == null) {
                     stack.push(new NullIota());
@@ -3125,9 +3130,17 @@ throw new CastingException("hexcasting.error.get_media_context");
                 Vec3Iota position = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
-                at.petra_k.hexcasting.common.world.AkashicRecordData.get(
-                    vm.getPlayer().world).write(target, key.getPattern().signature(),
-                    value.serialize());
+                net.minecraft.block.Block targetBlock =
+                    vm.getPlayer().world.getBlockState(target).getBlock();
+                if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
+                    throw new CastingException("hexcasting.error.no_akashic_record");
+                }
+                boolean written =
+                    ((at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock)
+                        .addNewDatum(vm.getPlayer().world, target, key.getPattern(), value);
+                if (!written) {
+                    throw new CastingException("hexcasting.error.akashic_duplicate");
+                }
             }
         });
 

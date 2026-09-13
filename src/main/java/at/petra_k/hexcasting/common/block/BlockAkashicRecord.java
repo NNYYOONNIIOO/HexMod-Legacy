@@ -14,24 +14,114 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /** Wooden storage anchor for the Akashic record system. */
 public final class BlockAkashicRecord extends Block {
+    private static final int MAX_NETWORK_BLOCKS = 128;
+
     public BlockAkashicRecord() {
         super(Material.WOOD);
         setHardness(2.0F);
         setResistance(5.0F);
     }
 
+    /** Look up a key in connected bookshelves, with the old world-data bridge as fallback. */
+    public NBTTagCompound lookupPattern(World world, BlockPos pos, HexPattern key) {
+        if (world == null || pos == null || key == null
+            || !(world.getBlockState(pos).getBlock() instanceof BlockAkashicRecord)) {
+            return null;
+        }
+        for (TileEntityAkashicBookshelf shelf : connectedBookshelves(world, pos)) {
+            HexPattern storedPattern = shelf.getPattern();
+            if (storedPattern != null && storedPattern.signature().equals(key.signature())
+                && shelf.getIotaTag() != null) {
+                return shelf.getIotaTag();
+            }
+        }
+        return AkashicRecordData.get(world).read(pos, key.signature());
+    }
+
+    /** Add a new key without clobbering an existing mapping. */
+    public boolean addNewDatum(World world, BlockPos pos, HexPattern key, Iota datum) {
+        if (world == null || pos == null || key == null || datum == null
+            || !(world.getBlockState(pos).getBlock() instanceof BlockAkashicRecord)
+            || lookupPattern(world, pos, key) != null) {
+            return false;
+        }
+        for (TileEntityAkashicBookshelf shelf : connectedBookshelves(world, pos)) {
+            if (!shelf.hasMapping()) {
+                shelf.setMapping(key, datum);
+                return true;
+            }
+        }
+        // Keep worlds created by the earlier bridge usable even when no
+        // bookshelf network has been built yet.
+        AkashicRecordData.get(world).write(pos, key.signature(), datum.serialize());
+        return true;
+    }
+
+    /** Clear both connected bookshelf mappings and the legacy per-record data. */
+    public void clearMappings(World world, BlockPos pos) {
+        if (world == null || pos == null) {
+            return;
+        }
+        for (TileEntityAkashicBookshelf shelf : connectedBookshelves(world, pos)) {
+            shelf.clearMapping();
+        }
+        AkashicRecordData.get(world).clearAt(pos);
+    }
+
+    private static List<TileEntityAkashicBookshelf> connectedBookshelves(
+            World world, BlockPos origin) {
+        List<TileEntityAkashicBookshelf> result = new ArrayList<>();
+        ArrayDeque<BlockPos> pending = new ArrayDeque<>();
+        Set<BlockPos> visited = new HashSet<>();
+        pending.add(origin);
+        while (!pending.isEmpty() && visited.size() < MAX_NETWORK_BLOCKS) {
+            BlockPos current = pending.removeFirst();
+            if (!visited.add(current)) {
+                continue;
+            }
+            Block block = world.getBlockState(current).getBlock();
+            boolean traversable = current.equals(origin)
+                || block instanceof BlockAkashicBookshelf || isConnector(block);
+            if (!traversable) {
+                continue;
+            }
+            if (block instanceof BlockAkashicBookshelf) {
+                TileEntity tileEntity = world.getTileEntity(current);
+                if (tileEntity instanceof TileEntityAkashicBookshelf) {
+                    result.add((TileEntityAkashicBookshelf) tileEntity);
+                }
+            }
+            for (EnumFacing facing : EnumFacing.values()) {
+                pending.addLast(current.offset(facing));
+            }
+        }
+        return result;
+    }
+
+    private static boolean isConnector(Block block) {
+        net.minecraft.util.ResourceLocation id = block.getRegistryName();
+        return id != null && "hexcasting".equals(id.getResourceDomain())
+            && "akashic_connector".equals(id.getResourcePath());
+    }
+
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
                                     EntityPlayer player, EnumHand hand,
-                                    net.minecraft.util.EnumFacing side,
-                                    float hitX, float hitY, float hitZ) {
+                                    EnumFacing side, float hitX, float hitY, float hitZ) {
         if (world.isRemote) {
             return true;
         }
@@ -40,6 +130,7 @@ public final class BlockAkashicRecord extends Block {
             return false;
         }
         TileEntityAkashicRecord record = (TileEntityAkashicRecord) tileEntity;
+        BlockAkashicRecord recordBlock = this;
         ItemStack held = player.getHeldItem(hand);
         if (player.isSneaking() && held.isEmpty()) {
             record.clearAll();
@@ -70,15 +161,17 @@ public final class BlockAkashicRecord extends Block {
             try {
                 Iota heldIota = holder.readIota(valueStack);
                 if (heldIota != null) {
-                    AkashicRecordData.get(world).write(pos, key.signature(),
-                        heldIota.serialize());
-                    player.sendMessage(new TextComponentTranslation(
-                        "hexcasting.message.akashic_record_written", key.signature()));
+                    if (recordBlock.addNewDatum(world, pos, key, heldIota)) {
+                        player.sendMessage(new TextComponentTranslation(
+                            "hexcasting.message.akashic_record_written", key.signature()));
+                    } else {
+                        player.sendMessage(new TextComponentTranslation(
+                            "hexcasting.error.akashic_duplicate"));
+                    }
                     return true;
                 }
 
-                NBTTagCompound storedTag = AkashicRecordData.get(world)
-                    .read(pos, key.signature());
+                NBTTagCompound storedTag = recordBlock.lookupPattern(world, pos, key);
                 if (storedTag != null) {
                     Iota storedIota = HexIotaTypes.deserialize(storedTag);
                     if (holder.canWrite(valueStack, storedIota)) {
@@ -89,14 +182,14 @@ public final class BlockAkashicRecord extends Block {
                     }
                 }
             } catch (CastingException | RuntimeException ignored) {
-                // Do not mutate the container when the stored Iota is invalid.
+                // Do not mutate the container when the Iota cannot be decoded.
             }
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.akashic_record_no_value"));
             return true;
         }
 
-        if (AkashicRecordData.get(world).read(pos, key.signature()) != null) {
+        if (recordBlock.lookupPattern(world, pos, key) != null) {
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.akashic_record_exists", key.signature()));
         } else {
