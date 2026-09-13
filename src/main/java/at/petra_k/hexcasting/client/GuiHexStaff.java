@@ -190,10 +190,9 @@ public final class GuiHexStaff extends GuiScreen {
             // RenderLib.drawPatternFromPoints expands segments with makeZappy
             // before the 5 px outer and 2 px inner drawLineSeq passes.
             List<float[]> zappyPoints = makeZappyPoints(pixelPoints, points.size());
-            // Hex's blue outer ribbon is surrounded by a soft additive-looking
-            // halo before the narrow blue ribbon and pink readability core.
-            drawLineSequence(zappyPoints, 8.0F,
-                withAlpha(glowColor, 0x58), withAlpha(glowColor, 0x58));
+            // Match Hex RenderLib.drawPatternFromPoints: one 5 px pattern
+            // ribbon followed by the 2 px readability pass. The old extra
+            // 8 px halo made connections visibly thicker than upstream.
             drawLineSequence(zappyPoints, 5.0F, glowColor, glowColor);
             drawLineSequence(zappyPoints, 2.0F, lineColor, lineColor);
         }
@@ -481,12 +480,12 @@ public final class GuiHexStaff extends GuiScreen {
 
     private void drawConnectionSpot(float x, float y, int glowColor, int coreColor,
                                     boolean duplicate) {
-        float glowRadius = duplicate ? 8.0F : 6.0F;
-        float coreRadius = duplicate ? 3.5F : 3.0F;
-        drawCircle(x, y, glowRadius,
-            withAlpha(glowColor, 0x72), withAlpha(glowColor, 0x00));
-        drawHexSpot(x, y, coreRadius, withAlpha(coreColor, 0xE8));
-        drawHexSpot(x, y, 1.15F, 0xFFF8FFFF);
+        // Upstream RenderLib uses radius 2 for connection spots. Keep a
+        // small duplicate marker expansion without the oversized halo that
+        // previously hid adjacent nodes and made closures look broken.
+        float coreRadius = duplicate ? 2.5F : 2.0F;
+        drawHexSpot(x, y, coreRadius, withAlpha(coreColor, duplicate ? 0xE8 : 0xD8));
+        drawHexSpot(x, y, 0.8F, 0xFFF8FFFF);
     }
 
     private static int withAlpha(int argb, int alpha) {
