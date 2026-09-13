@@ -45,6 +45,10 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
 
     @Override public int getConsumptionPriority(ItemStack stack) { return 4000; }
 
+    @Override public boolean canProvide(ItemStack stack) { return true; }
+
+    @Override public boolean canRecharge(ItemStack stack) { return true; }
+
     @Override
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
         if (tab != getCreativeTab()) {

@@ -21,7 +21,7 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
         this.mediaPerItem = Math.max(0L, mediaPerItem);
         this.variant = variant;
         this.priority = priority;
-        setMaxStackSize(16);
+        setMaxStackSize(64);
     }
 
     @Override
