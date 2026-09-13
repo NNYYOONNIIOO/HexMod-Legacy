@@ -1,10 +1,10 @@
 package at.petra_k.hexcasting.common.block;
 
-import at.petra_k.hexcasting.api.casting.iota.PatternIota;
+import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
-import at.petra_k.hexcasting.common.item.ItemSlate;
-import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
@@ -17,7 +17,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
@@ -98,6 +97,44 @@ public final class BlockAkashicBookshelf extends Block {
         }
 
         ItemStack held = player.getHeldItem(hand);
+        if (shelf.hasMapping() && held.getItem() instanceof IotaHolderItem) {
+            IotaHolderItem holder = (IotaHolderItem) held.getItem();
+            Iota stored = shelf.getIota();
+            if (stored != null) {
+                try {
+                    if (holder.canWrite(held, stored)) {
+                        holder.writeDatum(held, stored);
+                        player.sendMessage(new TextComponentTranslation(
+                            "hexcasting.message.akashic_shelf_read",
+                            shelf.getPattern().signature()));
+                        return true;
+                    }
+                } catch (RuntimeException ignored) {
+                    // Leave the container unchanged when it cannot receive this Iota.
+                }
+            }
+        }
+
+        EnumHand otherHand = hand == EnumHand.MAIN_HAND
+            ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND;
+        ItemStack other = player.getHeldItem(otherHand);
+        if (!shelf.hasMapping() && held.getItem() instanceof ItemPatternScroll
+            && other.getItem() instanceof IotaHolderItem) {
+            HexPattern pattern = ItemPatternScroll.getPattern(held);
+            IotaHolderItem holder = (IotaHolderItem) other.getItem();
+            try {
+                Iota datum = holder.readIota(other);
+                if (pattern != null && datum != null) {
+                    shelf.setMapping(pattern, datum);
+                    player.sendMessage(new TextComponentTranslation(
+                        "hexcasting.message.akashic_shelf_written", pattern.signature()));
+                    return true;
+                }
+            } catch (CastingException | RuntimeException ignored) {
+                // Do not consume either item when the Iota is malformed.
+            }
+        }
+
         if (held.getItem() instanceof ItemPatternScroll && shelf.getPattern() != null) {
             ItemPatternScroll.setPattern(held, shelf.getPattern());
             player.sendMessage(new TextComponentTranslation(
