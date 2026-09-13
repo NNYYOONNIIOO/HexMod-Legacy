@@ -1,11 +1,13 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:items/ancient_cypher"
+    "layer0": "hexcasting:items/cad/0_ancient_cypher"
   },
   "overrides": [
     {
-      "predicate": { "hexcasting:filled": 1.0 },
+      "predicate": {
+        "hexcasting:filled": 1
+      },
       "model": "hexcasting:item/cypher_filled"
     }
   ]

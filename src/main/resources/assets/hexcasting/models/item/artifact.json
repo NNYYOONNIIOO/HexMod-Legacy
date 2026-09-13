@@ -1,27 +1,41 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:items/artifact"
+    "layer0": "hexcasting:items/cad/0_artifact"
   },
   "overrides": [
     {
-      "predicate": { "hexcasting:filled": 1.0 },
+      "predicate": {
+        "hexcasting:filled": 1
+      },
       "model": "hexcasting:item/artifact_filled"
     },
     {
-      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.25 },
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:variant": 0.25
+      },
       "model": "hexcasting:item/artifact_variant_1"
     },
     {
-      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.5 },
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:variant": 0.5
+      },
       "model": "hexcasting:item/artifact_variant_2"
     },
     {
-      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.75 },
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:variant": 0.75
+      },
       "model": "hexcasting:item/artifact_variant_3"
     },
     {
-      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 1.0 },
+      "predicate": {
+        "hexcasting:filled": 1,
+        "hexcasting:variant": 1
+      },
       "model": "hexcasting:item/artifact_variant_4"
     }
   ]
