@@ -1,6 +1,5 @@
 package at.petra_k.hexcasting.common.network;
 
-import at.petra_k.hexcasting.common.casting.StaffProgramData;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
@@ -60,7 +59,6 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
             return;
         }
         ItemHexStaff.replaceProgram(staff, patternsData);
-        StaffProgramData.replace(player, hand, patternsData);
         try {
             Class<?> bridge = Class.forName(
                 "at.petra_k.hexcasting.client.HexStaffClientSync");

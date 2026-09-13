@@ -2,7 +2,6 @@ package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
-import at.petra_k.hexcasting.common.casting.StaffProgramData;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
@@ -124,7 +123,7 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
 
     private static void sendAuthoritativeSnapshot(EntityPlayer player, EnumHand hand) {
         PaucalAPI.sendTo(new MsgStaffProgramS2C(
-            hand, StaffProgramData.getPatterns(player, hand)), player);
+            hand, ItemHexStaff.getProgramSnapshot(player.getHeldItem(hand))), player);
     }
 
     public static void register() {

@@ -7,7 +7,6 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
-import at.petra_k.hexcasting.common.casting.StaffProgramData;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import net.minecraft.entity.player.EntityPlayer;
@@ -62,7 +61,7 @@ public final class ItemHexStaff extends Item {
 
         if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
             at.petrak.paucal.api.PaucalAPI.sendTo(
-                new MsgStaffProgramS2C(hand, StaffProgramData.getPatterns(player, hand)), player);
+                new MsgStaffProgramS2C(hand, getProgramSnapshot(staff)), player);
         }
 
         // Modern Hex opens the spellcasting screen here. The saved pattern
@@ -157,18 +156,12 @@ public final class ItemHexStaff extends Item {
     /** Update both the player-scoped program and the client compatibility cache. */
     public static void replaceProgram(EntityPlayer player, ItemStack staff,
                                       NBTTagList incoming) {
-        replaceProgram(player, EnumHand.MAIN_HAND, staff, incoming);
+        replaceProgram(staff, incoming);
     }
 
     public static void replaceProgram(EntityPlayer player, EnumHand hand,
                                       ItemStack staff, NBTTagList incoming) {
         replaceProgram(staff, incoming);
-        if (isStaff(staff) && staff.getTagCompound() != null) {
-            StaffProgramData.replace(player, hand,
-                staff.getTagCompound().getTagList(KEY_PATTERN_PROGRAM, 10));
-        } else {
-            StaffProgramData.clear(player, hand);
-        }
     }
 
     public static void clearProgram(ItemStack staff) {
@@ -188,7 +181,6 @@ public final class ItemHexStaff extends Item {
 
     public static void clearProgram(EntityPlayer player, EnumHand hand, ItemStack staff) {
         clearProgram(staff);
-        StaffProgramData.clear(player, hand);
     }
 
     public static int getProgramSize(ItemStack staff) {
@@ -219,11 +211,7 @@ public final class ItemHexStaff extends Item {
 
     public static List<HexPattern> getProgramPatterns(EntityPlayer player, EnumHand hand,
                                                       ItemStack staff) {
-        List<HexPattern> result = new ArrayList<>();
-        for (ProgramEntry entry : getProgramEntries(player, hand, staff)) {
-            result.add(entry.getPattern());
-        }
-        return result;
+        return getProgramPatterns(staff);
     }
 
     /** Read the player-side program first, falling back to legacy item NBT. */
@@ -233,10 +221,19 @@ public final class ItemHexStaff extends Item {
 
     public static List<ProgramEntry> getProgramEntries(EntityPlayer player, EnumHand hand,
                                                        ItemStack staff) {
-        if (player != null && isStaff(staff) && StaffProgramData.hasPatterns(player, hand)) {
-            return getPatternEntries(StaffProgramData.getPatterns(player, hand));
-        }
         return getProgramEntries(staff);
+    }
+
+    /** Returns a detached, normalized snapshot for network synchronization. */
+    public static NBTTagList getProgramSnapshot(ItemStack staff) {
+        NBTTagList snapshot = new NBTTagList();
+        for (ProgramEntry entry : getProgramEntries(staff)) {
+            NBTTagCompound data = entry.getPattern().serializeToNBT();
+            data.setInteger(KEY_ORIGIN_Q, entry.getOriginQ());
+            data.setInteger(KEY_ORIGIN_R, entry.getOriginR());
+            snapshot.appendTag(data);
+        }
+        return snapshot;
     }
 
     /** Returns the pattern, action id, and origin needed to reconstruct the GUI. */
