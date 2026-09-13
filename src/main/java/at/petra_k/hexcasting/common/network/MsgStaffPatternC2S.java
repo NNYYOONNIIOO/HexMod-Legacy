@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
@@ -117,8 +118,41 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
             sendAuthoritativeSnapshot(player, hand);
             return;
         }
+        NBTTagList previous = ItemHexStaff.getProgramSnapshot(staff);
+        boolean appendOnly = isPrefix(previous, patternsData);
         ItemHexStaff.replaceProgram(player, hand, staff, patternsData);
+        if (!appendOnly) {
+            StaffCastExecutor.clear(staff);
+        } else if (patternsData.tagCount() > previous.tagCount()) {
+            for (int i = previous.tagCount(); i < patternsData.tagCount(); i++) {
+                try {
+                    StaffCastExecutor.execute(
+                        player, hand, staff,
+                        HexPattern.fromNBT(patternsData.getCompoundTagAt(i)));
+                } catch (RuntimeException ignored) {
+                    // ItemHexStaff already filters malformed snapshot entries.
+                }
+            }
+        }
         sendAuthoritativeSnapshot(player, hand);
+    }
+
+    private static boolean isPrefix(NBTTagList previous, NBTTagList incoming) {
+        if (previous == null || incoming == null || previous.tagCount() > incoming.tagCount()) {
+            return false;
+        }
+        for (int i = 0; i < previous.tagCount(); i++) {
+            try {
+                HexPattern oldPattern = HexPattern.fromNBT(previous.getCompoundTagAt(i));
+                HexPattern newPattern = HexPattern.fromNBT(incoming.getCompoundTagAt(i));
+                if (!oldPattern.signature().equals(newPattern.signature())) {
+                    return false;
+                }
+            } catch (RuntimeException ignored) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void sendAuthoritativeSnapshot(EntityPlayer player, EnumHand hand) {

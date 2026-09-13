@@ -34,6 +34,7 @@ public final class ItemHexStaff extends Item {
     private static final String KEY_PATTERN_PROGRAM = "patterns";
     private static final String KEY_ORIGIN_Q = "origin_q";
     private static final String KEY_ORIGIN_R = "origin_r";
+    private static final String KEY_CASTING_STATE = "casting_state";
 
     public ItemHexStaff() {
         setMaxStackSize(1);
@@ -172,6 +173,7 @@ public final class ItemHexStaff extends Item {
         if (tag != null) {
             tag.removeTag(KEY_PROGRAM);
             tag.removeTag(KEY_PATTERN_PROGRAM);
+            tag.removeTag(KEY_CASTING_STATE);
         }
     }
 
