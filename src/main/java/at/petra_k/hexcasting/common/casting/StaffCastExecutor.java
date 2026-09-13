@@ -50,6 +50,17 @@ public final class StaffCastExecutor {
         }
     }
 
+    public static boolean isStackClear(ItemStack staff) {
+        if (staff == null || staff.isEmpty()) {
+            return false;
+        }
+        try {
+            return load(staff).getStack().size() == 0;
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
     public static boolean execute(EntityPlayer player, EnumHand hand, ItemStack staff,
                                   HexPattern pattern) {
         if (player == null || staff == null || staff.isEmpty() || pattern == null) {

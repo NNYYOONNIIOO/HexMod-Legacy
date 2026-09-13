@@ -177,6 +177,11 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
                         HexPattern.fromNBT(patternsData.getCompoundTagAt(i)));
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, success, StaffCastExecutor.getStackSize(staff)), player);
+                    if (success && StaffCastExecutor.isStackClear(staff)) {
+                        StaffCastExecutor.clear(staff);
+                        ItemHexStaff.clearProgram(player, hand, staff);
+                        break;
+                    }
                 } catch (RuntimeException ignored) {
                     // ItemHexStaff already filters malformed snapshot entries.
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
@@ -217,4 +222,3 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         MsgStaffCastResultS2C.register();
     }
 }
-
