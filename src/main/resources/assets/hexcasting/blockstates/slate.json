@@ -1,7 +1,11 @@
 {
   "variants": {
-    "normal": {
-      "model": "hexcasting:slate"
-    }
+    "facing=down": { "model": "hexcasting:slate_down" },
+    "facing=up": { "model": "hexcasting:slate_up" },
+    "facing=north": { "model": "hexcasting:slate_north" },
+    "facing=south": { "model": "hexcasting:slate_south" },
+    "facing=west": { "model": "hexcasting:slate_west" },
+    "facing=east": { "model": "hexcasting:slate_east" }
   }
+}
 }

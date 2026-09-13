@@ -5,28 +5,127 @@ import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-/** Carved slate used by Hex Casting circle structures. */
+/**
+ * A thin, face-attached slate used by Hex's circle structures.
+ *
+ * <p>FACING is the outward normal of the slate. The block is only valid while
+ * the opposite face has a solid support block, matching the modern slate's
+ * floor, ceiling, and wall placement behavior.</p>
+ */
 public final class BlockSlate extends Block {
+    public static final PropertyDirection FACING = PropertyDirection.create("facing");
+    private static final double THICKNESS = 1.0D / 16.0D;
+
     public BlockSlate() {
         super(Material.ROCK);
         setHardness(1.5F);
         setResistance(6.0F);
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(FACING,
+            EnumFacing.getFront(meta % EnumFacing.values().length));
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getIndex();
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
+                                            float hitX, float hitY, float hitZ,
+                                            int meta, EntityLivingBase placer) {
+        return getDefaultState().withProperty(FACING, facing);
+    }
+
+    @Override
+    public boolean canPlaceBlockAt(World world, BlockPos pos) {
+        for (EnumFacing facing : EnumFacing.values()) {
+            if (hasSupport(world, pos, facing)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos,
+                                Block blockIn, BlockPos fromPos) {
+        if (!canStay(world, pos, state)) {
+            dropBlockAsItem(world, pos, state, 0);
+            world.setBlockToAir(pos);
+        }
+        super.neighborChanged(state, world, pos, blockIn, fromPos);
+    }
+
+    private static boolean canStay(World world, BlockPos pos, IBlockState state) {
+        return hasSupport(world, pos, state.getValue(FACING));
+    }
+
+    private static boolean hasSupport(World world, BlockPos pos, EnumFacing normal) {
+        BlockPos supportPos = pos.offset(normal.getOpposite());
+        return world.getBlockState(supportPos).isSideSolid(world, supportPos, normal);
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        switch (state.getValue(FACING)) {
+            case DOWN:
+                return new AxisAlignedBB(0.0D, 1.0D - THICKNESS, 0.0D, 1.0D, 1.0D, 1.0D);
+            case NORTH:
+                return new AxisAlignedBB(0.0D, 0.0D, 1.0D - THICKNESS, 1.0D, 1.0D, 1.0D);
+            case SOUTH:
+                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, THICKNESS);
+            case WEST:
+                return new AxisAlignedBB(1.0D - THICKNESS, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+            case EAST:
+                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, THICKNESS, 1.0D, 1.0D);
+            case UP:
+            default:
+                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, THICKNESS, 1.0D);
+        }
+    }
+
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.MODEL;
     }
 
     @Override
@@ -106,7 +205,10 @@ public final class BlockSlate extends Block {
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world,
                          BlockPos pos, IBlockState state, int fortune) {
-        drops.add(createItemStack(world, pos));
+        ItemStack stack = createItemStack(world, pos);
+        if (!stack.isEmpty()) {
+            drops.add(stack);
+        }
     }
 
     private ItemStack createItemStack(IBlockAccess world, BlockPos pos) {
