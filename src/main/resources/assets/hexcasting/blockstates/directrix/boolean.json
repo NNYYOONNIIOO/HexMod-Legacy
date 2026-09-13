@@ -1,33 +1,22 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:directrix/boolean",
-      "x": 270,
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_down"
     },
     "facing=east": {
-      "model": "hexcasting:directrix/boolean",
-      "y": 90,
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_east"
     },
     "facing=north": {
-      "model": "hexcasting:directrix/boolean",
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_north"
     },
     "facing=south": {
-      "model": "hexcasting:directrix/boolean",
-      "x": 180,
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_south"
     },
     "facing=up": {
-      "model": "hexcasting:directrix/boolean",
-      "x": 90,
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_up"
     },
     "facing=west": {
-      "model": "hexcasting:directrix/boolean",
-      "y": 270,
-      "uvlock": true
+      "model": "hexcasting:directrix/boolean_west"
     }
   }
 }

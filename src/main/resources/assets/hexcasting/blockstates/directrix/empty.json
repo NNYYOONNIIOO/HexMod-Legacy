@@ -1,33 +1,22 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:directrix/empty",
-      "x": 270,
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_down"
     },
     "facing=east": {
-      "model": "hexcasting:directrix/empty",
-      "y": 90,
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_east"
     },
     "facing=north": {
-      "model": "hexcasting:directrix/empty",
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_north"
     },
     "facing=south": {
-      "model": "hexcasting:directrix/empty",
-      "x": 180,
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_south"
     },
     "facing=up": {
-      "model": "hexcasting:directrix/empty",
-      "x": 90,
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_up"
     },
     "facing=west": {
-      "model": "hexcasting:directrix/empty",
-      "y": 270,
-      "uvlock": true
+      "model": "hexcasting:directrix/empty_west"
     }
   }
 }
