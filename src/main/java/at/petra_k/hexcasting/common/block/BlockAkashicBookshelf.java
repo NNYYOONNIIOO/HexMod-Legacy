@@ -28,7 +28,8 @@ import net.minecraft.world.World;
 
 /** A single Akashic mapping cell: pattern key to arbitrary stored Iota. */
 public final class BlockAkashicBookshelf extends Block {
-    public static final PropertyDirection FACING = PropertyDirection.create("facing");
+    public static final PropertyDirection FACING =
+        PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
     public static final PropertyBool HAS_BOOKS = PropertyBool.create("has_books");
 
     public BlockAkashicBookshelf() {
