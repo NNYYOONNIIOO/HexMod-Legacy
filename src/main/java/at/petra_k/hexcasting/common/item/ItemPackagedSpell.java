@@ -30,6 +30,7 @@ import java.util.List;
 public class ItemPackagedSpell extends Item {
     private static final String KEY_PACKAGED_ACTION = "packaged_action";
     private static final String KEY_PATTERNS = "patterns";
+    private static final String KEY_PATTERN_PROGRAM = "pattern_program";
     private static final String KEY_VARIANT = "variant";
     private static final int VARIANT_COUNT = 5;
 
@@ -57,6 +58,30 @@ public class ItemPackagedSpell extends Item {
             addValidAction(actions, tag.getString(KEY_PACKAGED_ACTION));
         }
         return actions;
+    }
+
+    /** Reads exact drawable patterns, falling back to legacy registered actions. */
+    public static List<HexPattern> getPackagedPatterns(ItemStack stack) {
+        List<HexPattern> patterns = new ArrayList<>();
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag != null && tag.hasKey(KEY_PATTERN_PROGRAM, 9)) {
+            NBTTagList list = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
+            for (int i = 0; i < list.tagCount(); i++) {
+                try {
+                    patterns.add(HexPattern.fromNBT(list.getCompoundTagAt(i)));
+                } catch (RuntimeException ignored) {
+                    // Preserve valid entries even when one old entry is malformed.
+                }
+            }
+            return patterns;
+        }
+        for (ResourceLocation action : getPackagedActions(stack)) {
+            HexPattern pattern = HexActionRegistry.getPattern(action);
+            if (pattern != null) {
+                patterns.add(pattern);
+            }
+        }
+        return patterns;
     }
 
     private static void addValidAction(List<ResourceLocation> actions, String rawId) {
@@ -118,37 +143,29 @@ public class ItemPackagedSpell extends Item {
 
         ItemStack offhand = player.getHeldItemOffhand();
         if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
-            ResourceLocation action = ItemPatternScroll.getActionId(offhand);
-            if (action == null) {
+            HexPattern pattern = ItemPatternScroll.getPattern(offhand);
+            if (pattern == null) {
                 player.sendMessage(new TextComponentString(
-                    I18n.translateToLocal(ItemPatternScroll.getPattern(offhand) == null
-                        ? "hexcasting.tooltip.scroll.empty"
-                        : "hexcasting.message.pattern_requires_registered_action")));
+                    I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
-            appendPackagedAction(stack, action);
+            appendPackagedPattern(stack, pattern);
             ItemPatternScroll.consumeForWrite(offhand, player);
-            int count = getPackagedActions(stack).size();
+            int count = getPackagedPatterns(stack).size();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_added",
-                    localizeAction(action), count, count)));
+                    HexInline.formatPattern(pattern), count, count)));
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
         List<ResourceLocation> actions = getPackagedActions(stack);
-        if (actions.isEmpty()) {
+        List<HexPattern> patterns = getPackagedPatterns(stack);
+        if (actions.isEmpty() && patterns.isEmpty()) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_empty")));
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
-        List<HexPattern> patterns = new ArrayList<>();
-        for (ResourceLocation action : actions) {
-            HexPattern pattern = HexActionRegistry.getPattern(action);
-            if (pattern != null) {
-                patterns.add(pattern);
-            }
-        }
         if (patterns.isEmpty()) {
             clearPackagedAction(stack);
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
@@ -183,8 +200,16 @@ public class ItemPackagedSpell extends Item {
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         List<ResourceLocation> actions = getPackagedActions(stack);
-        if (actions.isEmpty()) {
+        List<HexPattern> patterns = getPackagedPatterns(stack);
+        if (patterns.isEmpty()) {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.none"));
+            return;
+        }
+        if (actions.isEmpty()) {
+            for (HexPattern pattern : patterns) {
+                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
+                    + HexInline.formatPattern(pattern));
+            }
             return;
         }
         for (ResourceLocation action : actions) {
@@ -215,6 +240,11 @@ public class ItemPackagedSpell extends Item {
             || HexActionRegistry.getPattern(action) == null) {
             return;
         }
+        if (stack.getTagCompound() != null
+            && stack.getTagCompound().hasKey(KEY_PATTERN_PROGRAM, 9)) {
+            appendPackagedPattern(stack, HexActionRegistry.getPattern(action));
+            return;
+        }
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
@@ -227,10 +257,45 @@ public class ItemPackagedSpell extends Item {
         tag.removeTag(KEY_PACKAGED_ACTION);
     }
 
+    /** Replace the packaged program with one exact drawable pattern. */
+    public static void setPackagedPattern(ItemStack stack, HexPattern pattern) {
+        clearPackagedAction(stack);
+        appendPackagedPattern(stack, pattern);
+    }
+
+    /** Append an exact pattern, converting any legacy action list first. */
+    public static void appendPackagedPattern(ItemStack stack, HexPattern pattern) {
+        if (stack == null || stack.isEmpty() || pattern == null) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        NBTTagList patterns;
+        if (tag.hasKey(KEY_PATTERN_PROGRAM, 9)) {
+            patterns = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
+        } else {
+            patterns = new NBTTagList();
+            for (ResourceLocation action : getPackagedActions(stack)) {
+                HexPattern oldPattern = HexActionRegistry.getPattern(action);
+                if (oldPattern != null) {
+                    patterns.appendTag(oldPattern.serializeToNBT());
+                }
+            }
+        }
+        patterns.appendTag(pattern.serializeToNBT());
+        tag.setTag(KEY_PATTERN_PROGRAM, patterns);
+        tag.removeTag(KEY_PATTERNS);
+        tag.removeTag(KEY_PACKAGED_ACTION);
+    }
+
     public static void clearPackagedAction(ItemStack stack) {
         if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
             stack.getTagCompound().removeTag(KEY_PACKAGED_ACTION);
             stack.getTagCompound().removeTag(KEY_PATTERNS);
+            stack.getTagCompound().removeTag(KEY_PATTERN_PROGRAM);
         }
     }
 
