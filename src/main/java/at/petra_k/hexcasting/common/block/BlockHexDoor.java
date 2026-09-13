@@ -22,4 +22,11 @@ public final class BlockHexDoor extends BlockDoor {
     public ItemStack getItem(World world, BlockPos pos, IBlockState state) {
         return new ItemStack(Item.getItemFromBlock(this));
     }
+    @Override
+    public ItemStack getPickBlock(IBlockState state, net.minecraft.util.math.RayTraceResult target,
+                                  World world, BlockPos pos,
+                                  net.minecraft.entity.player.EntityPlayer player) {
+        return new ItemStack(Item.getItemFromBlock(this));
+    }
+
 }

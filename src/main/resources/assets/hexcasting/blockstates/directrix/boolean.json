@@ -1,7 +1,7 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:directrix/boolean_down"
+      "model": "hexcasting:directrix/boolean_up"
     },
     "facing=east": {
       "model": "hexcasting:directrix/boolean_east"
@@ -13,7 +13,7 @@
       "model": "hexcasting:directrix/boolean_south"
     },
     "facing=up": {
-      "model": "hexcasting:directrix/boolean_up"
+      "model": "hexcasting:directrix/boolean_down"
     },
     "facing=west": {
       "model": "hexcasting:directrix/boolean_west"

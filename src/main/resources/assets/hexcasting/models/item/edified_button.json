@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/edified_button"
+  "parent": "hexcasting:block/edified_button",
+  "textures": {
+    "texture": "hexcasting:blocks/edified_planks"
+  }
 }
