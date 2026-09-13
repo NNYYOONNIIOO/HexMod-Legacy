@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.IItemPropertyGetter;
@@ -129,5 +130,16 @@ public final class ItemSlate extends ItemBlock {
         HexPattern pattern = getPattern(stack);
         return pattern == null ? name : I18n.translateToLocalFormatted(
             "hexcasting.item.slate.written", name, pattern.signature());
+    }
+
+    /** Keep blank slates free of stale BlockEntityTag data after clearing. */
+    @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity,
+                         int itemSlot, boolean isSelected) {
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag != null && tag.hasKey(TAG_BLOCK_ENTITY, 10)
+            && getPattern(stack) == null) {
+            tag.removeTag(TAG_BLOCK_ENTITY);
+        }
     }
 }
