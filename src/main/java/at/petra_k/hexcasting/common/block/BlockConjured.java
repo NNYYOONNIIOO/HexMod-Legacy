@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
@@ -42,6 +43,29 @@ public class BlockConjured extends Block {
     @Override
     public int quantityDropped(Random random) {
         return 0;
+    }
+
+    @Override
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        world.notifyBlockUpdate(pos, state, state, 3);
+        super.onBlockAdded(world, pos, state);
+    }
+
+    @Override
+    public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof TileEntityConjured) {
+            ((TileEntityConjured) tile).particleEffect();
+        }
+    }
+
+    @Override
+    public void onEntityWalk(World world, BlockPos pos, Entity entity) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof TileEntityConjured) {
+            ((TileEntityConjured) tile).walkParticle(entity);
+        }
+        super.onEntityWalk(world, pos, entity);
     }
 
     /** The visual effect is supplied by the block entity, as in Hex's source. */
