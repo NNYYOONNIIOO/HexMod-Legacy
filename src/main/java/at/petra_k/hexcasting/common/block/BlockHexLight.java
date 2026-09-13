@@ -55,12 +55,19 @@ public final class BlockHexLight extends Block {
     }
 
     @Override
-    public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face) {
-        return isPaperLantern() ? 100 : 0;
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    public net.minecraft.util.BlockRenderLayer getBlockLayer() {
+        return net.minecraft.util.BlockRenderLayer.CUTOUT;
     }
 
     @Override
-    public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face) {
-        return isPaperLantern() ? 60 : 0;
+    public int getFlammability(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
+        return 60;
     }
+
+    @Override
+    public int getFireSpreadSpeed(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
+        return 30;
+    }
+
 }
