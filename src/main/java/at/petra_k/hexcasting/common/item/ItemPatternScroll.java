@@ -99,7 +99,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                     player.sendMessage(new TextComponentString(
                         I18n.translateToLocalFormatted(
                             "hexcasting.message.program_added",
-                            localizeAction(current),
+                            current == null ? HexInline.formatPattern(currentPattern) : localizeAction(current),
                             ItemHexStaff.getProgramSize(player.getHeldItemOffhand()),
                             ItemHexStaff.MAX_PROGRAM_SIZE)));
                 } else {
@@ -227,11 +227,19 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                 // Invalid or stale NBT falls back to a registered action.
             }
         }
+        HexPattern stored = getStoredPattern(stack);
+        if (stored != null) {
+            try {
+                at.petra_k.hexcasting.api.casting.action.HexAction action = HexActionRegistry.get(stored);
+                return HexActionRegistry.idFor(action);
+            } catch (RuntimeException ignored) {
+                // A custom pattern may not have a registered action id.
+            }
+        }
         return null;
     }
 
-    /** Return the exact pattern stored on this scroll, with legacy action fallback. */
-    public static HexPattern getPattern(ItemStack stack) {
+    private static HexPattern getStoredPattern(ItemStack stack) {
         if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
             NBTTagCompound tag = stack.getTagCompound();
             if (tag.hasKey(KEY_PATTERN, 10)) {
@@ -245,6 +253,15 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                     }
                 }
             }
+        }
+        return null;
+    }
+
+    /** Return the exact pattern stored on this scroll, with legacy action fallback. */
+    public static HexPattern getPattern(ItemStack stack) {
+        HexPattern stored = getStoredPattern(stack);
+        if (stored != null) {
+            return stored;
         }
         ResourceLocation action = getActionId(stack);
         return action == null ? null : HexActionRegistry.getPattern(action);

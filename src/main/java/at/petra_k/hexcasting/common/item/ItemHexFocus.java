@@ -86,6 +86,9 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
             stack.setTagCompound(tag);
         }
         tag.setTag(TAG_DATA, iota.serialize());
+        // The complete iota is authoritative. Do not leave a legacy action id
+        // that can make a later read select a different registered pattern.
+        tag.removeTag(KEY_SELECTED_ACTION);
     }
 
     public static boolean isSealed(ItemStack stack) {
@@ -126,7 +129,10 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
     public void addInformation(ItemStack stack, World world, List<String> tooltip, net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation selected = resolveSelectedAction(stack);
-        HexPattern selectedPattern = selected == null ? null : HexActionRegistry.getPattern(selected);
+        HexPattern storedPattern = getStoredPattern(stack);
+        HexPattern selectedPattern = storedPattern != null
+            ? storedPattern
+            : selected == null ? null : HexActionRegistry.getPattern(selected);
         String actionText = selected == null
             ? I18n.translateToLocal("hexcasting.tooltip.none")
             : localizeAction(selected);
@@ -175,8 +181,16 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                 return new ActionResult<>(EnumActionResult.SUCCESS, held);
             }
 
+            HexPattern pattern = getStoredPattern(held);
+            if (pattern == null && selected != null) {
+                pattern = HexActionRegistry.getPattern(selected);
+            }
+            if (pattern == null) {
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocal("hexcasting.tooltip.none")));
+                return new ActionResult<>(EnumActionResult.SUCCESS, held);
+            }
             try {
-                HexPattern pattern = HexActionRegistry.getPattern(selected);
                 IHexCastingData data = HexCapabilities.CASTING_DATA == null
                     ? null
                     : player.getCapability(HexCapabilities.CASTING_DATA, null);
@@ -193,7 +207,7 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
                         "hexcasting.message.result",
-                        selected.getResourcePath(),
+                        selected == null ? HexInline.formatPattern(pattern) : selected.getResourcePath(),
                         resultText
                     )
                 ));
@@ -207,6 +221,18 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, held);
+    }
+
+    private static HexPattern getStoredPattern(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof ItemHexFocus)) {
+            return null;
+        }
+        try {
+            Iota stored = ((ItemHexFocus) stack.getItem()).readIota(stack);
+            return stored instanceof PatternIota ? ((PatternIota) stored).getPattern() : null;
+        } catch (CastingException ignored) {
+            return null;
+        }
     }
 
     private static ResourceLocation resolveSelectedAction(ItemStack stack) {
@@ -225,28 +251,37 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                 // Fall back to legacy selected_action data below.
             }
         }
-        ResourceLocation fallback = HexActions.PUSH_ONE_ID;
-        NBTTagCompound tag = stack.getTagCompound();
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_SELECTED_ACTION, 8)) {
-            ResourceLocation stored = new ResourceLocation(tag.getString(KEY_SELECTED_ACTION));
-            if (HexActionRegistry.get(stored) != null) {
-                return stored;
+            try {
+                ResourceLocation stored = new ResourceLocation(tag.getString(KEY_SELECTED_ACTION));
+                if (HexActionRegistry.get(stored) != null) {
+                    return stored;
+                }
+            } catch (RuntimeException ignored) {
+                // Invalid legacy data is treated as an empty focus.
             }
         }
-        return HexActionRegistry.get(fallback) == null ? HexActionRegistry.firstId() : fallback;
+        return null;
     }
 
     public static void setSelectedAction(ItemStack stack, ResourceLocation id) {
         HexActionRegistry.bootstrap();
-        HexPattern pattern = id == null ? null : HexActionRegistry.getPattern(id);
-        if (pattern != null) {
-            ItemHexFocus focus = stack != null && stack.getItem() instanceof ItemHexFocus
-                ? (ItemHexFocus) stack.getItem() : null;
-            if (focus != null) {
-                focus.writeDatum(stack, new PatternIota(pattern));
-            }
+        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof ItemHexFocus)) {
+            return;
         }
         NBTTagCompound tag = stack.getTagCompound();
+        if (id == null) {
+            if (tag != null) {
+                tag.removeTag(KEY_SELECTED_ACTION);
+            }
+            return;
+        }
+        HexPattern pattern = id == null ? null : HexActionRegistry.getPattern(id);
+        if (pattern != null) {
+            ((ItemHexFocus) stack.getItem()).writeDatum(stack, new PatternIota(pattern));
+        }
+        tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
             stack.setTagCompound(tag);
