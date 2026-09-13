@@ -75,15 +75,26 @@ public final class BlockHexSconce extends Block {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        switch (state.getValue(FACING)) {
-            case DOWN: return DOWN_BOX;
-            case NORTH: return NORTH_BOX;
-            case SOUTH: return SOUTH_BOX;
-            case WEST: return WEST_BOX;
-            case EAST: return EAST_BOX;
-            case UP:
-            default: return UP_BOX;
+        EnumFacing facing = state.getValue(FACING);
+        if (facing == EnumFacing.UP) {
+            return UP_BOX;
         }
+        if (facing == EnumFacing.DOWN) {
+            return DOWN_BOX;
+        }
+        if (facing == EnumFacing.NORTH) {
+            return NORTH_BOX;
+        }
+        if (facing == EnumFacing.SOUTH) {
+            return SOUTH_BOX;
+        }
+        if (facing == EnumFacing.WEST) {
+            return WEST_BOX;
+        }
+        if (facing == EnumFacing.EAST) {
+            return EAST_BOX;
+        }
+        return UP_BOX;
     }
 
     @Override
