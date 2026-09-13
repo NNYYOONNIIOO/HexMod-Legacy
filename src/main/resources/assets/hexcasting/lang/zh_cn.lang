@@ -1567,3 +1567,4 @@ hexcasting.message.akashic_record_exists=阿卡夏记录已包含：%s。
 hexcasting.message.akashic_record_requires_iota=请在另一只手持有 Iota 容器来写入此键。
 hexcasting.message.akashic_shelf_read=已读取阿卡夏书架映射：%s。
 hexcasting.message.akashic_shelf_written=已存储阿卡夏书架映射：%s。
+item.patchouli:guide_book.name=Hex 咒法指南

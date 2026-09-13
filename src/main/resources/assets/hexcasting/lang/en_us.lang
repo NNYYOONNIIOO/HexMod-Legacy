@@ -440,3 +440,4 @@ hexcasting.message.akashic_record_exists=Akashic record already contains %s.
 hexcasting.message.akashic_record_requires_iota=Hold an Iota container in the other hand to write this key.
 hexcasting.message.akashic_shelf_read=Read the Akashic bookshelf mapping for %s.
 hexcasting.message.akashic_shelf_written=Stored an Akashic bookshelf mapping for %s.
+item.patchouli:guide_book.name=Hex Casting Guide
