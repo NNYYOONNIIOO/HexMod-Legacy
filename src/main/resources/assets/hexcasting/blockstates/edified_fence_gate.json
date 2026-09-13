@@ -1,3 +1,7 @@
 {
-  "variants": {}
+  "variants": {
+    "normal": {
+      "model": "hexcasting:fence_gate"
+    }
+  }
 }

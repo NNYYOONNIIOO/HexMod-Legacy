@@ -1,4 +1,3 @@
 {
-  "parent": "hexcasting:block/edified_button",
-  "textures": {}
+  "parent": "hexcasting:block/edified_button"
 }

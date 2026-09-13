@@ -381,6 +381,7 @@ tile.hexcasting.directrix/empty.name=Hex Empty
 tile.hexcasting.directrix/redstone.name=Hex Redstone
 tile.hexcasting.edified_button.name=Edified Button
 tile.hexcasting.edified_door.name=Edified Door
+item.hexcasting.edified_door.name=Edified Door
 tile.hexcasting.edified_fence.name=Edified Fence
 tile.hexcasting.edified_fence_gate.name=Edified Fence Gate
 tile.hexcasting.edified_log.name=Edified Log

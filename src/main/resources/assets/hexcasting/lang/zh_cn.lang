@@ -1508,6 +1508,7 @@ tile.hexcasting.directrix/empty.name=空导轨
 tile.hexcasting.directrix/redstone.name=红石导轨
 tile.hexcasting.edified_button.name=启迪木按钮
 tile.hexcasting.edified_door.name=启迪木门
+item.hexcasting.edified_door.name=启迪木门
 tile.hexcasting.edified_fence.name=启迪木栅栏
 tile.hexcasting.edified_fence_gate.name=启迪木栅栏门
 tile.hexcasting.edified_log.name=启迪原木

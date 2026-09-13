@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:ancient_scroll_paper_lantern" }
+    "normal": {
+      "model": "hexcasting:ancient_scroll_paper_lantern"
+    }
   }
 }

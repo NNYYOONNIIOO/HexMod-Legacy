@@ -1,10 +1,10 @@
 {
   "variants": {
     "half=bottom": {
-      "model": "hexcasting:edified_half_slab_stone"
+      "model": "half_slab_stone"
     },
     "half=top": {
-      "model": "hexcasting:edified_upper_slab_stone"
+      "model": "upper_slab_stone"
     }
   }
 }

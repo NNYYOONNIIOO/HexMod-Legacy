@@ -7,11 +7,10 @@
     },
     {
       "when": {
-        "east": "true"
+        "north": "true"
       },
       "apply": {
         "model": "hexcasting:edified_fence_side",
-        "y": 90,
         "uvlock": true
       }
     },
@@ -21,7 +20,7 @@
       },
       "apply": {
         "model": "hexcasting:edified_fence_side",
-        "y": 0,
+        "y": 180,
         "uvlock": true
       }
     },
@@ -37,11 +36,11 @@
     },
     {
       "when": {
-        "north": "true"
+        "east": "true"
       },
       "apply": {
         "model": "hexcasting:edified_fence_side",
-        "y": 180,
+        "y": 90,
         "uvlock": true
       }
     }

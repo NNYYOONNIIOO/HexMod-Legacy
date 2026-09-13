@@ -1,6 +1,6 @@
 {
   "parent": "block/fence_side",
   "textures": {
-    "texture": "hexcasting:blocks/conjured_block"
+    "texture": "hexcasting:blocks/edified_planks"
   }
 }

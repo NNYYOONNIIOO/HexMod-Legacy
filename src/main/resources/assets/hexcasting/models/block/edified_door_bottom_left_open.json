@@ -1,5 +1,5 @@
 {
-  "parent": "block/door_bottom_right",
+  "parent": "block/door_bottom_left_open",
   "textures": {
     "bottom": "hexcasting:blocks/edified_door_lower",
     "top": "hexcasting:blocks/edified_door_upper"

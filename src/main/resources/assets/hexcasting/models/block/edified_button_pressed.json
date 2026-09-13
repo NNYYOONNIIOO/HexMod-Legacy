@@ -1,6 +1,6 @@
 {
   "parent": "block/button_pressed",
   "textures": {
-    "texture": "hexcasting:blocks/conjured_block"
+    "texture": "hexcasting:blocks/edified_planks"
   }
 }

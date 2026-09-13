@@ -621,7 +621,9 @@ private void drawMove(int mouseX, int mouseY) {
             return;
         }
         boolean closing = next.equals(currentPoints.get(0));
-        if (!closing && usedSpots.contains(next)) {
+        boolean backtracking = currentPoints.size() > 1
+            && next.equals(currentPoints.get(currentPoints.size() - 2));
+        if (!closing && !backtracking && usedSpots.contains(next)) {
             return;
         }
         HexDir direction = directionBetween(current, next);

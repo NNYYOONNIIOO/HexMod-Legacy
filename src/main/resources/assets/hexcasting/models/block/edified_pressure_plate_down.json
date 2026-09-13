@@ -1,6 +1,6 @@
 {
   "parent": "block/pressure_plate_down",
   "textures": {
-    "texture": "hexcasting:blocks/conjured_block"
+    "texture": "hexcasting:blocks/edified_planks"
   }
 }

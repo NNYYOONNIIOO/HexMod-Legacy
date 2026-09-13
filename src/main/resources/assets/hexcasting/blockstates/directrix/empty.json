@@ -1,29 +1,7 @@
 {
   "variants": {
-    "facing=down": {
-      "model": "hexcasting:directrix/empty",
-      "x": 180
-    },
-    "facing=up": {
+    "normal": {
       "model": "hexcasting:directrix/empty"
-    },
-    "facing=north": {
-      "model": "hexcasting:directrix/empty",
-      "x": 90
-    },
-    "facing=south": {
-      "model": "hexcasting:directrix/empty",
-      "x": 270
-    },
-    "facing=west": {
-      "model": "hexcasting:directrix/empty",
-      "x": 90,
-      "y": 90
-    },
-    "facing=east": {
-      "model": "hexcasting:directrix/empty",
-      "x": 90,
-      "y": 270
     }
   }
 }

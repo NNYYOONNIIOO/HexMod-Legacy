@@ -1,8 +1,8 @@
 {
   "parent": "block/outer_stairs",
   "textures": {
-    "bottom": "hexcasting:blocks/conjured_block",
-    "top": "hexcasting:blocks/conjured_block",
-    "side": "hexcasting:blocks/conjured_block"
+    "bottom": "hexcasting:blocks/edified_planks",
+    "top": "hexcasting:blocks/edified_planks",
+    "side": "hexcasting:blocks/edified_planks"
   }
 }
