@@ -156,7 +156,7 @@ public final class HexItems {
             } else if (id.equals("lore_fragment")) {
                 item = new ItemKnowledgeFragment(id);
             } else if (id.equals("creative_unlocker")) {
-                item = new ItemHexKnowledge("creative_unlocker");
+                item = new ItemKnowledgeFragment(id);
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll(scrollSize(id));
             } else if (id.contains("colorizer")) {
