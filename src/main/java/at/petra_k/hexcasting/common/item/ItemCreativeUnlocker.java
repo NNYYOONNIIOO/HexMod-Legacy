@@ -58,6 +58,16 @@ public final class ItemCreativeUnlocker extends Item implements MediaHolderItem 
     }
 
     @Override
+    public long withdrawMedia(ItemStack stack, long amount, boolean simulate) {
+        return amount < 0L ? Long.MAX_VALUE : Math.max(0L, amount);
+    }
+
+    @Override
+    public long insertMedia(ItemStack stack, long amount, boolean simulate) {
+        return amount < 0L ? Long.MAX_VALUE : Math.max(0L, amount);
+    }
+
+    @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
         if (!world.isRemote) {

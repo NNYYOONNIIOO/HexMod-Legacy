@@ -3,10 +3,13 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.Random;
 
 /** The translucent temporary block created by Hex Casting. */
 public class BlockConjured extends Block {
@@ -29,6 +32,16 @@ public class BlockConjured extends Block {
     @Override
     public boolean isFullCube(IBlockState state) {
         return false;
+    }
+
+    @Override
+    public Item getItemDropped(IBlockState state, Random random, int fortune) {
+        return null;
+    }
+
+    @Override
+    public int quantityDropped(Random random) {
+        return 0;
     }
 
     /** The visual effect is supplied by the block entity, as in Hex's source. */
