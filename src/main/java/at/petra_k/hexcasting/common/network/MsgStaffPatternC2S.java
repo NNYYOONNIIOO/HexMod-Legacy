@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.network;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
+import at.petra_k.hexcasting.common.casting.StaffPatternValidator;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
@@ -13,6 +14,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -115,6 +118,12 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         }
         if (patternsData == null) {
             ItemHexStaff.clearProgram(player, hand, staff);
+            sendAuthoritativeSnapshot(player, hand);
+            return;
+        }
+        String validationError = StaffPatternValidator.validate(patternsData);
+        if (validationError != null) {
+            player.sendMessage(new TextComponentString(I18n.translateToLocal(validationError)));
             sendAuthoritativeSnapshot(player, hand);
             return;
         }
