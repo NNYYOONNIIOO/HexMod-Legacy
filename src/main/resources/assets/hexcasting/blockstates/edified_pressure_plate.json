@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:edified_pressure_plate" }
+    "powered=false": {
+      "model": "hexcasting:edified_pressure_plate"
+    }
   }
 }

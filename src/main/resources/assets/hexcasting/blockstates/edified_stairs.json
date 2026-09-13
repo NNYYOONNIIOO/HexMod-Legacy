@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:edified_stairs" }
+    "facing=south,half=bottom,shape=inner_left": {
+      "model": "hexcasting:edified_stairs"
+    }
   }
 }

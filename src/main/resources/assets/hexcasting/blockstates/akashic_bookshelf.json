@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:akashic_bookshelf" }
+    "facing=east,has_books=false": {
+      "model": "hexcasting:akashic_bookshelf"
+    }
   }
 }

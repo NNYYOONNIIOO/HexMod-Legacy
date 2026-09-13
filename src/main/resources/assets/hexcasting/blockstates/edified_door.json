@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:edified_door" }
+    "facing=west,half=lower,hinge=left,open=true,powered=true": {
+      "model": "hexcasting:edified_door"
+    }
   }
 }
