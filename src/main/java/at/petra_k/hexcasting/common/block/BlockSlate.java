@@ -3,7 +3,6 @@ package at.petra_k.hexcasting.common.block;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
-import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -75,9 +74,7 @@ public final class BlockSlate extends Block {
         }
         if (scrollHand != null) {
             ItemStack scroll = player.getHeldItem(scrollHand);
-            HexActionRegistry.bootstrap();
-            HexPattern pattern = HexActionRegistry.getPattern(
-                ItemPatternScroll.getActionId(scroll));
+            HexPattern pattern = ItemPatternScroll.getPattern(scroll);
             if (pattern != null) {
                 slate.setPattern(pattern);
                 ItemPatternScroll.consumeForWrite(scroll, player);

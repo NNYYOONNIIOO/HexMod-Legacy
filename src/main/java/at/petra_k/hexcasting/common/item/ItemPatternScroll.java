@@ -29,6 +29,7 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
 public final class ItemPatternScroll extends Item {
     private static final String KEY_ACTION = "action";
+    private static final String KEY_PATTERN = "pattern";
 
     public ItemPatternScroll() {
         setMaxStackSize(1);
@@ -132,7 +133,7 @@ public final class ItemPatternScroll extends Item {
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation id = getActionId(stack);
-        HexPattern pattern = HexActionRegistry.getPattern(id);
+        HexPattern pattern = getPattern(stack);
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
         if (pattern != null) {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
@@ -165,6 +166,49 @@ public final class ItemPatternScroll extends Item {
         ResourceLocation defaultId = HexActionRegistry.get(fallback) == null
             ? HexActionRegistry.firstId() : fallback;
         return defaultId == null ? fallback : defaultId;
+    }
+
+    /** Return the exact pattern stored on this scroll, with legacy action fallback. */
+    public static HexPattern getPattern(ItemStack stack) {
+        if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag.hasKey(KEY_PATTERN, 10)) {
+                NBTTagCompound patternTag = tag.getCompoundTag(KEY_PATTERN);
+                if (patternTag.hasKey(HexPattern.TAG_START_DIR, 1)
+                    && patternTag.hasKey(HexPattern.TAG_ANGLES, 7)) {
+                    try {
+                        return HexPattern.fromNBT(patternTag);
+                    } catch (RuntimeException ignored) {
+                        // Fall through to the legacy action representation.
+                    }
+                }
+            }
+        }
+        ResourceLocation action = getActionId(stack);
+        return action == null ? null : HexActionRegistry.getPattern(action);
+    }
+
+    public static boolean hasPattern(ItemStack stack) {
+        return getPattern(stack) != null;
+    }
+
+    /** Store or clear the complete drawable pattern on a scroll. */
+    public static void setPattern(ItemStack stack, HexPattern pattern) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (pattern == null) {
+            if (tag != null) {
+                tag.removeTag(KEY_PATTERN);
+            }
+            return;
+        }
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
     }
 
     private static void setActionId(ItemStack stack, ResourceLocation id) {
