@@ -1,6 +1,31 @@
 {
-  "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/conjured_block"
-  }
+    "texture": "hexcasting:blocks/amethyst_tiles"
+  },
+  "elements": [
+    {
+      "from": [4, 0, 4],
+      "to": [12, 1, 12],
+      "faces": {
+        "down": { "texture": "#texture" },
+        "up": { "texture": "#texture" },
+        "north": { "texture": "#texture" },
+        "south": { "texture": "#texture" },
+        "west": { "texture": "#texture" },
+        "east": { "texture": "#texture" }
+      }
+    },
+    {
+      "from": [6, 1, 6],
+      "to": [10, 5, 10],
+      "faces": {
+        "down": { "texture": "#texture" },
+        "up": { "texture": "#texture" },
+        "north": { "texture": "#texture" },
+        "south": { "texture": "#texture" },
+        "west": { "texture": "#texture" },
+        "east": { "texture": "#texture" }
+      }
+    }
+  ]
 }

@@ -16,6 +16,7 @@ import at.petra_k.hexcasting.common.block.BlockHexFence;
 import at.petra_k.hexcasting.common.block.BlockHexFenceGate;
 import at.petra_k.hexcasting.common.block.BlockHexLeaves;
 import at.petra_k.hexcasting.common.block.BlockHexLight;
+import at.petra_k.hexcasting.common.block.BlockHexSconce;
 import at.petra_k.hexcasting.common.block.BlockHexLog;
 import at.petra_k.hexcasting.common.block.BlockHexPressurePlate;
 import at.petra_k.hexcasting.common.block.BlockHexStairs;
@@ -129,7 +130,9 @@ public final class HexBlocks {
                 || "aventurine_edified_leaves".equals(id)
                 || "citrine_edified_leaves".equals(id)) {
                 block = new BlockHexLeaves();
-            } else if (id.endsWith("_lantern") || id.endsWith("_sconce")) {
+            } else if ("amethyst_sconce".equals(id)) {
+                block = new BlockHexSconce();
+            } else if (id.endsWith("_lantern")) {
                 block = new BlockHexLight(id);
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
