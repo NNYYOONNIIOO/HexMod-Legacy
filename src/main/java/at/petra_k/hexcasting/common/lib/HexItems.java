@@ -6,7 +6,6 @@ import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
-import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
 import at.petra_k.hexcasting.common.item.ItemHexKnowledge;
 import at.petra_k.hexcasting.common.item.ItemAncientCypher;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
@@ -157,8 +156,6 @@ public final class HexItems {
                 item = new ItemHexKnowledge("lore_fragment");
             } else if (id.equals("creative_unlocker")) {
                 item = new ItemHexKnowledge("creative_unlocker");
-            } else if (id.equals("lore_fragment")) {
-                item = new ItemHexKnowledge("lore_fragment");
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll(scrollSize(id));
             } else if (id.contains("colorizer")) {

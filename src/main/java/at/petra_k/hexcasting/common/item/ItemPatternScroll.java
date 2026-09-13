@@ -4,6 +4,9 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -27,7 +30,7 @@ import net.minecraft.util.text.translation.I18n;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
-public final class ItemPatternScroll extends Item {
+public final class ItemPatternScroll extends Item implements IotaHolderItem {
     private final int maxPatterns;
     private static final String KEY_ACTION = "action";
     private static final String KEY_PATTERN = "pattern";
@@ -43,6 +46,41 @@ public final class ItemPatternScroll extends Item {
 
     public int getMaxPatterns() {
         return maxPatterns;
+    }
+
+    @Override
+    public NBTTagCompound readIotaTag(ItemStack stack) {
+        HexPattern pattern = getPattern(stack);
+        if (pattern == null) {
+            return null;
+        }
+        NBTTagCompound out = new NBTTagCompound();
+        out.setString("type", "hexcasting:pattern");
+        out.setTag("data", pattern.serializeToNBT());
+        return out;
+    }
+
+    @Override
+    public boolean writeable(ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public boolean canWrite(ItemStack stack, Iota datum) {
+        return datum == null || datum instanceof PatternIota;
+    }
+
+    @Override
+    public void writeDatum(ItemStack stack, Iota datum) {
+        if (!canWrite(stack, datum)) {
+            return;
+        }
+        if (datum == null) {
+            setPattern(stack, null);
+            return;
+        }
+        PatternIota pattern = (PatternIota) datum;
+        setPattern(stack, pattern.getPattern());
     }
 
     @Override

@@ -445,3 +445,5 @@ hexcasting.message.lore_fragment=Lore fragment examined.
 hexcasting.message.creative_unlocker=Knowledge unlocked.
 hexcasting.tooltip.lore_fragment=Contains a fragment of Hex knowledge.
 hexcasting.tooltip.creative_unlocker=Unlocks Hex knowledge in creative testing.
+hexcasting.tooltip.scroll.empty=An empty pattern scroll.
+hexcasting.tooltip.scroll.pattern=Stores one complete Hex pattern.

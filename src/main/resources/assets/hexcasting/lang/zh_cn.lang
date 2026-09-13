@@ -1572,3 +1572,5 @@ hexcasting.message.lore_fragment=你研究了传说碎片。
 hexcasting.message.creative_unlocker=已解锁知识。
 hexcasting.tooltip.lore_fragment=包含一段咒法知识。
 hexcasting.tooltip.creative_unlocker=用于创造模式测试时解锁咒法知识。
+hexcasting.tooltip.scroll.empty=空白咒法卷轴。
+hexcasting.tooltip.scroll.pattern=保存一个完整的咒法图案。
