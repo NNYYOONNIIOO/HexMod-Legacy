@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.item.ItemStack;
 
@@ -15,6 +16,17 @@ public final class BlockHexSlab extends BlockSlab {
         setSoundType(SoundType.WOOD);
         setHarvestLevel("axe", 0);
         setDefaultState(blockState.getBaseState().withProperty(HALF, EnumBlockHalf.BOTTOM));
+    }
+
+    /**
+     * Keep the half property present while BlockSlab's superclass constructor
+     * creates the state container.  The 1.12.2 Cleanroom/Forge combination can
+     * otherwise resolve the container as an empty vanilla block state during
+     * static registration.
+     */
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, HALF);
     }
 
     @Override
