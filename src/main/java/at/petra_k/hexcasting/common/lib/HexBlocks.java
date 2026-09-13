@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.common.block.BlockImpetus;
 import at.petra_k.hexcasting.common.block.BlockSlate;
 import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import at.petra_k.hexcasting.common.item.ItemSlate;
+import at.petra_k.hexcasting.common.item.ItemImpetus;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -141,8 +142,16 @@ public final class HexBlocks {
     public static void registerBlockItems(RegistryEvent.Register<Item> event) {
         for (Map.Entry<String, Block> entry : BLOCKS.entrySet()) {
             Block block = entry.getValue();
-            ItemBlock item = "slate".equals(entry.getKey())
-                ? new ItemSlate(block) : new ItemBlock(block);
+            ItemBlock item;
+            if ("slate".equals(entry.getKey())) {
+                item = new ItemSlate(block);
+            } else if ("impetus".equals(entry.getKey())
+                || entry.getKey().startsWith("impetus/")
+                || "great_impetus".equals(entry.getKey())) {
+                item = new ItemImpetus(block);
+            } else {
+                item = new ItemBlock(block);
+            }
             item.setRegistryName(block.getRegistryName());
             item.setUnlocalizedName(block.getUnlocalizedName());
             item.setCreativeTab(HexCreativeTab.HEX);

@@ -6,7 +6,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -14,6 +17,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.IBlockAccess;
+
+import net.minecraft.util.NonNullList;
 
 /**
  * Impetus trigger for the first 1.12.2 circle slice.
@@ -55,6 +61,40 @@ public class BlockImpetus extends Block {
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
         return new TileEntityImpetus();
+    }
+
+    @Override
+    public ItemStack getItem(World world, BlockPos pos, IBlockState state) {
+        return createItemStack(world, pos);
+    }
+
+    @Override
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world,
+                         BlockPos pos, IBlockState state, int fortune) {
+        ItemStack stack = createItemStack(world, pos);
+        if (!stack.isEmpty()) {
+            drops.add(stack);
+        }
+    }
+
+    private ItemStack createItemStack(IBlockAccess world, BlockPos pos) {
+        Item item = Item.getItemFromBlock(this);
+        if (item == null) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = new ItemStack(item);
+        TileEntity tileEntity = world.getTileEntity(pos);
+        if (tileEntity instanceof TileEntityImpetus) {
+            NBTTagList program = ((TileEntityImpetus) tileEntity).getProgramSnapshot();
+            if (program.tagCount() > 0) {
+                NBTTagCompound blockEntityTag = new NBTTagCompound();
+                blockEntityTag.setTag("patterns", program);
+                NBTTagCompound tag = new NBTTagCompound();
+                tag.setTag("BlockEntityTag", blockEntityTag);
+                stack.setTagCompound(tag);
+            }
+        }
+        return stack;
     }
 
     @Override

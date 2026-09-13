@@ -43,6 +43,14 @@ public final class TileEntityImpetus extends TileEntity {
         markDirty();
     }
 
+    /** Apply a program restored from the item's BlockEntityTag. */
+    public void restoreProgram(NBTTagList incoming) {
+        patterns = copyPatterns(incoming);
+        caster = new ItemStack(HexItems.STAFF);
+        StaffCastExecutor.clear(caster);
+        markDirty();
+    }
+
     public NBTTagList getProgramSnapshot() {
         return copyPatterns(patterns);
     }
