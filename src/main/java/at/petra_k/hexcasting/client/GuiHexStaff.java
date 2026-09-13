@@ -546,13 +546,15 @@ public final class GuiHexStaff extends GuiScreen {
         }
     }
 
-    private void drawMove(int mouseX, int mouseY) {
+private void drawMove(int mouseX, int mouseY) {
         if (!drawing || current == null) {
             return;
         }
+        int clampedMouseX = Math.max(0, Math.min(width, mouseX));
+        int clampedMouseY = Math.max(0, Math.min(height, mouseY));
         int[] anchorPixel = coordToPx(current);
-        double dx = mouseX - anchorPixel[0];
-        double dy = mouseY - anchorPixel[1];
+        double dx = clampedMouseX - anchorPixel[0];
+        double dy = clampedMouseY - anchorPixel[1];
         double hexSize = hexSize();
         double snapDistance = hexSize * hexSize * SNAP_DISTANCE_FACTOR;
         if (dx * dx + dy * dy < snapDistance) {
