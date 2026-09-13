@@ -97,7 +97,7 @@ public final class HexBlocks {
                 block = new BlockSlate();
             } else if ("akashic_record".equals(id)) {
                 block = new BlockAkashicRecord();
-            } else if ("impetus".equals(id)) {
+            } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 block = new BlockImpetus();
             } else if ("great_impetus".equals(id)) {
                 block = new BlockGreatImpetus();
