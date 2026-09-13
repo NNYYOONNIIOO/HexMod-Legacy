@@ -31,6 +31,7 @@ import java.util.UUID;
 /** A programmable Hex Casting staff for the first 1.12.2 casting slice. */
 public final class ItemHexStaff extends Item {
     public static final int MAX_PROGRAM_SIZE = 64;
+    private final String variant;
     private static final String KEY_PROGRAM = "program";
     private static final String KEY_PATTERN_PROGRAM = "patterns";
     private static final String KEY_ORIGIN_Q = "origin_q";
@@ -39,7 +40,16 @@ public final class ItemHexStaff extends Item {
     private static final String KEY_INSTANCE_ID = "staff_instance_id";
 
     public ItemHexStaff() {
+        this("");
+    }
+
+    public ItemHexStaff(String variant) {
+        this.variant = variant == null ? "" : variant;
         setMaxStackSize(1);
+    }
+
+    public String getVariant() {
+        return variant;
     }
 
     @Override

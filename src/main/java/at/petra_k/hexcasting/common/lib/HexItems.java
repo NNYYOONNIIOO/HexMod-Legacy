@@ -156,11 +156,11 @@ public final class HexItems {
             } else if (id.equals("creative_unlocker")) {
                 item = new ItemKnowledgeFragment("creative_unlocker");
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
-                item = new ItemPatternScroll();
+                item = new ItemPatternScroll(scrollSize(id));
             } else if (id.contains("colorizer")) {
                 item = new ItemColorizer(id);
             } else if (id.startsWith("staff/")) {
-                item = new ItemHexStaff();
+                item = new ItemHexStaff(id.substring("staff/".length()));
             } else {
                 item = new Item();
             }
@@ -181,6 +181,16 @@ public final class HexItems {
         items.add(ARTIFACT);
         items.addAll(EXTRA_ITEMS.values());
         return items;
+    }
+
+    private static int scrollSize(String id) {
+        if ("scroll_small".equals(id)) {
+            return 1;
+        }
+        if ("scroll_medium".equals(id)) {
+            return 2;
+        }
+        return 3;
     }
 
     private HexItems() {

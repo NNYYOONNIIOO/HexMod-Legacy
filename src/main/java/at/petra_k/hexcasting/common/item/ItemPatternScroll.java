@@ -28,11 +28,21 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
 public final class ItemPatternScroll extends Item {
+    private final int maxPatterns;
     private static final String KEY_ACTION = "action";
     private static final String KEY_PATTERN = "pattern";
 
     public ItemPatternScroll() {
+        this(1);
+    }
+
+    public ItemPatternScroll(int maxPatterns) {
+        this.maxPatterns = Math.max(1, Math.min(3, maxPatterns));
         setMaxStackSize(1);
+    }
+
+    public int getMaxPatterns() {
+        return maxPatterns;
     }
 
     @Override
