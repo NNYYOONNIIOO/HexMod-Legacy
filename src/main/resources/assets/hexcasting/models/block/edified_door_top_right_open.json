@@ -1,6 +1,7 @@
 {
   "parent": "block/door_top_rh",
   "textures": {
-    "texture": "hexcasting:blocks/edified_door_upper"
+    "texture": "hexcasting:blocks/edified_door_upper",
+    "top": "hexcasting:blocks/edified_door_upper"
   }
 }

@@ -2,6 +2,24 @@
   "variants": {
     "normal": {
       "model": "hexcasting:directrix/empty"
+    },
+    "facing=north": {
+      "model": "hexcasting:directrix/empty"
+    },
+    "facing=east": {
+      "model": "hexcasting:directrix/empty"
+    },
+    "facing=south": {
+      "model": "hexcasting:directrix/empty"
+    },
+    "facing=west": {
+      "model": "hexcasting:directrix/empty"
+    },
+    "facing=up": {
+      "model": "hexcasting:directrix/empty"
+    },
+    "facing=down": {
+      "model": "hexcasting:directrix/empty"
     }
   }
 }
