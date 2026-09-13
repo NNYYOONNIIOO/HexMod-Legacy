@@ -1,7 +1,7 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:items/focus_base",
-    "layer1": "hexcasting:items/focus_overlay"
+    "layer0": "hexcasting:items/cad/0_focus_filled",
+    "layer1": "hexcasting:items/cad/0_focus_filled_overlay"
   }
 }

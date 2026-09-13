@@ -1,7 +1,7 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:items/focus_empty"
+    "layer0": "hexcasting:items/cad/0_focus_empty"
   },
   "overrides": [
     {
@@ -14,31 +14,87 @@
     },
     {
       "predicate": { "hexcasting:variant": 0.142857 },
-      "model": "hexcasting:item/focus_variant_1"
+      "model": "hexcasting:item/focus_variant_1_empty"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.142857 },
+      "model": "hexcasting:item/focus_variant_1_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.142857 },
+      "model": "hexcasting:item/focus_variant_1_sealed",
     },
     {
       "predicate": { "hexcasting:variant": 0.285714 },
-      "model": "hexcasting:item/focus_variant_2"
+      "model": "hexcasting:item/focus_variant_2_empty"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.285714 },
+      "model": "hexcasting:item/focus_variant_2_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.285714 },
+      "model": "hexcasting:item/focus_variant_2_sealed",
     },
     {
       "predicate": { "hexcasting:variant": 0.428571 },
-      "model": "hexcasting:item/focus_variant_3"
+      "model": "hexcasting:item/focus_variant_3_empty"
     },
     {
-      "predicate": { "hexcasting:variant": 0.571428 },
-      "model": "hexcasting:item/focus_variant_4"
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.428571 },
+      "model": "hexcasting:item/focus_variant_3_filled"
     },
     {
-      "predicate": { "hexcasting:variant": 0.714285 },
-      "model": "hexcasting:item/focus_variant_5"
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.428571 },
+      "model": "hexcasting:item/focus_variant_3_sealed",
     },
     {
-      "predicate": { "hexcasting:variant": 0.857142 },
-      "model": "hexcasting:item/focus_variant_6"
+      "predicate": { "hexcasting:variant": 0.571429 },
+      "model": "hexcasting:item/focus_variant_4_empty"
     },
     {
-      "predicate": { "hexcasting:variant": 1.0 },
-      "model": "hexcasting:item/focus_variant_7"
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.571429 },
+      "model": "hexcasting:item/focus_variant_4_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.571429 },
+      "model": "hexcasting:item/focus_variant_4_sealed",
+    },
+    {
+      "predicate": { "hexcasting:variant": 0.714286 },
+      "model": "hexcasting:item/focus_variant_5_empty"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.714286 },
+      "model": "hexcasting:item/focus_variant_5_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.714286 },
+      "model": "hexcasting:item/focus_variant_5_sealed",
+    },
+    {
+      "predicate": { "hexcasting:variant": 0.857143 },
+      "model": "hexcasting:item/focus_variant_6_empty"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.857143 },
+      "model": "hexcasting:item/focus_variant_6_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 0.857143 },
+      "model": "hexcasting:item/focus_variant_6_sealed",
+    },
+    {
+      "predicate": { "hexcasting:variant": 1.000000 },
+      "model": "hexcasting:item/focus_variant_7_empty"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 1.000000 },
+      "model": "hexcasting:item/focus_variant_7_filled"
+    },
+    {
+      "predicate": { "hexcasting:sealed": 1.0, "hexcasting:variant": 1.000000 },
+      "model": "hexcasting:item/focus_variant_7_sealed"
     }
   ]
 }
