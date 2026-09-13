@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/directrix/redstone"
+    "all": "hexcasting:blocks/circle/directrix/redstone/front_dim_unpowered"
   }
 }

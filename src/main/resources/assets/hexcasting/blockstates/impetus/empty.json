@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": { "model": "hexcasting:impetus/empty" }
+    "normal": { "model": "hexcasting:impetus/empty" }
   }
 }

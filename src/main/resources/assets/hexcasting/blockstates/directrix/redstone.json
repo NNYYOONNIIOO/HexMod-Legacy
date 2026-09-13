@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": { "model": "hexcasting:directrix/redstone" }
+    "normal": { "model": "hexcasting:directrix/redstone" }
   }
 }

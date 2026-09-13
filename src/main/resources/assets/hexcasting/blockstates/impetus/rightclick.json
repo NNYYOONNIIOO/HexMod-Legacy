@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": { "model": "hexcasting:impetus/rightclick" }
+    "normal": { "model": "hexcasting:impetus/rightclick" }
   }
 }

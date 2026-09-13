@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/directrix/empty"
+    "all": "hexcasting:blocks/circle/directrix/empty/front_dim"
   }
 }

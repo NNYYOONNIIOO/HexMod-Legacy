@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/impetus/look"
+    "all": "hexcasting:blocks/circle/impetus/look/front_dim"
   }
 }
