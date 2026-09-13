@@ -1,6 +1,6 @@
 {
   "name": "Your First Pattern",
-  "icon": "hexcasting:pattern_scroll",
+      "icon": "hexcasting:scroll",
   "category": "hexcasting:getting_started",
   "sortnum": 0,
   "pages": [
@@ -20,13 +20,13 @@
     },
     {
       "type": "spotlight",
-      "item": "hexcasting:pattern_scroll",
+      "item": "hexcasting:scroll",
       "title": "Pattern Scroll",
       "text": "Scrolls expose the registered starter patterns as creative-tab variants. They are intentionally data-driven so more migrated actions can be added without changing the item."
     },
     {
       "type": "crafting",
-      "recipe": "hexcasting:pattern_scroll"
+      "recipe": "hexcasting:scroll"
     }
   ]
 }
