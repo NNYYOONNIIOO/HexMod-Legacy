@@ -100,10 +100,13 @@ public final class HexItemModels {
     private static void registerFocusProperties() {
         ResourceLocation filledId = new ResourceLocation(HexAPI.MOD_ID, "filled");
         ResourceLocation sealedId = new ResourceLocation(HexAPI.MOD_ID, "sealed");
+        ResourceLocation variantId = new ResourceLocation(HexAPI.MOD_ID, "variant");
         HexItems.FOCUS.addPropertyOverride(filledId, (stack, world, entity) ->
             !ItemHexFocus.isSealed(stack) && HexItems.FOCUS.readIotaTag(stack) != null ? 1.0F : 0.0F);
         HexItems.FOCUS.addPropertyOverride(sealedId, (stack, world, entity) ->
             ItemHexFocus.isSealed(stack) ? 1.0F : 0.0F);
+        HexItems.FOCUS.addPropertyOverride(variantId, (stack, world, entity) ->
+            ItemHexFocus.getVariant(stack) / 7.0F);
     }
 
     private static int colorFor(ItemStack stack) {
