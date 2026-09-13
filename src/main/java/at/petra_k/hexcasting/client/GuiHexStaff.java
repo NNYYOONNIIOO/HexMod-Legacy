@@ -525,7 +525,12 @@ public final class GuiHexStaff extends GuiScreen {
         if (mouseButton != 0 || drawing) {
             return;
         }
-        GridPoint start = pxToCoord(mouseX, mouseY);
+        // Match Hex's drawStart: clamp the click before converting it to a
+        // grid coordinate so clicks at the screen edge cannot start outside
+        // the visible casting area.
+        int clampedMouseX = Math.max(0, Math.min(width, mouseX));
+        int clampedMouseY = Math.max(0, Math.min(height, mouseY));
+        GridPoint start = pxToCoord(clampedMouseX, clampedMouseY);
         if (usedSpots.contains(start)) {
             return;
         }
