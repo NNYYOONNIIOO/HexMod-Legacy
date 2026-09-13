@@ -3,6 +3,9 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 
 /**
  * Shared 1.12.2 fallback for Hex decorative blocks that do not need a tile
@@ -11,11 +14,13 @@ import net.minecraft.block.material.Material;
  * behavior follows the block family instead of treating every block as rock.
  */
 public final class BlockHexDecorative extends Block {
+    private final String blockId;
     private final boolean lightSource;
 
     public BlockHexDecorative(String id) {
         super(materialFor(id));
-        this.lightSource = isLightSource(id);
+        this.blockId = id == null ? "" : id;
+        this.lightSource = isLightSource(blockId);
         setHardness(hardnessFor(id));
         setResistance(resistanceFor(id));
         setSoundType(soundFor(id));
@@ -32,6 +37,27 @@ public final class BlockHexDecorative extends Block {
 
     public boolean isLightSource() {
         return lightSource;
+    }
+
+    @Override
+    public boolean isFlammable(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return isWood(blockId) || isPaper(blockId);
+    }
+
+    @Override
+    public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        if (isPaper(blockId)) {
+            return 100;
+        }
+        return isWood(blockId) ? 20 : 0;
+    }
+
+    @Override
+    public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        if (isPaper(blockId)) {
+            return 60;
+        }
+        return isWood(blockId) ? 5 : 0;
     }
 
     private static Material materialFor(String id) {
@@ -82,6 +108,10 @@ public final class BlockHexDecorative extends Block {
 
     private static boolean isLightSource(String id) {
         return id.endsWith("lantern") || id.endsWith("sconce");
+    }
+
+    private static boolean isPaper(String id) {
+        return id.contains("scroll") || id.contains("paper");
     }
 
     private static boolean isMetal(String id) {
