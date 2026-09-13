@@ -42,6 +42,7 @@ tile.hexcasting.impetus.name=促动石
 tile.hexcasting.great_impetus.name=大型促动石
 tile.hexcasting.spell_circle.name=法术圆环
 item.hexcasting.focus.name=法术焦点
+item.hexcasting.focus.sealed.name=密封核心
 item.hexcasting.lens.name=窥视透镜
 item.hexcasting.battery.name=媒质电池
 hexcasting.action.get_caster=获取施法者

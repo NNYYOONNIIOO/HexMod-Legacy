@@ -39,6 +39,15 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
     }
 
     @Override
+    public String getItemStackDisplayName(ItemStack stack) {
+        String key = isSealed(stack)
+            ? "item.hexcasting.focus.sealed.name"
+            : "item.hexcasting.focus.name";
+        String translated = I18n.translateToLocal(key);
+        return key.equals(translated) ? super.getItemStackDisplayName(stack) : translated;
+    }
+
+    @Override
     public NBTTagCompound readIotaTag(ItemStack stack) {
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
         return tag != null && tag.hasKey(TAG_DATA, 10)
