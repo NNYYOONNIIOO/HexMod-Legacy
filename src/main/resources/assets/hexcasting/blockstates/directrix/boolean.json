@@ -1,6 +1,21 @@
 {
   "variants": {
-    "normal": {
+    "facing=down": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=east": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=north": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=south": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=up": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=west": {
       "model": "hexcasting:directrix/boolean"
     }
   }
