@@ -2,7 +2,10 @@ package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -27,11 +30,14 @@ import java.util.Collections;
 import java.util.List;
 
 /** A 64-page spellbook whose pages preserve complete drawable Hex patterns. */
-public final class ItemSpellbook extends Item {
+public final class ItemSpellbook extends Item implements IotaHolderItem {
     /** Legacy pages were a list of action-id strings. */
     private static final String KEY_LEGACY_PAGES = "pages";
     /** Current pages are a list of serialized HexPattern compounds. */
     private static final String KEY_PATTERN_PAGES = "pattern_pages";
+    /** Generic Iota pages use one-based numeric keys, like modern Hex. */
+    private static final String KEY_IOTA_PAGES = "iota_pages";
+    private static final String KEY_SEALED_PAGES = "sealed_pages";
     private static final String KEY_ACTIVE = "active_page";
     public static final int MAX_PAGES = 64;
 
@@ -141,20 +147,92 @@ public final class ItemSpellbook extends Item {
 
     /** Returns the complete pattern stored on the current page. */
     public static HexPattern getPattern(ItemStack stack) {
-        NBTTagList pages = getPatternPages(stack);
-        int active = getPageIndex(stack, pages.tagCount());
-        if (active < pages.tagCount()) {
-            try {
-                NBTTagCompound patternTag = pages.getCompoundTagAt(active);
-                if (patternTag.hasKey(HexPattern.TAG_START_DIR, 1)
-                    && patternTag.hasKey(HexPattern.TAG_ANGLES, 7)) {
-                    return HexPattern.fromNBT(patternTag);
-                }
-            } catch (RuntimeException ignored) {
-                // A malformed page is treated as empty while other pages survive.
-            }
+        NBTTagCompound storedTag = getStoredIotaTag(stack);
+        if (storedTag != null) {
+            Iota stored = readStoredIota(stack);
+            return stored instanceof PatternIota
+                ? ((PatternIota) stored).getPattern() : null;
         }
-        return null;
+        return getPatternPage(stack);
+    }
+
+    /** Read the current page as a generic Hex Iota, not only as a pattern. */
+    @Override
+    public NBTTagCompound readIotaTag(ItemStack stack) {
+        NBTTagCompound stored = getStoredIotaTag(stack);
+        if (stored != null) {
+            return stored;
+        }
+        HexPattern legacyPattern = getPatternPage(stack);
+        return legacyPattern == null ? null : new PatternIota(legacyPattern).serialize();
+    }
+
+    @Override
+    public boolean writeable(ItemStack stack) {
+        return !isSealed(stack);
+    }
+
+    @Override
+    public boolean canWrite(ItemStack stack, Iota datum) {
+        return datum == null || !isSealed(stack);
+    }
+
+    /** Write or clear the current page while preserving arbitrary Iota types. */
+    @Override
+    public void writeDatum(ItemStack stack, Iota datum) {
+        if (stack == null || stack.isEmpty() || (datum != null && isSealed(stack))) {
+            return;
+        }
+        NBTTagCompound root = getOrCreateTag(stack);
+        NBTTagCompound pages = root.hasKey(KEY_IOTA_PAGES, 10)
+            ? root.getCompoundTag(KEY_IOTA_PAGES) : new NBTTagCompound();
+        String pageKey = String.valueOf(getPageIndex(stack) + 1);
+        if (datum == null) {
+            pages.removeTag(pageKey);
+        } else {
+            pages.setTag(pageKey, datum.serialize());
+        }
+        if (pages.hasNoTags()) {
+            root.removeTag(KEY_IOTA_PAGES);
+        } else {
+            root.setTag(KEY_IOTA_PAGES, pages);
+        }
+    }
+
+    /** Set the modern per-page sealed flag used by spellbook recipes. */
+    public static void setSealed(ItemStack stack, boolean sealed) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound root = sealed ? getOrCreateTag(stack) : stack.getTagCompound();
+        if (root == null) {
+            return;
+        }
+        NBTTagCompound sealedPages = root.hasKey(KEY_SEALED_PAGES, 10)
+            ? root.getCompoundTag(KEY_SEALED_PAGES) : new NBTTagCompound();
+        String pageKey = String.valueOf(getPageIndex(stack) + 1);
+        if (sealed) {
+            sealedPages.setBoolean(pageKey, true);
+        } else {
+            sealedPages.removeTag(pageKey);
+        }
+        if (sealedPages.hasNoTags()) {
+            root.removeTag(KEY_SEALED_PAGES);
+        } else {
+            root.setTag(KEY_SEALED_PAGES, sealedPages);
+        }
+    }
+
+    public static boolean isSealed(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
+            return false;
+        }
+        NBTTagCompound root = stack.getTagCompound();
+        if (!root.hasKey(KEY_SEALED_PAGES, 10)) {
+            return false;
+        }
+        return root.getCompoundTag(KEY_SEALED_PAGES)
+            .getBoolean(String.valueOf(getPageIndex(stack) + 1));
     }
 
     private static ResourceLocation getActionId(HexPattern pattern) {
@@ -168,12 +246,12 @@ public final class ItemSpellbook extends Item {
 
     private static HexPattern cyclePage(ItemStack stack) {
         NBTTagCompound tag = getOrCreateTag(stack);
-        NBTTagList pages = getOrCreatePatternPages(stack);
-        if (pages.tagCount() == 0) {
+        int pageCount = getPageCount(stack);
+        if (pageCount == 0) {
             tag.setInteger(KEY_ACTIVE, 0);
             return null;
         }
-        int next = (getPageIndex(stack, pages.tagCount()) + 1) % pages.tagCount();
+        int next = (getPageIndex(stack, pageCount) + 1) % pageCount;
         tag.setInteger(KEY_ACTIVE, next);
         return getPattern(stack);
     }
@@ -266,7 +344,8 @@ public final class ItemSpellbook extends Item {
     }
 
     private static int getPageCount(ItemStack stack) {
-        return getPatternPages(stack).tagCount();
+        return Math.min(MAX_PAGES, Math.max(
+            getPatternPages(stack).tagCount(), getIotaPageCount(stack)));
     }
 
     private static int getPageIndex(ItemStack stack) {
@@ -279,6 +358,65 @@ public final class ItemSpellbook extends Item {
         }
         int active = stack.getTagCompound().getInteger(KEY_ACTIVE);
         return Math.max(0, Math.min(active, pageCount - 1));
+    }
+
+    private static int getIotaPageCount(ItemStack stack) {
+        NBTTagCompound pages = getIotaPages(stack);
+        int highest = 0;
+        for (String key : pages.getKeySet()) {
+            try {
+                highest = Math.max(highest, Integer.parseInt(key));
+            } catch (NumberFormatException ignored) {
+                // Ignore non-page metadata without affecting valid pages.
+            }
+        }
+        return highest;
+    }
+
+    private static NBTTagCompound getIotaPages(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
+            return new NBTTagCompound();
+        }
+        NBTTagCompound root = stack.getTagCompound();
+        return root.hasKey(KEY_IOTA_PAGES, 10)
+            ? root.getCompoundTag(KEY_IOTA_PAGES) : new NBTTagCompound();
+    }
+
+    private static NBTTagCompound getStoredIotaTag(ItemStack stack) {
+        NBTTagCompound pages = getIotaPages(stack);
+        String pageKey = String.valueOf(getPageIndex(stack, getIotaPageCount(stack)) + 1);
+        if (!pages.hasKey(pageKey, 10)) {
+            return null;
+        }
+        NBTTagCompound stored = pages.getCompoundTag(pageKey);
+        return stored.hasKey("type", 8) && stored.hasKey("data", 10)
+            ? stored : null;
+    }
+
+    private static Iota readStoredIota(ItemStack stack) {
+        try {
+            return ((ItemSpellbook) stack.getItem()).readIota(stack);
+        } catch (CastingException | RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    private static HexPattern getPatternPage(ItemStack stack) {
+        NBTTagList pages = getPatternPages(stack);
+        int active = getPageIndex(stack, pages.tagCount());
+        if (active >= pages.tagCount()) {
+            return null;
+        }
+        try {
+            NBTTagCompound patternTag = pages.getCompoundTagAt(active);
+            if (patternTag.hasKey(HexPattern.TAG_START_DIR, 1)
+                && patternTag.hasKey(HexPattern.TAG_ANGLES, 7)) {
+                return HexPattern.fromNBT(patternTag);
+            }
+        } catch (RuntimeException ignored) {
+            // A malformed page is treated as empty while other pages survive.
+        }
+        return null;
     }
 
     private static NBTTagCompound getOrCreateTag(ItemStack stack) {
