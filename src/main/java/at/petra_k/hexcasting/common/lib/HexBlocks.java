@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
+import at.petra_k.hexcasting.common.block.BlockAkashicConnector;
 import at.petra_k.hexcasting.common.block.BlockHexDecorative;
 import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
 import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
@@ -107,6 +108,8 @@ public final class HexBlocks {
                 block = new BlockAkashicRecord();
             } else if ("akashic_bookshelf".equals(id)) {
                 block = new BlockAkashicBookshelf();
+            } else if ("akashic_connector".equals(id)) {
+                block = new BlockAkashicConnector();
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
                     ? BlockImpetus.TriggerMode.REDSTONE

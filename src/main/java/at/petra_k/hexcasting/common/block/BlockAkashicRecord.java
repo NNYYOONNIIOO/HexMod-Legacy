@@ -113,6 +113,9 @@ public final class BlockAkashicRecord extends Block {
     }
 
     private static boolean isConnector(Block block) {
+        if (block instanceof BlockAkashicConnector) {
+            return true;
+        }
         net.minecraft.util.ResourceLocation id = block.getRegistryName();
         return id != null && "hexcasting".equals(id.getResourceDomain())
             && "akashic_connector".equals(id.getResourcePath());
