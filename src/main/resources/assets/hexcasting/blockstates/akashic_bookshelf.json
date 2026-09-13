@@ -1,7 +1,1 @@
-{
-  "variants": {
-    "facing=east,has_books=false": {
-      "model": "hexcasting:akashic_bookshelf"
-    }
-  }
-}
+{"variants":{"facing=east,has_books=false":{"model":"hexcasting:akashic_bookshelf"},"facing=east,has_books=true":{"model":"hexcasting:akashic_bookshelf"},"facing=north,has_books=false":{"model":"hexcasting:akashic_bookshelf"},"facing=north,has_books=true":{"model":"hexcasting:akashic_bookshelf"},"facing=south,has_books=false":{"model":"hexcasting:akashic_bookshelf"},"facing=south,has_books=true":{"model":"hexcasting:akashic_bookshelf"},"facing=west,has_books=false":{"model":"hexcasting:akashic_bookshelf"},"facing=west,has_books=true":{"model":"hexcasting:akashic_bookshelf"}}}

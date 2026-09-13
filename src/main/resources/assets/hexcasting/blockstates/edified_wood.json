@@ -1,5 +1,1 @@
-{
-  "variants": {
-    "normal": { "model": "hexcasting:edified_wood" }
-  }
-}
+{"variants":{"axis=x":{"model":"hexcasting:edified_wood"},"axis=y":{"model":"hexcasting:edified_wood"},"axis=z":{"model":"hexcasting:edified_wood"}}}

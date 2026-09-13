@@ -1,5 +1,1 @@
-{
-  "variants": {
-    "normal": { "model": "hexcasting:edified_log_citrine" }
-  }
-}
+{"variants":{"axis=x":{"model":"hexcasting:edified_log_citrine"},"axis=y":{"model":"hexcasting:edified_log_citrine"},"axis=z":{"model":"hexcasting:edified_log_citrine"}}}

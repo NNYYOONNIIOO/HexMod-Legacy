@@ -1,5 +1,1 @@
-{
-  "variants": {
-    "normal": { "model": "hexcasting:edified_button" }
-  }
-}
+{"variants":{"facing=down,powered=false":{"model":"hexcasting:edified_button"},"facing=down,powered=true":{"model":"hexcasting:edified_button"},"facing=east,powered=false":{"model":"hexcasting:edified_button"},"facing=east,powered=true":{"model":"hexcasting:edified_button"},"facing=north,powered=false":{"model":"hexcasting:edified_button"},"facing=north,powered=true":{"model":"hexcasting:edified_button"},"facing=south,powered=false":{"model":"hexcasting:edified_button"},"facing=south,powered=true":{"model":"hexcasting:edified_button"},"facing=up,powered=false":{"model":"hexcasting:edified_button"},"facing=up,powered=true":{"model":"hexcasting:edified_button"},"facing=west,powered=false":{"model":"hexcasting:edified_button"},"facing=west,powered=true":{"model":"hexcasting:edified_button"}}}

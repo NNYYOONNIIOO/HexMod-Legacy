@@ -1,5 +1,1 @@
-{
-  "variants": {
-    "normal": { "model": "hexcasting:edified_log_amethyst" }
-  }
-}
+{"variants":{"axis=x":{"model":"hexcasting:edified_log_amethyst"},"axis=y":{"model":"hexcasting:edified_log_amethyst"},"axis=z":{"model":"hexcasting:edified_log_amethyst"}}}

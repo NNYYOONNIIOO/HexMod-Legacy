@@ -1,5 +1,1 @@
-{
-  "variants": {
-    "normal": { "model": "hexcasting:edified_trapdoor" }
-  }
-}
+{"variants":{"facing=east,half=bottom,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=east,half=bottom,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=east,half=top,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=east,half=top,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=north,half=bottom,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=north,half=bottom,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=north,half=top,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=north,half=top,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=south,half=bottom,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=south,half=bottom,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=south,half=top,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=south,half=top,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=west,half=bottom,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=west,half=bottom,open=true":{"model":"hexcasting:edified_trapdoor"},"facing=west,half=top,open=false":{"model":"hexcasting:edified_trapdoor"},"facing=west,half=top,open=true":{"model":"hexcasting:edified_trapdoor"}}}
