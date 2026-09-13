@@ -39,4 +39,17 @@ public final class BlockConjuredLight extends BlockConjured {
     public int quantityDropped(java.util.Random random) {
         return 0;
     }
+
+    /** Conjured light follows the same temporary lifetime as conjured blocks. */
+    @Override
+    public boolean hasTileEntity(net.minecraft.block.state.IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public net.minecraft.tileentity.TileEntity createTileEntity(
+            net.minecraft.world.World world,
+            net.minecraft.block.state.IBlockState state) {
+        return new TileEntityConjured();
+    }
 }
