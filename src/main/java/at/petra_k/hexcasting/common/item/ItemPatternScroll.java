@@ -54,10 +54,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         if (pattern == null) {
             return null;
         }
-        NBTTagCompound out = new NBTTagCompound();
-        out.setString("type", "hexcasting:pattern");
-        out.setTag("data", pattern.serializeToNBT());
-        return out;
+        return new PatternIota(pattern).serialize();
     }
 
     @Override
@@ -91,6 +88,11 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             ResourceLocation current = getActionId(stack);
             HexPattern currentPattern = getPattern(stack);
             if (!player.isSneaking() && ItemHexStaff.isStaff(player.getHeldItemOffhand())) {
+                if (currentPattern == null) {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
+                    return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+                }
                 boolean added = ItemHexStaff.appendPattern(
                     player.getHeldItemOffhand(), currentPattern, 0, 0);
                 if (added) {
@@ -112,6 +114,11 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             if (!player.isSneaking()
                 && !player.getHeldItemOffhand().isEmpty()
                 && player.getHeldItemOffhand().getItem() instanceof ItemHexFocus) {
+                if (currentPattern == null) {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
+                    return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+                }
                 ItemHexFocus.setSelectedAction(player.getHeldItemOffhand(), current);
                 consumeForWrite(stack, player);
                 player.sendMessage(new TextComponentString(
@@ -121,7 +128,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
             if (player.isSneaking()) {
-                ResourceLocation next = HexActionRegistry.nextId(current);
+                ResourceLocation next = current == null
+                    ? HexActionRegistry.firstId() : HexActionRegistry.nextId(current);
                 if (next != null) {
                     setActionId(stack, next);
                     player.sendMessage(new TextComponentString(
@@ -131,6 +139,12 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                         )
                     ));
                 }
+                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            }
+
+            if (currentPattern == null) {
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
 
@@ -183,16 +197,23 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         HexActionRegistry.bootstrap();
         ResourceLocation id = getActionId(stack);
         HexPattern pattern = getPattern(stack);
-        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
-        if (pattern != null) {
-            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
+        if (pattern == null) {
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.empty"));
+            return;
         }
+        if (id != null) {
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
+        }
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }
 
     @Override
     public String getItemStackDisplayName(ItemStack stack) {
         ResourceLocation id = getActionId(stack);
+        if (id == null) {
+            return super.getItemStackDisplayName(stack);
+        }
         return I18n.translateToLocalFormatted(
             "hexcasting.item.pattern_scroll.variant",
             super.getItemStackDisplayName(stack), localizeAction(id));
@@ -200,7 +221,9 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
 
     public static ResourceLocation getActionId(ItemStack stack) {
         HexActionRegistry.bootstrap();
-        ResourceLocation fallback = HexActions.PUSH_ONE_ID;
+        if (stack == null || stack.isEmpty()) {
+            return null;
+        }
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_ACTION, 8)) {
             try {
@@ -212,9 +235,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                 // Invalid or stale NBT falls back to a registered action.
             }
         }
-        ResourceLocation defaultId = HexActionRegistry.get(fallback) == null
-            ? HexActionRegistry.firstId() : fallback;
-        return defaultId == null ? fallback : defaultId;
+        return null;
     }
 
     /** Return the exact pattern stored on this scroll, with legacy action fallback. */
@@ -285,6 +306,9 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
     }
 
     private static String localizeAction(ResourceLocation id) {
+        if (id == null) {
+            return I18n.translateToLocal("hexcasting.tooltip.scroll.empty");
+        }
         String key = "hexcasting.action." + id.getResourcePath();
         String translated = I18n.translateToLocal(key);
         return key.equals(translated) ? id.getResourcePath() : translated;
