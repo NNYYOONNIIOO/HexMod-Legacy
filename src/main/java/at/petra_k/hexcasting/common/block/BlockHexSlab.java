@@ -14,8 +14,8 @@ public final class BlockHexSlab extends BlockSlab {
         setHardness(2.0F);
         setResistance(3.0F);
         setSoundType(SoundType.WOOD);
-        setHarvestLevel("axe", 0);
         setDefaultState(blockState.getBaseState().withProperty(HALF, EnumBlockHalf.BOTTOM));
+        setHarvestLevel("axe", 0);
     }
 
     /**
