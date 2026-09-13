@@ -24,15 +24,23 @@ import java.util.List;
 /** Client-to-server snapshot of the spell layout in the staff GUI. */
 public final class MsgStaffPatternC2S implements PaucalMessage {
     private int handOrdinal;
+    private String staffInstanceId;
     private NBTTagList patternsData;
 
     public MsgStaffPatternC2S() {
         this.handOrdinal = EnumHand.MAIN_HAND.ordinal();
+        this.staffInstanceId = "";
         this.patternsData = null;
     }
 
     public MsgStaffPatternC2S(EnumHand hand, ResourceLocation action) {
+        this(hand, "", action);
+    }
+
+    public MsgStaffPatternC2S(EnumHand hand, String staffInstanceId,
+                              ResourceLocation action) {
         this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.staffInstanceId = staffInstanceId == null ? "" : staffInstanceId;
         this.patternsData = null;
         if (action != null) {
             HexActionRegistry.bootstrap();
@@ -45,7 +53,13 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     }
 
     public MsgStaffPatternC2S(EnumHand hand, HexPattern pattern, int originQ, int originR) {
+        this(hand, "", pattern, originQ, originR);
+    }
+
+    public MsgStaffPatternC2S(EnumHand hand, String staffInstanceId,
+                              HexPattern pattern, int originQ, int originR) {
         this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.staffInstanceId = staffInstanceId == null ? "" : staffInstanceId;
         this.patternsData = null;
         if (pattern != null) {
             this.patternsData = new NBTTagList();
@@ -58,7 +72,14 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
 
     public MsgStaffPatternC2S(EnumHand hand, List<HexPattern> patterns,
                               List<Integer> originQ, List<Integer> originR) {
+        this(hand, "", patterns, originQ, originR);
+    }
+
+    public MsgStaffPatternC2S(EnumHand hand, String staffInstanceId,
+                              List<HexPattern> patterns,
+                              List<Integer> originQ, List<Integer> originR) {
         this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.staffInstanceId = staffInstanceId == null ? "" : staffInstanceId;
         this.patternsData = new NBTTagList();
         if (patterns == null) {
             return;
@@ -83,8 +104,10 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         handOrdinal = buf.readByte();
         if (buf.readBoolean()) {
             NBTTagCompound payload = ByteBufUtils.readTag(buf);
+            staffInstanceId = payload == null ? "" : payload.getString("staff_id");
             patternsData = payload == null ? null : payload.getTagList("patterns", 10);
         } else {
+            staffInstanceId = "";
             patternsData = null;
         }
     }
@@ -95,6 +118,7 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         buf.writeBoolean(patternsData != null);
         if (patternsData != null) {
             NBTTagCompound payload = new NBTTagCompound();
+            payload.setString("staff_id", staffInstanceId == null ? "" : staffInstanceId);
             payload.setTag("patterns", patternsData);
             ByteBufUtils.writeTag(buf, payload);
         }
@@ -114,6 +138,14 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         EnumHand hand = EnumHand.values()[handOrdinal];
         ItemStack staff = player.getHeldItem(hand);
         if (!ItemHexStaff.isStaff(staff)) {
+            return;
+        }
+        String serverInstanceId = ItemHexStaff.ensureInstanceId(staff);
+        if (staffInstanceId != null && !staffInstanceId.isEmpty()
+            && !staffInstanceId.equals(serverInstanceId)) {
+            // The player changed the held stack while a previous GUI packet
+            // was in flight.  Never overwrite the newly held staff.
+            sendAuthoritativeSnapshot(player, hand);
             return;
         }
         if (patternsData == null) {
@@ -169,8 +201,9 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     }
 
     private static void sendAuthoritativeSnapshot(EntityPlayer player, EnumHand hand) {
+        ItemStack staff = player.getHeldItem(hand);
         PaucalAPI.sendTo(new MsgStaffProgramS2C(
-            hand, ItemHexStaff.getProgramSnapshot(player.getHeldItem(hand))), player);
+            hand, staff, ItemHexStaff.getProgramSnapshot(staff)), player);
     }
 
     public static void register() {

@@ -26,6 +26,7 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /** A programmable Hex Casting staff for the first 1.12.2 casting slice. */
 public final class ItemHexStaff extends Item {
@@ -35,6 +36,7 @@ public final class ItemHexStaff extends Item {
     private static final String KEY_ORIGIN_Q = "origin_q";
     private static final String KEY_ORIGIN_R = "origin_r";
     private static final String KEY_CASTING_STATE = "casting_state";
+    private static final String KEY_INSTANCE_ID = "staff_instance_id";
 
     public ItemHexStaff() {
         setMaxStackSize(1);
@@ -54,6 +56,10 @@ public final class ItemHexStaff extends Item {
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
         }
 
+        // A packet must be tied to this physical stack, not just to the hand
+        // that currently holds it.  The id is deliberately kept when the
+        // program is cleared, so clearing one staff can never alias another.
+        ensureInstanceId(staff);
         if (player.isSneaking()) {
             clearProgram(player, hand, staff);
             player.sendMessage(new TextComponentString(
@@ -62,7 +68,7 @@ public final class ItemHexStaff extends Item {
 
         if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
             at.petrak.paucal.api.PaucalAPI.sendTo(
-                new MsgStaffProgramS2C(hand, getProgramSnapshot(staff)), player);
+                new MsgStaffProgramS2C(hand, staff, getProgramSnapshot(staff)), player);
         }
 
         // Modern Hex opens the spellcasting screen here. The saved pattern
@@ -98,6 +104,43 @@ public final class ItemHexStaff extends Item {
 
     public static boolean isStaff(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.getItem() instanceof ItemHexStaff;
+    }
+
+    /**
+     * Returns the persistent identity of this physical staff stack.
+     *
+     * <p>The program itself is still stored in the stack's NBT.  This second
+     * value exists so delayed client/server packets cannot apply that NBT to
+     * whichever other staff happens to occupy the same hand later.</p>
+     */
+    public static String getInstanceId(ItemStack staff) {
+        if (!isStaff(staff) || staff.getTagCompound() == null) {
+            return "";
+        }
+        String instanceId = staff.getTagCompound().getString(KEY_INSTANCE_ID);
+        return isValidInstanceId(instanceId) ? instanceId : "";
+    }
+
+    /** Assign an id once, without touching the staff's program. */
+    public static String ensureInstanceId(ItemStack staff) {
+        if (!isStaff(staff)) {
+            return "";
+        }
+        String existing = getInstanceId(staff);
+        if (!existing.isEmpty()) {
+            return existing;
+        }
+        String generated = UUID.randomUUID().toString();
+        getOrCreateTag(staff).setString(KEY_INSTANCE_ID, generated);
+        return generated;
+    }
+
+    /** Apply a server-authoritative id to a client stack during synchronization. */
+    public static void setInstanceId(ItemStack staff, String instanceId) {
+        if (!isStaff(staff) || !isValidInstanceId(instanceId)) {
+            return;
+        }
+        getOrCreateTag(staff).setString(KEY_INSTANCE_ID, instanceId);
     }
 
     public static boolean appendAction(ItemStack staff, ResourceLocation action) {
@@ -329,6 +372,18 @@ public final class ItemHexStaff extends Item {
             stack.setTagCompound(tag);
         }
         return tag;
+    }
+
+    private static boolean isValidInstanceId(String instanceId) {
+        if (instanceId == null || instanceId.length() > 64) {
+            return false;
+        }
+        try {
+            UUID.fromString(instanceId);
+            return true;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     private static String localizeError(String message) {

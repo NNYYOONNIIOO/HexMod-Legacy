@@ -703,7 +703,11 @@ public final class GuiHexStaff extends GuiScreen {
             if (mc != null && mc.player != null) {
                 ItemHexStaff.clearProgram(mc.player, hand, mc.player.getHeldItem(hand));
             }
-            PaucalAPI.sendToServer(new MsgStaffPatternC2S(hand, (ResourceLocation) null));
+            PaucalAPI.sendToServer(new MsgStaffPatternC2S(
+                hand,
+                mc == null || mc.player == null ? ""
+                    : ItemHexStaff.getInstanceId(mc.player.getHeldItem(hand)),
+                (ResourceLocation) null));
             programIds.clear();
             programCount = 0;
             drawnPaths.clear();
@@ -726,6 +730,7 @@ public final class GuiHexStaff extends GuiScreen {
             originR.add(origin.r);
         }
         if (mc != null && mc.player != null) {
+            net.minecraft.item.ItemStack staff = mc.player.getHeldItem(hand);
             NBTTagList snapshot = new NBTTagList();
             for (int i = 0; i < savedPatterns.size(); i++) {
                 HexPattern pattern = savedPatterns.get(i);
@@ -736,10 +741,14 @@ public final class GuiHexStaff extends GuiScreen {
                 entry.setInteger("origin_r", origin.r);
                 snapshot.appendTag(entry);
             }
-            ItemHexStaff.replaceProgram(mc.player, hand, mc.player.getHeldItem(hand), snapshot);
+            ItemHexStaff.replaceProgram(mc.player, hand, staff, snapshot);
+            String staffInstanceId = ItemHexStaff.getInstanceId(staff);
+            PaucalAPI.sendToServer(new MsgStaffPatternC2S(
+                hand, staffInstanceId, new ArrayList<>(savedPatterns), originQ, originR));
+            return;
         }
         PaucalAPI.sendToServer(new MsgStaffPatternC2S(
-            hand, new ArrayList<>(savedPatterns), originQ, originR));
+            hand, "", new ArrayList<>(savedPatterns), originQ, originR));
     }
 
     public void refreshProgram() {
