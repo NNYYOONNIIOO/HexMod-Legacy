@@ -1580,3 +1580,4 @@ hexcasting.message.scroll_cleared=已清空咒法卷轴。
 hexcasting.message.pattern_requires_registered_action=该物品只能保存已注册的咒法动作。
 hexcasting.tooltip.scroll.pattern=保存一个完整的咒法图案。
 item.tile.hexcasting.edified_door.name=启迪木门
+item.hexcasting.book=Hex 咒法指南

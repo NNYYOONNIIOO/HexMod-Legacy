@@ -453,3 +453,4 @@ hexcasting.message.scroll_cleared=The pattern scroll was cleared.
 hexcasting.message.pattern_requires_registered_action=This item can only store a registered pattern action.
 hexcasting.tooltip.scroll.pattern=Stores one complete Hex pattern.
 item.tile.hexcasting.edified_door.name=Edified Door
+item.hexcasting.book=Hex Casting Guide
