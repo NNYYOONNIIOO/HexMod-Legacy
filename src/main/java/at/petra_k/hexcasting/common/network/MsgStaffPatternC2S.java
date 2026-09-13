@@ -135,11 +135,15 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         } else if (patternsData.tagCount() > previous.tagCount()) {
             for (int i = previous.tagCount(); i < patternsData.tagCount(); i++) {
                 try {
-                    StaffCastExecutor.execute(
+                    boolean success = StaffCastExecutor.execute(
                         player, hand, staff,
                         HexPattern.fromNBT(patternsData.getCompoundTagAt(i)));
+                    PaucalAPI.sendTo(new MsgStaffCastResultS2C(
+                        hand, success, StaffCastExecutor.getStackSize(staff)), player);
                 } catch (RuntimeException ignored) {
                     // ItemHexStaff already filters malformed snapshot entries.
+                    PaucalAPI.sendTo(new MsgStaffCastResultS2C(
+                        hand, false, StaffCastExecutor.getStackSize(staff)), player);
                 }
             }
         }
@@ -172,5 +176,6 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     public static void register() {
         at.petrak.paucal.api.PaucalAPI.registerMessage(MsgStaffPatternC2S.class, Side.SERVER);
         MsgStaffProgramS2C.register();
+        MsgStaffCastResultS2C.register();
     }
 }

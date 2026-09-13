@@ -108,6 +108,7 @@ hexcasting.message.pattern_overlap=该图案与之前的图案发生了重叠。
 hexcasting.message.pattern_invalid=该法术程序无效。
 hexcasting.message.program_empty=法杖中没有已编程的图案。
 hexcasting.message.program_result=施法结果：%s
+hexcasting.message.cast_failed=施法失败。
 hexcasting.message.staff_error=施法失败：%s
 hexcasting.message.media_recharged=已将 %s 媒质转入玩家储备（%s/%s）。
 hexcasting.message.media_empty=媒质电池是空的。

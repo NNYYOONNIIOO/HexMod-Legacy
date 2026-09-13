@@ -775,6 +775,12 @@ public final class GuiHexStaff extends GuiScreen {
         }
     }
 
+    public void showCastResult(String message) {
+        if (message != null && !message.isEmpty()) {
+            status = message;
+        }
+    }
+
     private static List<GridPoint> patternPoints(HexPattern pattern, GridPoint origin) {
         List<GridPoint> result = new ArrayList<>();
         GridPoint cursor = origin;

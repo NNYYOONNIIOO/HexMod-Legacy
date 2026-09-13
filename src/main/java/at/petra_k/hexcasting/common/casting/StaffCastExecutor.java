@@ -39,6 +39,17 @@ public final class StaffCastExecutor {
         staff.getTagCompound().removeTag(KEY_CASTING_STATE);
     }
 
+    public static int getStackSize(ItemStack staff) {
+        if (staff == null || staff.isEmpty()) {
+            return 0;
+        }
+        try {
+            return load(staff).getStack().size();
+        } catch (RuntimeException ignored) {
+            return 0;
+        }
+    }
+
     public static boolean execute(EntityPlayer player, EnumHand hand, ItemStack staff,
                                   HexPattern pattern) {
         if (player == null || staff == null || staff.isEmpty() || pattern == null) {

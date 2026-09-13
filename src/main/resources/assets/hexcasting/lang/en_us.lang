@@ -122,6 +122,7 @@ hexcasting.message.pattern_overlap=This pattern overlaps an earlier pattern.
 hexcasting.message.pattern_invalid=This spell program is invalid.
 hexcasting.message.program_empty=The staff has no programmed patterns.
 hexcasting.message.program_result=Cast result: %s
+hexcasting.message.cast_failed=Casting failed.
 hexcasting.message.staff_error=The cast failed: %s
 hexcasting.message.media_recharged=Transferred %s media to the player (%s/%s).
 hexcasting.message.media_empty=The media battery is empty.

@@ -16,4 +16,11 @@ public final class HexStaffClientSync {
             ((GuiHexStaff) minecraft.currentScreen).refreshFromServer();
         }
     }
+
+    public static void showCastResult(String message) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.currentScreen instanceof GuiHexStaff) {
+            ((GuiHexStaff) minecraft.currentScreen).showCastResult(message);
+        }
+    }
 }
