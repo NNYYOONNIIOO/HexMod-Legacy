@@ -2,6 +2,8 @@
   "parent": "block/door_bottom",
   "textures": {
     "texture": "hexcasting:blocks/edified_door_lower",
-    "bottom": "hexcasting:blocks/edified_door_lower"
+    "bottom": "hexcasting:blocks/edified_door_lower",
+    "particle": "hexcasting:blocks/edified_door_lower",
+    "top": "hexcasting:blocks/edified_door_lower"
   }
 }

@@ -1,6 +1,42 @@
 {
-  "parent": "block/cube_all",
+  "ambientocclusion": false,
+  "parent": "block/block",
   "textures": {
-    "all": "hexcasting:blocks/conjured_block"
-  }
+    "face": "hexcasting:blocks/circle/directrix/boolean/front_dim_false",
+    "particle": "hexcasting:blocks/circle/directrix/boolean/front_dim_false"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        15
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#face"
+        },
+        "up": {
+          "texture": "#face"
+        },
+        "north": {
+          "texture": "#face"
+        },
+        "south": {
+          "texture": "#face"
+        },
+        "west": {
+          "texture": "#face"
+        },
+        "east": {
+          "texture": "#face"
+        }
+      }
+    }
+  ]
 }
