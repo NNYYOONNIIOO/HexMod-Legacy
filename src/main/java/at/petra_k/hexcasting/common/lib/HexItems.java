@@ -87,6 +87,7 @@ public final class HexItems {
         "abacus",
         "thought_knot",
         "spellbook",
+        "packaged_spell",
         "ancient_cypher",
         "jeweler_hammer",
         "scroll_small",
@@ -138,6 +139,8 @@ public final class HexItems {
             Item item;
             if (id.equals("spellbook")) {
                 item = new ItemSpellbook();
+            } else if (id.equals("packaged_spell")) {
+                item = new ItemPackagedSpell();
             } else if (id.equals("ancient_cypher")) {
                 item = new ItemAncientCypher();
             } else if (id.equals("abacus")) {
