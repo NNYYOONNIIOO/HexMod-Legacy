@@ -90,7 +90,7 @@ public final class HexItemModels {
         IItemPropertyGetter filled =
             (stack, world, entity) -> ItemPackagedSpell.getPackagedAction(stack) == null ? 0.0F : 1.0F;
         IItemPropertyGetter variant =
-            (stack, world, entity) -> ItemPackagedSpell.getVariant(stack) / 4.0F;
+            (stack, world, entity) -> ItemPackagedSpell.getVariant(stack) / 7.0F;
         HexItems.CYPHER.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         HexItems.TRINKET.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         HexItems.ARTIFACT.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
