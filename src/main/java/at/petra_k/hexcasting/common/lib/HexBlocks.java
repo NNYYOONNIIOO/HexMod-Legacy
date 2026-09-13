@@ -175,7 +175,9 @@ public final class HexBlocks {
             } else if ("edified_slab".equals(id)) {
                 block = new BlockHexSlab();
             } else if ("edified_stairs".equals(id)) {
-                block = new BlockHexStairs(Blocks.PLANKS.getDefaultState());
+                Block edifiedPlanks = BLOCKS.get("edified_planks");
+                block = new BlockHexStairs(edifiedPlanks == null
+                    ? Blocks.PLANKS.getDefaultState() : edifiedPlanks.getDefaultState());
             } else if ("edified_log".equals(id)
                 || "edified_log_amethyst".equals(id)
                 || "edified_log_aventurine".equals(id)
