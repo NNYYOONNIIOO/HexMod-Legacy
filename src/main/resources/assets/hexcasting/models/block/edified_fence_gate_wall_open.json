@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/edified_fence_gate"
+  "parent": "block/template_fence_gate_wall_open",
+  "textures": {
+    "texture": "hexcasting:blocks/edified_planks"
+  }
 }

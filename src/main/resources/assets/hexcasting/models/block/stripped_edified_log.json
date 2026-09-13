@@ -1,6 +1,7 @@
 {
-  "parent": "block/cube_all",
+  "parent": "block/cube_column",
   "textures": {
-    "all": "hexcasting:blocks/stripped_edified_log"
+    "end": "hexcasting:blocks/stripped_edified_log_top",
+    "side": "hexcasting:blocks/stripped_edified_log"
   }
 }

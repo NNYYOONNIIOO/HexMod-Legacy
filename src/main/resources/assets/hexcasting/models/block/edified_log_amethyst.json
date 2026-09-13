@@ -1,6 +1,7 @@
 {
-  "parent": "block/cube_all",
+  "parent": "block/cube_column",
   "textures": {
-    "all": "hexcasting:blocks/deco/edified_log_amethyst"
+    "end": "hexcasting:blocks/edified_log_top",
+    "side": "hexcasting:blocks/deco/edified_log_amethyst"
   }
 }

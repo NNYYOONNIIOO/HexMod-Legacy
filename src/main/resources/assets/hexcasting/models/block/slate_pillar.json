@@ -1,6 +1,7 @@
 {
-  "parent": "block/cube_all",
+  "parent": "block/cube_column",
   "textures": {
-    "all": "hexcasting:blocks/conjured_block"
+    "end": "hexcasting:blocks/deco/slate_pillar_end",
+    "side": "hexcasting:blocks/deco/slate_pillar_side"
   }
 }

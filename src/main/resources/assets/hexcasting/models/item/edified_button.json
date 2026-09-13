@@ -1,5 +1,5 @@
 {
-  "parent": "hexcasting:block/edified_button",
+  "parent": "block/button_inventory",
   "textures": {
     "texture": "hexcasting:blocks/edified_planks"
   }
