@@ -7,6 +7,9 @@ import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.BlockAkashicConnector;
 import at.petra_k.hexcasting.common.block.BlockHexDecorative;
+import at.petra_k.hexcasting.common.block.BlockHexFalling;
+import at.petra_k.hexcasting.common.block.BlockHexRotated;
+import at.petra_k.hexcasting.common.block.BlockHexSlab;
 import at.petra_k.hexcasting.common.block.BlockHexButton;
 import at.petra_k.hexcasting.common.block.BlockHexDoor;
 import at.petra_k.hexcasting.common.block.BlockHexFence;
@@ -151,6 +154,12 @@ public final class HexBlocks {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
+            } else if ("amethyst_dust_block".equals(id)) {
+                block = new BlockHexFalling();
+            } else if ("amethyst_pillar".equals(id)
+                || "slate_pillar".equals(id)
+                || "slate_amethyst_pillar".equals(id)) {
+                block = new BlockHexRotated();
             } else if ("edified_door".equals(id)) {
                 block = new BlockHexDoor();
             } else if ("edified_trapdoor".equals(id)) {
@@ -163,6 +172,8 @@ public final class HexBlocks {
                 block = new BlockHexButton();
             } else if ("edified_pressure_plate".equals(id)) {
                 block = new BlockHexPressurePlate();
+            } else if ("edified_slab".equals(id)) {
+                block = new BlockHexSlab();
             } else if ("edified_stairs".equals(id)) {
                 block = new BlockHexStairs(Blocks.PLANKS.getDefaultState());
             } else if ("edified_log".equals(id)

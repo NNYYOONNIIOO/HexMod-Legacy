@@ -1,5 +1,16 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:slate_pillar" }
+    "axis=x": {
+      "model": "hexcasting:slate_pillar",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "hexcasting:slate_pillar"
+    },
+    "axis=z": {
+      "model": "hexcasting:slate_pillar",
+      "x": 90
+    }
   }
 }

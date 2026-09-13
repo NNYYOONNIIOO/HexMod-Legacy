@@ -1,5 +1,16 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:amethyst_pillar" }
+    "axis=x": {
+      "model": "hexcasting:amethyst_pillar",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "hexcasting:amethyst_pillar"
+    },
+    "axis=z": {
+      "model": "hexcasting:amethyst_pillar",
+      "x": 90
+    }
   }
 }
