@@ -7,8 +7,16 @@ import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.BlockAkashicConnector;
 import at.petra_k.hexcasting.common.block.BlockHexDecorative;
+import at.petra_k.hexcasting.common.block.BlockHexButton;
+import at.petra_k.hexcasting.common.block.BlockHexDoor;
+import at.petra_k.hexcasting.common.block.BlockHexFence;
+import at.petra_k.hexcasting.common.block.BlockHexFenceGate;
 import at.petra_k.hexcasting.common.block.BlockHexLeaves;
 import at.petra_k.hexcasting.common.block.BlockHexLight;
+import at.petra_k.hexcasting.common.block.BlockHexLog;
+import at.petra_k.hexcasting.common.block.BlockHexPressurePlate;
+import at.petra_k.hexcasting.common.block.BlockHexStairs;
+import at.petra_k.hexcasting.common.block.BlockHexTrapdoor;
 import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
 import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
 import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
@@ -20,9 +28,11 @@ import at.petra_k.hexcasting.common.item.ItemSlate;
 import at.petra_k.hexcasting.common.item.ItemImpetus;
 import at.petra_k.hexcasting.common.item.ItemAkashicBookshelf;
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemDoor;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -141,6 +151,29 @@ public final class HexBlocks {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
+            } else if ("edified_door".equals(id)) {
+                block = new BlockHexDoor();
+            } else if ("edified_trapdoor".equals(id)) {
+                block = new BlockHexTrapdoor();
+            } else if ("edified_fence".equals(id)) {
+                block = new BlockHexFence();
+            } else if ("edified_fence_gate".equals(id)) {
+                block = new BlockHexFenceGate();
+            } else if ("edified_button".equals(id)) {
+                block = new BlockHexButton();
+            } else if ("edified_pressure_plate".equals(id)) {
+                block = new BlockHexPressurePlate();
+            } else if ("edified_stairs".equals(id)) {
+                block = new BlockHexStairs(Blocks.PLANKS.getDefaultState());
+            } else if ("edified_log".equals(id)
+                || "edified_log_amethyst".equals(id)
+                || "edified_log_aventurine".equals(id)
+                || "edified_log_citrine".equals(id)
+                || "edified_log_purple".equals(id)
+                || "stripped_edified_log".equals(id)
+                || "edified_wood".equals(id)
+                || "stripped_edified_wood".equals(id)) {
+                block = new BlockHexLog();
             } else {
                 block = new BlockHexDecorative(id);
             }
@@ -163,9 +196,11 @@ public final class HexBlocks {
     public static void registerBlockItems(RegistryEvent.Register<Item> event) {
         for (Map.Entry<String, Block> entry : BLOCKS.entrySet()) {
             Block block = entry.getValue();
-            ItemBlock item;
+            Item item;
             if ("slate".equals(entry.getKey())) {
                 item = new ItemSlate(block);
+            } else if ("edified_door".equals(entry.getKey())) {
+                item = new ItemDoor(block);
             } else if ("impetus".equals(entry.getKey())
                 || entry.getKey().startsWith("impetus/")
                 || "great_impetus".equals(entry.getKey())) {
