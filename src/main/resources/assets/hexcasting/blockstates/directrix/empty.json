@@ -1,7 +1,7 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:directrix/empty_up"
+      "model": "hexcasting:directrix/empty_down"
     },
     "facing=east": {
       "model": "hexcasting:directrix/empty_east"
@@ -13,7 +13,7 @@
       "model": "hexcasting:directrix/empty_south"
     },
     "facing=up": {
-      "model": "hexcasting:directrix/empty_down"
+      "model": "hexcasting:directrix/empty_up"
     },
     "facing=west": {
       "model": "hexcasting:directrix/empty_west"
