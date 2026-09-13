@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
+import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
 import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
 import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
@@ -13,6 +14,7 @@ import at.petra_k.hexcasting.common.block.BlockSlate;
 import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import at.petra_k.hexcasting.common.item.ItemImpetus;
+import at.petra_k.hexcasting.common.item.ItemAkashicBookshelf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -102,6 +104,8 @@ public final class HexBlocks {
                 block = new BlockSlate();
             } else if ("akashic_record".equals(id)) {
                 block = new BlockAkashicRecord();
+            } else if ("akashic_bookshelf".equals(id)) {
+                block = new BlockAkashicBookshelf();
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
                     ? BlockImpetus.TriggerMode.REDSTONE
@@ -156,6 +160,8 @@ public final class HexBlocks {
                 || entry.getKey().startsWith("impetus/")
                 || "great_impetus".equals(entry.getKey())) {
                 item = new ItemImpetus(block);
+            } else if ("akashic_bookshelf".equals(entry.getKey())) {
+                item = new ItemAkashicBookshelf(block);
             } else {
                 item = new ItemBlock(block);
             }

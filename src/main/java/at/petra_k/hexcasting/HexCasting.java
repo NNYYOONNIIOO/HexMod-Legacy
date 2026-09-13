@@ -9,6 +9,8 @@ import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.block.TileEntityConjured;
 import at.petra_k.hexcasting.common.block.TileEntityImpetus;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
+import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
+import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petrak.paucal.api.PaucalAPI;
 
@@ -28,6 +30,10 @@ public final class HexCasting {
             new net.minecraft.util.ResourceLocation(MOD_ID, "slate"));
         GameRegistry.registerTileEntity(TileEntityImpetus.class,
             new net.minecraft.util.ResourceLocation(MOD_ID, "impetus"));
+        GameRegistry.registerTileEntity(TileEntityAkashicBookshelf.class,
+            new net.minecraft.util.ResourceLocation(MOD_ID, "akashic_bookshelf"));
+        GameRegistry.registerTileEntity(TileEntityAkashicRecord.class,
+            new net.minecraft.util.ResourceLocation(MOD_ID, "akashic_record"));
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();

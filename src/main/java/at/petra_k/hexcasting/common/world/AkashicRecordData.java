@@ -49,6 +49,25 @@ public final class AkashicRecordData extends WorldSavedData {
         markDirty();
     }
 
+    public int countAt(BlockPos position) {
+        String prefix = position.getX() + ":" + position.getY() + ":"
+            + position.getZ() + ":";
+        int count = 0;
+        for (String key : records.keySet()) {
+            if (key.startsWith(prefix)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public void clearAt(BlockPos position) {
+        String prefix = position.getX() + ":" + position.getY() + ":"
+            + position.getZ() + ":";
+        records.keySet().removeIf(key -> key.startsWith(prefix));
+        markDirty();
+    }
+
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         records.clear();
