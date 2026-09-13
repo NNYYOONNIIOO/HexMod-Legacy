@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
+import at.petra_k.hexcasting.common.item.ItemHexKnowledge;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
@@ -154,7 +155,9 @@ public final class HexItems {
             } else if (id.equals("lore_fragment")) {
                 item = new ItemKnowledgeFragment("lore_fragment");
             } else if (id.equals("creative_unlocker")) {
-                item = new ItemKnowledgeFragment("creative_unlocker");
+                item = new ItemHexKnowledge("creative_unlocker");
+            } else if (id.equals("lore_fragment")) {
+                item = new ItemHexKnowledge("lore_fragment");
             } else if (id.equals("scroll_small") || id.equals("scroll_medium") || id.equals("scroll")) {
                 item = new ItemPatternScroll(scrollSize(id));
             } else if (id.contains("colorizer")) {
@@ -162,7 +165,7 @@ public final class HexItems {
             } else if (id.startsWith("staff/")) {
                 item = new ItemHexStaff(id.substring("staff/".length()));
             } else {
-                item = new Item();
+                item = new ItemHexKnowledge(id);
             }
             EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)

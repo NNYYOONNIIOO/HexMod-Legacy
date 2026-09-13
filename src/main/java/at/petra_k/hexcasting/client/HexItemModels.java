@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
+import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.IItemPropertyGetter;
@@ -60,6 +61,12 @@ public final class HexItemModels {
 
         for (Item item : HexItems.allItems()) {
             if (item.getRegistryName() != null) {
+                ModelLoader.setCustomModelResourceLocation(
+                    item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+            }
+        }
+        for (Item item : HexItems.EXTRA_ITEMS.values()) {
+            if (item instanceof ItemPatternScroll && item.getRegistryName() != null) {
                 ModelLoader.setCustomModelResourceLocation(
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
