@@ -1,36 +1,60 @@
 package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
-import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 
-import java.util.List;
-
 /**
- * Ordinary impetus trigger for the first 1.12.2 circle slice.
+ * Impetus trigger for the first 1.12.2 circle slice.
  *
- * <p>The full Hex circle graph is still being ported, but an impetus already
- * has a useful, server-authoritative trigger boundary here: right-clicking it
- * with a programmed staff starts that staff's saved VM continuation and feeds
- * its patterns in source order.</p>
+ * <p>The program is bound to the block entity with a sneaking staff use. This
+ * keeps the trigger independent from whichever staff the player later holds,
+ * while the stored VM state remains persistent with the impetus.</p>
  */
 public class BlockImpetus extends Block {
+    public enum TriggerMode {
+        EMPTY,
+        LOOK,
+        REDSTONE,
+        RIGHT_CLICK
+    }
+
+    private final TriggerMode triggerMode;
+
     public BlockImpetus() {
+        this(TriggerMode.RIGHT_CLICK);
+    }
+
+    public BlockImpetus(TriggerMode triggerMode) {
         super(Material.IRON);
         setHardness(3.0F);
         setResistance(10.0F);
+        this.triggerMode = triggerMode == null ? TriggerMode.RIGHT_CLICK : triggerMode;
+    }
+
+    public TriggerMode getTriggerMode() {
+        return triggerMode;
+    }
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new TileEntityImpetus();
     }
 
     @Override
@@ -41,27 +65,57 @@ public class BlockImpetus extends Block {
         if (world.isRemote) {
             return true;
         }
+        TileEntity tileEntity = world.getTileEntity(pos);
+        if (!(tileEntity instanceof TileEntityImpetus)) {
+            return false;
+        }
+        TileEntityImpetus impetus = (TileEntityImpetus) tileEntity;
         ItemStack staff = player.getHeldItem(hand);
-        if (!ItemHexStaff.isStaff(staff)) {
-            player.sendMessage(new TextComponentTranslation(
-                "hexcasting.message.staff_error"));
+        if (player.isSneaking() && ItemHexStaff.isStaff(staff)) {
+            impetus.bindProgram(ItemHexStaff.getProgramSnapshot(staff));
             return true;
         }
-        List<HexPattern> patterns = ItemHexStaff.getProgramPatterns(staff);
-        if (patterns.isEmpty()) {
+        if (triggerMode == TriggerMode.RIGHT_CLICK || triggerMode == TriggerMode.LOOK) {
+            impetus.trigger(player, hand);
+        } else if (impetus.getProgramSize() == 0) {
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.program_empty"));
-            return true;
-        }
-
-        // An impetus starts a fresh trigger while the staff itself keeps the
-        // continuation between individual patterns in this trigger.
-        StaffCastExecutor.clear(staff);
-        for (HexPattern pattern : patterns) {
-            if (!StaffCastExecutor.execute(player, hand, staff, pattern)) {
-                break;
-            }
         }
         return true;
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos,
+                                Block blockIn, BlockPos fromPos) {
+        super.neighborChanged(state, world, pos, blockIn, fromPos);
+        if (world.isRemote || triggerMode != TriggerMode.REDSTONE) {
+            return;
+        }
+        TileEntity tileEntity = world.getTileEntity(pos);
+        if (!(tileEntity instanceof TileEntityImpetus)) {
+            return;
+        }
+        TileEntityImpetus impetus = (TileEntityImpetus) tileEntity;
+        boolean powered = world.isBlockPowered(pos);
+        if (powered && !impetus.isPowered()) {
+            EntityPlayer player = closestPlayer(world, pos);
+            if (player != null) {
+                impetus.trigger(player, EnumHand.MAIN_HAND);
+            }
+        }
+        impetus.setPowered(powered);
+    }
+
+    private static EntityPlayer closestPlayer(World world, BlockPos pos) {
+        EntityPlayer closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (EntityPlayer candidate : world.playerEntities) {
+            double distance = candidate.getDistanceSqToCenter(pos);
+            if (distance < closestDistance) {
+                closest = candidate;
+                closestDistance = distance;
+            }
+        }
+        return closest;
     }
 }

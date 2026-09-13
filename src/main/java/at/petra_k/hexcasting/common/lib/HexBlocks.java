@@ -99,7 +99,14 @@ public final class HexBlocks {
             } else if ("akashic_record".equals(id)) {
                 block = new BlockAkashicRecord();
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
-                block = new BlockImpetus();
+                BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
+                    ? BlockImpetus.TriggerMode.REDSTONE
+                    : id.endsWith("/look")
+                        ? BlockImpetus.TriggerMode.LOOK
+                        : id.endsWith("/empty")
+                            ? BlockImpetus.TriggerMode.EMPTY
+                            : BlockImpetus.TriggerMode.RIGHT_CLICK;
+                block = new BlockImpetus(mode);
             } else if (id.startsWith("directrix/")) {
                 block = new BlockSpellCircle();
             } else if ("great_impetus".equals(id)) {
