@@ -196,6 +196,21 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
     }
 
     private static ResourceLocation resolveSelectedAction(ItemStack stack) {
+        if (stack != null && stack.getItem() instanceof ItemHexFocus) {
+            try {
+                Iota stored = ((ItemHexFocus) stack.getItem()).readIota(stack);
+                if (stored instanceof PatternIota) {
+                    at.petra_k.hexcasting.api.casting.action.HexAction action =
+                        HexActionRegistry.get(((PatternIota) stored).getPattern());
+                    ResourceLocation id = HexActionRegistry.idFor(action);
+                    if (id != null) {
+                        return id;
+                    }
+                }
+            } catch (CastingException ignored) {
+                // Fall back to legacy selected_action data below.
+            }
+        }
         ResourceLocation fallback = HexActions.PUSH_ONE_ID;
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_SELECTED_ACTION, 8)) {

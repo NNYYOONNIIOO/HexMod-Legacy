@@ -119,7 +119,8 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
         NBTTagCompound data = stack == null ? null : stack.getTagCompound();
         if (data != null && data.hasKey(TAG_DATA, 10)) {
             try {
-                Iota iota = new ItemThoughtKnot().readIota(stack);
+                Iota iota = stack.getItem() instanceof ItemThoughtKnot
+                    ? ((ItemThoughtKnot) stack.getItem()).readIota(stack) : null;
                 if (iota instanceof PatternIota) {
                     at.petra_k.hexcasting.api.casting.action.HexAction action =
                         HexActionRegistry.get(((PatternIota) iota).getPattern());
