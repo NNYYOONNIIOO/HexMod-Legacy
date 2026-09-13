@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.event;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -24,6 +25,10 @@ public final class HexMissingMappings {
     @SubscribeEvent
     public static void onMissingItemMappings(RegistryEvent.MissingMappings<Item> event) {
         for (RegistryEvent.MissingMappings.Mapping<Item> mapping : event.getAllMappings()) {
+            if (new ResourceLocation("hexcasting", "scrying_lens").equals(mapping.key)) {
+                mapping.remap(HexItems.SCRYING_LENS);
+                continue;
+            }
             if (!OLD_GUIDE_BOOK.equals(mapping.key)) {
                 continue;
             }

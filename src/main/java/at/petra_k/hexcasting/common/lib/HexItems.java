@@ -35,8 +35,8 @@ public final class HexItems {
         .setCreativeTab(HexCreativeTab.HEX);
 
     public static final ItemScryingLens SCRYING_LENS = (ItemScryingLens) new ItemScryingLens()
-        .setRegistryName(HexAPI.MOD_ID, "scrying_lens")
-        .setUnlocalizedName(HexAPI.MOD_ID + ".scrying_lens")
+        .setRegistryName(HexAPI.MOD_ID, "lens")
+        .setUnlocalizedName(HexAPI.MOD_ID + ".lens")
         .setCreativeTab(HexCreativeTab.HEX);
 
     public static final ItemMediaBattery BATTERY = (ItemMediaBattery) new ItemMediaBattery()
@@ -78,7 +78,6 @@ public final class HexItems {
         "staff/edified",
         "staff/quenched",
         "staff/mindsplice",
-        "lens",
         "abacus",
         "thought_knot",
         "spellbook",
