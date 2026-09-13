@@ -99,6 +99,8 @@ public final class HexBlocks {
                 block = new BlockAkashicRecord();
             } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
                 block = new BlockImpetus();
+            } else if (id.startsWith("directrix/")) {
+                block = new BlockSpellCircle();
             } else if ("great_impetus".equals(id)) {
                 block = new BlockGreatImpetus();
             } else if ("spell_circle".equals(id)) {
