@@ -1,5 +1,29 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:directrix/boolean" }
+    "facing=down": {
+      "model": "hexcasting:directrix/boolean",
+      "x": 180
+    },
+    "facing=up": {
+      "model": "hexcasting:directrix/boolean"
+    },
+    "facing=north": {
+      "model": "hexcasting:directrix/boolean",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "hexcasting:directrix/boolean",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "hexcasting:directrix/boolean",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east": {
+      "model": "hexcasting:directrix/boolean",
+      "x": 90,
+      "y": 270
+    }
   }
 }

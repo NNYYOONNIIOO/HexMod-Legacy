@@ -1,5 +1,29 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:directrix/redstone" }
+    "facing=down": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 180
+    },
+    "facing=up": {
+      "model": "hexcasting:directrix/redstone"
+    },
+    "facing=north": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 90,
+      "y": 270
+    }
   }
 }
