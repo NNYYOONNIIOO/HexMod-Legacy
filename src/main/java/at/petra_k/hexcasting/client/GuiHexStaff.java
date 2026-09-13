@@ -230,12 +230,14 @@ public final class GuiHexStaff extends GuiScreen {
             if (length < 0.001D) {
                 continue;
             }
-            for (int hop = 1; hop < 10; hop++) {
-                float t = hop / 10.0F;
+            int hops = 5;
+            double hopDistance = length / (hops + 1.0D);
+            for (int hop = 1; hop <= hops; hop++) {
+                float t = hop / (float) (hops + 1);
                 double envelope = Math.sin(Math.PI * t);
                 long hopSeed = seed ^ (long) i * 0xBF58476D1CE4E5B9L
                     ^ (long) hop * 0x94D049BB133111EBL;
-                double offset = zappyNoise(hopSeed) * 2.5D * envelope;
+                double offset = zappyNoise(hopSeed) * Math.min(3.0D, hopDistance * 0.22D) * envelope;
                 result.add(new float[] {
                     (float) (from[0] + dx * t - dy / length * offset),
                     (float) (from[1] + dy * t + dx / length * offset)
@@ -320,18 +322,7 @@ public final class GuiHexStaff extends GuiScreen {
         }
         tessellator.draw();
 
-        // RenderLib uses triangle fans for caps and rounded/miter joins. The
-        // six-sided spot pass below supplies the visible node, while these
-        // small fans remove the gaps at sharp corners of the ribbon.
-        for (int i = 1; i < count - 1; i++) {
-            drawJoinFan(points.get(i)[0], points.get(i)[1], halfWidth,
-                tailColor, normalsX[i - 1], normalsY[i - 1], normalsX[i], normalsY[i]);
-        }
-        if (closed) {
-            int last = normalsX.length - 1;
-            drawJoinFan(points.get(0)[0], points.get(0)[1], halfWidth,
-                tailColor, normalsX[last], normalsY[last], normalsX[0], normalsY[0]);
-        } else {
+        if (!closed) {
             drawCapFan(points.get(0)[0], points.get(0)[1], halfWidth,
                 tailColor, normalsX[0], normalsY[0], false);
             drawCapFan(points.get(count - 1)[0], points.get(count - 1)[1], halfWidth,
@@ -367,26 +358,13 @@ public final class GuiHexStaff extends GuiScreen {
             return new float[] {normalsX[last] * halfWidth, normalsY[last] * halfWidth};
         }
 
-        float mx = normalsX[index - 1] + normalsX[index];
-        float my = normalsY[index - 1] + normalsY[index];
-        float miterLength = (float) Math.sqrt(mx * mx + my * my);
-        if (miterLength < 0.001F) {
+        float nx = normalsX[index - 1] + normalsX[index];
+        float ny = normalsY[index - 1] + normalsY[index];
+        float length = (float) Math.sqrt(nx * nx + ny * ny);
+        if (length < 0.001F) {
             return new float[] {normalsX[index] * halfWidth, normalsY[index] * halfWidth};
         }
-
-        float miterX = mx / miterLength;
-        float miterY = my / miterLength;
-        float denominator = miterX * normalsY[index] - miterY * normalsX[index];
-        if (Math.abs(denominator) < 0.25F) {
-            return new float[] {normalsX[index] * halfWidth, normalsY[index] * halfWidth};
-        }
-        float scale = Math.min(halfWidth * 2.5F, Math.abs(halfWidth / denominator));
-        float turn = normalsX[index - 1] * normalsY[index]
-            - normalsY[index - 1] * normalsX[index];
-        if (turn < 0.0F) {
-            scale = -scale;
-        }
-        return new float[] {miterX * scale, miterY * scale};
+        return new float[] {nx / length * halfWidth, ny / length * halfWidth};
     }
 
     private static float[] miterOffset(float previousX, float previousY,
@@ -686,7 +664,7 @@ private void drawMove(int mouseX, int mouseY) {
     }
 
     private static String patternDescription(HexPattern pattern) {
-        return pattern == null ? I18n.format("hexcasting.tooltip.pattern") : pattern.signature();
+        return pattern == null ? I18n.format("hexcasting.tooltip.pattern") : pattern.anglesSignature();
     }
 
     private static boolean samePixel(float[] first, float[] second) {

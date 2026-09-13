@@ -123,6 +123,20 @@ public final class StaffCastExecutor {
         int markerIndex = lower.indexOf(marker);
         if (markerIndex >= 0) {
             String signature = message.substring(markerIndex + marker.length()).trim();
+            int open = signature.indexOf("HexPattern(");
+            int close = signature.lastIndexOf(')');
+            if (open >= 0 && close > open) {
+                String raw = signature.substring(open + "HexPattern(".length(), close);
+                int slash = raw.indexOf('/');
+                signature = slash >= 0 ? raw.substring(slash + 1) : raw;
+                signature = signature.replace("FORWARD", "w")
+                    .replace("RIGHT_BACK", "d")
+                    .replace("RIGHT", "e")
+                    .replace("BACK", "s")
+                    .replace("LEFT_BACK", "a")
+                    .replace("LEFT", "q")
+                    .replace("/", "");
+            }
             return I18n.translateToLocalFormatted(
                 "hexcasting.message.pattern_unregistered", signature);
         }

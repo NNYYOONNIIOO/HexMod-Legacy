@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/edified_door"
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:items/edified_door"
+  }
 }

@@ -148,6 +148,19 @@ public final class HexPattern {
         return out.toString();
     }
 
+    /** The compact relative-angle notation used by Hex in tooltips and errors. */
+    public String anglesSignature() {
+        final char[] symbols = {'w', 'e', 'd', 's', 'a', 'q'};
+        StringBuilder out = new StringBuilder(angles.size());
+        for (HexAngle angle : angles) {
+            int ordinal = angle.ordinal();
+            if (ordinal >= 0 && ordinal < symbols.length) {
+                out.append(symbols[ordinal]);
+            }
+        }
+        return out.toString();
+    }
+
     public NBTTagCompound serializeToNBT() {
         NBTTagCompound out = new NBTTagCompound();
         out.setByte(TAG_START_DIR, (byte) startDir.ordinal());
