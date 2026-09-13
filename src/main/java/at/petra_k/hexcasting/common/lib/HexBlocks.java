@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
+import at.petra_k.hexcasting.common.block.BlockHexDecorative;
 import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
 import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
 import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
@@ -130,9 +131,7 @@ public final class HexBlocks {
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
             } else {
-                block = new Block(Material.ROCK)
-                    .setHardness(2.0F)
-                    .setResistance(6.0F);
+                block = new BlockHexDecorative(id);
             }
             block.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
