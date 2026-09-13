@@ -76,31 +76,22 @@ abstract class BlockDirectrixBase extends Block {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        switch (state.getValue(FACING)) {
-            case DOWN:
-                return new AxisAlignedBB(0.0D, 1.0D - THICKNESS, 0.0D, 1.0D, 1.0D, 1.0D);
-            case NORTH:
-                return new AxisAlignedBB(0.0D, 0.0D, 1.0D - THICKNESS, 1.0D, 1.0D, 1.0D);
-            case SOUTH:
-                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, THICKNESS);
-            case WEST:
-                return new AxisAlignedBB(1.0D - THICKNESS, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
-            case EAST:
-                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, THICKNESS, 1.0D, 1.0D);
-            case UP:
-            default:
-                return new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, THICKNESS, 1.0D);
-        }
+        return FULL_BLOCK_AABB;
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return FULL_BLOCK_AABB;
     }
 
     @Override
     public boolean isOpaqueCube(IBlockState state) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isFullCube(IBlockState state) {
-        return false;
+        return true;
     }
 
     @Override

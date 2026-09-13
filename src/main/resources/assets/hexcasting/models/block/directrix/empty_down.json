@@ -1,22 +1,12 @@
 {
-  "ambientocclusion": false,
-  "parent": "block/block",
+  "parent": "block/cube",
   "textures": {
-    "face": "hexcasting:blocks/circle/directrix/empty/bottom",
-    "particle": "hexcasting:blocks/circle/directrix/empty/bottom"
-  },
-  "elements": [
-    {
-      "from": [0, 15, 0],
-      "to": [16, 16, 16],
-      "faces": {
-        "down": {"texture": "#face"},
-        "up": {"texture": "#face"},
-        "north": {"texture": "#face"},
-        "south": {"texture": "#face"},
-        "west": {"texture": "#face"},
-        "east": {"texture": "#face"}
-      }
-    }
-  ]
+    "particle": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "north": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "south": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "east": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "west": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "up": "hexcasting:blocks/circle/directrix/empty/bottom",
+    "down": "hexcasting:blocks/circle/directrix/empty/bottom"
+  }
 }
