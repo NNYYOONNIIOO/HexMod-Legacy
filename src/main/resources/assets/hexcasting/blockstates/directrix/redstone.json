@@ -1,16 +1,33 @@
 {
   "variants": {
-    "facing=down,powered=false": { "model": "hexcasting:directrix/redstone", "x": 180 },
-    "facing=down,powered=true": { "model": "hexcasting:directrix/redstone", "x": 180 },
-    "facing=up,powered=false": { "model": "hexcasting:directrix/redstone" },
-    "facing=up,powered=true": { "model": "hexcasting:directrix/redstone" },
-    "facing=north,powered=false": { "model": "hexcasting:directrix/redstone", "x": 90 },
-    "facing=north,powered=true": { "model": "hexcasting:directrix/redstone", "x": 90 },
-    "facing=south,powered=false": { "model": "hexcasting:directrix/redstone", "x": 270 },
-    "facing=south,powered=true": { "model": "hexcasting:directrix/redstone", "x": 270 },
-    "facing=west,powered=false": { "model": "hexcasting:directrix/redstone", "x": 90, "y": 90 },
-    "facing=west,powered=true": { "model": "hexcasting:directrix/redstone", "x": 90, "y": 90 },
-    "facing=east,powered=false": { "model": "hexcasting:directrix/redstone", "x": 90, "y": 270 },
-    "facing=east,powered=true": { "model": "hexcasting:directrix/redstone", "x": 90, "y": 270 }
+    "facing=down": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 270,
+      "uvlock": true
+    },
+    "facing=east": {
+      "model": "hexcasting:directrix/redstone",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=north": {
+      "model": "hexcasting:directrix/redstone",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=up": {
+      "model": "hexcasting:directrix/redstone",
+      "x": 90,
+      "uvlock": true
+    },
+    "facing=west": {
+      "model": "hexcasting:directrix/redstone",
+      "y": 270,
+      "uvlock": true
+    }
   }
 }

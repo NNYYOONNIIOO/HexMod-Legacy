@@ -1,6 +1,42 @@
 {
-  "parent": "block/cube_all",
+  "ambientocclusion": false,
+  "parent": "block/block",
   "textures": {
-    "all": "hexcasting:blocks/circle/directrix/redstone/front_dim_unpowered"
-  }
+    "face": "hexcasting:blocks/circle/directrix/redstone/front_dim_unpowered",
+    "particle": "hexcasting:blocks/circle/directrix/redstone/front_dim_unpowered"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        15
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#face"
+        },
+        "up": {
+          "texture": "#face"
+        },
+        "north": {
+          "texture": "#face"
+        },
+        "south": {
+          "texture": "#face"
+        },
+        "west": {
+          "texture": "#face"
+        },
+        "east": {
+          "texture": "#face"
+        }
+      }
+    }
+  ]
 }

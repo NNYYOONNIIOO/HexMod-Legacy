@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "hexcasting:blocks/conjured_block"
+    "layer0": "hexcasting:blocks/circle/directrix/boolean/front_dim_false"
   }
 }

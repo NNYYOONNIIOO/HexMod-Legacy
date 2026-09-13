@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/directrix/redstone"
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:blocks/circle/directrix/redstone/front_dim_unpowered"
+  }
 }

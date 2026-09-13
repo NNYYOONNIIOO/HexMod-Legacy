@@ -12,6 +12,8 @@ import net.minecraft.world.IBlockAccess;
 
 /** Small non-solid light source used by Hex lantern and sconce blocks. */
 public final class BlockHexLight extends Block {
+    private static final AxisAlignedBB FULL_BOX =
+        new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
     private static final AxisAlignedBB LANTERN_BOX =
         new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.875D, 0.8125D);
     private static final AxisAlignedBB SCONCE_BOX =
@@ -31,7 +33,12 @@ public final class BlockHexLight extends Block {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, net.minecraft.util.math.BlockPos pos) {
-        return sconce ? SCONCE_BOX : LANTERN_BOX;
+        return isPaperLantern() ? FULL_BOX : (sconce ? SCONCE_BOX : LANTERN_BOX);
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, net.minecraft.util.math.BlockPos pos) {
+        return isPaperLantern() ? FULL_BOX : (sconce ? SCONCE_BOX : LANTERN_BOX);
     }
 
     @Override

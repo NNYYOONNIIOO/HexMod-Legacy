@@ -119,7 +119,6 @@ hexcasting.message.media_unavailable=玩家媒质储备不可用。
 hexcasting.book.name=Hex Casting
 hexcasting.book.category.getting_started=入门
 hexcasting.book.entry.getting_started.first_pattern=你的第一个图案
-item.patchouli.guide_book.name=Hex Casting 指南
 item.patchouli.book.name=Hex Casting 指南
 itemGroup.hexcasting=Hex Casting
 hexcasting.landing=我似乎发现了一种全新的魔法，一种在六边形网格上画各式奇诡图案的魔法。      它深深地迷住了我。我决定着手撰写一本笔记，以此记述我的想法和研究成果。      $(br2)$(l:https://forum.petra-k.at/index.php)论坛链接/$
