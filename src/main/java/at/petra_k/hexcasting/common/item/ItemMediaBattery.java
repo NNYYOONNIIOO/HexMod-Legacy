@@ -58,6 +58,8 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
         addFilledVariant(items, MediaConstants.DUST_UNIT * 64L);
         addFilledVariant(items, MediaConstants.SHARD_UNIT * 64L);
         addFilledVariant(items, MediaConstants.CRYSTAL_UNIT * 64L);
+        addFilledVariant(items, MediaConstants.QUENCHED_SHARD_UNIT * 64L);
+        addFilledVariant(items, MediaConstants.QUENCHED_BLOCK_UNIT * 64L);
     }
 
     private void addFilledVariant(NonNullList<ItemStack> items, long media) {
