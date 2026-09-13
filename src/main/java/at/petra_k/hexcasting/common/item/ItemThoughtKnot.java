@@ -4,6 +4,9 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -24,11 +27,53 @@ import net.minecraft.world.World;
 import java.util.List;
 
 /** A single-slot portable pattern holder for the 1.12.2 item set. */
-public final class ItemThoughtKnot extends Item {
+public final class ItemThoughtKnot extends Item implements IotaHolderItem {
     private static final String KEY_ACTION = "action";
 
     public ItemThoughtKnot() {
         setMaxStackSize(1);
+    }
+
+    @Override
+    public NBTTagCompound readIotaTag(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag != null && tag.hasKey(TAG_DATA, 10)) {
+            return tag.getCompoundTag(TAG_DATA);
+        }
+        ResourceLocation action = getLegacyAction(stack);
+        HexPattern pattern = action == null ? null : HexActionRegistry.getPattern(action);
+        return pattern == null ? null : new PatternIota(pattern).serialize();
+    }
+
+    @Override
+    public boolean writeable(ItemStack stack) {
+        return readIotaTag(stack) == null;
+    }
+
+    @Override
+    public boolean canWrite(ItemStack stack, Iota iota) {
+        return iota != null && writeable(stack);
+    }
+
+    @Override
+    public void writeDatum(ItemStack stack, Iota iota) {
+        if (stack == null || stack.isEmpty() || iota == null || !writeable(stack)) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.removeTag(KEY_ACTION);
+        tag.setTag(TAG_DATA, iota.serialize());
+    }
+
+    public static void clearDatum(ItemStack stack) {
+        if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
+            stack.getTagCompound().removeTag(TAG_DATA);
+            stack.getTagCompound().removeTag(KEY_ACTION);
+        }
     }
 
     @Override
@@ -70,6 +115,31 @@ public final class ItemThoughtKnot extends Item {
 
     public static ResourceLocation getActionId(ItemStack stack) {
         HexActionRegistry.bootstrap();
+        NBTTagCompound data = stack == null ? null : stack.getTagCompound();
+        if (data != null && data.hasKey(TAG_DATA, 10)) {
+            try {
+                Iota iota = new ItemThoughtKnot().readIota(stack);
+                if (iota instanceof PatternIota) {
+                    at.petra_k.hexcasting.api.casting.action.HexAction action =
+                        HexActionRegistry.get(((PatternIota) iota).getPattern());
+                    ResourceLocation id = HexActionRegistry.idFor(action);
+                    if (id != null) {
+                        return id;
+                    }
+                }
+            } catch (Exception ignored) {
+                // Malformed Iota data falls back to legacy/default behavior.
+            }
+        }
+        ResourceLocation legacy = getLegacyAction(stack);
+        if (legacy != null) {
+            return legacy;
+        }
+        return HexActionRegistry.get(HexActions.PUSH_ONE_ID) == null
+            ? HexActionRegistry.firstId() : HexActions.PUSH_ONE_ID;
+    }
+
+    private static ResourceLocation getLegacyAction(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null && tag.hasKey(KEY_ACTION, 8)) {
             try {
@@ -79,8 +149,7 @@ public final class ItemThoughtKnot extends Item {
                 // Old or malformed NBT falls back to the default action.
             }
         }
-        return HexActionRegistry.get(HexActions.PUSH_ONE_ID) == null
-            ? HexActionRegistry.firstId() : HexActions.PUSH_ONE_ID;
+        return null;
     }
 
     private static void execute(ItemStack knot, EntityPlayer player) {
@@ -114,6 +183,11 @@ public final class ItemThoughtKnot extends Item {
     }
 
     private static void setAction(ItemStack stack, ResourceLocation action) {
+        HexPattern pattern = HexActionRegistry.getPattern(action);
+        if (pattern != null && stack.getItem() instanceof ItemThoughtKnot) {
+            ((ItemThoughtKnot) stack.getItem()).writeDatum(stack, new PatternIota(pattern));
+            return;
+        }
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
@@ -123,7 +197,7 @@ public final class ItemThoughtKnot extends Item {
     }
 
     private static void clear(ItemStack stack) {
-        if (stack.getTagCompound() != null) stack.getTagCompound().removeTag(KEY_ACTION);
+        clearDatum(stack);
     }
 
     private static String localizeAction(ResourceLocation id) {

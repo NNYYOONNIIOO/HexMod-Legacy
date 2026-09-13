@@ -5,6 +5,9 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
@@ -26,11 +29,88 @@ import net.minecraft.util.text.translation.I18n;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** Action-selectable portable casting item for the 1.12.2 port. */
-public final class ItemHexFocus extends Item {
+public final class ItemHexFocus extends Item implements IotaHolderItem {
     private static final String KEY_SELECTED_ACTION = "selected_action";
+    private static final String KEY_SEALED = "sealed";
+    private static final String KEY_VARIANT = "variant";
 
     public ItemHexFocus() {
         setMaxStackSize(1);
+    }
+
+    @Override
+    public NBTTagCompound readIotaTag(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        return tag != null && tag.hasKey(TAG_DATA, 10)
+            ? tag.getCompoundTag(TAG_DATA) : null;
+    }
+
+    @Override
+    public boolean writeable(ItemStack stack) {
+        return !isSealed(stack);
+    }
+
+    @Override
+    public boolean canWrite(ItemStack stack, Iota iota) {
+        return iota == null || !isSealed(stack);
+    }
+
+    @Override
+    public void writeDatum(ItemStack stack, Iota iota) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (iota == null) {
+            if (tag != null) {
+                tag.removeTag(TAG_DATA);
+                tag.removeTag(KEY_SELECTED_ACTION);
+                tag.removeTag(KEY_SEALED);
+            }
+            return;
+        }
+        if (isSealed(stack)) {
+            return;
+        }
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setTag(TAG_DATA, iota.serialize());
+    }
+
+    public static boolean isSealed(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        return tag != null && tag.getBoolean(KEY_SEALED);
+    }
+
+    public static void seal(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setBoolean(KEY_SEALED, true);
+    }
+
+    public static int getVariant(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        return tag == null ? 0 : Math.max(0, Math.min(7, tag.getInteger(KEY_VARIANT)));
+    }
+
+    public static void setVariant(ItemStack stack, int variant) {
+        if (stack == null || stack.isEmpty() || isSealed(stack)) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setInteger(KEY_VARIANT, Math.max(0, Math.min(7, variant)));
     }
 
     @Override
@@ -127,6 +207,15 @@ public final class ItemHexFocus extends Item {
     }
 
     public static void setSelectedAction(ItemStack stack, ResourceLocation id) {
+        HexActionRegistry.bootstrap();
+        HexPattern pattern = id == null ? null : HexActionRegistry.getPattern(id);
+        if (pattern != null) {
+            ItemHexFocus focus = stack != null && stack.getItem() instanceof ItemHexFocus
+                ? (ItemHexFocus) stack.getItem() : null;
+            if (focus != null) {
+                focus.writeDatum(stack, new PatternIota(pattern));
+            }
+        }
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
             tag = new NBTTagCompound();
