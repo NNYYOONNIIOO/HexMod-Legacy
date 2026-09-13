@@ -392,7 +392,7 @@ public final class CastingVM {
         }
         HexAction action = pattern == null ? null : HexActionRegistry.get(pattern);
         if (pattern != null && action == null && parentheses.isEmpty() && !escapeNext) {
-            throw new CastingException("No action is registered for pattern " + pattern.signature());
+            throw new CastingException("No action is registered for pattern " + pattern.anglesSignature());
         }
         Iota value = pattern == null ? work.iota : new PatternIota(pattern);
 

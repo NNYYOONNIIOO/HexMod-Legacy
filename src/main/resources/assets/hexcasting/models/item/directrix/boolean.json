@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/directrix/boolean"
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:blocks/conjured_block"
+  }
 }

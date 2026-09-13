@@ -1,3 +1,4 @@
 {
-  "parent": "hexcasting:block/edified_trapdoor"
+  "parent": "hexcasting:block/edified_trapdoor_bottom",
+  "textures": {}
 }

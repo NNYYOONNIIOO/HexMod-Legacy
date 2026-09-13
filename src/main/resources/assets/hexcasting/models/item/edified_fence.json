@@ -1,3 +1,4 @@
 {
-  "parent": "hexcasting:block/edified_fence"
+  "parent": "hexcasting:block/edified_fence_inventory",
+  "textures": {}
 }

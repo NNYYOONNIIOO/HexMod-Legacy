@@ -1,3 +1,6 @@
 {
-  "parent": "hexcasting:block/scroll_paper_lantern"
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:blocks/scroll_paper_lantern"
+  }
 }

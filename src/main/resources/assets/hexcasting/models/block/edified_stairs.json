@@ -1,6 +1,8 @@
 {
-  "parent": "block/cube_all",
+  "parent": "block/stairs",
   "textures": {
-    "all": "hexcasting:blocks/conjured_block"
+    "bottom": "hexcasting:blocks/conjured_block",
+    "top": "hexcasting:blocks/conjured_block",
+    "side": "hexcasting:blocks/conjured_block"
   }
 }

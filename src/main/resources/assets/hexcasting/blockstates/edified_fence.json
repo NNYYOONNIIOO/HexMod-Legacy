@@ -1,1 +1,49 @@
-{"variants":{"east=false,north=false,south=false,west=false":{"model":"hexcasting:edified_fence"},"east=false,north=false,south=false,west=true":{"model":"hexcasting:edified_fence"},"east=false,north=false,south=true,west=false":{"model":"hexcasting:edified_fence"},"east=false,north=false,south=true,west=true":{"model":"hexcasting:edified_fence"},"east=false,north=true,south=false,west=false":{"model":"hexcasting:edified_fence"},"east=false,north=true,south=false,west=true":{"model":"hexcasting:edified_fence"},"east=false,north=true,south=true,west=false":{"model":"hexcasting:edified_fence"},"east=false,north=true,south=true,west=true":{"model":"hexcasting:edified_fence"},"east=true,north=false,south=false,west=false":{"model":"hexcasting:edified_fence"},"east=true,north=false,south=false,west=true":{"model":"hexcasting:edified_fence"},"east=true,north=false,south=true,west=false":{"model":"hexcasting:edified_fence"},"east=true,north=false,south=true,west=true":{"model":"hexcasting:edified_fence"},"east=true,north=true,south=false,west=false":{"model":"hexcasting:edified_fence"},"east=true,north=true,south=false,west=true":{"model":"hexcasting:edified_fence"},"east=true,north=true,south=true,west=false":{"model":"hexcasting:edified_fence"},"east=true,north=true,south=true,west=true":{"model":"hexcasting:edified_fence"}}}
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "hexcasting:edified_fence_post"
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "hexcasting:edified_fence_side",
+        "y": 90,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "hexcasting:edified_fence_side",
+        "y": 0,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "hexcasting:edified_fence_side",
+        "y": 270,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "hexcasting:edified_fence_side",
+        "y": 180,
+        "uvlock": true
+      }
+    }
+  ]
+}

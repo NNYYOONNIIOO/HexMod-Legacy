@@ -1,5 +1,5 @@
 {
-  "parent": "block/slab",
+  "parent": "block/inner_stairs",
   "textures": {
     "bottom": "hexcasting:blocks/conjured_block",
     "top": "hexcasting:blocks/conjured_block",

@@ -559,7 +559,9 @@ private void drawMove(int mouseX, int mouseY) {
         }
         HexDir direction = HexDir.values()[directionIndex];
         GridPoint next = current.add(direction);
-        if (usedSpots.contains(next)) {
+        boolean backtracking = currentPoints.size() > 1
+            && next.equals(currentPoints.get(currentPoints.size() - 2));
+        if (!backtracking && usedSpots.contains(next)) {
             return;
         }
         appendSnappedPoint(next);

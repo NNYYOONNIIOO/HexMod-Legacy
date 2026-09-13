@@ -1,1 +1,68 @@
-{"variants":{"facing=down,powered=false":{"model":"hexcasting:edified_button"},"facing=down,powered=true":{"model":"hexcasting:edified_button"},"facing=east,powered=false":{"model":"hexcasting:edified_button"},"facing=east,powered=true":{"model":"hexcasting:edified_button"},"facing=north,powered=false":{"model":"hexcasting:edified_button"},"facing=north,powered=true":{"model":"hexcasting:edified_button"},"facing=south,powered=false":{"model":"hexcasting:edified_button"},"facing=south,powered=true":{"model":"hexcasting:edified_button"},"facing=up,powered=false":{"model":"hexcasting:edified_button"},"facing=up,powered=true":{"model":"hexcasting:edified_button"},"facing=west,powered=false":{"model":"hexcasting:edified_button"},"facing=west,powered=true":{"model":"hexcasting:edified_button"}}}
+{
+  "variants": {
+    "facing=up,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true
+    },
+    "facing=down,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true,
+      "x": 180
+    },
+    "facing=east,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "facing=south,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "facing=north,powered=false": {
+      "model": "hexcasting:edified_button",
+      "uvlock": true,
+      "x": 90
+    },
+    "facing=up,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true
+    },
+    "facing=down,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true,
+      "x": 180
+    },
+    "facing=east,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "facing=west,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "facing=south,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "facing=north,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "uvlock": true,
+      "x": 90
+    }
+  }
+}

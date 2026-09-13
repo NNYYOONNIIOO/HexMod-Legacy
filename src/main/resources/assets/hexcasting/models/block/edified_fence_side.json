@@ -1,5 +1,5 @@
 {
-  "parent": "block/button",
+  "parent": "block/fence_side",
   "textures": {
     "texture": "hexcasting:blocks/conjured_block"
   }

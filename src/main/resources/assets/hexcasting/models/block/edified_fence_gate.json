@@ -1,6 +1,6 @@
 {
-  "parent": "block/cube_all",
+  "parent": "block/fence_gate",
   "textures": {
-    "all": "hexcasting:blocks/conjured_block"
+    "texture": "hexcasting:blocks/conjured_block"
   }
 }

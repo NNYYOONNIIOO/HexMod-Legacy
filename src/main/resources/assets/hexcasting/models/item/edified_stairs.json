@@ -1,3 +1,4 @@
 {
-  "parent": "hexcasting:block/edified_stairs"
+  "parent": "hexcasting:block/edified_stairs",
+  "textures": {}
 }

@@ -1,3 +1,4 @@
 {
-  "parent": "hexcasting:block/edified_slab"
+  "parent": "hexcasting:block/edified_slab",
+  "textures": {}
 }

@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/circle/directrix/boolean/front_dim_false"
+    "all": "hexcasting:blocks/conjured_block"
   }
 }
