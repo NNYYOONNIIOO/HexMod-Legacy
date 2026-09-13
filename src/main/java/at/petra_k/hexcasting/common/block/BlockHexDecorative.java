@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -16,16 +17,22 @@ import net.minecraft.world.IBlockAccess;
 public final class BlockHexDecorative extends Block {
     private final String blockId;
     private final boolean lightSource;
+    private final boolean translucent;
 
     public BlockHexDecorative(String id) {
         super(materialFor(id));
         this.blockId = id == null ? "" : id;
         this.lightSource = isLightSource(blockId);
+        this.translucent = isTranslucent(blockId);
         setHardness(hardnessFor(id));
         setResistance(resistanceFor(id));
         setSoundType(soundFor(id));
         if (lightSource) {
             setLightLevel(1.0F);
+            setLightOpacity(0);
+        }
+        if (translucent) {
+            setLightLevel(4.0F / 15.0F);
             setLightOpacity(0);
         }
         if (isWood(id)) {
@@ -37,6 +44,16 @@ public final class BlockHexDecorative extends Block {
 
     public boolean isLightSource() {
         return lightSource;
+    }
+
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return !translucent && super.isOpaqueCube(state);
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return !translucent && super.isFullCube(state);
     }
 
     @Override
@@ -108,6 +125,10 @@ public final class BlockHexDecorative extends Block {
 
     private static boolean isLightSource(String id) {
         return id.endsWith("lantern") || id.endsWith("sconce");
+    }
+
+    private static boolean isTranslucent(String id) {
+        return id.startsWith("quenched_allay");
     }
 
     private static boolean isPaper(String id) {
