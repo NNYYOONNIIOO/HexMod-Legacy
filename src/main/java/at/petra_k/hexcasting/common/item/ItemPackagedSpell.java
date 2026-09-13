@@ -12,6 +12,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
@@ -21,25 +23,50 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /** A single-use or reusable packaged spell container for the 1.12.2 port. */
-public final class ItemPackagedSpell extends Item {
+public class ItemPackagedSpell extends Item {
     private static final String KEY_PACKAGED_ACTION = "packaged_action";
+    private static final String KEY_PATTERNS = "patterns";
     private static final String KEY_VARIANT = "variant";
     private static final int VARIANT_COUNT = 5;
 
     /** Returns the action stored in this packaged spell, or null for an empty item. */
     public static ResourceLocation getPackagedAction(ItemStack stack) {
+        List<ResourceLocation> actions = getPackagedActions(stack);
+        return actions.isEmpty() ? null : actions.get(0);
+    }
+
+    /** Reads the current program, while accepting the old single-action NBT format. */
+    public static List<ResourceLocation> getPackagedActions(ItemStack stack) {
+        List<ResourceLocation> actions = new ArrayList<>();
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
-        if (tag == null || !tag.hasKey(KEY_PACKAGED_ACTION, 8)) {
-            return null;
+        if (tag == null) {
+            return actions;
         }
+
+        if (tag.hasKey(KEY_PATTERNS, 9)) {
+            NBTTagList list = tag.getTagList(KEY_PATTERNS, 8);
+            for (int i = 0; i < list.tagCount(); i++) {
+                addValidAction(actions, list.getStringTagAt(i));
+            }
+        }
+        if (actions.isEmpty() && tag.hasKey(KEY_PACKAGED_ACTION, 8)) {
+            addValidAction(actions, tag.getString(KEY_PACKAGED_ACTION));
+        }
+        return actions;
+    }
+
+    private static void addValidAction(List<ResourceLocation> actions, String rawId) {
         try {
-            ResourceLocation id = new ResourceLocation(tag.getString(KEY_PACKAGED_ACTION));
-            return HexActionRegistry.getPattern(id) == null ? null : id;
+            ResourceLocation id = new ResourceLocation(rawId);
+            if (HexActionRegistry.getPattern(id) != null) {
+                actions.add(id);
+            }
         } catch (RuntimeException ignored) {
-            return null;
+            // Ignore malformed entries so one damaged stack does not crash item rendering.
         }
     }
 
@@ -92,22 +119,29 @@ public final class ItemPackagedSpell extends Item {
         ItemStack offhand = player.getHeldItemOffhand();
         if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
             ResourceLocation action = ItemPatternScroll.getActionId(offhand);
-            setPackagedAction(stack, action);
+            appendPackagedAction(stack, action);
+            int count = getPackagedActions(stack).size();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_added",
-                    localizeAction(action), 1, 1)));
+                    localizeAction(action), count, count)));
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
-        ResourceLocation action = getPackagedAction(stack);
-        if (action == null) {
+        List<ResourceLocation> actions = getPackagedActions(stack);
+        if (actions.isEmpty()) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.program_empty")));
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
 
-        HexPattern pattern = HexActionRegistry.getPattern(action);
-        if (pattern == null) {
+        List<HexPattern> patterns = new ArrayList<>();
+        for (ResourceLocation action : actions) {
+            HexPattern pattern = HexActionRegistry.getPattern(action);
+            if (pattern != null) {
+                patterns.add(pattern);
+            }
+        }
+        if (patterns.isEmpty()) {
             clearPackagedAction(stack);
             return new ActionResult<>(EnumActionResult.SUCCESS, stack);
         }
@@ -116,9 +150,9 @@ public final class ItemPackagedSpell extends Item {
                 ? null : player.getCapability(HexCapabilities.CASTING_DATA, null);
             CastingStack result;
             if (data == null) {
-                result = HexEvaluator.evaluate(Collections.singletonList(pattern));
+                result = HexEvaluator.evaluate(patterns);
             } else {
-                HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data, player);
+                HexEvaluator.evaluate(patterns, data.getCastingStack(), data, player);
                 result = data.getCastingStack();
             }
             String resultText = result.isEmpty()
@@ -126,6 +160,9 @@ public final class ItemPackagedSpell extends Item {
                 : result.peek().display();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_result", resultText)));
+            if (consumeOnUse() && !player.capabilities.isCreativeMode) {
+                stack.shrink(1);
+            }
         } catch (CastingException exception) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.staff_error", exception.getMessage())));
@@ -137,19 +174,35 @@ public final class ItemPackagedSpell extends Item {
     public void addInformation(ItemStack stack, World world, List<String> tooltip,
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
-        ResourceLocation action = getPackagedAction(stack);
-        if (action == null) {
+        List<ResourceLocation> actions = getPackagedActions(stack);
+        if (actions.isEmpty()) {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.none"));
             return;
         }
-        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(action));
-        HexPattern pattern = HexActionRegistry.getPattern(action);
-        if (pattern != null) {
-            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
+        for (ResourceLocation action : actions) {
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(action));
+            HexPattern pattern = HexActionRegistry.getPattern(action);
+            if (pattern != null) {
+                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
+            }
         }
     }
 
+    /** Cyphers override this because they are consumed after a successful cast. */
+    protected boolean consumeOnUse() {
+        return false;
+    }
+
     public static void setPackagedAction(ItemStack stack, ResourceLocation action) {
+        if (stack == null || stack.isEmpty() || action == null
+            || HexActionRegistry.getPattern(action) == null) {
+            return;
+        }
+        clearPackagedAction(stack);
+        appendPackagedAction(stack, action);
+    }
+
+    public static void appendPackagedAction(ItemStack stack, ResourceLocation action) {
         if (stack == null || stack.isEmpty() || action == null
             || HexActionRegistry.getPattern(action) == null) {
             return;
@@ -159,12 +212,17 @@ public final class ItemPackagedSpell extends Item {
             tag = new NBTTagCompound();
             stack.setTagCompound(tag);
         }
-        tag.setString(KEY_PACKAGED_ACTION, action.toString());
+        NBTTagList patterns = tag.hasKey(KEY_PATTERNS, 9)
+            ? tag.getTagList(KEY_PATTERNS, 8) : new NBTTagList();
+        patterns.appendTag(new NBTTagString(action.toString()));
+        tag.setTag(KEY_PATTERNS, patterns);
+        tag.removeTag(KEY_PACKAGED_ACTION);
     }
 
     public static void clearPackagedAction(ItemStack stack) {
         if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
             stack.getTagCompound().removeTag(KEY_PACKAGED_ACTION);
+            stack.getTagCompound().removeTag(KEY_PATTERNS);
         }
     }
 

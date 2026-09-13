@@ -10,6 +10,9 @@ import at.petra_k.hexcasting.common.item.ItemKnowledgeFragment;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
+import at.petra_k.hexcasting.common.item.ItemCypher;
+import at.petra_k.hexcasting.common.item.ItemTrinket;
+import at.petra_k.hexcasting.common.item.ItemArtifact;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemJewelerHammer;
 import at.petra_k.hexcasting.common.item.ItemSpellbook;
@@ -44,17 +47,17 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".battery")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemPackagedSpell CYPHER = (ItemPackagedSpell) new ItemPackagedSpell()
+    public static final ItemCypher CYPHER = (ItemCypher) new ItemCypher()
         .setRegistryName(HexAPI.MOD_ID, "cypher")
         .setUnlocalizedName(HexAPI.MOD_ID + ".cypher")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemPackagedSpell TRINKET = (ItemPackagedSpell) new ItemPackagedSpell()
+    public static final ItemTrinket TRINKET = (ItemTrinket) new ItemTrinket()
         .setRegistryName(HexAPI.MOD_ID, "trinket")
         .setUnlocalizedName(HexAPI.MOD_ID + ".trinket")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemPackagedSpell ARTIFACT = (ItemPackagedSpell) new ItemPackagedSpell()
+    public static final ItemArtifact ARTIFACT = (ItemArtifact) new ItemArtifact()
         .setRegistryName(HexAPI.MOD_ID, "artifact")
         .setUnlocalizedName(HexAPI.MOD_ID + ".artifact")
         .setCreativeTab(HexCreativeTab.HEX);
