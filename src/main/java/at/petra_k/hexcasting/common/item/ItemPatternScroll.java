@@ -41,9 +41,10 @@ public final class ItemPatternScroll extends Item {
         if (!world.isRemote) {
             HexActionRegistry.bootstrap();
             ResourceLocation current = getActionId(stack);
+            HexPattern currentPattern = getPattern(stack);
             if (!player.isSneaking() && ItemHexStaff.isStaff(player.getHeldItemOffhand())) {
-                boolean added = ItemHexStaff.appendAction(
-                    player.getHeldItemOffhand(), current);
+                boolean added = ItemHexStaff.appendPattern(
+                    player.getHeldItemOffhand(), currentPattern, 0, 0);
                 if (added) {
                     consumeForWrite(stack, player);
                     player.sendMessage(new TextComponentString(
@@ -86,7 +87,7 @@ public final class ItemPatternScroll extends Item {
             }
 
             try {
-                HexPattern pattern = HexActionRegistry.getPattern(current);
+                HexPattern pattern = currentPattern;
                 IHexCastingData data = HexCapabilities.CASTING_DATA == null
                     ? null
                     : player.getCapability(HexCapabilities.CASTING_DATA, null);
@@ -221,6 +222,9 @@ public final class ItemPatternScroll extends Item {
             stack.setTagCompound(tag);
         }
         tag.setString(KEY_ACTION, id.toString());
+        // A cycled action is a new scroll definition; do not let an older
+        // exact pattern NBT entry continue to shadow the selected action.
+        tag.removeTag(KEY_PATTERN);
     }
 
     /** Consumes a written scroll unless the player is in creative mode. */
