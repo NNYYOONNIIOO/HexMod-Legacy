@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.block.TileEntityConjured;
+import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petrak.paucal.api.PaucalAPI;
 
@@ -22,6 +23,8 @@ public final class HexCasting {
     public void preInit(FMLPreInitializationEvent event) {
         GameRegistry.registerTileEntity(TileEntityConjured.class,
             new net.minecraft.util.ResourceLocation(MOD_ID, "conjured"));
+        GameRegistry.registerTileEntity(TileEntitySlate.class,
+            new net.minecraft.util.ResourceLocation(MOD_ID, "slate"));
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();
