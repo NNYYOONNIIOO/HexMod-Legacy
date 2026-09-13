@@ -82,12 +82,18 @@ public final class HexItemModels {
     private static void registerPackagedSpellProperties() {
         IItemPropertyGetter filled =
             (stack, world, entity) -> ItemPackagedSpell.getPackagedAction(stack) == null ? 0.0F : 1.0F;
+        IItemPropertyGetter variant =
+            (stack, world, entity) -> ItemPackagedSpell.getVariant(stack) / 4.0F;
         HexItems.CYPHER.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         HexItems.TRINKET.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
         HexItems.ARTIFACT.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
+        HexItems.CYPHER.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"), variant);
+        HexItems.TRINKET.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"), variant);
+        HexItems.ARTIFACT.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"), variant);
         Item ancient = HexItems.EXTRA_ITEMS.get("ancient_cypher");
         if (ancient != null) {
             ancient.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"), filled);
+            ancient.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"), variant);
         }
     }
 

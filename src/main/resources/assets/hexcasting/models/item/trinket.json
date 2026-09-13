@@ -7,6 +7,22 @@
     {
       "predicate": { "hexcasting:filled": 1.0 },
       "model": "hexcasting:item/trinket_filled"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.25 },
+      "model": "hexcasting:item/trinket_variant_1"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.5 },
+      "model": "hexcasting:item/trinket_variant_2"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 0.75 },
+      "model": "hexcasting:item/trinket_variant_3"
+    },
+    {
+      "predicate": { "hexcasting:filled": 1.0, "hexcasting:variant": 1.0 },
+      "model": "hexcasting:item/trinket_variant_4"
     }
   ]
 }

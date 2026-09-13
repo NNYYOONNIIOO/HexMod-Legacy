@@ -26,6 +26,8 @@ import java.util.List;
 /** A single-use or reusable packaged spell container for the 1.12.2 port. */
 public final class ItemPackagedSpell extends Item {
     private static final String KEY_PACKAGED_ACTION = "packaged_action";
+    private static final String KEY_VARIANT = "variant";
+    private static final int VARIANT_COUNT = 5;
 
     /** Returns the action stored in this packaged spell, or null for an empty item. */
     public static ResourceLocation getPackagedAction(ItemStack stack) {
@@ -39,6 +41,37 @@ public final class ItemPackagedSpell extends Item {
         } catch (RuntimeException ignored) {
             return null;
         }
+    }
+
+    public static int getVariant(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null) {
+            return 0;
+        }
+        return Math.max(0, Math.min(VARIANT_COUNT - 1, tag.getInteger(KEY_VARIANT)));
+    }
+
+    public static void setVariant(ItemStack stack, int variant) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        int normalized = Math.max(0, Math.min(VARIANT_COUNT - 1, variant));
+        NBTTagCompound tag = stack.getTagCompound();
+        if (normalized == 0) {
+            if (tag != null) {
+                tag.removeTag(KEY_VARIANT);
+            }
+            return;
+        }
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setInteger(KEY_VARIANT, normalized);
+    }
+
+    public static void cycleVariant(ItemStack stack) {
+        setVariant(stack, (getVariant(stack) + 1) % VARIANT_COUNT);
     }
 
     @Override
