@@ -57,6 +57,7 @@ public final class ItemSpellbook extends Item {
         if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
             ResourceLocation action = ItemPatternScroll.getActionId(offhand);
             writeActivePage(stack, action);
+            ItemPatternScroll.consumeForWrite(offhand, player);
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_added",
                     localizeAction(action), getPageIndex(stack) + 1, MAX_PAGES)));

@@ -140,6 +140,7 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                 && offhand.getItem() instanceof ItemPatternScroll) {
                 ResourceLocation action = ItemPatternScroll.getActionId(offhand);
                 setSelectedAction(held, action);
+                ItemPatternScroll.consumeForWrite(offhand, player);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
                         "hexcasting.message.program_added",

@@ -120,6 +120,7 @@ public class ItemPackagedSpell extends Item {
         if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
             ResourceLocation action = ItemPatternScroll.getActionId(offhand);
             appendPackagedAction(stack, action);
+            ItemPatternScroll.consumeForWrite(offhand, player);
             int count = getPackagedActions(stack).size();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_added",

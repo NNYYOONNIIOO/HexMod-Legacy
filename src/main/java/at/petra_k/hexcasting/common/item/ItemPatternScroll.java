@@ -44,6 +44,7 @@ public final class ItemPatternScroll extends Item {
                 boolean added = ItemHexStaff.appendAction(
                     player.getHeldItemOffhand(), current);
                 if (added) {
+                    consumeForWrite(stack, player);
                     player.sendMessage(new TextComponentString(
                         I18n.translateToLocalFormatted(
                             "hexcasting.message.program_added",
@@ -62,6 +63,7 @@ public final class ItemPatternScroll extends Item {
                 && !player.getHeldItemOffhand().isEmpty()
                 && player.getHeldItemOffhand().getItem() instanceof ItemHexFocus) {
                 ItemHexFocus.setSelectedAction(player.getHeldItemOffhand(), current);
+                consumeForWrite(stack, player);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
                         "hexcasting.message.program_added",
@@ -176,6 +178,16 @@ public final class ItemPatternScroll extends Item {
         }
         tag.setString(KEY_ACTION, id.toString());
     }
+
+    /** Consumes a written scroll unless the player is in creative mode. */
+    public static boolean consumeForWrite(ItemStack stack, EntityPlayer player) {
+        if (stack == null || stack.isEmpty() || player == null || player.capabilities.isCreativeMode) {
+            return false;
+        }
+        stack.shrink(1);
+        return true;
+    }
+
     private static String localizeAction(ResourceLocation id) {
         String key = "hexcasting.action." + id.getResourcePath();
         String translated = I18n.translateToLocal(key);
