@@ -644,7 +644,10 @@ private void drawMove(int mouseX, int mouseY) {
         }
         HexDir last = workingPattern.finalDir();
         if (direction == last.rotatedBy(HexAngle.BACK)) {
-            if (workingPattern.getAngles().isEmpty()) {
+            // The first segment has no turn angle to remove. Treat returning
+            // to the start as a real undo of that segment; otherwise the
+            // first line remains in the working path and cannot be withdrawn.
+            if (currentPoints.size() <= 2 || workingPattern.getAngles().isEmpty()) {
                 currentPoints.clear();
                 currentPoints.add(next);
                 current = next;
