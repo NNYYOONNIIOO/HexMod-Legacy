@@ -4,8 +4,11 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
+import at.petra_k.hexcasting.common.block.BlockBooleanDirectrix;
+import at.petra_k.hexcasting.common.block.BlockEmptyDirectrix;
 import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
 import at.petra_k.hexcasting.common.block.BlockImpetus;
+import at.petra_k.hexcasting.common.block.BlockRedstoneDirectrix;
 import at.petra_k.hexcasting.common.block.BlockSlate;
 import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import at.petra_k.hexcasting.common.item.ItemSlate;
@@ -108,8 +111,12 @@ public final class HexBlocks {
                             ? BlockImpetus.TriggerMode.EMPTY
                             : BlockImpetus.TriggerMode.RIGHT_CLICK;
                 block = new BlockImpetus(mode);
-            } else if (id.startsWith("directrix/")) {
-                block = new BlockSpellCircle();
+            } else if ("directrix/empty".equals(id)) {
+                block = new BlockEmptyDirectrix();
+            } else if ("directrix/boolean".equals(id)) {
+                block = new BlockBooleanDirectrix();
+            } else if ("directrix/redstone".equals(id)) {
+                block = new BlockRedstoneDirectrix();
             } else if ("great_impetus".equals(id)) {
                 block = new BlockGreatImpetus();
             } else if ("spell_circle".equals(id)) {
