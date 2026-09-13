@@ -29,6 +29,7 @@ import java.util.List;
 /** A single-slot portable pattern holder for the 1.12.2 item set. */
 public final class ItemThoughtKnot extends Item implements IotaHolderItem {
     private static final String KEY_ACTION = "action";
+    private static final String KEY_PATTERN = "pattern";
 
     public ItemThoughtKnot() {
         setMaxStackSize(1);
@@ -36,12 +37,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
 
     @Override
     public NBTTagCompound readIotaTag(ItemStack stack) {
-        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
-        if (tag != null && tag.hasKey(TAG_DATA, 10)) {
-            return tag.getCompoundTag(TAG_DATA);
-        }
-        ResourceLocation action = getLegacyAction(stack);
-        HexPattern pattern = action == null ? null : HexActionRegistry.getPattern(action);
+        HexPattern pattern = getPattern(stack);
         return pattern == null ? null : new PatternIota(pattern).serialize();
     }
 
@@ -56,17 +52,17 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
     }
 
     @Override
-    public void writeDatum(ItemStack stack, Iota iota) {
-        if (stack == null || stack.isEmpty() || iota == null || !writeable(stack)) {
+    public void writeDatum(ItemStack stack, Iota datum) {
+        if (stack == null || stack.isEmpty()) {
             return;
         }
-        NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null) {
-            tag = new NBTTagCompound();
-            stack.setTagCompound(tag);
+        if (datum == null) {
+            setPattern(stack, null);
+            return;
         }
-        tag.removeTag(KEY_ACTION);
-        tag.setTag(TAG_DATA, iota.serialize());
+        if (datum instanceof PatternIota) {
+            setPattern(stack, ((PatternIota) datum).getPattern());
+        }
     }
 
     public static void clearDatum(ItemStack stack) {
@@ -87,19 +83,17 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocal("hexcasting.message.thought_knot_cleared")));
             } else if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
-                ResourceLocation action = ItemPatternScroll.getActionId(offhand);
-                if (action == null) {
+                HexPattern pattern = ItemPatternScroll.getPattern(offhand);
+                if (pattern == null) {
                     player.sendMessage(new TextComponentString(
-                        I18n.translateToLocal(ItemPatternScroll.getPattern(offhand) == null
-                            ? "hexcasting.tooltip.scroll.empty"
-                            : "hexcasting.message.pattern_requires_registered_action")));
+                        I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
                     return new ActionResult<>(EnumActionResult.SUCCESS, knot);
                 }
-                setAction(knot, action);
+                setPattern(knot, pattern);
                 ItemPatternScroll.consumeForWrite(offhand, player);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted("hexcasting.message.thought_knot_written",
-                        localizeAction(action))));
+                        HexInline.formatPattern(pattern))));
             } else {
                 execute(knot, player);
             }
@@ -112,13 +106,50 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation action = getActionId(stack);
-        HexPattern pattern = HexActionRegistry.getPattern(action);
+        HexPattern pattern = getPattern(stack);
         tooltip.add(I18n.translateToLocalFormatted("hexcasting.tooltip.thought_knot",
-            localizeAction(action)));
+            action == null ? I18n.translateToLocal("hexcasting.tooltip.none") : localizeAction(action)));
         if (pattern != null) {
             tooltip.add(I18n.translateToLocalFormatted("hexcasting.tooltip.pattern",
                 HexInline.formatPattern(pattern)));
         }
+    }
+
+    /** Return the exact pattern, with legacy action NBT as a compatibility fallback. */
+    public static HexPattern getPattern(ItemStack stack) {
+        if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag.hasKey(KEY_PATTERN, 10)) {
+                try {
+                    return HexPattern.fromNBT(tag.getCompoundTag(KEY_PATTERN));
+                } catch (RuntimeException ignored) {
+                    // Fall through to the legacy action representation.
+                }
+            }
+        }
+        ResourceLocation action = getActionId(stack);
+        return action == null ? null : HexActionRegistry.getPattern(action);
+    }
+
+    /** Store or clear the exact pattern and invalidate legacy action NBT. */
+    public static void setPattern(ItemStack stack, HexPattern pattern) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (pattern == null) {
+            if (tag != null) {
+                tag.removeTag(KEY_PATTERN);
+                tag.removeTag(KEY_ACTION);
+            }
+            return;
+        }
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
+        tag.removeTag(KEY_ACTION);
     }
 
     public static ResourceLocation getActionId(ItemStack stack) {
@@ -163,7 +194,8 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
 
     private static void execute(ItemStack knot, EntityPlayer player) {
         ResourceLocation action = getActionId(knot);
-        HexPattern pattern = HexActionRegistry.getPattern(action);
+        HexPattern pattern = getPattern(knot);
+        
         if (pattern == null) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.thought_knot_empty")));
