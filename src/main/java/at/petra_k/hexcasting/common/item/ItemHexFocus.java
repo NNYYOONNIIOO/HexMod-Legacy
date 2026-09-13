@@ -147,13 +147,18 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
             ItemStack offhand = player.getHeldItemOffhand();
             if (!player.isSneaking() && !offhand.isEmpty()
                 && offhand.getItem() instanceof ItemPatternScroll) {
-                ResourceLocation action = ItemPatternScroll.getActionId(offhand);
-                setSelectedAction(held, action);
+                HexPattern pattern = ItemPatternScroll.getPattern(offhand);
+                if (pattern == null) {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
+                    return new ActionResult<>(EnumActionResult.SUCCESS, held);
+                }
+                writeDatum(held, new PatternIota(pattern));
                 ItemPatternScroll.consumeForWrite(offhand, player);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
-                        "hexcasting.message.program_added",
-                        localizeAction(action), 1, 1)));
+                        "hexcasting.message.focus_written",
+                        HexInline.formatPattern(pattern))));
                 return new ActionResult<>(EnumActionResult.SUCCESS, held);
             }
             if (player.isSneaking()) {

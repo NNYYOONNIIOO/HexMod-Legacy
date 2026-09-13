@@ -10,7 +10,6 @@ import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
-import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -31,7 +30,7 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** A portable, NBT-backed spell pattern for the 1.12.2 port. */
 public final class ItemPatternScroll extends Item implements IotaHolderItem {
-    private final int maxPatterns;
+    private final int blockSize;
     private static final String KEY_ACTION = "action";
     private static final String KEY_PATTERN = "pattern";
 
@@ -40,12 +39,12 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
     }
 
     public ItemPatternScroll(int maxPatterns) {
-        this.maxPatterns = Math.max(1, Math.min(3, maxPatterns));
+        this.blockSize = Math.max(1, Math.min(3, maxPatterns));
         setMaxStackSize(1);
     }
 
-    public int getMaxPatterns() {
-        return maxPatterns;
+    public int getBlockSize() {
+        return blockSize;
     }
 
     @Override
@@ -119,26 +118,19 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                         I18n.translateToLocal("hexcasting.tooltip.scroll.empty")));
                     return new ActionResult<>(EnumActionResult.SUCCESS, stack);
                 }
-                ItemHexFocus.setSelectedAction(player.getHeldItemOffhand(), current);
+                ItemHexFocus focus = (ItemHexFocus) player.getHeldItemOffhand().getItem();
+                focus.writeDatum(player.getHeldItemOffhand(), new PatternIota(currentPattern));
                 consumeForWrite(stack, player);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
-                        "hexcasting.message.program_added",
-                        localizeAction(current), 1, 1)));
+                        "hexcasting.message.focus_written",
+                        HexInline.formatPattern(currentPattern))));
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
             if (player.isSneaking()) {
-                ResourceLocation next = current == null
-                    ? HexActionRegistry.firstId() : HexActionRegistry.nextId(current);
-                if (next != null) {
-                    setActionId(stack, next);
-                    player.sendMessage(new TextComponentString(
-                        I18n.translateToLocalFormatted(
-                            "hexcasting.message.scroll_selected",
-                            next.getResourcePath()
-                        )
-                    ));
-                }
+                setPattern(stack, null);
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocal("hexcasting.message.scroll_cleared")));
                 return new ActionResult<>(EnumActionResult.SUCCESS, stack);
             }
 
@@ -166,7 +158,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
                         "hexcasting.message.scroll_result",
-                        current.getResourcePath(),
+                        current == null ? HexInline.formatPattern(pattern) : current.getResourcePath(),
                         resultText
                     )
                 ));
@@ -271,6 +263,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         if (pattern == null) {
             if (tag != null) {
                 tag.removeTag(KEY_PATTERN);
+                tag.removeTag(KEY_ACTION);
             }
             return;
         }
@@ -279,21 +272,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             stack.setTagCompound(tag);
         }
         tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
-    }
-
-    private static void setActionId(ItemStack stack, ResourceLocation id) {
-        if (id == null) {
-            return;
-        }
-        NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null) {
-            tag = new NBTTagCompound();
-            stack.setTagCompound(tag);
-        }
-        tag.setString(KEY_ACTION, id.toString());
-        // A cycled action is a new scroll definition; do not let an older
-        // exact pattern NBT entry continue to shadow the selected action.
-        tag.removeTag(KEY_PATTERN);
+        tag.removeTag(KEY_ACTION);
     }
 
     /** Consumes a written scroll unless the player is in creative mode. */

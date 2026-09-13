@@ -1573,4 +1573,7 @@ hexcasting.message.creative_unlocker=已解锁知识。
 hexcasting.tooltip.lore_fragment=包含一段咒法知识。
 hexcasting.tooltip.creative_unlocker=用于创造模式测试时解锁咒法知识。
 hexcasting.tooltip.scroll.empty=空白咒法卷轴。
+hexcasting.message.focus_written=已将图案写入法术焦点：%s
+hexcasting.message.scroll_cleared=已清空咒法卷轴。
+hexcasting.message.pattern_requires_registered_action=该物品只能保存已注册的咒法动作。
 hexcasting.tooltip.scroll.pattern=保存一个完整的咒法图案。

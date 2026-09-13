@@ -446,4 +446,7 @@ hexcasting.message.creative_unlocker=Knowledge unlocked.
 hexcasting.tooltip.lore_fragment=Contains a fragment of Hex knowledge.
 hexcasting.tooltip.creative_unlocker=Unlocks Hex knowledge in creative testing.
 hexcasting.tooltip.scroll.empty=An empty pattern scroll.
+hexcasting.message.focus_written=Focus written with pattern %s.
+hexcasting.message.scroll_cleared=The pattern scroll was cleared.
+hexcasting.message.pattern_requires_registered_action=This item can only store a registered pattern action.
 hexcasting.tooltip.scroll.pattern=Stores one complete Hex pattern.

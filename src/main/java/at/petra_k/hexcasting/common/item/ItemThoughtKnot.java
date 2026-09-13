@@ -88,6 +88,13 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
                     I18n.translateToLocal("hexcasting.message.thought_knot_cleared")));
             } else if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
                 ResourceLocation action = ItemPatternScroll.getActionId(offhand);
+                if (action == null) {
+                    player.sendMessage(new TextComponentString(
+                        I18n.translateToLocal(ItemPatternScroll.getPattern(offhand) == null
+                            ? "hexcasting.tooltip.scroll.empty"
+                            : "hexcasting.message.pattern_requires_registered_action")));
+                    return new ActionResult<>(EnumActionResult.SUCCESS, knot);
+                }
                 setAction(knot, action);
                 ItemPatternScroll.consumeForWrite(offhand, player);
                 player.sendMessage(new TextComponentString(

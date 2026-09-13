@@ -119,6 +119,13 @@ public class ItemPackagedSpell extends Item {
         ItemStack offhand = player.getHeldItemOffhand();
         if (!offhand.isEmpty() && offhand.getItem() instanceof ItemPatternScroll) {
             ResourceLocation action = ItemPatternScroll.getActionId(offhand);
+            if (action == null) {
+                player.sendMessage(new TextComponentString(
+                    I18n.translateToLocal(ItemPatternScroll.getPattern(offhand) == null
+                        ? "hexcasting.tooltip.scroll.empty"
+                        : "hexcasting.message.pattern_requires_registered_action")));
+                return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+            }
             appendPackagedAction(stack, action);
             ItemPatternScroll.consumeForWrite(offhand, player);
             int count = getPackagedActions(stack).size();
