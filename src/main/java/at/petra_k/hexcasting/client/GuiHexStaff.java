@@ -218,7 +218,9 @@ public final class GuiHexStaff extends GuiScreen {
         }
         List<float[]> result = new ArrayList<>();
         result.add(new float[] {points.get(0)[0], points.get(0)[1]});
-        long seed = 0x5DEECE66DL ^ (long) seedSalt * 0x9E3779B97F4A7C15L;
+        long tick = System.currentTimeMillis() / 50L;
+        long seed = 0x5DEECE66DL ^ tick
+            ^ (long) seedSalt * 0x9E3779B97F4A7C15L;
         for (int i = 0; i < points.size() - 1; i++) {
             float[] from = points.get(i);
             float[] to = points.get(i + 1);
@@ -653,7 +655,7 @@ private void drawMove(int mouseX, int mouseY) {
             return;
         }
         HexDir last = workingPattern.finalDir();
-        if (!closing && direction == last.rotatedBy(HexAngle.BACK)) {
+        if (direction == last.rotatedBy(HexAngle.BACK)) {
             if (workingPattern.getAngles().isEmpty()) {
                 currentPoints.clear();
                 currentPoints.add(next);

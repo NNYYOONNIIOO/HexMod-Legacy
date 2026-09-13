@@ -87,7 +87,6 @@ public final class HexItems {
         "abacus",
         "thought_knot",
         "spellbook",
-        "packaged_spell",
         "ancient_cypher",
         "jeweler_hammer",
         "scroll_small",
