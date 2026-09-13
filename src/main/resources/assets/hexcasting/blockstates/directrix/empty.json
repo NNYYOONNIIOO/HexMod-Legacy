@@ -1,5 +1,5 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:directrix/empty" }
+    "": { "model": "hexcasting:directrix/empty" }
   }
 }
