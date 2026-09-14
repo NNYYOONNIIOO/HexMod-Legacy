@@ -1,77 +1,8 @@
 {
-  "ambientocclusion": false,
+  "parent": "minecraft:block/wooden_door_bottom",
   "textures": {
-    "particle": "#texture",
-    "texture": "hexcasting:blocks/edified_door_lower"
-  },
-  "elements": [
-    {
-      "from": [
-        0,
-        0,
-        0
-      ],
-      "to": [
-        3,
-        16,
-        16
-      ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        },
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#texture"
-        }
-      }
-    }
-  ]
+    "particle": "hexcasting:blocks/edified_door_lower",
+    "bottom": "hexcasting:blocks/edified_door_lower",
+    "top": "hexcasting:blocks/edified_door_lower"
+  }
 }
