@@ -32,6 +32,7 @@ import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import at.petra_k.hexcasting.common.item.ItemImpetus;
 import at.petra_k.hexcasting.common.item.ItemAkashicBookshelf;
+import at.petra_k.hexcasting.common.item.ItemHexSlab;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.block.material.Material;
@@ -46,9 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import at.petra_k.hexcasting.common.block.BlockHexDoubleSlab;
-import net.minecraft.block.BlockSlab;
-import net.minecraft.item.ItemSlab;
 
 /** Generic 1.12.2 registry for Hex blocks pending specialized behavior ports. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID)
@@ -88,7 +86,6 @@ public final class HexBlocks {
         "edified_planks",
         "edified_pressure_plate",
         "edified_slab",
-        "edified_double_slab",
         "edified_stairs",
         "edified_tile",
         "edified_trapdoor",
@@ -180,8 +177,6 @@ public final class HexBlocks {
                 block = new BlockHexPressurePlate();
             } else if ("edified_slab".equals(id)) {
                 block = new BlockHexSlab();
-            } else if ("edified_double_slab".equals(id)) {
-                block = new BlockHexDoubleSlab();
             } else if ("edified_stairs".equals(id)) {
                 Block edifiedPlanks = BLOCKS.get("edified_planks");
                 block = new BlockHexStairs(edifiedPlanks == null
@@ -218,9 +213,6 @@ public final class HexBlocks {
     @SubscribeEvent
     public static void registerBlockItems(RegistryEvent.Register<Item> event) {
         for (Map.Entry<String, Block> entry : BLOCKS.entrySet()) {
-            if ("edified_double_slab".equals(entry.getKey())) {
-                continue;
-            }
             Block block = entry.getValue();
             Item item;
             if ("slate".equals(entry.getKey())) {
@@ -228,7 +220,7 @@ public final class HexBlocks {
             } else if ("edified_door".equals(entry.getKey())) {
                 item = new ItemDoor(block);
             } else if ("edified_slab".equals(entry.getKey())) {
-                item = new ItemSlab(block, (BlockSlab) block, (BlockSlab) BLOCKS.get("edified_double_slab"));
+                item = new ItemHexSlab((BlockHexSlab) block);
             } else if (entry.getKey().startsWith("impetus/") || "great_impetus".equals(entry.getKey())) {
                 item = new ItemImpetus(block);
             } else if ("akashic_bookshelf".equals(entry.getKey())) {
