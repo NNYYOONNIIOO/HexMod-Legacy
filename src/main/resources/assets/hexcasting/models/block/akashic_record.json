@@ -78,10 +78,11 @@
       ]
     }
   ],
-  "render_type": "minecraft:translucent",
+  "render_type": "cutout",
   "textures": {
     "inner": "hexcasting:blocks/akashic_ligature",
     "outer": "hexcasting:blocks/akashic_record",
     "particle": "hexcasting:blocks/akashic_ligature"
-  }
+  },
+  "renderType": "cutout"
 }

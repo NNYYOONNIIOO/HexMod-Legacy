@@ -7,6 +7,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.item.ItemStack;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /** Single wood slab with vanilla half-state, collision, and placement behavior. */
 public final class BlockHexSlab extends BlockSlab {
@@ -59,4 +62,18 @@ public final class BlockHexSlab extends BlockSlab {
     public Comparable<?> getTypeForItem(ItemStack stack) {
         return EnumBlockHalf.BOTTOM;
     }
+
+    @Override
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing,
+            float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+        IBlockState state = getDefaultState();
+        if (this.isDouble()) {
+            return state;
+        }
+        if (facing == EnumFacing.DOWN || (facing != EnumFacing.UP && hitY > 0.5F)) {
+            return state.withProperty(HALF, EnumBlockHalf.TOP);
+        }
+        return state.withProperty(HALF, EnumBlockHalf.BOTTOM);
+    }
+
 }

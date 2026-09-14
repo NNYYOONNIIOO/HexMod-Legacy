@@ -1,16 +1,3 @@
 {
-  "overrides": [
-    {
-      "model": "hexcasting:item/slate_blank",
-      "predicate": {
-        "hexcasting:written": 0
-      }
-    },
-    {
-      "model": "hexcasting:item/slate_written",
-      "predicate": {
-        "hexcasting:written": 1
-      }
-    }
-  ]
+  "parent": "hexcasting:block/spell_circle_up"
 }
