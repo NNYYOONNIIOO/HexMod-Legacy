@@ -33,6 +33,7 @@ public final class BlockAkashicRecord extends Block {
 
     public BlockAkashicRecord() {
         super(Material.WOOD);
+        setLightOpacity(0);
         setHardness(2.0F);
         setResistance(5.0F);
     }
