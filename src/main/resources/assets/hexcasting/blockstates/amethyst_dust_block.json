@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "hexcasting:block/amethyst_dust_block"
+    "normal": {
+      "model": "hexcasting:amethyst_dust_block"
     }
   }
 }

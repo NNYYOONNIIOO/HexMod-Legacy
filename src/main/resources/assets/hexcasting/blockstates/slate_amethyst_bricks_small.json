@@ -2,13 +2,13 @@
   "variants": {
     "": [
       {
-        "model": "hexcasting:block/deco/slate_amethyst_bricks_small_0"
+        "model": "hexcasting:deco/slate_amethyst_bricks_small_0"
       },
       {
-        "model": "hexcasting:block/deco/slate_amethyst_bricks_small_1"
+        "model": "hexcasting:deco/slate_amethyst_bricks_small_1"
       },
       {
-        "model": "hexcasting:block/deco/slate_amethyst_bricks_small_2"
+        "model": "hexcasting:deco/slate_amethyst_bricks_small_2"
       }
     ]
   }
