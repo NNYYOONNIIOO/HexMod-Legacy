@@ -1,122 +1,30 @@
 {
   "variants": {
-    "energized=false,face=ceiling,facing=east": {
+    "facing=down": {
       "model": "hexcasting:slate",
       "uvlock": true,
       "x": 180
     },
-    "energized=false,face=ceiling,facing=north": {
+    "facing=east": {
+      "model": "hexcasting:slate",
+      "uvlock": true
+    },
+    "facing=north": {
+      "model": "hexcasting:slate",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "hexcasting:slate",
+      "uvlock": true
+    },
+    "facing=up": {
       "model": "hexcasting:slate",
       "uvlock": true,
       "x": 180
     },
-    "energized=false,face=ceiling,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=false,face=ceiling,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=false,face=floor,facing=east": {
+    "facing=west": {
       "model": "hexcasting:slate",
       "uvlock": true
-    },
-    "energized=false,face=floor,facing=north": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=false,face=floor,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=false,face=floor,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=false,face=wall,facing=east": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 90
-    },
-    "energized=false,face=wall,facing=north": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90
-    },
-    "energized=false,face=wall,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 180
-    },
-    "energized=false,face=wall,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 270
-    },
-    "energized=true,face=ceiling,facing=east": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=true,face=ceiling,facing=north": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=true,face=ceiling,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=true,face=ceiling,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 180
-    },
-    "energized=true,face=floor,facing=east": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=true,face=floor,facing=north": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=true,face=floor,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=true,face=floor,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true
-    },
-    "energized=true,face=wall,facing=east": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 90
-    },
-    "energized=true,face=wall,facing=north": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90
-    },
-    "energized=true,face=wall,facing=south": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 180
-    },
-    "energized=true,face=wall,facing=west": {
-      "model": "hexcasting:slate",
-      "uvlock": true,
-      "x": 90,
-      "y": 270
     }
   }
 }
