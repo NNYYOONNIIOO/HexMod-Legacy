@@ -251,7 +251,7 @@ public final class HexItemModels {
     private static float focusOverlayLayer(ItemStack stack) {
         if (stack == null) return 0.0F;
         if (ItemHexFocus.isSealed(stack)) return 2.0F;
-        return ItemHexFocus.readIotaTag(stack) != null ? 1.0F : 0.0F;
+        return HexItems.FOCUS.readIotaTag(stack) != null ? 1.0F : 0.0F;
     }
 
     private static float spellbookOverlayLayer(ItemStack stack) {
