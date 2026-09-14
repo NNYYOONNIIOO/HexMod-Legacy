@@ -1,25 +1,25 @@
 {
   "overrides": [
     {
-      "model": "hexcasting:items/quenched_shard_0",
+      "model": "hexcasting:item/quenched_shard_0",
       "predicate": {
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/quenched_shard_1",
+      "model": "hexcasting:item/quenched_shard_1",
       "predicate": {
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/quenched_shard_2",
+      "model": "hexcasting:item/quenched_shard_2",
       "predicate": {
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/quenched_shard_3",
+      "model": "hexcasting:item/quenched_shard_3",
       "predicate": {
         "hexcasting:variant": 3
       }
