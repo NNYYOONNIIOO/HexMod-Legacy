@@ -26,6 +26,13 @@ public final class HexInline {
         com.samsthenerd.inline.common.InlineCommonBuiltins.register();
         if (net.minecraftforge.fml.common.FMLCommonHandler.instance().getSide().isClient()) {
             loadClientIntegration();
+            try {
+                Class<?> renderer = Class.forName(
+                    "at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer");
+                renderer.getMethod("register").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                throw new IllegalStateException("Unable to initialize pattern chat renderer", exception);
+            }
         }
         initialized = true;
     }

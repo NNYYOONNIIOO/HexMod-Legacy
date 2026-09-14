@@ -103,8 +103,12 @@ public final class InlineAPI {
 
     public static ITextComponent asText(InlineData<?> data, MatchContext context) {
         EntityContext entityContext = new EntityContext(context);
-        return new TextComponentString(render(data,
-            new InlineRenderContext(entityContext.viewer, entityContext.client)));
+        String rendered = render(data,
+            new InlineRenderContext(entityContext.viewer, entityContext.client));
+        // Inline renderers may return a private-use token.  Keep the token in
+        // the component so the client chat overlay can draw the actual
+        // geometry instead of exposing the renderer's fallback characters.
+        return new TextComponentString(rendered);
     }
 
     /**

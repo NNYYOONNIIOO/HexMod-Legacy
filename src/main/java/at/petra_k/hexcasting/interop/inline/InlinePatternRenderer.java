@@ -22,77 +22,17 @@ public final class InlinePatternRenderer implements InlineRenderer<InlinePattern
     }
 
     /**
-     * Render the actual hex geometry as a compact Unicode diagram. This keeps
-     * the 1.20.1 inline-pattern behavior meaningful in 1.12.2 chat, where the
-     * modern font renderer is unavailable.
+     * Return the pattern's inline marker. The client-side Inline event handler
+     * consumes this marker and draws the geometry with the same line/dot
+     * renderer used by the staff GUI. Returning a Unicode/box-drawing diagram
+     * here is deliberately avoided: that is merely character art and is the
+     * bug visible in the error message.
      */
     public static String render(HexPattern pattern) {
         if (pattern == null) {
-            return "<null pattern>";
+            return "";
         }
-        List<GridPoint> points = new ArrayList<>();
-        GridPoint cursor = new GridPoint(0, 0);
-        points.add(cursor);
-        for (HexDir direction : pattern.directions()) {
-            cursor = cursor.add(direction);
-            points.add(cursor);
-        }
-        int minX = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE;
-        int minY = Integer.MAX_VALUE;
-        int maxY = Integer.MIN_VALUE;
-        for (GridPoint point : points) {
-            int x = point.q * 2;
-            int y = point.r * 2;
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minY = Math.min(minY, y);
-            maxY = Math.max(maxY, y);
-        }
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
-        if (width > 96 || height > 48) {
-            return pattern.signature();
-        }
-        char[][] canvas = new char[height][width];
-        for (int y = 0; y < height; y++) {
-            java.util.Arrays.fill(canvas[y], ' ');
-        }
-        for (int i = 0; i + 1 < points.size(); i++) {
-            GridPoint from = points.get(i);
-            GridPoint to = points.get(i + 1);
-            int x1 = from.q * 2 - minX;
-            int y1 = from.r * 2 - minY;
-            int x2 = to.q * 2 - minX;
-            int y2 = to.r * 2 - minY;
-            char segment = segmentChar(x2 - x1, y2 - y1);
-            put(canvas, (x1 + x2) / 2, (y1 + y2) / 2, segment);
-        }
-        for (int i = 0; i < points.size(); i++) {
-            GridPoint point = points.get(i);
-            int x = point.q * 2 - minX;
-            int y = point.r * 2 - minY;
-            put(canvas, x, y, i == 0 ? '\u25C6' : '\u25CF');
-        }
-        StringBuilder result = new StringBuilder(width * height + height);
-        for (int y = 0; y < height; y++) {
-            int last = width - 1;
-            while (last >= 0 && canvas[y][last] == ' ') {
-                last--;
-            }
-            if (last < 0) {
-                continue;
-            }
-            if (result.length() > 0) {
-                result.append('\n');
-            }
-            int first = 0;
-            while (first < last && canvas[y][first] == ' ') {
-                first++;
-            }
-            result.append(canvas[y], first, last - first + 1);
-        }
-        return result.toString();
+        return "\\uE000hexcasting:pattern:" + pattern.signature() + "\\uE001";
     }
 
     private static char segmentChar(int dx, int dy) {

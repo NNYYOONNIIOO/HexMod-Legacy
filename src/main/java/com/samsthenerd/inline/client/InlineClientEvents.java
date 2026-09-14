@@ -2,6 +2,7 @@ package com.samsthenerd.inline.client;
 
 import com.samsthenerd.inline.api.InlineAPI;
 import com.samsthenerd.inline.api.MatchContext;
+import at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -17,8 +18,10 @@ public final class InlineClientEvents {
             return;
         }
         Minecraft minecraft = Minecraft.getMinecraft();
-        event.setMessage(InlineAPI.formatChat(event.getMessage(),
-            new MatchContext(minecraft.player, minecraft.world)));
+        net.minecraft.util.text.ITextComponent formatted = InlineAPI.formatChat(
+            event.getMessage(), new MatchContext(minecraft.player, minecraft.world));
+        InlinePatternChatRenderer.capture(formatted);
+        event.setMessage(InlinePatternChatRenderer.stripTokens(formatted));
     }
 
     /**
