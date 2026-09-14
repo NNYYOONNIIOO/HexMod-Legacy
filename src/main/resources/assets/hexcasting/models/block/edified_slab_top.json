@@ -1,46 +1,8 @@
 {
+  "parent": "minecraft:block/slab_top",
   "textures": {
     "bottom": "hexcasting:blocks/edified_planks",
     "side": "hexcasting:blocks/edified_planks",
     "top": "hexcasting:blocks/edified_planks"
-  },
-  "elements": [
-    {
-      "from": [
-        0,
-        8,
-        0
-      ],
-      "to": [
-        16,
-        16,
-        16
-      ],
-      "faces": {
-        "down": {
-          "texture": "#bottom"
-        },
-        "up": {
-          "texture": "#top",
-          "cullface": "up"
-        },
-        "north": {
-          "texture": "#side",
-          "cullface": "north"
-        },
-        "south": {
-          "texture": "#side",
-          "cullface": "south"
-        },
-        "west": {
-          "texture": "#side",
-          "cullface": "west"
-        },
-        "east": {
-          "texture": "#side",
-          "cullface": "east"
-        }
-      }
-    }
-  ]
+  }
 }

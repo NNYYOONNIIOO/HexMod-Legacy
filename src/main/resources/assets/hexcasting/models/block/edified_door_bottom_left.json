@@ -1,5 +1,6 @@
 {
-  "parent": "block/door_bottom",
+  "parent": "minecraft:block/door_bottom_left",
+  "render_type": "minecraft:cutout",
   "textures": {
     "bottom": "hexcasting:blocks/edified_door_lower",
     "top": "hexcasting:blocks/edified_door_upper"

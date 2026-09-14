@@ -1,7 +1,7 @@
 {
   "variants": {
-    "normal": {
-      "model": "hexcasting:conjured_light"
+    "": {
+      "model": "hexcasting:conjured"
     }
   }
 }

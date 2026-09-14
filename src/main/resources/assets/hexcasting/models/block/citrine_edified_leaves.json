@@ -1,5 +1,6 @@
 {
-  "parent": "block/leaves",
+  "parent": "minecraft:block/leaves",
+  "render_type": "minecraft:cutout_mipped",
   "textures": {
     "all": "hexcasting:blocks/citrine_edified_leaves"
   }

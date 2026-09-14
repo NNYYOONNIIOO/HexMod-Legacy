@@ -1,7 +1,7 @@
 {
   "variants": {
     "powered=false": {
-      "model": "hexcasting:edified_pressure_plate_up"
+      "model": "hexcasting:edified_pressure_plate"
     },
     "powered=true": {
       "model": "hexcasting:edified_pressure_plate_down"

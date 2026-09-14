@@ -1,6 +1,6 @@
 {
   "variants": {
-    "normal": {
+    "": {
       "model": "hexcasting:deco/amethyst_bricks"
     }
   }

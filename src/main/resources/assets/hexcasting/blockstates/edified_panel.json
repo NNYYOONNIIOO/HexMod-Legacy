@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:edified_panel" }
+    "": {
+      "model": "hexcasting:edified_panel"
+    }
   }
 }

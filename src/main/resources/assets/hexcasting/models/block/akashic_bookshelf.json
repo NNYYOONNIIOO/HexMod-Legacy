@@ -58,6 +58,7 @@
       ]
     }
   ],
+  "render_type": "minecraft:cutout",
   "textures": {
     "front": "hexcasting:blocks/akashic_bookshelf",
     "particle": "hexcasting:blocks/akashic_bookshelf_vert",

@@ -1,26 +1,55 @@
 {
   "variants": {
-    "facing=down": {
+    "facing=down,waterlogged=false": {
+      "model": "hexcasting:amethyst_sconce",
+      "x": 180
+    },
+    "facing=down,waterlogged=true": {
+      "model": "hexcasting:amethyst_sconce",
+      "x": 180
+    },
+    "facing=east,waterlogged=false": {
+      "model": "hexcasting:amethyst_sconce",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,waterlogged=true": {
+      "model": "hexcasting:amethyst_sconce",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north,waterlogged=false": {
       "model": "hexcasting:amethyst_sconce",
       "x": 90
     },
-    "facing=east": {
+    "facing=north,waterlogged=true": {
       "model": "hexcasting:amethyst_sconce",
-      "y": 90
+      "x": 90
     },
-    "facing=north": {
-      "model": "hexcasting:amethyst_sconce"
-    },
-    "facing=south": {
+    "facing=south,waterlogged=false": {
       "model": "hexcasting:amethyst_sconce",
+      "x": 90,
       "y": 180
     },
-    "facing=up": {
+    "facing=south,waterlogged=true": {
       "model": "hexcasting:amethyst_sconce",
-      "x": -90
+      "x": 90,
+      "y": 180
     },
-    "facing=west": {
+    "facing=up,waterlogged=false": {
+      "model": "hexcasting:amethyst_sconce"
+    },
+    "facing=up,waterlogged=true": {
+      "model": "hexcasting:amethyst_sconce"
+    },
+    "facing=west,waterlogged=false": {
       "model": "hexcasting:amethyst_sconce",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,waterlogged=true": {
+      "model": "hexcasting:amethyst_sconce",
+      "x": 90,
       "y": 270
     }
   }

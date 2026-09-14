@@ -32,11 +32,11 @@
     },
     "energized=false,facing=up,powered=false": {
       "model": "hexcasting:circle/directrix/redstone/dim_unpowered_up",
-      "x": -90
+      "x": 270
     },
     "energized=false,facing=up,powered=true": {
       "model": "hexcasting:circle/directrix/redstone/dim_powered_up",
-      "x": -90
+      "x": 270
     },
     "energized=false,facing=west,powered=false": {
       "model": "hexcasting:circle/directrix/redstone/dim_unpowered_west",
@@ -78,11 +78,11 @@
     },
     "energized=true,facing=up,powered=false": {
       "model": "hexcasting:circle/directrix/redstone/lit_unpowered_up",
-      "x": -90
+      "x": 270
     },
     "energized=true,facing=up,powered=true": {
       "model": "hexcasting:circle/directrix/redstone/lit_powered_up",
-      "x": -90
+      "x": 270
     },
     "energized=true,facing=west,powered=false": {
       "model": "hexcasting:circle/directrix/redstone/lit_unpowered_west",

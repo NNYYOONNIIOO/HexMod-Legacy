@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:scroll_paper" }
+    "": {
+      "model": "hexcasting:scroll_paper"
+    }
   }
 }

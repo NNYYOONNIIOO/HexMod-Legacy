@@ -17,7 +17,7 @@
     },
     "energized=false,facing=up": {
       "model": "hexcasting:circle/directrix/empty/dim_up",
-      "x": -90
+      "x": 270
     },
     "energized=false,facing=west": {
       "model": "hexcasting:circle/directrix/empty/dim_west",
@@ -40,7 +40,7 @@
     },
     "energized=true,facing=up": {
       "model": "hexcasting:circle/directrix/empty/lit_up",
-      "x": -90
+      "x": 270
     },
     "energized=true,facing=west": {
       "model": "hexcasting:circle/directrix/empty/lit_west",

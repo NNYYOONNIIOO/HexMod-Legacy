@@ -1,5 +1,6 @@
 {
-  "parent": "block/trapdoor_bottom",
+  "parent": "minecraft:block/template_orientable_trapdoor_bottom",
+  "render_type": "minecraft:cutout",
   "textures": {
     "texture": "hexcasting:blocks/edified_trapdoor"
   }

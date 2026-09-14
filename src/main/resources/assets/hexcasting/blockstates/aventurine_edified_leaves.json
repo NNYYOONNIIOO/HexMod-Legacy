@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:aventurine_edified_leaves" }
+    "": {
+      "model": "hexcasting:aventurine_edified_leaves"
+    }
   }
 }
