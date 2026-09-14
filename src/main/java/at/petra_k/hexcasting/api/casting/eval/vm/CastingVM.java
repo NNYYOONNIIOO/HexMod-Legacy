@@ -237,6 +237,19 @@ public final class CastingVM {
         escapeNext = false;
     }
 
+    /**
+     * Reset all transient escape state at a Thoth/meta-evaluation boundary.
+     *
+     * <p>Hex resets the open-parenthesis capture together with the escape
+     * flag between {@code for_each} iterations. Keeping only the flag reset
+     * leaks an unfinished body into the next iteration.</p>
+     */
+    public void resetMetaState() {
+        escapeNext = false;
+        parenCount = 0;
+        parentheses.clear();
+    }
+
     public void openParen() {
         if (parenCount == 0 || parentheses.isEmpty()) {
             parentheses.clear();

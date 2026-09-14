@@ -29,10 +29,10 @@ public final class ForEachAction implements HexAction {
             for (Iota datum : data.getItems()) {
                 stack.restore(baseStack);
                 stack.push(datum);
-                // Hex resets runtime escape at the start of every Thoth
-                // iteration, so an escape at the end of one body cannot
-                // affect the first Iota of the next body.
-                vm.resetEscape();
+                // Hex resets the complete transient capture state at the
+                // start of every Thoth iteration. This includes an unfinished
+                // parenthesized body, not only escapeNext.
+                vm.resetMetaState();
                 vm.runNestedIotas(code.getItems());
                 boolean halted = vm.wasLastNestedRunHalted();
                 List<Iota> iterationStack = stack.snapshot();
