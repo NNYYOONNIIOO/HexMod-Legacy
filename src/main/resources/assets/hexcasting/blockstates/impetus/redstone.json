@@ -1,96 +1,40 @@
 {
   "variants": {
-    "energized=false,facing=down,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/dim_down",
-      "x": 90
+    "energized=false,facing=down": {
+      "model": "hexcasting:circle/impetus/redstone/dim_down"
     },
-    "energized=false,facing=down,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_down",
-      "x": 90
+    "energized=false,facing=east": {
+      "model": "hexcasting:circle/impetus/redstone/dim_east"
     },
-    "energized=false,facing=east,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/dim_east",
-      "y": 90
-    },
-    "energized=false,facing=east,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_east",
-      "y": 90
-    },
-    "energized=false,facing=north,powered=false": {
+    "energized=false,facing=north": {
       "model": "hexcasting:circle/impetus/redstone/dim_north"
     },
-    "energized=false,facing=north,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_north"
+    "energized=false,facing=south": {
+      "model": "hexcasting:circle/impetus/redstone/dim_south"
     },
-    "energized=false,facing=south,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/dim_south",
-      "y": 180
+    "energized=false,facing=up": {
+      "model": "hexcasting:circle/impetus/redstone/dim_up"
     },
-    "energized=false,facing=south,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_south",
-      "y": 180
+    "energized=false,facing=west": {
+      "model": "hexcasting:circle/impetus/redstone/dim_west"
     },
-    "energized=false,facing=up,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/dim_up",
-      "x": 270
+    "energized=true,facing=down": {
+      "model": "hexcasting:circle/impetus/redstone/lit_down"
     },
-    "energized=false,facing=up,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_up",
-      "x": 270
+    "energized=true,facing=east": {
+      "model": "hexcasting:circle/impetus/redstone/lit_east"
     },
-    "energized=false,facing=west,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/dim_west",
-      "y": 270
-    },
-    "energized=false,facing=west,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/dim_west",
-      "y": 270
-    },
-    "energized=true,facing=down,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/lit_down",
-      "x": 90
-    },
-    "energized=true,facing=down,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_down",
-      "x": 90
-    },
-    "energized=true,facing=east,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/lit_east",
-      "y": 90
-    },
-    "energized=true,facing=east,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_east",
-      "y": 90
-    },
-    "energized=true,facing=north,powered=false": {
+    "energized=true,facing=north": {
       "model": "hexcasting:circle/impetus/redstone/lit_north"
     },
-    "energized=true,facing=north,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_north"
+    "energized=true,facing=south": {
+      "model": "hexcasting:circle/impetus/redstone/lit_south"
     },
-    "energized=true,facing=south,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/lit_south",
-      "y": 180
+    "energized=true,facing=up": {
+      "model": "hexcasting:circle/impetus/redstone/lit_up"
     },
-    "energized=true,facing=south,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_south",
-      "y": 180
-    },
-    "energized=true,facing=up,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/lit_up",
-      "x": 270
-    },
-    "energized=true,facing=up,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_up",
-      "x": 270
-    },
-    "energized=true,facing=west,powered=false": {
-      "model": "hexcasting:circle/impetus/redstone/lit_west",
-      "y": 270
-    },
-    "energized=true,facing=west,powered=true": {
-      "model": "hexcasting:circle/impetus/redstone/lit_west",
-      "y": 270
+    "energized=true,facing=west": {
+      "model": "hexcasting:circle/impetus/redstone/lit_west"
     }
   }
 }

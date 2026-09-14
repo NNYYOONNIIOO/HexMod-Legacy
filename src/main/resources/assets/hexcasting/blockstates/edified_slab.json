@@ -1,12 +1,9 @@
 {
   "variants": {
-    "type=bottom": {
-      "model": "hexcasting:edified_slab"
+    "half=bottom": {
+      "model": "hexcasting:edified_slab_bottom"
     },
-    "type=double": {
-      "model": "hexcasting:edified_planks"
-    },
-    "type=top": {
+    "half=top": {
       "model": "hexcasting:edified_slab_top"
     }
   }

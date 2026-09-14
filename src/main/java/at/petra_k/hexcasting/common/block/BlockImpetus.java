@@ -1,4 +1,8 @@
 package at.petra_k.hexcasting.common.block;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.PropertyBool;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
@@ -29,6 +33,9 @@ import net.minecraft.util.NonNullList;
  * while the stored VM state remains persistent with the impetus.</p>
  */
 public class BlockImpetus extends Block {
+    public static final PropertyDirection FACING = PropertyDirection.create("facing");
+    public static final PropertyBool ENERGIZED = PropertyBool.create("energized");
+
     public enum TriggerMode {
         EMPTY,
         LOOK,
@@ -39,6 +46,7 @@ public class BlockImpetus extends Block {
     private final TriggerMode triggerMode;
 
     public BlockImpetus() {
+        this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP).withProperty(ENERGIZED, false));
         this(TriggerMode.RIGHT_CLICK);
     }
 
@@ -158,4 +166,29 @@ public class BlockImpetus extends Block {
         }
         return closest;
     }
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING, ENERGIZED);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        int facingIndex = meta & 7;
+        EnumFacing facing = facingIndex < 6 ? EnumFacing.getFront(facingIndex) : EnumFacing.UP;
+        return getDefaultState()
+            .withProperty(FACING, facing)
+            .withProperty(ENERGIZED, (meta & 8) != 0);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getIndex() | (state.getValue(ENERGIZED) ? 8 : 0);
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing,
+            float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+        return getDefaultState().withProperty(FACING, facing).withProperty(ENERGIZED, false);
+    }
+
 }
