@@ -2,13 +2,13 @@
   "parent": "minecraft:item/generated",
   "overrides": [
     {
-      "model": "hexcasting:items/thought_knot",
+      "model": "hexcasting:item/thought_knot",
       "predicate": {
         "hexcasting:written": 0
       }
     },
     {
-      "model": "hexcasting:items/thought_knot_written",
+      "model": "hexcasting:item/thought_knot_written",
       "predicate": {
         "hexcasting:written": 1
       }

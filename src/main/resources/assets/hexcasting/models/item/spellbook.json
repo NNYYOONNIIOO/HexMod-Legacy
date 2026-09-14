@@ -2,168 +2,168 @@
   "parent": "minecraft:item/generated",
   "overrides": [
     {
-      "model": "hexcasting:items/spellbook",
+      "model": "hexcasting:item/spellbook",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/spellbook_0_filled",
+      "model": "hexcasting:item/spellbook_0_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/spellbook_0_sealed",
+      "model": "hexcasting:item/spellbook_0_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/spellbook_1",
+      "model": "hexcasting:item/spellbook_1",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/spellbook_1_filled",
+      "model": "hexcasting:item/spellbook_1_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/spellbook_1_sealed",
+      "model": "hexcasting:item/spellbook_1_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/spellbook_2",
+      "model": "hexcasting:item/spellbook_2",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/spellbook_2_filled",
+      "model": "hexcasting:item/spellbook_2_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/spellbook_2_sealed",
+      "model": "hexcasting:item/spellbook_2_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/spellbook_3",
+      "model": "hexcasting:item/spellbook_3",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 3
       }
     },
     {
-      "model": "hexcasting:items/spellbook_3_filled",
+      "model": "hexcasting:item/spellbook_3_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 3
       }
     },
     {
-      "model": "hexcasting:items/spellbook_3_sealed",
+      "model": "hexcasting:item/spellbook_3_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 3
       }
     },
     {
-      "model": "hexcasting:items/spellbook_4",
+      "model": "hexcasting:item/spellbook_4",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 4
       }
     },
     {
-      "model": "hexcasting:items/spellbook_4_filled",
+      "model": "hexcasting:item/spellbook_4_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 4
       }
     },
     {
-      "model": "hexcasting:items/spellbook_4_sealed",
+      "model": "hexcasting:item/spellbook_4_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 4
       }
     },
     {
-      "model": "hexcasting:items/spellbook_5",
+      "model": "hexcasting:item/spellbook_5",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 5
       }
     },
     {
-      "model": "hexcasting:items/spellbook_5_filled",
+      "model": "hexcasting:item/spellbook_5_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 5
       }
     },
     {
-      "model": "hexcasting:items/spellbook_5_sealed",
+      "model": "hexcasting:item/spellbook_5_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 5
       }
     },
     {
-      "model": "hexcasting:items/spellbook_6",
+      "model": "hexcasting:item/spellbook_6",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 6
       }
     },
     {
-      "model": "hexcasting:items/spellbook_6_filled",
+      "model": "hexcasting:item/spellbook_6_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 6
       }
     },
     {
-      "model": "hexcasting:items/spellbook_6_sealed",
+      "model": "hexcasting:item/spellbook_6_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 6
       }
     },
     {
-      "model": "hexcasting:items/spellbook_7",
+      "model": "hexcasting:item/spellbook_7",
       "predicate": {
         "hexcasting:overlay_layer": 0,
         "hexcasting:variant": 7
       }
     },
     {
-      "model": "hexcasting:items/spellbook_7_filled",
+      "model": "hexcasting:item/spellbook_7_filled",
       "predicate": {
         "hexcasting:overlay_layer": 1,
         "hexcasting:variant": 7
       }
     },
     {
-      "model": "hexcasting:items/spellbook_7_sealed",
+      "model": "hexcasting:item/spellbook_7_sealed",
       "predicate": {
         "hexcasting:overlay_layer": 2,
         "hexcasting:variant": 7

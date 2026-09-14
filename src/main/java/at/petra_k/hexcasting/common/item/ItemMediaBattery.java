@@ -30,12 +30,39 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
 
     public ItemMediaBattery() { setMaxStackSize(1); }
 
-    @Override public long getMaxMedia(ItemStack stack) { return DEFAULT_MAX_MEDIA; }
+    @Override
+    public long getMaxMedia(ItemStack stack) {
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag != null) {
+            if (tag.hasKey(KEY_MAX_MEDIA, 4)) {
+                return Math.max(1L, tag.getLong(KEY_MAX_MEDIA));
+            }
+            if (tag.hasKey(SOURCE_MAX_MEDIA_KEY, 4)) {
+                return Math.max(1L, tag.getLong(SOURCE_MAX_MEDIA_KEY));
+            }
+        }
+        return DEFAULT_MAX_MEDIA;
+    }
 
     @Override
     public long getMedia(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
-        return tag == null || !tag.hasKey(KEY_MEDIA, 4) ? 0L : clamp(tag.getLong(KEY_MEDIA));
+        return tag == null || !tag.hasKey(KEY_MEDIA, 4) ? 0L : clamp(stack, tag.getLong(KEY_MEDIA));
+    }
+
+    /** Store the capacity on the stack so each phial/battery keeps its own size. */
+    public void setMaxMedia(ItemStack stack, long maxMedia) {
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        long capacity = Math.max(1L, maxMedia);
+        tag.setLong(KEY_MAX_MEDIA, capacity);
+        tag.setLong(SOURCE_MAX_MEDIA_KEY, capacity);
+        if (tag.hasKey(KEY_MEDIA, 4) && tag.getLong(KEY_MEDIA) > capacity) {
+            tag.setLong(KEY_MEDIA, capacity);
+        }
     }
 
     @Override

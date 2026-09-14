@@ -1,25 +1,25 @@
 {
   "overrides": [
     {
-      "model": "hexcasting:blocks/quenched_allay_0",
+      "model": "hexcasting:block/quenched_allay_0",
       "predicate": {
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:blocks/quenched_allay_1",
+      "model": "hexcasting:block/quenched_allay_1",
       "predicate": {
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:blocks/quenched_allay_2",
+      "model": "hexcasting:block/quenched_allay_2",
       "predicate": {
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:blocks/quenched_allay_3",
+      "model": "hexcasting:block/quenched_allay_3",
       "predicate": {
         "hexcasting:variant": 3
       }

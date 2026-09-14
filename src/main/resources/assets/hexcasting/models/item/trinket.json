@@ -2,112 +2,112 @@
   "parent": "minecraft:item/generated",
   "overrides": [
     {
-      "model": "hexcasting:items/trinket",
+      "model": "hexcasting:item/trinket",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/trinket_0_filled",
+      "model": "hexcasting:item/trinket_0_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 0
       }
     },
     {
-      "model": "hexcasting:items/trinket_1",
+      "model": "hexcasting:item/trinket_1",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/trinket_1_filled",
+      "model": "hexcasting:item/trinket_1_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 1
       }
     },
     {
-      "model": "hexcasting:items/trinket_2",
+      "model": "hexcasting:item/trinket_2",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/trinket_2_filled",
+      "model": "hexcasting:item/trinket_2_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 2
       }
     },
     {
-      "model": "hexcasting:items/trinket_3",
+      "model": "hexcasting:item/trinket_3",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 3
       }
     },
     {
-      "model": "hexcasting:items/trinket_3_filled",
+      "model": "hexcasting:item/trinket_3_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 3
       }
     },
     {
-      "model": "hexcasting:items/trinket_4",
+      "model": "hexcasting:item/trinket_4",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 4
       }
     },
     {
-      "model": "hexcasting:items/trinket_4_filled",
+      "model": "hexcasting:item/trinket_4_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 4
       }
     },
     {
-      "model": "hexcasting:items/trinket_5",
+      "model": "hexcasting:item/trinket_5",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 5
       }
     },
     {
-      "model": "hexcasting:items/trinket_5_filled",
+      "model": "hexcasting:item/trinket_5_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 5
       }
     },
     {
-      "model": "hexcasting:items/trinket_6",
+      "model": "hexcasting:item/trinket_6",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 6
       }
     },
     {
-      "model": "hexcasting:items/trinket_6_filled",
+      "model": "hexcasting:item/trinket_6_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 6
       }
     },
     {
-      "model": "hexcasting:items/trinket_7",
+      "model": "hexcasting:item/trinket_7",
       "predicate": {
         "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 7
       }
     },
     {
-      "model": "hexcasting:items/trinket_7_filled",
+      "model": "hexcasting:item/trinket_7_filled",
       "predicate": {
         "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 7

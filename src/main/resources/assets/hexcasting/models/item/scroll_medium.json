@@ -1,13 +1,13 @@
 {
   "overrides": [
     {
-      "model": "hexcasting:items/scroll_pristine_medium",
+      "model": "hexcasting:item/scroll_pristine_medium",
       "predicate": {
         "hexcasting:ancient": 0
       }
     },
     {
-      "model": "hexcasting:items/scroll_ancient_medium",
+      "model": "hexcasting:item/scroll_ancient_medium",
       "predicate": {
         "hexcasting:ancient": 1
       }
