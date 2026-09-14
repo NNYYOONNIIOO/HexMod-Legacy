@@ -5,7 +5,6 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
-import at.petra_k.hexcasting.api.casting.iota.ListIota;
 
 import java.util.List;
 
@@ -23,8 +22,11 @@ public final class EvalBreakableAction implements HexAction {
         }
         List<Iota> before = stack.snapshot();
         try {
-            ListIota code = stack.pop(ListIota.class);
-            vm.runNestedIotas(code.getItems());
+            Iota target = stack.pop();
+            // The continuation is captured before the body is evaluated, so
+            // eval/cc can later invoke the exact outer work queue.
+            stack.push(vm.captureContinuation());
+            vm.runNestedIota(target);
         } catch (CastingException exception) {
             stack.restore(before);
             throw exception;

@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
@@ -17,6 +18,7 @@ import net.minecraft.nbt.NBTTagList;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import net.minecraft.entity.player.EntityPlayer;
@@ -75,6 +77,7 @@ public final class CastingVM {
     private boolean escapeNext;
     private boolean halted;
     private boolean lastNestedRunHalted;
+    private boolean continuationInvoked;
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
     private IHexCastingData castingData;
@@ -203,6 +206,45 @@ public final class CastingVM {
 
     public int getPendingCount() {
         return continuation.size();
+    }
+
+    /** Snapshot the currently pending work for an eval/cc continuation value. */
+    public ContinuationIota captureContinuation() {
+        ArrayList<Iota> pending = new ArrayList<>(continuation.size());
+        for (WorkItem work : continuation) {
+            pending.add(work.pattern == null ? work.iota : new PatternIota(work.pattern));
+        }
+        return new ContinuationIota(pending);
+    }
+
+    /** Replace the active work queue with a previously captured continuation. */
+    public void invokeContinuation(ContinuationIota value) throws CastingException {
+        if (value == null) {
+            throw new CastingException("Cannot invoke a null continuation");
+        }
+        continuation.clear();
+        for (Iota pending : value.getContinuation()) {
+            if (pending == null) {
+                throw new CastingException("Continuation contains a null Iota");
+            }
+            continuation.addLast(WorkItem.iota(pending));
+        }
+        continuationInvoked = true;
+    }
+
+    /** Evaluate one supported meta-evaluation target in the active VM. */
+    public CastingStack runNestedIota(Iota target) throws CastingException {
+        if (target instanceof ListIota) {
+            return runNestedIotas(((ListIota) target).getItems());
+        }
+        if (target instanceof PatternIota) {
+            return runNested(Collections.singletonList(((PatternIota) target).getPattern()));
+        }
+        if (target instanceof ContinuationIota) {
+            invokeContinuation((ContinuationIota) target);
+            return stack;
+        }
+        throw new CastingException("Cannot evaluate Iota of type " + target.getType().getId());
     }
 
     public boolean isHalted() {
@@ -506,6 +548,8 @@ public final class CastingVM {
                 capture(value, true);
             } else if (parenCount > 0 && (action == null || !action.executesInParentheses())) {
                 parentheses.peek().values.add(new ParenEntry(value, false));
+            } else if (work.iota instanceof ContinuationIota) {
+                invokeContinuation((ContinuationIota) work.iota);
             } else if (action != null) {
                 action.execute(stack, this);
             } else {
@@ -569,8 +613,10 @@ public final class CastingVM {
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
         boolean previousHalted = halted;
+        boolean previousContinuationInvoked = continuationInvoked;
         halted = false;
         lastNestedRunHalted = false;
+        continuationInvoked = false;
         continuation.clear();
         try {
             for (HexPattern pattern : patterns) {
@@ -581,8 +627,12 @@ public final class CastingVM {
             }
         } finally {
             lastNestedRunHalted = halted;
+            boolean invoked = continuationInvoked;
+            continuationInvoked = previousContinuationInvoked;
             halted = previousHalted;
-            continuation.addAll(outerContinuation);
+            if (!invoked) {
+                continuation.addAll(outerContinuation);
+            }
         }
         return stack;
     }
@@ -600,8 +650,10 @@ public final class CastingVM {
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
         boolean previousHalted = halted;
+        boolean previousContinuationInvoked = continuationInvoked;
         halted = false;
         lastNestedRunHalted = false;
+        continuationInvoked = false;
         continuation.clear();
         try {
             enqueueIotas(iotas);
@@ -610,8 +662,12 @@ public final class CastingVM {
             }
         } finally {
             lastNestedRunHalted = halted;
+            boolean invoked = continuationInvoked;
+            continuationInvoked = previousContinuationInvoked;
             halted = previousHalted;
-            continuation.addAll(outerContinuation);
+            if (!invoked) {
+                continuation.addAll(outerContinuation);
+            }
         }
         return stack;
     }

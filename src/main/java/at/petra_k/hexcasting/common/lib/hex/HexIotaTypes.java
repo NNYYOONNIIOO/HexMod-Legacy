@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
+import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.GarbageIota;
@@ -36,6 +37,7 @@ public final class HexIotaTypes {
         register(Vec3Iota.TYPE);
         register(EntityIota.TYPE);
         register(ItemIota.TYPE);
+        register(ContinuationIota.TYPE);
     }
 
     private HexIotaTypes() {
