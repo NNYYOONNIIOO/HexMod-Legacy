@@ -29,6 +29,22 @@
     "facing=west,powered=true": {
       "model": "hexcasting:edified_button_pressed",
       "y": 270
+    },
+    "facing=down,powered=false": {
+      "model": "hexcasting:edified_button",
+      "x": 90
+    },
+    "facing=up,powered=false": {
+      "model": "hexcasting:edified_button",
+      "x": 270
+    },
+    "facing=down,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "x": 90
+    },
+    "facing=up,powered=true": {
+      "model": "hexcasting:edified_button_pressed",
+      "x": 270
     }
   }
 }
