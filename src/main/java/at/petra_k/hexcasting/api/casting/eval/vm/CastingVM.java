@@ -58,6 +58,7 @@ public final class CastingVM {
     private final ArrayDeque<ParenFrame> parentheses = new ArrayDeque<>();
     private boolean escapeNext;
     private boolean halted;
+    private boolean lastNestedRunHalted;
     private int operationsConsumed;
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
     private IHexCastingData castingData;
@@ -190,6 +191,11 @@ public final class CastingVM {
 
     public boolean isHalted() {
         return halted;
+    }
+
+    /** Whether the most recent nested evaluation stopped on a halt action. */
+    public boolean wasLastNestedRunHalted() {
+        return lastNestedRunHalted;
     }
 
     /** Stop this VM and discard all currently queued work. */
@@ -447,8 +453,14 @@ public final class CastingVM {
     /** Drain all pending work, failing deterministically if the budget is hit. */
     public CastingStack run(int maxOperations) throws CastingException {
         validateBudget(maxOperations);
-        while (hasPendingWork()) {
-            step(maxOperations);
+        try {
+            while (hasPendingWork()) {
+                step(maxOperations);
+            }
+        } finally {
+            // Halt is scoped to this evaluation and must not permanently
+            // disable a staff when its state is saved afterward.
+            halted = false;
         }
         return stack;
     }
@@ -469,6 +481,9 @@ public final class CastingVM {
             throw new IllegalArgumentException("Nested pattern sequence cannot be null");
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
+        boolean previousHalted = halted;
+        halted = false;
+        lastNestedRunHalted = false;
         continuation.clear();
         try {
             for (HexPattern pattern : patterns) {
@@ -478,9 +493,9 @@ public final class CastingVM {
                 step(maxOperations);
             }
         } finally {
-            // A runtime escape is scoped to the nested evaluation that
-            // consumed it; it must not leak into the surrounding program.
+            lastNestedRunHalted = halted;
             escapeNext = false;
+            halted = previousHalted;
             continuation.addAll(outerContinuation);
         }
         return stack;
@@ -498,6 +513,9 @@ public final class CastingVM {
             throw new IllegalArgumentException("Nested Iota sequence cannot be null");
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
+        boolean previousHalted = halted;
+        halted = false;
+        lastNestedRunHalted = false;
         continuation.clear();
         try {
             enqueueIotas(iotas);
@@ -505,9 +523,9 @@ public final class CastingVM {
                 step(maxOperations);
             }
         } finally {
-            // Nested meta-evaluation boundaries reset runtime escape state;
-            // it must never leak into the enclosing continuation.
+            lastNestedRunHalted = halted;
             escapeNext = false;
+            halted = previousHalted;
             continuation.addAll(outerContinuation);
         }
         return stack;

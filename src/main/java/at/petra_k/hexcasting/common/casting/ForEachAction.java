@@ -34,12 +34,16 @@ public final class ForEachAction implements HexAction {
                 // affect the first Iota of the next body.
                 vm.resetEscape();
                 vm.runNestedIotas(code.getItems());
+                boolean halted = vm.wasLastNestedRunHalted();
                 List<Iota> iterationStack = stack.snapshot();
                 // The modern FrameForEach appends the complete stack state
                 // produced by the body, not only its top value. This keeps
                 // multi-result bodies and the surrounding stack layout
                 // compatible with Hex's list semantics.
                 accumulator.addAll(iterationStack);
+                if (halted) {
+                    break;
+                }
             }
             stack.restore(baseStack);
             stack.push(new ListIota(accumulator));
