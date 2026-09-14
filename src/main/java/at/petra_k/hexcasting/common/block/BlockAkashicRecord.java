@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.util.BlockRenderLayer;
 
 /** Wooden storage anchor for the Akashic record system. */
 public final class BlockAkashicRecord extends Block {
@@ -221,4 +222,20 @@ public final class BlockAkashicRecord extends Block {
     public TileEntity createTileEntity(World world, IBlockState state) {
         return new TileEntityAkashicRecord();
     }
+
+    @Override
+    public BlockRenderLayer getBlockLayer() {
+        return BlockRenderLayer.CUTOUT;
+    }
+
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
 }

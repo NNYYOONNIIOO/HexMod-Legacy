@@ -46,6 +46,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import at.petra_k.hexcasting.common.block.BlockHexDoubleSlab;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.item.ItemSlab;
 
 /** Generic 1.12.2 registry for Hex blocks pending specialized behavior ports. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID)
@@ -85,6 +88,7 @@ public final class HexBlocks {
         "edified_planks",
         "edified_pressure_plate",
         "edified_slab",
+        "edified_double_slab",
         "edified_stairs",
         "edified_tile",
         "edified_trapdoor",
@@ -176,6 +180,8 @@ public final class HexBlocks {
                 block = new BlockHexPressurePlate();
             } else if ("edified_slab".equals(id)) {
                 block = new BlockHexSlab();
+            } else if ("edified_double_slab".equals(id)) {
+                block = new BlockHexDoubleSlab();
             } else if ("edified_stairs".equals(id)) {
                 Block edifiedPlanks = BLOCKS.get("edified_planks");
                 block = new BlockHexStairs(edifiedPlanks == null
@@ -212,12 +218,17 @@ public final class HexBlocks {
     @SubscribeEvent
     public static void registerBlockItems(RegistryEvent.Register<Item> event) {
         for (Map.Entry<String, Block> entry : BLOCKS.entrySet()) {
+            if ("edified_double_slab".equals(entry.getKey())) {
+                continue;
+            }
             Block block = entry.getValue();
             Item item;
             if ("slate".equals(entry.getKey())) {
                 item = new ItemSlate(block);
             } else if ("edified_door".equals(entry.getKey())) {
                 item = new ItemDoor(block);
+            } else if ("edified_slab".equals(entry.getKey())) {
+                item = new ItemSlab(block, (BlockSlab) block, (BlockSlab) BLOCKS.get("edified_double_slab"));
             } else if (entry.getKey().startsWith("impetus/") || "great_impetus".equals(entry.getKey())) {
                 item = new ItemImpetus(block);
             } else if ("akashic_bookshelf".equals(entry.getKey())) {

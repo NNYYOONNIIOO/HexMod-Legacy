@@ -78,11 +78,9 @@
       ]
     }
   ],
-  "render_type": "cutout",
   "textures": {
-    "inner": "hexcasting:blocks/akashic_ligature",
+    "inner": "hexcasting:blocks/akashic_record_inner",
     "outer": "hexcasting:blocks/akashic_record",
-    "particle": "hexcasting:blocks/akashic_ligature"
-  },
-  "renderType": "cutout"
+    "particle": "hexcasting:blocks/akashic_record_inner"
+  }
 }
