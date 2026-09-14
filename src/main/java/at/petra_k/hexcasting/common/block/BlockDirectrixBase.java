@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.block;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -16,6 +17,7 @@ import net.minecraft.world.World;
 /** Shared face-attached geometry for the three Hex directrix variants. */
 abstract class BlockDirectrixBase extends Block {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
+    public static final PropertyBool ENERGIZED = PropertyBool.create("energized");
     private static final double THICKNESS = 1.0D / 16.0D;
 
     protected BlockDirectrixBase() {
@@ -33,13 +35,15 @@ abstract class BlockDirectrixBase extends Block {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(FACING,
-            EnumFacing.getFront(meta % EnumFacing.values().length));
+        return getDefaultState()
+            .withProperty(FACING, EnumFacing.getFront(meta & 7))
+            .withProperty(ENERGIZED, (meta & 8) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getIndex();
+        return state.getValue(FACING).getIndex()
+            | (state.getValue(ENERGIZED) ? 8 : 0);
     }
 
     @Override

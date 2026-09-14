@@ -1,26 +1,49 @@
 {
   "variants": {
-    "facing=down": {
+    "energized=false,facing=down": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_down",
       "x": 90
     },
-    "facing=east": {
+    "energized=false,facing=east": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_east",
       "y": 90
     },
-    "facing=north": {
+    "energized=false,facing=north": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_north"
     },
-    "facing=south": {
+    "energized=false,facing=south": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_south",
       "y": 180
     },
-    "facing=up": {
+    "energized=false,facing=up": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_up",
       "x": -90
     },
-    "facing=west": {
+    "energized=false,facing=west": {
       "model": "hexcasting:block/circle/directrix/boolean/dim_neither_west",
+      "y": 270
+    },
+    "energized=true,facing=down": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_down",
+      "x": 90
+    },
+    "energized=true,facing=east": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_east",
+      "y": 90
+    },
+    "energized=true,facing=north": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_north"
+    },
+    "energized=true,facing=south": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_south",
+      "y": 180
+    },
+    "energized=true,facing=up": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_up",
+      "x": -90
+    },
+    "energized=true,facing=west": {
+      "model": "hexcasting:block/circle/directrix/boolean/lit_neither_west",
       "y": 270
     }
   }
