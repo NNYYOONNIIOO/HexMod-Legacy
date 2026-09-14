@@ -30,7 +30,11 @@ public final class ForEachAction implements HexAction {
                 stack.restore(baseStack);
                 stack.push(datum);
                 vm.runNestedIotas(code.getItems());
-                accumulator.addAll(stack.snapshot());
+                List<Iota> iterationStack = stack.snapshot();
+                if (iterationStack.size() <= baseStack.size()) {
+                    throw new CastingException("hexcasting.error.for_each_no_result");
+                }
+                accumulator.add(iterationStack.get(iterationStack.size() - 1));
             }
             stack.restore(baseStack);
             stack.push(new ListIota(accumulator));

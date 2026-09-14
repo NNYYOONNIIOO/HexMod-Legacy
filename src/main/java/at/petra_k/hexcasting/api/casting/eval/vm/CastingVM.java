@@ -210,6 +210,11 @@ public final class CastingVM {
         escapeNext = true;
     }
 
+    /** Clear runtime escape state at a meta-evaluation boundary. */
+    public void resetEscape() {
+        escapeNext = false;
+    }
+
     public void openParen() {
         parentheses.push(new ParenFrame());
     }
@@ -473,6 +478,9 @@ public final class CastingVM {
                 step(maxOperations);
             }
         } finally {
+            // A runtime escape is scoped to the nested evaluation that
+            // consumed it; it must not leak into the surrounding program.
+            escapeNext = false;
             continuation.addAll(outerContinuation);
         }
         return stack;
