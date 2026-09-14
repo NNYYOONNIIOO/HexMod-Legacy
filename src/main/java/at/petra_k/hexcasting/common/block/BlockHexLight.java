@@ -8,7 +8,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.IBlockAccess;
 
 /** Small non-solid light source used by Hex lantern and sconce blocks. */
 public final class BlockHexLight extends Block {
@@ -27,7 +26,8 @@ public final class BlockHexLight extends Block {
         setHardness(0.8F);
         setResistance(2.0F);
         setSoundType(SoundType.GLASS);
-        setLightLevel(1.0F);
+        setLightLevel(id != null && id.contains("ancient_scroll_paper_lantern")
+            ? (12.0F / 15.0F) : 1.0F);
         setLightOpacity(0);
     }
 
@@ -69,12 +69,12 @@ public final class BlockHexLight extends Block {
 
     @Override
     public int getFlammability(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
-        return 60;
+        return isPaperLantern() ? 60 : 0;
     }
 
     @Override
     public int getFireSpreadSpeed(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
-        return 30;
+        return isPaperLantern() ? 100 : 0;
     }
 
 }
