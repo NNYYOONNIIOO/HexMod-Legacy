@@ -1,120 +1,120 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "hexcasting:items/cad/0_cypher"
-  },
+  "parent": "minecraft:item/generated",
   "overrides": [
     {
+      "model": "hexcasting:items/cypher",
       "predicate": {
-        "hexcasting:filled": 0,
+        "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 0
-      },
-      "model": "hexcasting:item/cypher"
+      }
     },
     {
+      "model": "hexcasting:items/cypher_0_filled",
       "predicate": {
-        "hexcasting:filled": 1,
+        "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 0
-      },
-      "model": "hexcasting:item/cypher_filled"
+      }
     },
     {
+      "model": "hexcasting:items/cypher_1",
       "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.142857
-      },
-      "model": "hexcasting:item/cypher_variant_1_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.142857
-      },
-      "model": "hexcasting:item/cypher_variant_1"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.285714
-      },
-      "model": "hexcasting:item/cypher_variant_2_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.285714
-      },
-      "model": "hexcasting:item/cypher_variant_2"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.428571
-      },
-      "model": "hexcasting:item/cypher_variant_3_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.428571
-      },
-      "model": "hexcasting:item/cypher_variant_3"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.571429
-      },
-      "model": "hexcasting:item/cypher_variant_4_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.571429
-      },
-      "model": "hexcasting:item/cypher_variant_4"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.714286
-      },
-      "model": "hexcasting:item/cypher_variant_5_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.714286
-      },
-      "model": "hexcasting:item/cypher_variant_5"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
-        "hexcasting:variant": 0.857143
-      },
-      "model": "hexcasting:item/cypher_variant_6_empty"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 1,
-        "hexcasting:variant": 0.857143
-      },
-      "model": "hexcasting:item/cypher_variant_6"
-    },
-    {
-      "predicate": {
-        "hexcasting:filled": 0,
+        "hexcasting:has_patterns": -0.01,
         "hexcasting:variant": 1
-      },
-      "model": "hexcasting:item/cypher_variant_7_empty"
+      }
     },
     {
+      "model": "hexcasting:items/cypher_1_filled",
       "predicate": {
-        "hexcasting:filled": 1,
+        "hexcasting:has_patterns": 0.99,
         "hexcasting:variant": 1
-      },
-      "model": "hexcasting:item/cypher_variant_7"
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_2",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_2_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_3",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 3
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_3_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 3
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_4",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 4
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_4_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 4
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_5",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 5
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_5_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 5
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_6",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 6
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_6_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 6
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_7",
+      "predicate": {
+        "hexcasting:has_patterns": -0.01,
+        "hexcasting:variant": 7
+      }
+    },
+    {
+      "model": "hexcasting:items/cypher_7_filled",
+      "predicate": {
+        "hexcasting:has_patterns": 0.99,
+        "hexcasting:variant": 7
+      }
     }
-  ]
+  ],
+  "textures": {
+    "layer0": "hexcasting:items/cad/0_cypher"
+  }
 }

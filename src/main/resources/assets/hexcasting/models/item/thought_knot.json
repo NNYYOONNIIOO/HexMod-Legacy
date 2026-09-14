@@ -1,5 +1,19 @@
 {
-  "parent": "item/generated",
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "hexcasting:items/thought_knot",
+      "predicate": {
+        "hexcasting:written": 0
+      }
+    },
+    {
+      "model": "hexcasting:items/thought_knot_written",
+      "predicate": {
+        "hexcasting:written": 1
+      }
+    }
+  ],
   "textures": {
     "layer0": "hexcasting:items/thought_knot"
   }

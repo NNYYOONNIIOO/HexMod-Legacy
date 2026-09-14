@@ -1,3 +1,28 @@
 {
-  "parent": "hexcasting:block/quenched_allay_tiles"
+  "overrides": [
+    {
+      "model": "hexcasting:blocks/deco/quenched_allay_tiles_0",
+      "predicate": {
+        "hexcasting:variant": 0
+      }
+    },
+    {
+      "model": "hexcasting:blocks/deco/quenched_allay_tiles_1",
+      "predicate": {
+        "hexcasting:variant": 1
+      }
+    },
+    {
+      "model": "hexcasting:blocks/deco/quenched_allay_tiles_2",
+      "predicate": {
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:blocks/deco/quenched_allay_tiles_3",
+      "predicate": {
+        "hexcasting:variant": 3
+      }
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "parent": "item/generated",
+  "parent": "minecraft:item/handheld_rod",
   "textures": {
     "layer0": "hexcasting:items/staff/cherry"
   }

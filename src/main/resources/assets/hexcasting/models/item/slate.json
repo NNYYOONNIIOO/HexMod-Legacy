@@ -1,14 +1,16 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "hexcasting:items/slate_blank"
-  },
   "overrides": [
     {
+      "model": "hexcasting:items/slate_blank",
+      "predicate": {
+        "hexcasting:written": 0
+      }
+    },
+    {
+      "model": "hexcasting:items/slate_written",
       "predicate": {
         "hexcasting:written": 1
-      },
-      "model": "hexcasting:item/slate_written"
+      }
     }
   ]
 }

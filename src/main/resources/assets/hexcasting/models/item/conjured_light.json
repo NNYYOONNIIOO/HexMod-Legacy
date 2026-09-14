@@ -1,6 +1,6 @@
 {
-  "parent": "hexcasting:block/conjured_light",
+  "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/amethyst_shard"
+    "layer0": "minecraft:items/amethyst_shard"
   }
 }
