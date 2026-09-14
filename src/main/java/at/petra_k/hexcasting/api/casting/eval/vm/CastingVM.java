@@ -628,11 +628,15 @@ public final class CastingVM {
         } finally {
             lastNestedRunHalted = halted;
             boolean invoked = continuationInvoked;
-            continuationInvoked = previousContinuationInvoked;
             halted = previousHalted;
             if (!invoked) {
                 continuation.addAll(outerContinuation);
             }
+            // Propagate a continuation jump through every synchronous nested
+            // evaluator. Otherwise a parent runNestedIotas call restores its
+            // stale queue after an inner eval/cc has already resumed the
+            // captured continuation.
+            continuationInvoked = previousContinuationInvoked || invoked;
         }
         return stack;
     }
@@ -663,11 +667,12 @@ public final class CastingVM {
         } finally {
             lastNestedRunHalted = halted;
             boolean invoked = continuationInvoked;
-            continuationInvoked = previousContinuationInvoked;
             halted = previousHalted;
             if (!invoked) {
                 continuation.addAll(outerContinuation);
             }
+            // Preserve the jump signal for an enclosing nested evaluator.
+            continuationInvoked = previousContinuationInvoked || invoked;
         }
         return stack;
     }
