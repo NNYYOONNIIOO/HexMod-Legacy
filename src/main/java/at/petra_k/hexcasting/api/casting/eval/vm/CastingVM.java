@@ -253,9 +253,16 @@ public final class CastingVM {
         if (count < 0) {
             throw new IllegalArgumentException("Parenthesis count cannot be negative");
         }
-        for (int i = 0; i < count; i++) {
-            openParen();
+        if (count == 0) {
+            return;
         }
+        if (parenCount == 0 || parentheses.isEmpty()) {
+            // open_n_parens changes the counter as one operation. It must not
+            // synthesize nested open_paren PatternIotas in the captured code.
+            parentheses.clear();
+            parentheses.push(new ParenFrame());
+        }
+        parenCount += count;
     }
 
     public void closeParen() throws CastingException {
