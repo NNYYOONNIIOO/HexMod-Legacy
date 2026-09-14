@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:block/fence_gate_wall_open",
+  "parent": "minecraft:block/fence_gate_open",
   "textures": {
     "texture": "hexcasting:blocks/edified_planks"
   }

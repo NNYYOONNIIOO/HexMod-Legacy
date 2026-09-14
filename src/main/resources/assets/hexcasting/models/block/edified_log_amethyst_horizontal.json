@@ -1,7 +1,40 @@
 {
-  "parent": "block/cube_column_horizontal",
   "textures": {
     "end": "hexcasting:blocks/edified_log_top",
     "side": "hexcasting:blocks/deco/edified_log_amethyst"
-  }
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#end"
+        },
+        "up": {
+          "texture": "#end"
+        },
+        "north": {
+          "texture": "#side"
+        },
+        "south": {
+          "texture": "#side"
+        },
+        "west": {
+          "texture": "#side"
+        },
+        "east": {
+          "texture": "#side"
+        }
+      }
+    }
+  ]
 }
