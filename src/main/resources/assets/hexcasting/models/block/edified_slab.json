@@ -1,5 +1,5 @@
 {
-  "parent": "block/slab",
+  "parent": "minecraft:block/slab",
   "textures": {
     "bottom": "hexcasting:blocks/edified_planks",
     "side": "hexcasting:blocks/edified_planks",
