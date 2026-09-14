@@ -3,6 +3,7 @@
   "textures": {
     "particle": "hexcasting:blocks/edified_door_upper",
     "bottom": "hexcasting:blocks/edified_door_upper",
-    "top": "hexcasting:blocks/edified_door_upper"
+    "top": "hexcasting:blocks/edified_door_upper",
+    "texture": "hexcasting:blocks/edified_door_upper"
   }
 }
