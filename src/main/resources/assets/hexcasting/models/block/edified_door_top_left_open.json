@@ -1,9 +1,7 @@
 {
-  "parent": "minecraft:block/wooden_door_top",
+  "parent": "block/door_top_left_open",
   "textures": {
-    "particle": "hexcasting:blocks/edified_door_upper",
     "bottom": "hexcasting:blocks/edified_door_upper",
-    "top": "hexcasting:blocks/edified_door_upper",
-    "texture": "hexcasting:blocks/edified_door_upper"
+    "top": "hexcasting:blocks/edified_door_upper"
   }
 }
