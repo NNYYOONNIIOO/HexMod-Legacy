@@ -505,6 +505,9 @@ public final class CastingVM {
                 step(maxOperations);
             }
         } finally {
+            // Nested meta-evaluation boundaries reset runtime escape state;
+            // it must never leak into the enclosing continuation.
+            escapeNext = false;
             continuation.addAll(outerContinuation);
         }
         return stack;

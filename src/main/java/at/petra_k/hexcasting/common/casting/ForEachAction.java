@@ -29,12 +29,17 @@ public final class ForEachAction implements HexAction {
             for (Iota datum : data.getItems()) {
                 stack.restore(baseStack);
                 stack.push(datum);
+                // Hex resets runtime escape at the start of every Thoth
+                // iteration, so an escape at the end of one body cannot
+                // affect the first Iota of the next body.
+                vm.resetEscape();
                 vm.runNestedIotas(code.getItems());
                 List<Iota> iterationStack = stack.snapshot();
-                if (iterationStack.size() <= baseStack.size()) {
-                    throw new CastingException("hexcasting.error.for_each_no_result");
-                }
-                accumulator.add(iterationStack.get(iterationStack.size() - 1));
+                // The modern FrameForEach appends the complete stack state
+                // produced by the body, not only its top value. This keeps
+                // multi-result bodies and the surrounding stack layout
+                // compatible with Hex's list semantics.
+                accumulator.addAll(iterationStack);
             }
             stack.restore(baseStack);
             stack.push(new ListIota(accumulator));
