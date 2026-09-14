@@ -1,1 +1,16 @@
-{"variants":{"axis=x":{"model":"hexcasting:edified_log_aventurine"},"axis=y":{"model":"hexcasting:edified_log_aventurine"},"axis=z":{"model":"hexcasting:edified_log_aventurine"}}}
+{
+  "variants": {
+    "axis=x": {
+      "model": "hexcasting:block/edified_log_aventurine",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "hexcasting:block/edified_log_aventurine"
+    },
+    "axis=z": {
+      "model": "hexcasting:block/edified_log_aventurine",
+      "x": 90
+    }
+  }
+}

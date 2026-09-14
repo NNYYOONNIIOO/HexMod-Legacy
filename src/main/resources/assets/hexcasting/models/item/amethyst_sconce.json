@@ -1,3 +1,4 @@
 {
-  "parent": "hexcasting:block/amethyst_sconce"
+  "parent": "hexcasting:block/amethyst_sconce",
+  "textures": {}
 }

@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "hexcasting:blocks/impetus"
+    "all": "hexcasting:blocks/amethyst_tiles"
   }
 }

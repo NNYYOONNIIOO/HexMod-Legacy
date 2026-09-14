@@ -1,10 +1,10 @@
 {
   "variants": {
     "half=bottom": {
-      "model": "hexcasting:edified_slab"
+      "model": "hexcasting:block/edified_slab"
     },
     "half=top": {
-      "model": "hexcasting:edified_slab_top"
+      "model": "hexcasting:block/edified_slab_top"
     }
   }
 }

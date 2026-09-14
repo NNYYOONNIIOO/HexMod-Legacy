@@ -1,8 +1,8 @@
 {
   "parent": "block/block",
   "textures": {
-    "particle": "hexcasting:blocks/spell_circle",
-    "all": "hexcasting:blocks/spell_circle"
+    "particle": "hexcasting:blocks/slate",
+    "all": "hexcasting:blocks/slate"
   },
   "elements": [
     {

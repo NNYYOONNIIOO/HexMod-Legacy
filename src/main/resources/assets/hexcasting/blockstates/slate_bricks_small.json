@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:slate_bricks_small" }
+    "": {
+      "model": "hexcasting:block/deco/slate_bricks_small"
+    }
   }
 }

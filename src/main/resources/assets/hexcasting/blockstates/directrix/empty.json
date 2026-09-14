@@ -1,22 +1,27 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:directrix/empty_down"
+      "model": "hexcasting:block/circle/directrix/empty/dim_down",
+      "x": 90
     },
     "facing=east": {
-      "model": "hexcasting:directrix/empty_east"
+      "model": "hexcasting:block/circle/directrix/empty/dim_east",
+      "y": 90
     },
     "facing=north": {
-      "model": "hexcasting:directrix/empty_north"
+      "model": "hexcasting:block/circle/directrix/empty/dim_north"
     },
     "facing=south": {
-      "model": "hexcasting:directrix/empty_south"
+      "model": "hexcasting:block/circle/directrix/empty/dim_south",
+      "y": 180
     },
     "facing=up": {
-      "model": "hexcasting:directrix/empty_up"
+      "model": "hexcasting:block/circle/directrix/empty/dim_up",
+      "x": -90
     },
     "facing=west": {
-      "model": "hexcasting:directrix/empty_west"
+      "model": "hexcasting:block/circle/directrix/empty/dim_west",
+      "y": 270
     }
   }
 }

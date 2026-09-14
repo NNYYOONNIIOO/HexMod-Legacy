@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.BlockConjured;
+import at.petra_k.hexcasting.common.block.BlockHexPillar;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
@@ -159,8 +160,7 @@ public final class HexBlocks {
                 block = new BlockConjured();
             } else if ("amethyst_dust_block".equals(id)) {
                 block = new BlockHexFalling();
-            } else if ("amethyst_pillar".equals(id)
-                || "slate_pillar".equals(id)
+            } else if ("slate_pillar".equals(id)
                 || "slate_amethyst_pillar".equals(id)) {
                 block = new BlockHexRotated();
             } else if ("edified_door".equals(id)) {
@@ -181,6 +181,8 @@ public final class HexBlocks {
                 Block edifiedPlanks = BLOCKS.get("edified_planks");
                 block = new BlockHexStairs(edifiedPlanks == null
                     ? Blocks.PLANKS.getDefaultState() : edifiedPlanks.getDefaultState());
+            } else if ("amethyst_pillar".equals(id)) {
+                block = new BlockHexPillar();
             } else if ("edified_log".equals(id)
                 || "edified_log_amethyst".equals(id)
                 || "edified_log_aventurine".equals(id)

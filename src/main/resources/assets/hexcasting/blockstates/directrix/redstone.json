@@ -1,40 +1,50 @@
 {
   "variants": {
     "facing=down,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_down"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_down",
+      "x": 90
     },
     "facing=down,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_down"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_down",
+      "x": 90
     },
     "facing=east,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_east"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_east",
+      "y": 90
     },
     "facing=east,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_east"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_east",
+      "y": 90
     },
     "facing=north,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_north"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_north"
     },
     "facing=north,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_north"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_north"
     },
     "facing=south,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_south"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_south",
+      "y": 180
     },
     "facing=south,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_south"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_south",
+      "y": 180
     },
     "facing=up,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_up"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_up",
+      "x": -90
     },
     "facing=up,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_up"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_up",
+      "x": -90
     },
     "facing=west,powered=false": {
-      "model": "hexcasting:directrix/redstone_dim_unpowered_west"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_unpowered_west",
+      "y": 270
     },
     "facing=west,powered=true": {
-      "model": "hexcasting:directrix/redstone_dim_powered_west"
+      "model": "hexcasting:block/circle/directrix/redstone/dim_powered_west",
+      "y": 270
     }
   }
 }

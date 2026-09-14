@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:akashic_connector" }
+    "": {
+      "model": "hexcasting:block/akashic_ligature"
+    }
   }
 }

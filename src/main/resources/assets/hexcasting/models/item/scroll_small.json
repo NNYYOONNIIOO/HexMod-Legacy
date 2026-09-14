@@ -1,6 +1,16 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "hexcasting:items/scroll_small"
-  }
+  "overrides": [
+    {
+      "model": "hexcasting:item/scroll_pristine_small",
+      "predicate": {
+        "hexcasting:ancient": 0
+      }
+    },
+    {
+      "model": "hexcasting:item/scroll_ancient_small",
+      "predicate": {
+        "hexcasting:ancient": 1
+      }
+    }
+  ]
 }

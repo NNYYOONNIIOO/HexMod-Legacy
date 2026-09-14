@@ -24,6 +24,8 @@ import java.util.List;
 /** Portable NBT-backed media storage for the 1.12.2 port. */
 public final class ItemMediaBattery extends Item implements MediaHolderItem {
     public static final String KEY_MEDIA = "media";
+    public static final String KEY_MAX_MEDIA = "max_media";
+    public static final String SOURCE_MAX_MEDIA_KEY = "hexcasting:start_media";
     public static final long DEFAULT_MAX_MEDIA = MediaConstants.CRYSTAL_UNIT * 64L;
 
     public ItemMediaBattery() { setMaxStackSize(1); }
@@ -40,7 +42,7 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
     public void setMedia(ItemStack stack, long media) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) { tag = new NBTTagCompound(); stack.setTagCompound(tag); }
-        tag.setLong(KEY_MEDIA, clamp(media));
+        tag.setLong(KEY_MEDIA, clamp(stack, media));
     }
 
     @Override public int getConsumptionPriority(ItemStack stack) { return 4000; }
@@ -64,6 +66,7 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
 
     private void addFilledVariant(NonNullList<ItemStack> items, long media) {
         ItemStack battery = new ItemStack(this);
+        setMaxMedia(battery, media);
         setMedia(battery, media);
         items.add(battery);
     }
@@ -101,7 +104,7 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
             "hexcasting.tooltip.media", getMedia(stack), getMaxMedia(stack)));
     }
 
-    private static long clamp(long media) {
-        return Math.max(0L, Math.min(DEFAULT_MAX_MEDIA, media));
+    private long clamp(ItemStack stack, long media) {
+        return Math.max(0L, Math.min(getMaxMedia(stack), media));
     }
 }

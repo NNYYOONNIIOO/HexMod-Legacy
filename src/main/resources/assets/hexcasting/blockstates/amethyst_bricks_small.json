@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:amethyst_bricks_small" }
+    "": {
+      "model": "hexcasting:block/deco/amethyst_bricks_small"
+    }
   }
 }

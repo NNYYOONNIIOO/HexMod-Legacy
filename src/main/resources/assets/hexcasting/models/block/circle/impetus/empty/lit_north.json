@@ -1,0 +1,13 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "hexcasting:blocks/circle/bottom",
+    "east": "hexcasting:blocks/circle/impetus/empty/left_lit",
+    "north": "hexcasting:blocks/circle/impetus/empty/front_lit",
+    "particle": "hexcasting:blocks/slate",
+    "south": "hexcasting:blocks/circle/impetus/back_lit",
+    "up": "hexcasting:blocks/circle/impetus/empty/top_lit",
+    "west": "hexcasting:blocks/circle/impetus/empty/right_lit"
+  }
+}
+

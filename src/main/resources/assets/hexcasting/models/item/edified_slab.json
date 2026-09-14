@@ -1,8 +1,3 @@
 {
-  "parent": "block/slab",
-  "textures": {
-    "bottom": "hexcasting:blocks/edified_planks",
-    "side": "hexcasting:blocks/edified_planks",
-    "top": "hexcasting:blocks/edified_planks"
-  }
+  "parent": "hexcasting:block/edified_slab"
 }

@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "hexcasting:slate_amethyst_tiles" }
+    "": {
+      "model": "hexcasting:block/deco/slate_amethyst_tiles"
+    }
   }
 }
