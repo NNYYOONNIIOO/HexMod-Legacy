@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:block/cube",
+  "parent": "block/cube",
   "textures": {
     "down": "hexcasting:blocks/circle/bottom",
     "east": "hexcasting:blocks/circle/impetus/look/left_dim",
@@ -10,4 +10,3 @@
     "west": "hexcasting:blocks/circle/impetus/look/right_dim"
   }
 }
-

@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:block/cube",
+  "parent": "block/cube",
   "textures": {
     "down": "hexcasting:blocks/circle/bottom",
     "east": "hexcasting:blocks/circle/directrix/redstone/left_powered",
