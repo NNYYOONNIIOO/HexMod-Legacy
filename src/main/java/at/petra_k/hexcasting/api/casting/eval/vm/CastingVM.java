@@ -11,6 +11,7 @@ import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagByte;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagList;
 
 import java.util.ArrayDeque;
@@ -348,7 +349,12 @@ public final class CastingVM {
                 NBTTagList escaped = frameTag.getTagList("escaped", 1);
                 ParenFrame frame = new ParenFrame();
                 for (int j = 0; j < values.tagCount(); j++) {
-                    boolean isEscaped = j < escaped.tagCount() && escaped.getByteAt(j) != 0;
+                    boolean isEscaped = false;
+                    if (j < escaped.tagCount()) {
+                        NBTBase escapedTag = escaped.get(j);
+                        isEscaped = escapedTag instanceof NBTTagByte
+                            && ((NBTTagByte) escapedTag).getByte() != 0;
+                    }
                     frame.values.add(new ParenEntry(
                         HexIotaTypes.deserialize(values.getCompoundTagAt(j)), isEscaped));
                 }
