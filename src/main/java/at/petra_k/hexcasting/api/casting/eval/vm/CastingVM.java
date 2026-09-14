@@ -581,7 +581,6 @@ public final class CastingVM {
             }
         } finally {
             lastNestedRunHalted = halted;
-            escapeNext = false;
             halted = previousHalted;
             continuation.addAll(outerContinuation);
         }
@@ -611,7 +610,6 @@ public final class CastingVM {
             }
         } finally {
             lastNestedRunHalted = halted;
-            escapeNext = false;
             halted = previousHalted;
             continuation.addAll(outerContinuation);
         }
