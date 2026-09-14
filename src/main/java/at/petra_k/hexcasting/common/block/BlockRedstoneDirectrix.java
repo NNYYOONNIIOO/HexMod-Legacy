@@ -17,37 +17,50 @@ public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
         super();
         setDefaultState(blockState.getBaseState()
             .withProperty(FACING, EnumFacing.UP)
-            .withProperty(POWERED, false));
+            .withProperty(POWERED, false)
+            .withProperty(ENERGIZED, false));
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, POWERED);
+        return new BlockStateContainer(this, FACING, POWERED, ENERGIZED);
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
             .withProperty(FACING, EnumFacing.getFront(meta & 7))
-            .withProperty(POWERED, (meta & 8) != 0);
+            .withProperty(POWERED, false)
+            .withProperty(ENERGIZED, (meta & 8) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
         return state.getValue(FACING).getIndex()
-            | (state.getValue(POWERED) ? 8 : 0);
+            | (state.getValue(ENERGIZED) ? 8 : 0);
+    }
+
+    @Override
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(world, pos, state);
+        updatePowered(world, pos);
     }
 
     @Override
     public void neighborChanged(IBlockState state, World world, BlockPos pos,
                                 Block blockIn, BlockPos fromPos) {
         super.neighborChanged(state, world, pos, blockIn, fromPos);
-        if (world.isAirBlock(pos)) {
+        updatePowered(world, pos);
+    }
+
+    private static void updatePowered(World world, BlockPos pos) {
+        IBlockState current = world.getBlockState(pos);
+        if (!(current.getBlock() instanceof BlockRedstoneDirectrix)) {
             return;
         }
         boolean powered = world.isBlockPowered(pos);
-        if (powered != state.getValue(POWERED)) {
-            world.setBlockState(pos, state.withProperty(POWERED, powered), 3);
+        if (powered != current.getValue(POWERED)) {
+            world.setBlockState(pos, current.withProperty(POWERED, powered), 3);
         }
     }
 }

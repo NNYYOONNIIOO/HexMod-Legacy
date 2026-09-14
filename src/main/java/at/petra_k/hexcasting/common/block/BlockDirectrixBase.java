@@ -25,7 +25,9 @@ abstract class BlockDirectrixBase extends Block {
         setHardness(0.2F);
         setResistance(0.2F);
         setLightOpacity(0);
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
+        setDefaultState(blockState.getBaseState()
+            .withProperty(FACING, EnumFacing.UP)
+            .withProperty(ENERGIZED, false));
     }
 
     @Override
