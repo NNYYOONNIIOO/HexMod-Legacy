@@ -239,4 +239,9 @@ public final class HexBlocks {
     public static Collection<Item> blockItems() {
         return Collections.unmodifiableCollection(BLOCK_ITEMS.values());
     }
+
+    /** Return the registered item form of a Hex block for client model predicates. */
+    public static Item getBlockItem(String id) {
+        return BLOCK_ITEMS.get(id);
+    }
 }

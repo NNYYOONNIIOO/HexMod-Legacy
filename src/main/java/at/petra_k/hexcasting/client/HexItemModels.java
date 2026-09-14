@@ -162,6 +162,10 @@ public final class HexItemModels {
     }
 
     private static void registerLegacyResourceProperties() {
+        registerNbtProperty(HexItems.FOCUS, "overlay_layer",
+            (stack, world, entity) -> focusOverlayLayer(stack));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("spellbook"), "overlay_layer",
+            (stack, world, entity) -> spellbookOverlayLayer(stack));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("ancient_cypher"), "has_patterns",
             (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("ancient_cypher"), "variant",
@@ -178,15 +182,15 @@ public final class HexItemModels {
             (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
         registerNbtProperty(HexItems.CYPHER, "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay"), "variant",
+        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_bricks"), "variant",
+        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_bricks"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_bricks_small"), "variant",
+        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_bricks_small"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_tiles"), "variant",
+        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_tiles"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll"), "ancient",
             (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
@@ -194,7 +198,7 @@ public final class HexItemModels {
             (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll_small"), "ancient",
             (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("slate"), "written",
+        registerNbtProperty(HexBlocks.getBlockItem("slate"), "written",
             (stack, world, entity) -> nbtBooleanProperty(stack, "written"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"), "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
@@ -244,6 +248,20 @@ public final class HexItemModels {
         return nbtNumberProperty(stack, key) == 0.0F ? 0.0F : 1.0F;
     }
 
+    private static float focusOverlayLayer(ItemStack stack) {
+        if (stack == null) return 0.0F;
+        if (ItemHexFocus.isSealed(stack)) return 2.0F;
+        return ItemHexFocus.readIotaTag(stack) != null ? 1.0F : 0.0F;
+    }
+
+    private static float spellbookOverlayLayer(ItemStack stack) {
+        if (stack == null) return 0.0F;
+        Item spellbook = HexItems.EXTRA_ITEMS.get("spellbook");
+        if (spellbook == null || stack.getItem() != spellbook) return 0.0F;
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag != null && tag.getBoolean("sealed")) return 2.0F;
+        return ItemSpellbook.getPattern(stack) != null ? 1.0F : 0.0F;
+    }
     private static float batteryMaxMediaProperty(ItemStack stack) {
         if (stack == null || !(stack.getItem() instanceof at.petra_k.hexcasting.common.item.ItemMediaBattery)) return 0.0F;
         at.petra_k.hexcasting.common.item.ItemMediaBattery battery = (at.petra_k.hexcasting.common.item.ItemMediaBattery) stack.getItem();
