@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "block/cube_bottom_top",
   "textures": {
     "bottom": "hexcasting:blocks/deco/amethyst_pillar_bottom",
     "side": "hexcasting:blocks/deco/amethyst_pillar_side",
