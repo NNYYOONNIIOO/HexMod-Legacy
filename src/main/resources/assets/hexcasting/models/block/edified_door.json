@@ -1,7 +1,7 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "particle": "hexcasting:blocks/edified_door_lower",
+    "particle": "#texture",
     "texture": "hexcasting:blocks/edified_door_lower"
   },
   "elements": [
