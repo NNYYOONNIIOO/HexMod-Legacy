@@ -60,7 +60,24 @@ public final class ParenControlAction implements HexAction {
 
     @Override
     public boolean executesInParentheses() {
-        return true;
+        // Only actions with an explicit operateInParens implementation run
+        // while a parenthesized program is being captured. In particular,
+        // open_n_parens and close_all_parens are ordinary captured patterns
+        // in Hex; executing them here corrupts the captured program and its
+        // parenthesis count.
+        switch (kind) {
+            case ESCAPE:
+            case RUNTIME_ESCAPE:
+            case OPEN:
+            case CLOSE:
+            case READ_INTO:
+            case UNDO:
+                return true;
+            case OPEN_N:
+            case CLOSE_ALL:
+            default:
+                return false;
+        }
     }
 
     private static int readCount(CastingStack stack) throws CastingException {
