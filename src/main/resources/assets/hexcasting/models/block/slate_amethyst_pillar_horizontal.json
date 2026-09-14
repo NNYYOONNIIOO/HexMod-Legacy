@@ -1,7 +1,21 @@
 {
-  "parent": "block/cube_column_horizontal",
   "textures": {
     "end": "hexcasting:blocks/deco/slate_amethyst_pillar_end",
-    "side": "hexcasting:blocks/deco/slate_amethyst_pillar_side"
-  }
+    "side": "hexcasting:blocks/deco/slate_amethyst_pillar_side",
+    "particle": "hexcasting:blocks/deco/slate_amethyst_pillar_side"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down": { "texture": "#side" },
+        "up": { "texture": "#side" },
+        "north": { "texture": "#side" },
+        "south": { "texture": "#side" },
+        "west": { "texture": "#end" },
+        "east": { "texture": "#end" }
+      }
+    }
+  ]
 }
