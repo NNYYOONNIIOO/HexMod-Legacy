@@ -1,55 +1,25 @@
 {
   "variants": {
-    "facing=down,waterlogged=false": {
+    "facing=down": {
       "model": "hexcasting:amethyst_sconce",
       "x": 180
     },
-    "facing=down,waterlogged=true": {
+    "facing=east": {
       "model": "hexcasting:amethyst_sconce",
-      "x": 180
-    },
-    "facing=east,waterlogged=false": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90,
       "y": 90
     },
-    "facing=east,waterlogged=true": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90,
-      "y": 90
-    },
-    "facing=north,waterlogged=false": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90
-    },
-    "facing=north,waterlogged=true": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90
-    },
-    "facing=south,waterlogged=false": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90,
-      "y": 180
-    },
-    "facing=south,waterlogged=true": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90,
-      "y": 180
-    },
-    "facing=up,waterlogged=false": {
+    "facing=north": {
       "model": "hexcasting:amethyst_sconce"
     },
-    "facing=up,waterlogged=true": {
+    "facing=south": {
+      "model": "hexcasting:amethyst_sconce",
+      "y": 180
+    },
+    "facing=up": {
       "model": "hexcasting:amethyst_sconce"
     },
-    "facing=west,waterlogged=false": {
+    "facing=west": {
       "model": "hexcasting:amethyst_sconce",
-      "x": 90,
-      "y": 270
-    },
-    "facing=west,waterlogged=true": {
-      "model": "hexcasting:amethyst_sconce",
-      "x": 90,
       "y": 270
     }
   }
