@@ -65,6 +65,9 @@
             16
           ],
           "texture": "#bottom"
+        },
+        "up": {
+          "texture": "#bottom"
         }
       }
     }
