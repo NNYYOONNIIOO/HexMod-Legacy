@@ -1,15 +1,14 @@
 {
   "variants": {
     "axis=x": {
-      "model": "hexcasting:slate_pillar",
-      "x": 90,
+      "model": "hexcasting:block/slate_pillar_horizontal",
       "y": 90
     },
     "axis=y": {
-      "model": "hexcasting:slate_pillar"
+      "model": "hexcasting:block/slate_pillar"
     },
     "axis=z": {
-      "model": "hexcasting:slate_pillar",
+      "model": "hexcasting:block/slate_pillar_horizontal",
       "x": 90
     }
   }

@@ -1,15 +1,14 @@
 {
   "variants": {
     "axis=x": {
-      "model": "hexcasting:block/edified_wood",
-      "x": 90,
+      "model": "hexcasting:block/edified_wood_horizontal",
       "y": 90
     },
     "axis=y": {
       "model": "hexcasting:block/edified_wood"
     },
     "axis=z": {
-      "model": "hexcasting:block/edified_wood",
+      "model": "hexcasting:block/edified_wood_horizontal",
       "x": 90
     }
   }
