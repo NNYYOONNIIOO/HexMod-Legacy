@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.network.MsgStaffPatternC2S;
@@ -677,7 +678,8 @@ private void drawMove(int mouseX, int mouseY) {
     }
 
     private static String patternDescription(HexPattern pattern) {
-        return pattern == null ? I18n.format("hexcasting.tooltip.pattern") : pattern.anglesSignature();
+        return pattern == null ? I18n.format("hexcasting.tooltip.pattern")
+            : HexInline.formatPattern(pattern);
     }
 
     private static boolean samePixel(float[] first, float[] second) {

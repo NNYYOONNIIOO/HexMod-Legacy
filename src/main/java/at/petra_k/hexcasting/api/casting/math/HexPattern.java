@@ -63,6 +63,30 @@ public final class HexPattern {
         return new HexPattern(startDir, parsed);
     }
 
+    /** Parse the serialized human-readable form produced by toString(). */
+    public static HexPattern fromSignature(String signature) {
+        if (signature == null) {
+            throw new IllegalArgumentException("Pattern signature cannot be null");
+        }
+        String normalized = signature.trim();
+        if (normalized.startsWith("HexPattern(") && normalized.endsWith(")")) {
+            normalized = normalized.substring("HexPattern(".length(), normalized.length() - 1);
+        }
+        String[] parts = normalized.split("/");
+        if (parts.length == 0 || parts[0].isEmpty()) {
+            throw new IllegalArgumentException("Pattern signature is empty");
+        }
+        HexDir start = HexDir.fromString(parts[0]);
+        ArrayList<HexAngle> parsed = new ArrayList<>(Math.max(0, parts.length - 1));
+        for (int i = 1; i < parts.length; i++) {
+            if (parts[i].isEmpty()) {
+                continue;
+            }
+            parsed.add(HexAngle.valueOf(parts[i].trim().toUpperCase()));
+        }
+        return new HexPattern(start, parsed);
+    }
+
     public HexDir getStartDir() {
         return startDir;
     }

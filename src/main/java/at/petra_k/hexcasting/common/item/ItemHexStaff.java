@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -405,6 +406,11 @@ public final class ItemHexStaff extends Item {
         int markerIndex = lower.indexOf(marker);
         if (markerIndex >= 0) {
             String signature = message.substring(markerIndex + marker.length()).trim();
+            try {
+                signature = HexInline.formatPattern(HexPattern.fromSignature(signature));
+            } catch (IllegalArgumentException ignored) {
+                // Keep compatibility with older saved/error messages.
+            }
             return I18n.translateToLocalFormatted(
                 "hexcasting.message.pattern_unregistered", signature);
         }
