@@ -9,7 +9,9 @@
       "y": 90
     },
     "facing=north": {
-      "model": "hexcasting:amethyst_sconce"
+      "model": "hexcasting:amethyst_sconce",
+      "x": 90,
+      "y": 180
     },
     "facing=south": {
       "model": "hexcasting:amethyst_sconce",
