@@ -71,6 +71,7 @@ public final class HexBlocks {
         "directrix/boolean",
         "directrix/empty",
         "directrix/redstone",
+        "great_impetus",
         "edified_button",
         "edified_door",
         "edified_fence",
@@ -92,6 +93,7 @@ public final class HexBlocks {
         "impetus/look",
         "impetus/redstone",
         "impetus/rightclick",
+        "spell_circle",
         "quenched_allay",
         "quenched_allay_bricks",
         "quenched_allay_bricks_small",
@@ -147,6 +149,10 @@ public final class HexBlocks {
                 block = new BlockBooleanDirectrix();
             } else if ("directrix/redstone".equals(id)) {
                 block = new BlockRedstoneDirectrix();
+            } else if ("great_impetus".equals(id)) {
+                block = new BlockGreatImpetus();
+            } else if ("spell_circle".equals(id)) {
+                block = new BlockSpellCircle();
             } else if ("conjured_light".equals(id)) {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
@@ -212,7 +218,7 @@ public final class HexBlocks {
                 item = new ItemSlate(block);
             } else if ("edified_door".equals(entry.getKey())) {
                 item = new ItemDoor(block);
-            } else if (entry.getKey().startsWith("impetus/")) {
+            } else if (entry.getKey().startsWith("impetus/") || "great_impetus".equals(entry.getKey())) {
                 item = new ItemImpetus(block);
             } else if ("akashic_bookshelf".equals(entry.getKey())) {
                 item = new ItemAkashicBookshelf(block);

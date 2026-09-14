@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "facing=down": { "model": "hexcasting:spell_circle_down", "x": 90 },
+    "facing=east": { "model": "hexcasting:spell_circle_up", "y": 90 },
+    "facing=north": { "model": "hexcasting:spell_circle_up" },
+    "facing=south": { "model": "hexcasting:spell_circle_up", "y": 180 },
+    "facing=up": { "model": "hexcasting:spell_circle_up", "x": 270 },
+    "facing=west": { "model": "hexcasting:spell_circle_up", "y": 270 }
+  }
+}
+
