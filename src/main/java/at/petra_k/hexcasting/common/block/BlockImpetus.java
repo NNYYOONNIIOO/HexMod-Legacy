@@ -46,12 +46,12 @@ public class BlockImpetus extends Block {
     private final TriggerMode triggerMode;
 
     public BlockImpetus() {
-        this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP).withProperty(ENERGIZED, false));
         this(TriggerMode.RIGHT_CLICK);
     }
 
     public BlockImpetus(TriggerMode triggerMode) {
         super(Material.IRON);
+        this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP).withProperty(ENERGIZED, false));
         setHardness(3.0F);
         setResistance(10.0F);
         this.triggerMode = triggerMode == null ? TriggerMode.RIGHT_CLICK : triggerMode;
