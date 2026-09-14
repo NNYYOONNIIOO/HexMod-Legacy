@@ -1,6 +1,9 @@
 {
   "variants": {
-    "normal": {
+    "half=bottom": {
+      "model": "hexcasting:edified_slab_double"
+    },
+    "half=top": {
       "model": "hexcasting:edified_slab_double"
     }
   }

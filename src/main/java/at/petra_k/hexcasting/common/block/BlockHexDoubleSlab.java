@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.block;
 
 import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockSlab.EnumBlockHalf;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -12,6 +13,7 @@ import net.minecraft.item.ItemStack;
 public final class BlockHexDoubleSlab extends BlockSlab {
     public BlockHexDoubleSlab() {
         super(Material.WOOD);
+        setDefaultState(blockState.getBaseState().withProperty(HALF, EnumBlockHalf.BOTTOM));
         setHardness(2.0F);
         setResistance(3.0F);
         setSoundType(SoundType.WOOD);
@@ -24,17 +26,17 @@ public final class BlockHexDoubleSlab extends BlockSlab {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this);
+        return new BlockStateContainer(this, HALF);
     }
 
     @Override
     public IProperty<?> getVariantProperty() {
-        return null;
+        return HALF;
     }
 
     @Override
     public Comparable<?> getTypeForItem(ItemStack stack) {
-        return null;
+        return EnumBlockHalf.BOTTOM;
     }
 
     @Override
