@@ -55,9 +55,6 @@ public final class HexBlocks {
         "akashic_record",
         "conjured_block",
         "conjured_light",
-        "impetus",
-        "great_impetus",
-        "spell_circle",
         "akashic_bookshelf",
         "akashic_connector",
         "amethyst_bricks",
@@ -135,7 +132,7 @@ public final class HexBlocks {
                 block = new BlockHexSconce();
             } else if (id.endsWith("_lantern")) {
                 block = new BlockHexLight(id);
-            } else if ("impetus".equals(id) || id.startsWith("impetus/")) {
+            } else if (id.startsWith("impetus/")) {
                 BlockImpetus.TriggerMode mode = id.endsWith("/redstone")
                     ? BlockImpetus.TriggerMode.REDSTONE
                     : id.endsWith("/look")
@@ -150,10 +147,6 @@ public final class HexBlocks {
                 block = new BlockBooleanDirectrix();
             } else if ("directrix/redstone".equals(id)) {
                 block = new BlockRedstoneDirectrix();
-            } else if ("great_impetus".equals(id)) {
-                block = new BlockGreatImpetus();
-            } else if ("spell_circle".equals(id)) {
-                block = new BlockSpellCircle();
             } else if ("conjured_light".equals(id)) {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
@@ -219,9 +212,7 @@ public final class HexBlocks {
                 item = new ItemSlate(block);
             } else if ("edified_door".equals(entry.getKey())) {
                 item = new ItemDoor(block);
-            } else if ("impetus".equals(entry.getKey())
-                || entry.getKey().startsWith("impetus/")
-                || "great_impetus".equals(entry.getKey())) {
+            } else if (entry.getKey().startsWith("impetus/")) {
                 item = new ItemImpetus(block);
             } else if ("akashic_bookshelf".equals(entry.getKey())) {
                 item = new ItemAkashicBookshelf(block);
