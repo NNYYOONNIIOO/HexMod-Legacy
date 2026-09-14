@@ -34,6 +34,7 @@ public final class HexItemModels {
         registerPackagedSpellProperties();
         registerFocusProperties();
         registerSpellbookProperties();
+        registerLegacyResourceProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
             0,
@@ -158,5 +159,111 @@ public final class HexItemModels {
     private static int colorFor(ItemStack stack) {
         int color = ItemColorizer.getColor(stack);
         return color < 0 ? 0xFFFFFF : color;
+    }
+
+    private static void registerLegacyResourceProperties() {
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("ancient_cypher"), "has_patterns",
+            (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("ancient_cypher"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.ARTIFACT, "has_patterns",
+            (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
+        registerNbtProperty(HexItems.ARTIFACT, "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.BATTERY, "max_media",
+            (stack, world, entity) -> batteryMaxMediaProperty(stack));
+        registerNbtProperty(HexItems.BATTERY, "media",
+            (stack, world, entity) -> batteryMediaProperty(stack));
+        registerNbtProperty(HexItems.CYPHER, "has_patterns",
+            (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
+        registerNbtProperty(HexItems.CYPHER, "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_bricks"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_bricks_small"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_tiles"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll"), "ancient",
+            (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll_medium"), "ancient",
+            (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll_small"), "ancient",
+            (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("slate"), "written",
+            (stack, world, entity) -> nbtBooleanProperty(stack, "written"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"), "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+        registerNbtProperty(HexItems.EXTRA_ITEMS.get("thought_knot"), "written",
+            (stack, world, entity) -> nbtBooleanProperty(stack, "written"));
+        registerNbtProperty(HexItems.TRINKET, "has_patterns",
+            (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
+        registerNbtProperty(HexItems.TRINKET, "variant",
+            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+    }
+
+    private static void registerNbtProperty(Item item, String key, IItemPropertyGetter getter) {
+        if (item != null) {
+            item.addPropertyOverride(new net.minecraft.util.ResourceLocation(HexAPI.MOD_ID, key), getter);
+        }
+    }
+
+    private static String resolveNbtKey(ItemStack stack, String key) {
+        if (stack == null || stack.getTagCompound() == null) return key;
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag.hasKey(key, 99)) return key;
+        String namespaced = HexAPI.MOD_ID + ":" + key;
+        return tag.hasKey(namespaced, 99) ? namespaced : key;
+    }
+
+    private static float nbtNumberProperty(ItemStack stack, String key) {
+        if (stack == null || stack.getTagCompound() == null) return 0.0F;
+        NBTTagCompound tag = stack.getTagCompound();
+        String actual = resolveNbtKey(stack, key);
+        if (!tag.hasKey(actual, 99)) return 0.0F;
+        switch (tag.getTagId(actual)) {
+            case 1: return tag.getByte(actual);
+            case 2: return tag.getShort(actual);
+            case 3: return tag.getInteger(actual);
+            case 4: return (float) tag.getLong(actual);
+            case 5: return tag.getFloat(actual);
+            case 6: return (float) tag.getDouble(actual);
+            default: return 0.0F;
+        }
+    }
+
+    private static float nbtBooleanProperty(ItemStack stack, String key) {
+        if (stack == null || stack.getTagCompound() == null) return 0.0F;
+        NBTTagCompound tag = stack.getTagCompound();
+        String actual = resolveNbtKey(stack, key);
+        if (tag.hasKey(actual, 1)) return tag.getBoolean(actual) ? 1.0F : 0.0F;
+        return nbtNumberProperty(stack, key) == 0.0F ? 0.0F : 1.0F;
+    }
+
+    private static float batteryMaxMediaProperty(ItemStack stack) {
+        if (stack == null || !(stack.getItem() instanceof at.petra_k.hexcasting.common.item.ItemMediaBattery)) return 0.0F;
+        at.petra_k.hexcasting.common.item.ItemMediaBattery battery = (at.petra_k.hexcasting.common.item.ItemMediaBattery) stack.getItem();
+        long max = battery.getMaxMedia(stack);
+        long dust = at.petra_k.hexcasting.api.misc.MediaConstants.DUST_UNIT * 64L;
+        long shard = at.petra_k.hexcasting.api.misc.MediaConstants.SHARD_UNIT * 64L;
+        long crystal = at.petra_k.hexcasting.api.misc.MediaConstants.CRYSTAL_UNIT * 64L;
+        long quenchedShard = at.petra_k.hexcasting.api.misc.MediaConstants.QUENCHED_SHARD_UNIT * 64L;
+        if (max <= dust) return 0.0F;
+        if (max <= shard) return 1.0F;
+        if (max <= crystal) return 2.0F;
+        if (max <= quenchedShard) return 3.0F;
+        return 4.0F;
+    }
+
+    private static float batteryMediaProperty(ItemStack stack) {
+        if (stack == null || !(stack.getItem() instanceof at.petra_k.hexcasting.common.item.ItemMediaBattery)) return 0.0F;
+        at.petra_k.hexcasting.common.item.ItemMediaBattery battery = (at.petra_k.hexcasting.common.item.ItemMediaBattery) stack.getItem();
+        long max = battery.getMaxMedia(stack);
+        if (max <= 0L) return 0.0F;
+        return (float) Math.max(0.0D, Math.min(1.0D, (double) battery.getMedia(stack) / (double) max));
     }
 }
