@@ -55,7 +55,6 @@ tile.hexcasting.conjured_block.name=Conjured Block
 tile.hexcasting.conjured_light.name=Conjured Light
 tile.hexcasting.impetus.name=Impetus
 tile.hexcasting.great_impetus.name=Great Impetus
-tile.hexcasting.spell_circle.name=Spell Circle
 item.hexcasting.focus.name=Focus
 item.hexcasting.focus.sealed.name=Sealed Focus
 item.hexcasting.lens.name=Scrying Lens

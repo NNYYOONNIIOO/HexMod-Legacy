@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** Wooden storage anchor for the Akashic record system. */
 public final class BlockAkashicRecord extends Block {
@@ -225,8 +227,9 @@ public final class BlockAkashicRecord extends Block {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public BlockRenderLayer getBlockLayer() {
-        return BlockRenderLayer.CUTOUT;
+        return BlockRenderLayer.TRANSLUCENT;
     }
 
     @Override

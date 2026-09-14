@@ -1,22 +1,22 @@
 {
   "variants": {
     "facing=down": {
-      "model": "hexcasting:spell_circle_down"
+      "model": "hexcasting:slate_down"
     },
     "facing=east": {
-      "model": "hexcasting:spell_circle_east"
+      "model": "hexcasting:slate_east"
     },
     "facing=north": {
-      "model": "hexcasting:spell_circle_north"
+      "model": "hexcasting:slate_north"
     },
     "facing=south": {
-      "model": "hexcasting:spell_circle_south"
+      "model": "hexcasting:slate_south"
     },
     "facing=up": {
-      "model": "hexcasting:spell_circle_up"
+      "model": "hexcasting:slate_up"
     },
     "facing=west": {
-      "model": "hexcasting:spell_circle_west"
+      "model": "hexcasting:slate_west"
     }
   }
 }

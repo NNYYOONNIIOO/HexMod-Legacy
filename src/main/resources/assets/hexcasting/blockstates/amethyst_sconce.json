@@ -11,12 +11,12 @@
     },
     "facing=north": {
       "model": "hexcasting:amethyst_sconce",
-      "x": 90,
-      "y": 180
+      "x": 90
     },
     "facing=south": {
       "model": "hexcasting:amethyst_sconce",
-      "x": 90
+      "x": 90,
+      "y": 180
     },
     "facing=up": {
       "model": "hexcasting:amethyst_sconce"

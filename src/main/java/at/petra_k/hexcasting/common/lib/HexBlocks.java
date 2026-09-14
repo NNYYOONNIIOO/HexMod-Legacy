@@ -28,7 +28,6 @@ import at.petra_k.hexcasting.common.block.BlockGreatImpetus;
 import at.petra_k.hexcasting.common.block.BlockImpetus;
 import at.petra_k.hexcasting.common.block.BlockRedstoneDirectrix;
 import at.petra_k.hexcasting.common.block.BlockSlate;
-import at.petra_k.hexcasting.common.block.BlockSpellCircle;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import at.petra_k.hexcasting.common.item.ItemImpetus;
 import at.petra_k.hexcasting.common.item.ItemAkashicBookshelf;
@@ -94,7 +93,6 @@ public final class HexBlocks {
         "impetus/look",
         "impetus/redstone",
         "impetus/rightclick",
-        "spell_circle",
         "quenched_allay",
         "quenched_allay_bricks",
         "quenched_allay_bricks_small",
@@ -151,10 +149,7 @@ public final class HexBlocks {
             } else if ("directrix/redstone".equals(id)) {
                 block = new BlockRedstoneDirectrix();
             } else if ("great_impetus".equals(id)) {
-                block = new BlockGreatImpetus();
-            } else if ("spell_circle".equals(id)) {
-                block = new BlockSpellCircle();
-            } else if ("conjured_light".equals(id)) {
+                block = new BlockGreatImpetus();            } else if ("conjured_light".equals(id)) {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
