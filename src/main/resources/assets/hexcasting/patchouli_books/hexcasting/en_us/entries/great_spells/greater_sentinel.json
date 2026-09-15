@@ -1,0 +1,17 @@
+{
+  "name": "hexcasting.action.sentinel/create/great",
+  "category": "hexcasting:great_spells",
+  "icon": "minecraft:beacon",
+  "sortnum": 5,
+  "pages": [
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:sentinel/create/great",
+      "anchor": "hexcasting:sentinel/create/great",
+      "input": "vector",
+      "output": "",
+      "text": "hexcasting.page.greater_sentinel.1"
+    },
+    { "type": "text", "text": "hexcasting.page.greater_sentinel.2" }
+  ]
+}

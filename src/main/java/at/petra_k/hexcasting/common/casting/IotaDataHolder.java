@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.item.ItemStack;
@@ -15,7 +16,17 @@ public final class IotaDataHolder {
     }
 
     public static boolean canRead(ItemStack stack) {
-        return stack != null && !stack.isEmpty() && stack.hasTagCompound()
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (stack.getItem() instanceof IotaHolderItem) {
+            try {
+                return ((IotaHolderItem) stack.getItem()).readIotaTag(stack) != null;
+            } catch (RuntimeException ignored) {
+                return false;
+            }
+        }
+        return stack.hasTagCompound()
             && stack.getTagCompound().hasKey(TAG_IOTA, 10);
     }
 
@@ -29,7 +40,16 @@ public final class IotaDataHolder {
             throw new CastingException("hexcasting.error.data_holder_missing");
         }
         try {
+            if (stack.getItem() instanceof IotaHolderItem) {
+                Iota value = ((IotaHolderItem) stack.getItem()).readIota(stack);
+                if (value == null) {
+                    throw new CastingException("hexcasting.error.data_holder_missing");
+                }
+                return value;
+            }
             return HexIotaTypes.deserialize(stack.getTagCompound().getCompoundTag(TAG_IOTA));
+        } catch (CastingException exception) {
+            throw exception;
         } catch (RuntimeException exception) {
             throw new CastingException("hexcasting.error.data_holder_invalid");
         }

@@ -27,6 +27,14 @@ public final class HexInline {
         if (net.minecraftforge.fml.common.FMLCommonHandler.instance().getSide().isClient()) {
             loadClientIntegration();
             try {
+                Class<?> patternPage = Class.forName(
+                    "at.petra_k.hexcasting.client.HexPatternPage");
+                patternPage.getMethod("register").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                throw new IllegalStateException(
+                    "Unable to initialize Patchouli pattern page", exception);
+            }
+            try {
                 Class<?> renderer = Class.forName(
                     "at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer");
                 renderer.getMethod("register").invoke(null);

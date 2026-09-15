@@ -5,9 +5,12 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
+import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
@@ -317,7 +320,9 @@ public final class CastingVM {
             parentheses.clear();
             parentheses.push(new ParenFrame());
         }
-        parenCount += count;
+        // open_n_parens sets the depth to the value read from the stack; it
+        // does not add another set of layers to a capture already in flight.
+        parenCount = count;
     }
 
     public void closeParen() throws CastingException {
@@ -341,17 +346,34 @@ public final class CastingVM {
     }
 
     public void closeAllParens() throws CastingException {
-        while (parenCount > 0) {
-            closeParen();
+        if (parenCount <= 0 || parentheses.isEmpty()) {
+            throw new CastingException("Cannot close parentheses when none is open");
         }
+        ParenFrame frame = parentheses.peek();
+        ArrayList<Iota> values = new ArrayList<>(frame.values.size());
+        for (ParenEntry entry : frame.values) {
+            values.add(entry.value);
+        }
+        stack.push(new DoubleIota(parenCount));
+        stack.push(new ListIota(values));
+        parenCount = 0;
+        parentheses.clear();
     }
 
-    /** Move one stack value into the currently captured parenthesized list. */
+    /** Read the off-hand data holder into the currently captured list. */
     public void readIntoParen() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
             throw new CastingException("Cannot read into parentheses when none is open");
         }
-        parentheses.peek().values.add(new ParenEntry(stack.pop(), true));
+        if (player == null) {
+            throw new CastingException("hexcasting.error.read_context");
+        }
+        net.minecraft.item.ItemStack offhand = player.getHeldItemOffhand();
+        if (offhand == null || offhand.isEmpty()) {
+            throw new CastingException("hexcasting.error.data_holder_missing");
+        }
+        Iota datum = IotaDataHolder.read(offhand);
+        parentheses.peek().values.add(new ParenEntry(datum, true));
     }
 
     /** Undo the latest captured value, or the current empty parenthesis frame. */
@@ -530,8 +552,12 @@ public final class CastingVM {
         if (pattern == null && work.iota instanceof PatternIota) {
             pattern = ((PatternIota) work.iota).getPattern();
         }
-        HexAction action = pattern == null ? null : HexActionRegistry.get(pattern);
-        if (pattern != null && action == null && parenCount == 0 && !escapeNext) {
+        HexAction action = pattern == null ? null : HexActionRegistry.get(
+            pattern, player == null ? null : player.world);
+        SpecialPatternResolver.Match special = action == null
+            ? SpecialPatternResolver.match(pattern) : null;
+        if (pattern != null && action == null && special == null
+            && parenCount == 0 && !escapeNext) {
             throw new CastingException("No action is registered for pattern " + pattern);
         }
         Iota value = pattern == null ? work.iota : new PatternIota(pattern);
@@ -552,6 +578,8 @@ public final class CastingVM {
                 invokeContinuation((ContinuationIota) work.iota);
             } else if (action != null) {
                 action.execute(stack, this);
+            } else if (special != null) {
+                special.execute(stack);
             } else {
                 stack.push(value);
             }

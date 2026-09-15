@@ -22,6 +22,10 @@ public final class ParenControlAction implements HexAction {
         this.kind = kind;
     }
 
+    public Kind getKind() {
+        return kind;
+    }
+
     @Override
     public void execute(CastingStack stack) throws CastingException {
         execute(stack, new CastingVM(stack));
@@ -62,9 +66,10 @@ public final class ParenControlAction implements HexAction {
     public boolean executesInParentheses() {
         // Only actions with an explicit operateInParens implementation run
         // while a parenthesized program is being captured. In particular,
-        // open_n_parens and close_all_parens are ordinary captured patterns
-        // in Hex; executing them here corrupts the captured program and its
-        // parenthesis count.
+        // open_n_parens is an ordinary captured pattern in Hex because its
+        // operand is read from the value stack. close_all_parens is different:
+        // it is explicitly executable while capturing and returns the saved
+        // parenthesis depth together with the captured list.
         switch (kind) {
             case ESCAPE:
             case RUNTIME_ESCAPE:
@@ -72,9 +77,9 @@ public final class ParenControlAction implements HexAction {
             case CLOSE:
             case READ_INTO:
             case UNDO:
+            case CLOSE_ALL:
                 return true;
             case OPEN_N:
-            case CLOSE_ALL:
             default:
                 return false;
         }

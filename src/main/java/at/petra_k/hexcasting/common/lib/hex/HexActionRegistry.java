@@ -4,6 +4,8 @@ import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,8 +50,63 @@ public final class HexActionRegistry {
         return exact == null ? BY_SHAPE.get(shapeOf(pattern)) : exact;
     }
 
+    /**
+     * Resolve a pattern with the world context used by Hex's great spells.
+     *
+     * <p>The ordinary registry is intentionally checked first.  The fixed
+     * prototype of a per-world action is retained as a compatibility fallback,
+     * but in a loaded world the generated signature takes precedence over that
+     * prototype.</p>
+     */
+    public static HexAction get(HexPattern pattern, World world) {
+        if (pattern == null) {
+            return null;
+        }
+        HexAction ordinary = get(pattern);
+        ResourceLocation ordinaryId = idFor(ordinary);
+        if (ordinary != null
+            && !PerWorldPatternData.isPerWorldAction(ordinaryId)) {
+            return ordinary;
+        }
+
+        ResourceLocation perWorldId = PerWorldPatternData.actionFor(world, pattern);
+        if (perWorldId != null) {
+            HexAction perWorld = get(perWorldId);
+            if (perWorld != null) {
+                return perWorld;
+            }
+        }
+        return ordinary;
+    }
+
     public static HexPattern getPattern(ResourceLocation id) {
-        return PATTERN_BY_ID.get(id);
+        HexPattern pattern = PATTERN_BY_ID.get(id);
+        if (pattern != null) {
+            return pattern;
+        }
+        return getPattern(BY_ID.get(id));
+    }
+
+    /** Recover the pattern belonging to a registered action object. */
+    public static HexPattern getPattern(HexAction action) {
+        if (action == null) {
+            return null;
+        }
+        for (Map.Entry<HexPattern, HexAction> entry : BY_PATTERN.entrySet()) {
+            if (entry.getValue() == action) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    /** Return a great spell's generated pattern when a world is available. */
+    public static HexPattern getPattern(ResourceLocation id, World world) {
+        if (id == null) {
+            return null;
+        }
+        HexPattern worldPattern = PerWorldPatternData.patternFor(world, id);
+        return worldPattern == null ? getPattern(id) : worldPattern;
     }
 
     public static ResourceLocation idFor(HexAction action) {

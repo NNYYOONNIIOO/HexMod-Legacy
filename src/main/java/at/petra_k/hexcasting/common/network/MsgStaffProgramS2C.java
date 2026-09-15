@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
 import io.netty.buffer.ByteBuf;
@@ -9,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -17,11 +19,13 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
     private int handOrdinal;
     private String staffInstanceId;
     private NBTTagList patternsData;
+    private NBTTagList perWorldPatterns;
 
     public MsgStaffProgramS2C() {
         this.handOrdinal = EnumHand.MAIN_HAND.ordinal();
         this.staffInstanceId = "";
         this.patternsData = new NBTTagList();
+        this.perWorldPatterns = new NBTTagList();
     }
 
     public MsgStaffProgramS2C(EnumHand hand, NBTTagList patterns) {
@@ -29,9 +33,14 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
     }
 
     public MsgStaffProgramS2C(EnumHand hand, ItemStack staff, NBTTagList patterns) {
+        this(hand, null, staff, patterns);
+    }
+
+    public MsgStaffProgramS2C(EnumHand hand, World world, ItemStack staff, NBTTagList patterns) {
         this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
         this.staffInstanceId = ItemHexStaff.getInstanceId(staff);
         this.patternsData = patterns == null ? new NBTTagList() : patterns;
+        this.perWorldPatterns = PerWorldPatternData.snapshot(world);
     }
 
     @Override
@@ -40,6 +49,8 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
         NBTTagCompound payload = ByteBufUtils.readTag(buf);
         staffInstanceId = payload == null ? "" : payload.getString("staff_id");
         patternsData = payload == null ? new NBTTagList() : payload.getTagList("patterns", 10);
+        perWorldPatterns = payload == null
+            ? new NBTTagList() : payload.getTagList("per_world_patterns", 10);
     }
 
     @Override
@@ -48,6 +59,8 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
         NBTTagCompound payload = new NBTTagCompound();
         payload.setString("staff_id", staffInstanceId == null ? "" : staffInstanceId);
         payload.setTag("patterns", patternsData == null ? new NBTTagList() : patternsData);
+        payload.setTag("per_world_patterns",
+            perWorldPatterns == null ? new NBTTagList() : perWorldPatterns);
         ByteBufUtils.writeTag(buf, payload);
     }
 
@@ -63,6 +76,10 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
             return;
         }
         EnumHand hand = EnumHand.values()[handOrdinal];
+        // The per-world table is useful even when this response arrives after
+        // the held stack changed. Apply it before validating the staff so an
+        // already-open GUI and ancient-scroll tooltips cannot miss the table.
+        PerWorldPatternData.applyClientSnapshot(perWorldPatterns);
         ItemStack staff = player.getHeldItem(hand);
         if (!ItemHexStaff.isStaff(staff)) {
             return;

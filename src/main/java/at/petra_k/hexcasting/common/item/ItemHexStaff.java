@@ -8,8 +8,11 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
+import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
+import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -37,6 +40,8 @@ public final class ItemHexStaff extends Item {
     private static final String KEY_PATTERN_PROGRAM = "patterns";
     private static final String KEY_ORIGIN_Q = "origin_q";
     private static final String KEY_ORIGIN_R = "origin_r";
+    /** Per-pattern client rendering state, matching Hex's ResolvedPattern.Valid field. */
+    public static final String KEY_RESOLUTION = "resolution";
     private static final String KEY_CASTING_STATE = "casting_state";
     private static final String KEY_INSTANCE_ID = "staff_instance_id";
 
@@ -79,7 +84,11 @@ public final class ItemHexStaff extends Item {
 
         if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
             at.petrak.paucal.api.PaucalAPI.sendTo(
-                new MsgStaffProgramS2C(hand, staff, getProgramSnapshot(staff)), player);
+                new MsgPerWorldPatternsS2C(player.world),
+                (net.minecraft.entity.player.EntityPlayerMP) player);
+            at.petrak.paucal.api.PaucalAPI.sendTo(
+                new MsgStaffProgramS2C(hand, player.world, staff,
+                    getProgramSnapshot(staff)), player);
         }
 
         // Modern Hex opens the spellcasting screen here. The saved pattern
@@ -99,18 +108,40 @@ public final class ItemHexStaff extends Item {
     public void addInformation(ItemStack stack, World world, List<String> tooltip,
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
-        List<ResourceLocation> actions = getProgramIds(stack);
+        List<ProgramEntry> entries = getProgramEntries(stack);
         tooltip.add(I18n.translateToLocalFormatted(
-            "hexcasting.tooltip.staff_program", actions.size(), MAX_PROGRAM_SIZE));
-        int shown = Math.min(actions.size(), 8);
+            "hexcasting.tooltip.staff_program", entries.size(), MAX_PROGRAM_SIZE));
+        int shown = Math.min(entries.size(), 8);
         for (int i = 0; i < shown; i++) {
             tooltip.add(I18n.translateToLocalFormatted(
-                "hexcasting.tooltip.staff_entry", i + 1, localizeAction(actions.get(i))));
+                "hexcasting.tooltip.staff_entry", i + 1,
+                describeProgramEntry(entries.get(i))));
         }
-        if (actions.size() > shown) {
+        if (entries.size() > shown) {
             tooltip.add(I18n.translateToLocalFormatted(
-                "hexcasting.tooltip.staff_more", actions.size() - shown));
+                "hexcasting.tooltip.staff_more", entries.size() - shown));
         }
+    }
+
+    private static String describeProgramEntry(ProgramEntry entry) {
+        if (entry == null || entry.getPattern() == null) {
+            return I18n.translateToLocal("hexcasting.tooltip.pattern");
+        }
+        if (entry.getActionId() != null) {
+            return localizeAction(entry.getActionId());
+        }
+        SpecialPatternResolver.Match special =
+            SpecialPatternResolver.match(entry.getPattern());
+        if (special != null) {
+            if (special.getKind() == SpecialPatternResolver.Kind.NUMBER) {
+                return I18n.translateToLocalFormatted(
+                    "hexcasting.special.number", special.getNumber());
+            }
+            return I18n.translateToLocalFormatted(
+                "hexcasting.special.mask", special.maskSignature());
+        }
+        return I18n.translateToLocalFormatted("hexcasting.tooltip.staff_pattern",
+            HexInline.formatPattern(entry.getPattern()));
     }
 
     public static boolean isStaff(ItemStack stack) {
@@ -177,6 +208,8 @@ public final class ItemHexStaff extends Item {
         NBTTagCompound entry = pattern.serializeToNBT();
         entry.setInteger(KEY_ORIGIN_Q, originQ);
         entry.setInteger(KEY_ORIGIN_R, originR);
+        entry.setInteger(KEY_RESOLUTION,
+            StaffCastExecutor.Resolution.UNRESOLVED.ordinal());
         patterns.appendTag(entry);
         tag.setTag(KEY_PATTERN_PROGRAM, patterns);
         return true;
@@ -186,6 +219,15 @@ public final class ItemHexStaff extends Item {
     public static void replaceProgram(ItemStack staff, NBTTagList incoming) {
         if (!isStaff(staff)) {
             return;
+        }
+        // Older clients and a few legacy callers submit only the pattern and
+        // origin fields.  Preserve the old resolution for an unchanged
+        // prefix in that case; otherwise a harmless append would repaint all
+        // previous paths as gray on the next authoritative sync.
+        NBTTagList previous = null;
+        if (staff.getTagCompound() != null
+            && staff.getTagCompound().hasKey(KEY_PATTERN_PROGRAM, 9)) {
+            previous = staff.getTagCompound().getTagList(KEY_PATTERN_PROGRAM, 10);
         }
         NBTTagList normalized = new NBTTagList();
         if (incoming != null) {
@@ -197,6 +239,21 @@ public final class ItemHexStaff extends Item {
                     NBTTagCompound entry = pattern.serializeToNBT();
                     entry.setInteger(KEY_ORIGIN_Q, raw.getInteger(KEY_ORIGIN_Q));
                     entry.setInteger(KEY_ORIGIN_R, raw.getInteger(KEY_ORIGIN_R));
+                    int resolution = StaffCastExecutor.Resolution.UNRESOLVED.ordinal();
+                    if (raw.hasKey(KEY_RESOLUTION, 3)) {
+                        resolution = normalizeResolution(raw.getInteger(KEY_RESOLUTION));
+                    } else if (previous != null && i < previous.tagCount()) {
+                        try {
+                            NBTTagCompound old = previous.getCompoundTagAt(i);
+                            HexPattern oldPattern = HexPattern.fromNBT(old);
+                            if (oldPattern.signature().equals(pattern.signature())) {
+                                resolution = normalizeResolution(old.getInteger(KEY_RESOLUTION));
+                            }
+                        } catch (RuntimeException ignored) {
+                            // A malformed old entry must not reject the new snapshot.
+                        }
+                    }
+                    entry.setInteger(KEY_RESOLUTION, resolution);
                     normalized.appendTag(entry);
                 } catch (RuntimeException ignored) {
                     // Ignore only malformed entries in the submitted snapshot.
@@ -229,6 +286,25 @@ public final class ItemHexStaff extends Item {
             tag.removeTag(KEY_PATTERN_PROGRAM);
             tag.removeTag(KEY_CASTING_STATE);
         }
+    }
+
+    /** Persist the last server-side resolution state for one drawn pattern. */
+    public static void setProgramResolution(ItemStack staff, int index,
+                                             StaffCastExecutor.Resolution resolution) {
+        if (!isStaff(staff) || index < 0 || resolution == null
+            || staff.getTagCompound() == null) {
+            return;
+        }
+        NBTTagCompound tag = staff.getTagCompound();
+        if (!tag.hasKey(KEY_PATTERN_PROGRAM, 9)) {
+            return;
+        }
+        NBTTagList patterns = tag.getTagList(KEY_PATTERN_PROGRAM, 10);
+        if (index >= patterns.tagCount()) {
+            return;
+        }
+        NBTTagCompound entry = patterns.getCompoundTagAt(index);
+        entry.setInteger(KEY_RESOLUTION, normalizeResolution(resolution.ordinal()));
     }
 
     public static void clearProgram(EntityPlayer player, ItemStack staff) {
@@ -277,6 +353,15 @@ public final class ItemHexStaff extends Item {
 
     public static List<ProgramEntry> getProgramEntries(EntityPlayer player, EnumHand hand,
                                                        ItemStack staff) {
+        if (!isStaff(staff) || staff.getTagCompound() == null) {
+            return Collections.emptyList();
+        }
+        HexActionRegistry.bootstrap();
+        NBTTagCompound tag = staff.getTagCompound();
+        if (tag.hasKey(KEY_PATTERN_PROGRAM)) {
+            return getPatternEntries(tag.getTagList(KEY_PATTERN_PROGRAM, 10),
+                player == null ? null : player.world);
+        }
         return getProgramEntries(staff);
     }
 
@@ -287,6 +372,7 @@ public final class ItemHexStaff extends Item {
             NBTTagCompound data = entry.getPattern().serializeToNBT();
             data.setInteger(KEY_ORIGIN_Q, entry.getOriginQ());
             data.setInteger(KEY_ORIGIN_R, entry.getOriginR());
+            data.setInteger(KEY_RESOLUTION, entry.getResolutionOrdinal());
             snapshot.appendTag(data);
         }
         return snapshot;
@@ -312,7 +398,8 @@ public final class ItemHexStaff extends Item {
                 ResourceLocation actionId = new ResourceLocation(legacy.getStringTagAt(i));
                 HexPattern pattern = HexActionRegistry.getPattern(actionId);
                 if (pattern != null) {
-                    result.add(new ProgramEntry(pattern, actionId, legacyOriginQ, 0));
+                    result.add(new ProgramEntry(pattern, actionId, legacyOriginQ, 0,
+                        StaffCastExecutor.Resolution.UNRESOLVED.ordinal()));
                     legacyOriginQ += 4;
                 }
             } catch (RuntimeException ignored) {
@@ -323,17 +410,23 @@ public final class ItemHexStaff extends Item {
     }
 
     private static List<ProgramEntry> getPatternEntries(NBTTagList patterns) {
+        return getPatternEntries(patterns, null);
+    }
+
+    private static List<ProgramEntry> getPatternEntries(
+        NBTTagList patterns, net.minecraft.world.World world) {
         HexActionRegistry.bootstrap();
         List<ProgramEntry> result = new ArrayList<>();
         for (int i = 0; i < patterns.tagCount(); i++) {
             try {
                 NBTTagCompound entry = patterns.getCompoundTagAt(i);
                 HexPattern pattern = HexPattern.fromNBT(entry);
-                HexAction action = HexActionRegistry.get(pattern);
+                HexAction action = HexActionRegistry.get(pattern, world);
                 ResourceLocation actionId = action == null
                     ? null : HexActionRegistry.idFor(action);
                 result.add(new ProgramEntry(pattern, actionId,
-                    entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R)));
+                    entry.getInteger(KEY_ORIGIN_Q), entry.getInteger(KEY_ORIGIN_R),
+                    normalizeResolution(entry.getInteger(KEY_RESOLUTION))));
             } catch (RuntimeException ignored) {
                 // Ignore malformed entries without discarding the rest of the program.
             }
@@ -346,13 +439,15 @@ public final class ItemHexStaff extends Item {
         private final ResourceLocation actionId;
         private final int originQ;
         private final int originR;
+        private final int resolutionOrdinal;
 
         private ProgramEntry(HexPattern pattern, ResourceLocation actionId,
-                             int originQ, int originR) {
+                             int originQ, int originR, int resolutionOrdinal) {
             this.pattern = pattern;
             this.actionId = actionId;
             this.originQ = originQ;
             this.originR = originR;
+            this.resolutionOrdinal = normalizeResolution(resolutionOrdinal);
         }
 
         public HexPattern getPattern() {
@@ -370,6 +465,16 @@ public final class ItemHexStaff extends Item {
         public int getOriginR() {
             return originR;
         }
+
+        public int getResolutionOrdinal() {
+            return resolutionOrdinal;
+        }
+    }
+
+    private static int normalizeResolution(int ordinal) {
+        StaffCastExecutor.Resolution[] values = StaffCastExecutor.Resolution.values();
+        return ordinal < 0 || ordinal >= values.length
+            ? StaffCastExecutor.Resolution.UNRESOLVED.ordinal() : ordinal;
     }
 
     private static boolean isPatternScroll(ItemStack stack) {

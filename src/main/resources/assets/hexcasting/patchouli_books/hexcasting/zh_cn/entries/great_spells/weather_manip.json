@@ -1,0 +1,32 @@
+{
+  "name": "hexcasting.entry.weather_manip",
+  "category": "hexcasting:great_spells",
+  "icon": "minecraft:beacon",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:lightning",
+      "anchor": "hexcasting:lightning",
+      "input": "vector",
+      "output": "",
+      "text": "hexcasting.page.weather_manip.lightning"
+    },
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:summon_rain",
+      "anchor": "hexcasting:summon_rain",
+      "input": "",
+      "output": "",
+      "text": "hexcasting.page.weather_manip.summon_rain"
+    },
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:dispel_rain",
+      "anchor": "hexcasting:dispel_rain",
+      "input": "",
+      "output": "",
+      "text": "hexcasting.page.weather_manip.dispel_rain"
+    }
+  ]
+}

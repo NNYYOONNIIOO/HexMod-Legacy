@@ -15,6 +15,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -29,6 +32,7 @@ import java.util.Locale;
  */
 public final class StaffCastExecutor {
     private static final String KEY_CASTING_STATE = "casting_state";
+    private static final int MAX_PREVIEW_ENTRIES = 64;
 
     private StaffCastExecutor() {
     }
@@ -56,7 +60,15 @@ public final class StaffCastExecutor {
             return false;
         }
         try {
-            return load(staff).getStack().size() == 0;
+            CastingVM vm = load(staff);
+            // Hex keeps the staff spell open while a parenthesized program is
+            // being collected, even when the value stack is empty.  Checking
+            // only stack size makes drawing Introspection (open_paren) reset
+            // the VM immediately, so the following patterns execute instead
+            // of being captured until Retrospection (close_paren).
+            return vm.getStack().size() == 0
+                && vm.getParenDepth() == 0
+                && !vm.isEscapeNext();
         } catch (RuntimeException ignored) {
             return false;
         }
@@ -64,14 +76,27 @@ public final class StaffCastExecutor {
 
     public static boolean execute(EntityPlayer player, EnumHand hand, ItemStack staff,
                                   HexPattern pattern) {
+        return executeDetailed(player, hand, staff, pattern).isSuccess();
+    }
+
+    /**
+     * Execute one drawn pattern and retain the client-visible resolution state.
+     * The 1.20.1 GUI uses this state to color each line independently; a
+     * boolean success flag is not enough because escaped and parenthesized
+     * patterns have different meanings and colors.
+     */
+    public static CastOutcome executeDetailed(EntityPlayer player, EnumHand hand,
+                                              ItemStack staff, HexPattern pattern) {
         if (player == null || staff == null || staff.isEmpty() || pattern == null) {
-            return false;
+            return CastOutcome.failure(Resolution.ERRORED,
+                Collections.<String>emptyList(), 0, 0, false);
         }
         IHexCastingData castingData =
             player.getCapability(HexCapabilities.CASTING_DATA, null);
         if (castingData == null) {
             sendError(player, "hexcasting.message.staff_error");
-            return false;
+            return CastOutcome.failure(Resolution.ERRORED,
+                Collections.<String>emptyList(), 0, 0, false);
         }
 
         CastingVM vm = null;
@@ -80,25 +105,94 @@ public final class StaffCastExecutor {
             vm = load(staff);
             vm.setCastingData(castingData);
             vm.setPlayer(player);
+            boolean wasEscaped = vm.isEscapeNext();
+            boolean wasInParens = vm.getParenDepth() > 0;
+            at.petra_k.hexcasting.api.casting.action.HexAction action =
+                HexActionRegistry.get(pattern, player.world);
+            boolean isCaptured = wasEscaped || (wasInParens
+                && (action == null || !action.executesInParentheses()));
             vm.enqueue(pattern);
             vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
             save(staff, vm);
-            return true;
+            Resolution resolution = resolveResolution(action, wasEscaped,
+                wasInParens, vm);
+            return CastOutcome.success(resolution, preview(vm),
+                vm.getStack().size(), vm.getParenDepth(), vm.isEscapeNext(),
+                isStackClear(vm));
         } catch (CastingException exception) {
             if (vm != null) {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
             sendError(player, exception.getMessage());
-            return false;
+            return CastOutcome.failure(Resolution.ERRORED,
+                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm));
         } catch (RuntimeException exception) {
             if (vm != null) {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
             sendError(player, "hexcasting.message.staff_error");
-            return false;
+            return CastOutcome.failure(Resolution.ERRORED,
+                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm));
         }
+    }
+
+    private static boolean isStackClear(CastingVM vm) {
+        return vm != null && vm.getStack().size() == 0
+            && vm.getParenDepth() == 0 && !vm.isEscapeNext();
+    }
+
+    private static Resolution resolveResolution(
+        at.petra_k.hexcasting.api.casting.action.HexAction action,
+        boolean wasEscaped, boolean wasInParens, CastingVM vm) {
+        if (wasEscaped) {
+            return Resolution.ESCAPED;
+        }
+        if (action instanceof ParenControlAction) {
+            ParenControlAction.Kind kind = ((ParenControlAction) action).getKind();
+            if (kind == ParenControlAction.Kind.UNDO) {
+                return Resolution.UNDONE;
+            }
+            if (kind == ParenControlAction.Kind.OPEN && wasInParens) {
+                return Resolution.ESCAPED;
+            }
+            if (kind == ParenControlAction.Kind.CLOSE && wasInParens
+                && vm.getParenDepth() > 0) {
+                return Resolution.ESCAPED;
+            }
+        }
+        if (wasInParens && (action == null || !action.executesInParentheses())) {
+            return Resolution.ESCAPED;
+        }
+        return Resolution.EVALUATED;
+    }
+
+    private static int parenDepth(CastingVM vm) {
+        return vm == null ? 0 : Math.max(0, vm.getParenDepth());
+    }
+
+    private static int stackSize(CastingVM vm) {
+        return vm == null || vm.getStack() == null ? 0 : vm.getStack().size();
+    }
+
+    private static boolean escapeNext(CastingVM vm) {
+        return vm != null && vm.isEscapeNext();
+    }
+
+    private static List<String> preview(CastingVM vm) {
+        if (vm == null || vm.getStack() == null) {
+            return Collections.emptyList();
+        }
+        List<String> values = new ArrayList<>();
+        List<at.petra_k.hexcasting.api.casting.iota.Iota> snapshot =
+            vm.getStack().snapshot();
+        for (int i = snapshot.size() - 1;
+             i >= 0 && values.size() < MAX_PREVIEW_ENTRIES; i--) {
+            at.petra_k.hexcasting.api.casting.iota.Iota value = snapshot.get(i);
+            values.add(value == null ? "?" : value.display());
+        }
+        return values;
     }
 
     private static CastingVM load(ItemStack staff) {
@@ -147,5 +241,80 @@ public final class StaffCastExecutor {
         return message.equals(translated)
             ? I18n.translateToLocal("hexcasting.message.staff_error")
             : translated;
+    }
+
+    public enum Resolution {
+        UNRESOLVED,
+        EVALUATED,
+        ESCAPED,
+        UNDONE,
+        ERRORED,
+        INVALID
+    }
+
+    public static final class CastOutcome {
+        private final Resolution resolution;
+        private final List<String> stackPreview;
+        private final int stackSize;
+        private final int parenDepth;
+        private final boolean escapeNext;
+        private final boolean stackClear;
+
+        private CastOutcome(Resolution resolution, List<String> stackPreview,
+                            int stackSize, int parenDepth, boolean escapeNext,
+                            boolean stackClear) {
+            this.resolution = resolution == null ? Resolution.ERRORED : resolution;
+            this.stackPreview = Collections.unmodifiableList(new ArrayList<>(
+                stackPreview == null ? Collections.<String>emptyList() : stackPreview));
+            this.stackSize = Math.max(0, stackSize);
+            this.parenDepth = Math.max(0, parenDepth);
+            this.escapeNext = escapeNext;
+            this.stackClear = stackClear;
+        }
+
+        private static CastOutcome success(Resolution resolution,
+                                           List<String> stackPreview,
+                                           int stackSize, int parenDepth, boolean escapeNext,
+                                           boolean stackClear) {
+            return new CastOutcome(resolution, stackPreview, stackSize,
+                parenDepth, escapeNext, stackClear);
+        }
+
+        private static CastOutcome failure(Resolution resolution,
+                                           List<String> stackPreview,
+                                           int stackSize, int parenDepth,
+                                           boolean escapeNext) {
+            return new CastOutcome(resolution, stackPreview, stackSize,
+                parenDepth, escapeNext, false);
+        }
+
+        public boolean isSuccess() {
+            return resolution != Resolution.ERRORED
+                && resolution != Resolution.INVALID;
+        }
+
+        public Resolution getResolution() {
+            return resolution;
+        }
+
+        public List<String> getStackPreview() {
+            return stackPreview;
+        }
+
+        public int getStackSize() {
+            return stackSize;
+        }
+
+        public int getParenDepth() {
+            return parenDepth;
+        }
+
+        public boolean isEscapeNext() {
+            return escapeNext;
+        }
+
+        public boolean isStackClear() {
+            return stackClear;
+        }
     }
 }

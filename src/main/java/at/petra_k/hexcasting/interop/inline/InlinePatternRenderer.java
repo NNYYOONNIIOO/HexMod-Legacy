@@ -32,7 +32,7 @@ public final class InlinePatternRenderer implements InlineRenderer<InlinePattern
         if (pattern == null) {
             return "";
         }
-        return "\\uE000hexcasting:pattern:" + pattern.signature() + "\\uE001";
+        return "\uE000hexcasting:pattern:" + pattern.signature() + "\uE001";
     }
 
     private static char segmentChar(int dx, int dy) {

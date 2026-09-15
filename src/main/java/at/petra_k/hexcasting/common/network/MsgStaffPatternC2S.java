@@ -105,6 +105,18 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         }
     }
 
+    /**
+     * Send the already normalized staff snapshot, including per-pattern
+     * resolution state.  The GUI uses this overload so appending one new
+     * pattern cannot turn all older, resolved paths back into UNRESOLVED.
+     */
+    public MsgStaffPatternC2S(EnumHand hand, String staffInstanceId,
+                              NBTTagList snapshot) {
+        this.handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
+        this.staffInstanceId = staffInstanceId == null ? "" : staffInstanceId;
+        this.patternsData = snapshot == null ? new NBTTagList() : snapshot;
+    }
+
     @Override
     public void fromBytes(ByteBuf buf) {
         handOrdinal = buf.readByte();
@@ -172,18 +184,22 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         } else if (patternsData.tagCount() > previous.tagCount()) {
             for (int i = previous.tagCount(); i < patternsData.tagCount(); i++) {
                 try {
-                    boolean success = StaffCastExecutor.execute(
+                    StaffCastExecutor.CastOutcome outcome = StaffCastExecutor.executeDetailed(
                         player, hand, staff,
                         HexPattern.fromNBT(patternsData.getCompoundTagAt(i)));
+                    ItemHexStaff.setProgramResolution(
+                        staff, i, outcome.getResolution());
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
-                        hand, success, StaffCastExecutor.getStackSize(staff)), player);
-                    if (success && StaffCastExecutor.isStackClear(staff)) {
+                        hand, i, outcome), player);
+                    if (outcome.isSuccess() && outcome.isStackClear()) {
                         StaffCastExecutor.clear(staff);
                         ItemHexStaff.clearProgram(player, hand, staff);
                         break;
                     }
                 } catch (RuntimeException ignored) {
                     // ItemHexStaff already filters malformed snapshot entries.
+                    ItemHexStaff.setProgramResolution(
+                        staff, i, StaffCastExecutor.Resolution.ERRORED);
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, false, StaffCastExecutor.getStackSize(staff)), player);
                 }
@@ -213,12 +229,13 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
     private static void sendAuthoritativeSnapshot(EntityPlayer player, EnumHand hand) {
         ItemStack staff = player.getHeldItem(hand);
         PaucalAPI.sendTo(new MsgStaffProgramS2C(
-            hand, staff, ItemHexStaff.getProgramSnapshot(staff)), player);
+            hand, player.world, staff, ItemHexStaff.getProgramSnapshot(staff)), player);
     }
 
     public static void register() {
         at.petrak.paucal.api.PaucalAPI.registerMessage(MsgStaffPatternC2S.class, Side.SERVER);
         MsgStaffProgramS2C.register();
         MsgStaffCastResultS2C.register();
+        MsgPerWorldPatternsS2C.register();
     }
 }

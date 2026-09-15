@@ -171,7 +171,8 @@ public final class HexItems {
             }
             EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
-                .setCreativeTab(HexCreativeTab.HEX));
+                .setCreativeTab(id.equals("scroll_small") || id.equals("scroll_medium")
+                    || id.equals("scroll") ? HexCreativeTab.SCROLLS : HexCreativeTab.HEX));
         }
     }
 

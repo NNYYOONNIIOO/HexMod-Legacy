@@ -10,7 +10,10 @@ import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.lib.HexCreativeTab;
+import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -32,6 +35,8 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 public final class ItemPatternScroll extends Item implements IotaHolderItem {
     private final int blockSize;
     private static final String KEY_ACTION = "action";
+    public static final String TAG_OP_ID = "op_id";
+    public static final String TAG_ANCIENT = "ancient";
     private static final String KEY_PATTERN = "pattern";
 
     public ItemPatternScroll() {
@@ -45,6 +50,28 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
 
     public int getBlockSize() {
         return blockSize;
+    }
+
+    /** Create an ancient scroll that resolves its stroke order in the current world. */
+    public static ItemStack withPerWorldPattern(ItemStack stack, ResourceLocation action) {
+        return withPerWorldPattern(stack, action == null ? "" : action.toString());
+    }
+
+    /** Create an ancient scroll using the same op_id representation as Hex 1.20.1. */
+    public static ItemStack withPerWorldPattern(ItemStack stack, String action) {
+        if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof ItemPatternScroll)) {
+            return stack;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setString(TAG_OP_ID, action == null ? "" : action);
+        tag.setBoolean(TAG_ANCIENT, true);
+        tag.removeTag(KEY_ACTION);
+        tag.removeTag(KEY_PATTERN);
+        return stack;
     }
 
     @Override
@@ -85,7 +112,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         if (!world.isRemote) {
             HexActionRegistry.bootstrap();
             ResourceLocation current = getActionId(stack);
-            HexPattern currentPattern = getPattern(stack);
+            HexPattern currentPattern = getPattern(stack, world);
             if (!player.isSneaking() && ItemHexStaff.isStaff(player.getHeldItemOffhand())) {
                 if (currentPattern == null) {
                     player.sendMessage(new TextComponentString(
@@ -174,12 +201,41 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
     }
 
+    /** Load an op_id into the exact world-specific pattern as soon as it enters an inventory. */
+    @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+        super.onUpdate(stack, world, entity, slot, selected);
+        if (world == null || world.isRemote || stack == null || stack.isEmpty()
+            || !(entity instanceof EntityPlayer)) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null || !tag.hasKey(TAG_OP_ID, 8)
+            || tag.hasKey(KEY_PATTERN, 10)) {
+            return;
+        }
+        try {
+            ResourceLocation action = new ResourceLocation(tag.getString(TAG_OP_ID));
+            HexPattern pattern = HexActionRegistry.getPattern(action, world);
+            if (pattern != null) {
+                tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
+                tag.setBoolean(TAG_ANCIENT, true);
+            }
+        } catch (RuntimeException ignored) {
+            // Invalid op_id data is left alone so the tooltip can explain it.
+        }
+    }
+
     @Override
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
-        if (tab == getCreativeTab()) {
-            // Keep one ordinary scroll in the creative inventory. Action-bearing
-            // scrolls remain valid NBT stacks supplied by recipes or commands.
+        if (tab == HexCreativeTab.SCROLLS) {
             items.add(new ItemStack(this));
+            if (blockSize == 3) {
+                HexActionRegistry.bootstrap();
+                for (ResourceLocation action : PerWorldPatternData.perWorldActionIds()) {
+                    items.add(withPerWorldPattern(new ItemStack(this), action));
+                }
+            }
         }
     }
 
@@ -188,7 +244,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
         ResourceLocation id = getActionId(stack);
-        HexPattern pattern = getPattern(stack);
+        HexPattern pattern = getPattern(stack, world);
         if (pattern == null) {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.empty"));
             return;
@@ -206,9 +262,32 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         if (id == null) {
             return super.getItemStackDisplayName(stack);
         }
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag != null && tag.hasKey(TAG_OP_ID, 8)) {
+            return I18n.translateToLocalFormatted(
+                getScrollLocalizationKey("of"), localizeAction(id));
+        }
         return I18n.translateToLocalFormatted(
             "hexcasting.item.pattern_scroll.variant",
             super.getItemStackDisplayName(stack), localizeAction(id));
+    }
+
+    /**
+     * Ancient scroll names use the same size-specific description id as the
+     * modern item.  The old port hard-coded the large-scroll key, which made
+     * small and medium ancient scrolls fall back to a literal localization
+     * key (and made translated names inconsistent between the three items).
+     */
+    private String getScrollLocalizationKey(String suffix) {
+        String id;
+        if (blockSize <= 1) {
+            id = "scroll_small";
+        } else if (blockSize == 2) {
+            id = "scroll_medium";
+        } else {
+            id = "scroll";
+        }
+        return "item.hexcasting." + id + "." + suffix;
     }
 
     public static ResourceLocation getActionId(ItemStack stack) {
@@ -217,14 +296,19 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             return null;
         }
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag != null && tag.hasKey(KEY_ACTION, 8)) {
-            try {
-                ResourceLocation stored = new ResourceLocation(tag.getString(KEY_ACTION));
-                if (HexActionRegistry.get(stored) != null) {
-                    return stored;
+        if (tag != null) {
+            for (String key : new String[] {TAG_OP_ID, KEY_ACTION}) {
+                if (!tag.hasKey(key, 8)) {
+                    continue;
                 }
-            } catch (RuntimeException ignored) {
-                // Invalid or stale NBT falls back to a registered action.
+                try {
+                    ResourceLocation stored = new ResourceLocation(tag.getString(key));
+                    if (HexActionRegistry.get(stored) != null) {
+                        return stored;
+                    }
+                } catch (RuntimeException ignored) {
+                    // Invalid or stale NBT falls back to a registered action.
+                }
             }
         }
         HexPattern stored = getStoredPattern(stack);
@@ -259,16 +343,25 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
 
     /** Return the exact pattern stored on this scroll, with legacy action fallback. */
     public static HexPattern getPattern(ItemStack stack) {
+        return getPattern(stack, null);
+    }
+
+    /** Return the exact pattern, resolving op_id against the server/client world table. */
+    public static HexPattern getPattern(ItemStack stack, World world) {
         HexPattern stored = getStoredPattern(stack);
         if (stored != null) {
             return stored;
         }
         ResourceLocation action = getActionId(stack);
-        return action == null ? null : HexActionRegistry.getPattern(action);
+        return action == null ? null : HexActionRegistry.getPattern(action, world);
     }
 
     public static boolean hasPattern(ItemStack stack) {
         return getPattern(stack) != null;
+    }
+
+    public static boolean hasPattern(ItemStack stack, World world) {
+        return getPattern(stack, world) != null;
     }
 
     /** Store or clear the complete drawable pattern on a scroll. */
@@ -281,6 +374,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             if (tag != null) {
                 tag.removeTag(KEY_PATTERN);
                 tag.removeTag(KEY_ACTION);
+                tag.removeTag(TAG_OP_ID);
+                tag.removeTag(TAG_ANCIENT);
             }
             return;
         }
@@ -290,6 +385,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         }
         tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
         tag.removeTag(KEY_ACTION);
+        tag.removeTag(TAG_OP_ID);
+        tag.removeTag(TAG_ANCIENT);
     }
 
     /** Consumes a written scroll unless the player is in creative mode. */

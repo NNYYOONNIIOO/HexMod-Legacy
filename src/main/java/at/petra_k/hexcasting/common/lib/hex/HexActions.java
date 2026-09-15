@@ -2092,7 +2092,10 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern CREATE_WATER_PATTERN =
         pattern(HexDir.SOUTH_EAST, "aqawqadaq");
     public static final HexAction CREATE_WATER = register(CREATE_WATER_ID, CREATE_WATER_PATTERN,
-        fluidAction(net.minecraft.init.Blocks.WATER.getDefaultState()));
+        fluidAction(net.minecraft.init.Blocks.WATER.getDefaultState(),
+            net.minecraft.init.Blocks.CAULDRON.getDefaultState()
+                .withProperty(net.minecraft.block.BlockCauldron.LEVEL, 3),
+            MediaConstants.DUST_UNIT, net.minecraft.init.Items.WATER_BUCKET));
 
     /** Place a source lava block at a position. */
     public static final ResourceLocation CREATE_LAVA_ID =
@@ -2100,7 +2103,10 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern CREATE_LAVA_PATTERN =
         pattern(HexDir.EAST, "eaqawqadaqd");
     public static final HexAction CREATE_LAVA = register(CREATE_LAVA_ID, CREATE_LAVA_PATTERN,
-        fluidAction(net.minecraft.init.Blocks.LAVA.getDefaultState()));
+        fluidAction(net.minecraft.init.Blocks.LAVA.getDefaultState(),
+            net.minecraft.init.Blocks.CAULDRON.getDefaultState()
+                .withProperty(net.minecraft.block.BlockCauldron.LEVEL, 3),
+            MediaConstants.CRYSTAL_UNIT, net.minecraft.init.Items.LAVA_BUCKET));
 
     /** Remove a water source block at a position. */
     public static final ResourceLocation DESTROY_WATER_ID =
@@ -2128,7 +2134,11 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
-    private static HexAction fluidAction(final net.minecraft.block.state.IBlockState state) {
+    private static HexAction fluidAction(
+        final net.minecraft.block.state.IBlockState liquidState,
+        final net.minecraft.block.state.IBlockState cauldronState,
+        final long mediaCost,
+        final net.minecraft.item.Item bucket) {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
@@ -2142,8 +2152,23 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-                if (!player.world.isRemote && player.world.isAirBlock(position)) {
-                    player.world.setBlockState(position, state, 3);
+                if (!player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                    net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.fluid_forbidden");
+                }
+                // Match OpCreateFluid: the action pays before applying the
+                // world-side effect, fills a cauldron to its maximum level,
+                // and otherwise delegates placement to the matching bucket.
+                vm.consumeMedia(mediaCost);
+                if (player.world.isRemote) {
+                    return;
+                }
+                if (player.world.getBlockState(position).getBlock()
+                    == net.minecraft.init.Blocks.CAULDRON) {
+                    player.world.setBlockState(position, cauldronState, 3);
+                } else if (bucket instanceof net.minecraft.item.ItemBucket) {
+                    ((net.minecraft.item.ItemBucket) bucket).tryPlaceContainedLiquid(
+                        player, player.world, position);
                 }
             }
         };
@@ -2408,7 +2433,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_ABSORPTION_PATTERN =
         pattern(HexDir.SOUTH_WEST, "qqaawawaeqqdd");
     public static final HexAction POTION_ABSORPTION = register(
-        POTION_ABSORPTION_ID, POTION_ABSORPTION_PATTERN, potionAction(net.minecraft.init.MobEffects.ABSORPTION));
+        POTION_ABSORPTION_ID, POTION_ABSORPTION_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.ABSORPTION,
+            MediaConstants.DUST_UNIT, true, true));
 
     /** Apply the vanilla potion/haste effect to the caster. */
     public static final ResourceLocation POTION_HASTE_ID =
@@ -2416,7 +2443,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_HASTE_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qaawawaeqqqdd");
     public static final HexAction POTION_HASTE = register(
-        POTION_HASTE_ID, POTION_HASTE_PATTERN, potionAction(net.minecraft.init.MobEffects.HASTE));
+        POTION_HASTE_ID, POTION_HASTE_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.HASTE,
+            MediaConstants.DUST_UNIT / 3L, true, true));
 
     /** Apply the vanilla potion/levitation effect to the caster. */
     public static final ResourceLocation POTION_LEVITATION_ID =
@@ -2424,7 +2453,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_LEVITATION_PATTERN =
         pattern(HexDir.WEST, "qqqqqawwawawd");
     public static final HexAction POTION_LEVITATION = register(
-        POTION_LEVITATION_ID, POTION_LEVITATION_PATTERN, potionAction(net.minecraft.init.MobEffects.LEVITATION));
+        POTION_LEVITATION_ID, POTION_LEVITATION_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.LEVITATION,
+            MediaConstants.DUST_UNIT / 5L, false, false));
 
     /** Apply the vanilla potion/night_vision effect to the caster. */
     public static final ResourceLocation POTION_NIGHT_VISION_ID =
@@ -2432,7 +2463,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_NIGHT_VISION_PATTERN =
         pattern(HexDir.WEST, "qqqaawawaeqdd");
     public static final HexAction POTION_NIGHT_VISION = register(
-        POTION_NIGHT_VISION_ID, POTION_NIGHT_VISION_PATTERN, potionAction(net.minecraft.init.MobEffects.NIGHT_VISION));
+        POTION_NIGHT_VISION_ID, POTION_NIGHT_VISION_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.NIGHT_VISION,
+            MediaConstants.DUST_UNIT / 5L, false, true));
 
     /** Apply the vanilla potion/poison effect to the caster. */
     public static final ResourceLocation POTION_POISON_ID =
@@ -2440,7 +2473,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_POISON_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqadwawaww");
     public static final HexAction POTION_POISON = register(
-        POTION_POISON_ID, POTION_POISON_PATTERN, potionAction(net.minecraft.init.MobEffects.POISON));
+        POTION_POISON_ID, POTION_POISON_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.POISON,
+            MediaConstants.DUST_UNIT / 3L, true, false));
 
     /** Apply the vanilla potion/regeneration effect to the caster. */
     public static final ResourceLocation POTION_REGENERATION_ID =
@@ -2448,7 +2483,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_REGENERATION_PATTERN =
         pattern(HexDir.NORTH_WEST, "qqqqaawawaedd");
     public static final HexAction POTION_REGENERATION = register(
-        POTION_REGENERATION_ID, POTION_REGENERATION_PATTERN, potionAction(net.minecraft.init.MobEffects.REGENERATION));
+        POTION_REGENERATION_ID, POTION_REGENERATION_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.REGENERATION,
+            MediaConstants.DUST_UNIT, true, true));
 
     /** Apply the vanilla potion/slowness effect to the caster. */
     public static final ResourceLocation POTION_SLOWNESS_ID =
@@ -2456,7 +2493,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_SLOWNESS_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqadwawaw");
     public static final HexAction POTION_SLOWNESS = register(
-        POTION_SLOWNESS_ID, POTION_SLOWNESS_PATTERN, potionAction(net.minecraft.init.MobEffects.SLOWNESS));
+        POTION_SLOWNESS_ID, POTION_SLOWNESS_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.SLOWNESS,
+            MediaConstants.DUST_UNIT / 3L, true, false));
 
     /** Apply the vanilla potion/strength effect to the caster. */
     public static final ResourceLocation POTION_STRENGTH_ID =
@@ -2464,7 +2503,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_STRENGTH_PATTERN =
         pattern(HexDir.EAST, "aawawaeqqqqdd");
     public static final HexAction POTION_STRENGTH = register(
-        POTION_STRENGTH_ID, POTION_STRENGTH_PATTERN, potionAction(net.minecraft.init.MobEffects.STRENGTH));
+        POTION_STRENGTH_ID, POTION_STRENGTH_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.STRENGTH,
+            MediaConstants.DUST_UNIT / 3L, true, true));
 
     /** Apply the vanilla potion/weakness effect to the caster. */
     public static final ResourceLocation POTION_WEAKNESS_ID =
@@ -2472,7 +2513,9 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_WEAKNESS_PATTERN =
         pattern(HexDir.NORTH_WEST, "qqqqqaqwawaw");
     public static final HexAction POTION_WEAKNESS = register(
-        POTION_WEAKNESS_ID, POTION_WEAKNESS_PATTERN, potionAction(net.minecraft.init.MobEffects.WEAKNESS));
+        POTION_WEAKNESS_ID, POTION_WEAKNESS_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.WEAKNESS,
+            MediaConstants.DUST_UNIT / 10L, true, false));
 
     /** Apply the vanilla potion/wither effect to the caster. */
     public static final ResourceLocation POTION_WITHER_ID =
@@ -2480,10 +2523,14 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern POTION_WITHER_PATTERN =
         pattern(HexDir.SOUTH_WEST, "qqqqqaewawawe");
     public static final HexAction POTION_WITHER = register(
-        POTION_WITHER_ID, POTION_WITHER_PATTERN, potionAction(net.minecraft.init.MobEffects.WITHER));
+        POTION_WITHER_ID, POTION_WITHER_PATTERN,
+        potionAction(net.minecraft.init.MobEffects.WITHER,
+            MediaConstants.DUST_UNIT, true, false));
 
     private static HexAction potionAction(
-        final net.minecraft.potion.Potion potion) {
+        final net.minecraft.potion.Potion potion,
+        final long baseCost, final boolean allowPotency,
+        final boolean potencyCubic) {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
@@ -2495,10 +2542,46 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.potion_context");
                 }
-                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                if (!player.world.isRemote) {
-                    player.addPotionEffect(new net.minecraft.potion.PotionEffect(
-                        potion, 20 * 30, 0, false, true));
+                DoubleIota potencyIota = allowPotency
+                    ? stack.pop(DoubleIota.class) : null;
+                double duration = stack.pop(DoubleIota.class).getValue();
+                net.minecraft.entity.Entity target = resolveEntity(
+                    stack.pop(EntityIota.class), vm);
+                if (!(target instanceof net.minecraft.entity.EntityLivingBase)
+                    || target instanceof net.minecraft.entity.item.EntityArmorStand) {
+                    throw new CastingException("hexcasting.error.potion_target");
+                }
+                if (Double.isNaN(duration) || Double.isInfinite(duration)
+                    || duration <= 0.0D
+                    || duration > (Integer.MAX_VALUE / 20.0D)) {
+                    throw new CastingException("hexcasting.error.potion_duration");
+                }
+                double potency = potencyIota == null ? 1.0D
+                    : potencyIota.getValue();
+                if (Double.isNaN(potency) || Double.isInfinite(potency)
+                    || potency < 1.0D || potency > 127.0D) {
+                    throw new CastingException("hexcasting.error.potion_potency");
+                }
+                if (vm.getPlayer().getDistanceSq(target) > 32.0D * 32.0D) {
+                    throw new CastingException("hexcasting.error.potion_range");
+                }
+                double potencyCost = potencyCubic
+                    ? potency * potency * potency : potency * potency;
+                double mediaCost = baseCost * duration * potencyCost;
+                if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
+                    || mediaCost > Long.MAX_VALUE) {
+                    throw new CastingException("hexcasting.error.potion_cost");
+                }
+                vm.consumeMedia(Math.max(1L, (long) Math.ceil(mediaCost)));
+                net.minecraft.entity.EntityLivingBase living =
+                    (net.minecraft.entity.EntityLivingBase) target;
+                int ticks = (int) Math.floor(duration * 20.0D);
+                if (!living.world.isRemote) {
+                    if (ticks > 0) {
+                        living.addPotionEffect(new net.minecraft.potion.PotionEffect(
+                            potion, ticks, (int) Math.floor(potency) - 1,
+                            false, true));
+                    }
                 }
             }
         };
@@ -2626,7 +2709,12 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
-    /** Enable creative-style flight for the caster for a bounded duration. */
+    /**
+     * Altiora: give a player the short upward impulse and collision grace
+     * used by the 1.20.1 great spell.  The old port incorrectly treated this
+     * pattern as the separate limited-flight action and popped a duration
+     * number, so the normal ``get caster -> flight`` program failed.
+     */
     public static final ResourceLocation FLIGHT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "flight");
     public static final HexPattern FLIGHT_PATTERN =
@@ -2643,18 +2731,24 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.flight_context");
                 }
-                double seconds = stack.pop(DoubleIota.class).getValue();
-                if (Double.isNaN(seconds) || Double.isInfinite(seconds)
-                    || seconds <= 0.0D || seconds > 3600.0D) {
-                    throw new CastingException("hexcasting.error.flight_duration");
+                net.minecraft.entity.Entity target = resolveEntity(
+                    stack.pop(EntityIota.class), vm);
+                if (!(target instanceof net.minecraft.entity.player.EntityPlayer)) {
+                    throw new CastingException("hexcasting.error.flight_target");
                 }
-                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                if (!player.capabilities.isCreativeMode) {
-                    player.capabilities.allowFlying = true;
-                    player.capabilities.isFlying = true;
-                    player.sendPlayerAbilities();
+                net.minecraft.entity.player.EntityPlayer player =
+                    (net.minecraft.entity.player.EntityPlayer) target;
+                if (player.world != vm.getPlayer().world
+                    || vm.getPlayer().getDistanceSq(player) > 32.0D * 32.0D) {
+                    throw new CastingException("hexcasting.error.flight_range");
                 }
-                HexFlightState.grant(player, (int) Math.ceil(seconds * 20.0D));
+                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+                if (!player.world.isRemote) {
+                    player.addVelocity(0.0D, 1.5D, 0.0D);
+                    player.velocityChanged = true;
+                    player.fallDistance = 0.0F;
+                    HexFlightState.grantAltiora(player);
+                }
             }
         });
 
@@ -2664,9 +2758,27 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern FLIGHT_CAN_FLY_PATTERN =
         pattern(HexDir.NORTH_EAST, "dwdwdeweaqa");
     public static final HexAction FLIGHT_CAN_FLY = register(
-        FLIGHT_CAN_FLY_ID, FLIGHT_CAN_FLY_PATTERN, stack ->
-            stack.push(new BooleanIota(stack.peek() instanceof EntityIota
-                ? false : true)));
+        FLIGHT_CAN_FLY_ID, FLIGHT_CAN_FLY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.flight_can_fly_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                net.minecraft.entity.Entity target = resolveEntity(
+                    stack.pop(EntityIota.class), vm);
+                if (!(target instanceof net.minecraft.entity.player.EntityPlayer)) {
+                    throw new CastingException("hexcasting.error.flight_can_fly_context");
+                }
+                net.minecraft.entity.player.EntityPlayer player =
+                    (net.minecraft.entity.player.EntityPlayer) target;
+                stack.push(new BooleanIota(
+                    HexFlightState.hasAltiora(player)
+                        || player.capabilities.allowFlying));
+            }
+        });
 
     /** Return the configured Hex flight range in blocks. */
     public static final ResourceLocation FLIGHT_RANGE_ID =
@@ -2701,6 +2813,8 @@ throw new CastingException("hexcasting.error.get_media_context");
     private static final class HexFlightState {
         private static final java.util.Map<java.util.UUID, Integer> REMAINING =
             new java.util.HashMap<>();
+        private static final java.util.Map<java.util.UUID, Integer> ALTIORA_REMAINING =
+            new java.util.HashMap<>();
 
         private static void grant(net.minecraft.entity.player.EntityPlayer player, int ticks) {
             java.util.UUID id = player.getUniqueID();
@@ -2710,6 +2824,40 @@ throw new CastingException("hexcasting.error.get_media_context");
         private static double remainingSeconds(net.minecraft.entity.player.EntityPlayer player) {
             Integer ticks = REMAINING.get(player.getUniqueID());
             return ticks == null ? 0.0D : Math.max(0, ticks) / 20.0D;
+        }
+
+        private static void grantAltiora(
+            net.minecraft.entity.player.EntityPlayer player) {
+            java.util.UUID id = player.getUniqueID();
+            ALTIORA_REMAINING.put(id, 20);
+        }
+
+        private static void tickAltiora(
+            net.minecraft.entity.player.EntityPlayer player) {
+            java.util.UUID id = player.getUniqueID();
+            Integer remaining = ALTIORA_REMAINING.get(id);
+            if (remaining == null) {
+                return;
+            }
+            if (remaining <= 0
+                && (player.onGround || player.collidedHorizontally)) {
+                ALTIORA_REMAINING.remove(id);
+                return;
+            }
+            player.fallDistance = 0.0F;
+            ALTIORA_REMAINING.put(id, Math.max(0, remaining - 1));
+        }
+
+        private static boolean hasAltiora(
+            net.minecraft.entity.player.EntityPlayer player) {
+            return ALTIORA_REMAINING.containsKey(player.getUniqueID());
+        }
+    }
+
+    /** Called by the Forge player tick bridge for the Altiora grace period. */
+    public static void tickAltiora(net.minecraft.entity.player.EntityPlayer player) {
+        if (player != null && !player.world.isRemote) {
+            HexFlightState.tickAltiora(player);
         }
     }
 
@@ -2925,7 +3073,16 @@ throw new CastingException("hexcasting.error.get_media_context");
                     || Math.abs(z) > 30000000.0D) {
                     throw new CastingException("hexcasting.error.teleport_great_position");
                 }
+                vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
                 if (!vm.getPlayer().world.isRemote) {
+                    // Greater Teleport forcibly detaches the target from
+                    // non-sticky vehicles/passengers, matching the upstream
+                    // action's ordinary-entity behavior.
+                    target.dismountRidingEntity();
+                    for (net.minecraft.entity.Entity passenger
+                        : new java.util.ArrayList<>(target.getPassengers())) {
+                        passenger.dismountRidingEntity();
+                    }
                     target.setPosition(x, y, z);
                     target.motionX = 0.0D;
                     target.motionY = 0.0D;
