@@ -1053,6 +1053,7 @@ private void drawMove(int mouseX, int mouseY) {
         if (typedChar == 'c' || typedChar == 'C') {
             if (mc != null && mc.player != null) {
                 ItemHexStaff.clearProgram(mc.player, hand, mc.player.getHeldItem(hand));
+                HexClientEffects.clearSpiralPatterns(mc.player.getUniqueID());
             }
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(
                 hand,

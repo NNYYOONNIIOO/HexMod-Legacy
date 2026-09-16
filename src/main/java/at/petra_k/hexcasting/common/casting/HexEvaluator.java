@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.effect.HexCastingEffects;
 
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
@@ -43,7 +44,16 @@ public final class HexEvaluator {
         CastingVM vm = new CastingVM(stack).enqueue(patterns);
         vm.setCastingData(castingData);
         vm.setPlayer(player);
-        vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+        try {
+            vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            HexCastingEffects.onPortableCast(player, patterns, true);
+        } catch (CastingException exception) {
+            HexCastingEffects.onPortableCast(player, patterns, false);
+            throw exception;
+        } catch (RuntimeException exception) {
+            HexCastingEffects.onPortableCast(player, patterns, false);
+            throw exception;
+        }
     }
 
 }

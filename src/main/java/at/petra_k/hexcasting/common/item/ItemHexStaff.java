@@ -68,6 +68,7 @@ public final class ItemHexStaff extends Item {
             // program has disappeared from the visible hand stack.
             if (player.isSneaking()) {
                 clearProgram(player, hand, staff);
+                clearClientOrbitPatterns(player);
             }
             openStaffGui(hand);
             return new ActionResult<>(EnumActionResult.SUCCESS, staff);
@@ -97,6 +98,21 @@ public final class ItemHexStaff extends Item {
         // pattern is drawn; right-clicking must not replay the whole list as a
         // fresh cast (which loses the VM stack and causes false failures).
         return new ActionResult<>(EnumActionResult.SUCCESS, staff);
+    }
+
+    /** Clear the client-side spiral immediately; the server snapshot follows. */
+    private static void clearClientOrbitPatterns(EntityPlayer player) {
+        if (player == null) {
+            return;
+        }
+        try {
+            Class<?> effects = Class.forName(
+                "at.petra_k.hexcasting.client.HexClientEffects");
+            effects.getMethod("clearSpiralPatterns", UUID.class)
+                .invoke(null, player.getUniqueID());
+        } catch (ReflectiveOperationException ignored) {
+            // The client-only renderer is absent on a dedicated server.
+        }
     }
 
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)

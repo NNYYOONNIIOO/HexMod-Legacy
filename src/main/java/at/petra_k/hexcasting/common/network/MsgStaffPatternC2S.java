@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.casting.StaffPatternValidator;
+import at.petra_k.hexcasting.common.effect.HexCastingEffects;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
@@ -167,6 +168,7 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         }
         if (patternsData == null) {
             ItemHexStaff.clearProgram(player, hand, staff);
+            HexCastingEffects.clearOrbitPatterns(player);
             sendAuthoritativeSnapshot(player, hand);
             return;
         }
@@ -181,16 +183,19 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         ItemHexStaff.replaceProgram(player, hand, staff, patternsData);
         if (!appendOnly) {
             StaffCastExecutor.clear(staff);
+            HexCastingEffects.clearOrbitPatterns(player);
         } else if (patternsData.tagCount() > previous.tagCount()) {
             for (int i = previous.tagCount(); i < patternsData.tagCount(); i++) {
                 try {
+                    HexPattern pattern = HexPattern.fromNBT(patternsData.getCompoundTagAt(i));
                     StaffCastExecutor.CastOutcome outcome = StaffCastExecutor.executeDetailed(
                         player, hand, staff,
-                        HexPattern.fromNBT(patternsData.getCompoundTagAt(i)));
+                        pattern);
                     ItemHexStaff.setProgramResolution(
                         staff, i, outcome.getResolution());
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, i, outcome), player);
+                    HexCastingEffects.onStaffPattern(player, pattern, outcome);
                     if (outcome.isSuccess() && outcome.isStackClear()) {
                         StaffCastExecutor.clear(staff);
                         ItemHexStaff.clearProgram(player, hand, staff);
@@ -202,6 +207,8 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
                         staff, i, StaffCastExecutor.Resolution.ERRORED);
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, false, StaffCastExecutor.getStackSize(staff)), player);
+                    HexCastingEffects.onStaffPattern(player, null,
+                        null);
                 }
             }
         }
@@ -236,6 +243,9 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
         at.petrak.paucal.api.PaucalAPI.registerMessage(MsgStaffPatternC2S.class, Side.SERVER);
         MsgStaffProgramS2C.register();
         MsgStaffCastResultS2C.register();
+        MsgCastingPatternS2C.register();
+        MsgClearCastingPatternsS2C.register();
+        MsgCastParticlesS2C.register();
         MsgPerWorldPatternsS2C.register();
     }
 }

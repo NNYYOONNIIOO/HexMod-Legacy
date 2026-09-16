@@ -93,6 +93,21 @@ public final class MsgStaffProgramS2C implements PaucalMessage {
             ItemHexStaff.setInstanceId(staff, staffInstanceId);
         }
         ItemHexStaff.replaceProgram(staff, patternsData);
+        if (patternsData == null || patternsData.tagCount() == 0) {
+            // The authoritative empty snapshot is the final state of a
+            // staff clear.  Use it as a second, ordered clearing signal so a
+            // delayed orbit packet can never leave a stale rune ring around
+            // the player after the dedicated clear packet was processed.
+            try {
+                Class<?> effects = Class.forName(
+                    "at.petra_k.hexcasting.client.HexClientEffects");
+                effects.getMethod("clearSpiralPatterns", java.util.UUID.class)
+                    .invoke(null, player.getUniqueID());
+            } catch (ReflectiveOperationException ignored) {
+                // The client-only renderer is deliberately absent on a
+                // dedicated server.
+            }
+        }
         try {
             Class<?> bridge = Class.forName(
                 "at.petra_k.hexcasting.client.HexStaffClientSync");
