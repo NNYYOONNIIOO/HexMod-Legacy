@@ -33,6 +33,8 @@ import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.common.lib.HexBlocks;
+import at.petra_k.hexcasting.common.world.HexEdifiedTreeGenerator;
 
 /**
  * First portable action slice of Hex Casting.
@@ -2108,7 +2110,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 .withProperty(net.minecraft.block.BlockCauldron.LEVEL, 3),
             MediaConstants.CRYSTAL_UNIT, net.minecraft.init.Items.LAVA_BUCKET));
 
-    /** Remove a water source block at a position. */
+    /** Remove fluids in and around a position, matching OpDestroyFluid. */
     public static final ResourceLocation DESTROY_WATER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "destroy_water");
     public static final HexPattern DESTROY_WATER_PATTERN =
@@ -2127,9 +2129,55 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-                if (!player.world.isRemote
-                    && player.world.getBlockState(position).getBlock() == net.minecraft.init.Blocks.WATER) {
-                    player.world.setBlockToAir(position);
+                if (!player.world.isBlockModifiable(player, position)
+                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.fluid_forbidden");
+                }
+                vm.consumeMedia(2L * MediaConstants.CRYSTAL_UNIT);
+                if (player.world.isRemote) {
+                    return;
+                }
+
+                java.util.ArrayDeque<net.minecraft.util.math.BlockPos> todo =
+                    new java.util.ArrayDeque<>();
+                java.util.HashSet<net.minecraft.util.math.BlockPos> seen =
+                    new java.util.HashSet<>();
+                for (int x = -2; x <= 2; x++) {
+                    for (int y = -2; y <= 2; y++) {
+                        for (int z = -2; z <= 2; z++) {
+                            todo.add(position.add(x, y, z));
+                        }
+                    }
+                }
+                int removed = 0;
+                while (!todo.isEmpty() && removed < 1024) {
+                    net.minecraft.util.math.BlockPos current = todo.removeFirst();
+                    if (!seen.add(current)
+                        || position.distanceSq(current) > 100.0D
+                        || !player.world.isBlockModifiable(player, current)
+                        || !player.canPlayerEdit(current, net.minecraft.util.EnumFacing.UP,
+                            net.minecraft.item.ItemStack.EMPTY)) {
+                        continue;
+                    }
+                    net.minecraft.block.Block block =
+                        player.world.getBlockState(current).getBlock();
+                    boolean fluid = block == net.minecraft.init.Blocks.WATER
+                        || block == net.minecraft.init.Blocks.FLOWING_WATER
+                        || block == net.minecraft.init.Blocks.LAVA
+                        || block == net.minecraft.init.Blocks.FLOWING_LAVA;
+                    if (fluid) {
+                        player.world.setBlockToAir(current);
+                        removed++;
+                        for (net.minecraft.util.EnumFacing facing
+                            : net.minecraft.util.EnumFacing.values()) {
+                            todo.add(current.offset(facing));
+                        }
+                    } else if (block == net.minecraft.init.Blocks.CAULDRON) {
+                        player.world.setBlockState(current,
+                            net.minecraft.init.Blocks.CAULDRON.getDefaultState(), 3);
+                        removed++;
+                    }
                 }
             }
         });
@@ -2185,7 +2233,7 @@ throw new CastingException("hexcasting.error.get_media_context");
         return new net.minecraft.util.math.BlockPos(value.x, value.y, value.z);
     }
 
-    /** Apply bonemeal to a sapling or growable block at a position. */
+    /** Grow a sapling into Hex's Akashic/edified tree. */
     public static final ResourceLocation EDIFY_ID =
         new ResourceLocation(HexAPI.MOD_ID, "edify");
     public static final HexPattern EDIFY_PATTERN =
@@ -2203,11 +2251,33 @@ throw new CastingException("hexcasting.error.get_media_context");
                 throw new CastingException("hexcasting.error.edify_context");
             }
             net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-            if (!player.world.isRemote) {
-                net.minecraft.item.ItemStack boneMeal = new net.minecraft.item.ItemStack(
-                    net.minecraft.init.Items.DYE, 1, 15);
-                net.minecraft.item.ItemDye.applyBonemeal(
-                    boneMeal, player.world, position, player, net.minecraft.util.EnumHand.MAIN_HAND);
+            net.minecraft.block.state.IBlockState sapling = player.world.getBlockState(position);
+            if (!(sapling.getBlock() instanceof net.minecraft.block.BlockSapling)) {
+                throw new CastingException("hexcasting.error.edify_sapling");
+            }
+            if (!player.world.isBlockModifiable(player, position)
+                || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                    net.minecraft.item.ItemStack.EMPTY)) {
+                throw new CastingException("hexcasting.error.edify_forbidden");
+            }
+
+            vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+            if (player.world.isRemote) {
+                return;
+            }
+
+            // Remove the sapling exactly as BlockSapling.generateTree does.
+            // If all eight feature attempts are blocked, restore it instead
+            // of reporting a successful cast with no world-side result.
+            player.world.setBlockState(position, net.minecraft.init.Blocks.AIR.getDefaultState(), 4);
+            boolean generated = false;
+            for (int attempt = 0; attempt < 8 && !generated; attempt++) {
+                generated = HexEdifiedTreeGenerator.growTree(
+                    player.world, player.world.rand, position);
+            }
+            if (!generated) {
+                player.world.setBlockState(position, sapling, 4);
+                throw new CastingException("hexcasting.error.edify_failed");
             }
         }
     });
@@ -2286,11 +2356,26 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     stack.pop(Vec3Iota.class));
-                if (!vm.getPlayer().world.isRemote) {
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.block.state.IBlockState state =
+                    player.world.getBlockState(position);
+                if (!(state.getBlock() instanceof net.minecraft.block.IGrowable)
+                    || !((net.minecraft.block.IGrowable) state.getBlock()).canGrow(
+                        player.world, position, state, player.world.isRemote)) {
+                    throw new CastingException("hexcasting.error.bonemeal_target");
+                }
+                if (!player.world.isBlockModifiable(player, position)
+                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.bonemeal_forbidden");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT
+                    + MediaConstants.DUST_UNIT / 8L);
+                if (!player.world.isRemote) {
                     net.minecraft.item.ItemStack boneMeal = new net.minecraft.item.ItemStack(
                         net.minecraft.init.Items.DYE, 1, 15);
                     net.minecraft.item.ItemDye.applyBonemeal(
-                        boneMeal, vm.getPlayer().world, position, vm.getPlayer(),
+                        boneMeal, player.world, position, player,
                         net.minecraft.util.EnumHand.MAIN_HAND);
                 }
             }
@@ -2646,7 +2731,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
-    /** Conjure a block state at a target position without consuming an item. */
+    /** Conjure a temporary solid block at a target position. */
     public static final ResourceLocation CONJURE_BLOCK_ID =
         new ResourceLocation(HexAPI.MOD_ID, "conjure_block");
     public static final HexPattern CONJURE_BLOCK_PATTERN =
@@ -2663,22 +2748,26 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.conjure_block_context");
                 }
-                Iota first = stack.pop();
-                Iota second = stack.pop();
-                BlockIota block;
-                Vec3Iota position;
-                if (first instanceof BlockIota && second instanceof Vec3Iota) {
-                    block = (BlockIota) first;
-                    position = (Vec3Iota) second;
-                } else if (second instanceof BlockIota && first instanceof Vec3Iota) {
-                    block = (BlockIota) second;
-                    position = (Vec3Iota) first;
-                } else {
-                    throw new CastingException("hexcasting.error.conjure_block_expected");
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    stack.pop(Vec3Iota.class));
+                net.minecraft.block.state.IBlockState current =
+                    player.world.getBlockState(target);
+                if (!current.getBlock().isReplaceable(player.world, target)) {
+                    throw new CastingException("hexcasting.error.conjure_block_target");
                 }
-                net.minecraft.util.math.BlockPos target = blockPosition(position);
-                if (!vm.getPlayer().world.isRemote && vm.getPlayer().world.isAirBlock(target)) {
-                    vm.getPlayer().world.setBlockState(target, block.getState(), 3);
+                if (!player.world.isBlockModifiable(player, target)
+                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.conjure_block_forbidden");
+                }
+                net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_block");
+                if (conjured == null) {
+                    throw new CastingException("hexcasting.error.conjure_block_missing");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                if (!player.world.isRemote) {
+                    player.world.setBlockState(target, conjured.getDefaultState(), 3);
                 }
             }
         });
@@ -2702,9 +2791,24 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.util.math.BlockPos target = blockPosition(
                     stack.pop(Vec3Iota.class));
-                if (!vm.getPlayer().world.isRemote && vm.getPlayer().world.isAirBlock(target)) {
-                    vm.getPlayer().world.setBlockState(
-                        target, net.minecraft.init.Blocks.GLOWSTONE.getDefaultState(), 3);
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.block.state.IBlockState current =
+                    player.world.getBlockState(target);
+                if (!current.getBlock().isReplaceable(player.world, target)) {
+                    throw new CastingException("hexcasting.error.conjure_light_target");
+                }
+                if (!player.world.isBlockModifiable(player, target)
+                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.conjure_light_forbidden");
+                }
+                net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_light");
+                if (conjured == null) {
+                    throw new CastingException("hexcasting.error.conjure_light_missing");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                if (!player.world.isRemote) {
+                    player.world.setBlockState(target, conjured.getDefaultState(), 3);
                 }
             }
         });
