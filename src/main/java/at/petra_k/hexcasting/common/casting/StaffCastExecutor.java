@@ -105,6 +105,7 @@ public final class StaffCastExecutor {
             vm = load(staff);
             vm.setCastingData(castingData);
             vm.setPlayer(player);
+            vm.setCastingHand(hand);
             boolean wasEscaped = vm.isEscapeNext();
             boolean wasInParens = vm.getParenDepth() > 0;
             at.petra_k.hexcasting.api.casting.action.HexAction action =
@@ -178,6 +179,30 @@ public final class StaffCastExecutor {
 
     private static boolean escapeNext(CastingVM vm) {
         return vm != null && vm.isEscapeNext();
+    }
+
+    /**
+     * Read the persisted VM state without executing another pattern.
+     *
+     * <p>The staff screen is opened locally on the client, but the VM lives
+     * on the server-side staff stack.  A reopen/world join therefore needs a
+     * real server snapshot instead of assuming that the last client packet
+     * is still available.</p>
+     */
+    public static CastOutcome getCurrentState(ItemStack staff) {
+        if (staff == null || staff.isEmpty()) {
+            return CastOutcome.success(Resolution.UNRESOLVED,
+                Collections.<String>emptyList(), 0, 0, false, true);
+        }
+        try {
+            CastingVM vm = load(staff);
+            return CastOutcome.success(Resolution.UNRESOLVED, preview(vm),
+                stackSize(vm), parenDepth(vm), escapeNext(vm),
+                isStackClear(vm));
+        } catch (RuntimeException ignored) {
+            return CastOutcome.success(Resolution.UNRESOLVED,
+                Collections.<String>emptyList(), 0, 0, false, false);
+        }
     }
 
     private static List<String> preview(CastingVM vm) {

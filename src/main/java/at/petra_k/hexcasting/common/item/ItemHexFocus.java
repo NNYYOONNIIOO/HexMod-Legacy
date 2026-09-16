@@ -198,7 +198,7 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                 if (data == null) {
                     result = HexEvaluator.evaluate(Collections.singletonList(pattern));
                 } else {
-                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data, player);
+                    HexEvaluator.evaluate(Collections.singletonList(pattern), data.getCastingStack(), data, player, hand);
                     result = data.getCastingStack();
                 }
                 String resultText = result.isEmpty()

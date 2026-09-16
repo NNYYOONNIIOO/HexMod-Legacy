@@ -19,6 +19,16 @@ public final class HexStaffClientSync {
         }
     }
 
+    /** Apply the authoritative VM preview sent when the staff is reopened. */
+    public static void refreshCastingState(List<String> stackPreview,
+                                           int parenDepth, boolean escapeNext) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft.currentScreen instanceof GuiHexStaff) {
+            ((GuiHexStaff) minecraft.currentScreen).setCastingState(
+                stackPreview, parenDepth, escapeNext);
+        }
+    }
+
     public static void showCastResult(String message) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft.currentScreen instanceof GuiHexStaff) {

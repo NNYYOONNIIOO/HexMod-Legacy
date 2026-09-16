@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.common.effect.HexCastingEffects;
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
 
 /** Server-safe evaluator for a sequence of registered Hex patterns. */
 public final class HexEvaluator {
@@ -41,9 +42,18 @@ public final class HexEvaluator {
     public static void evaluate(List<HexPattern> patterns, CastingStack stack,
                                 IHexCastingData castingData, EntityPlayer player)
         throws CastingException {
+        evaluate(patterns, stack, castingData, player, EnumHand.MAIN_HAND);
+    }
+
+    /** Evaluate with the physical hand that contains the casting item. */
+    public static void evaluate(List<HexPattern> patterns, CastingStack stack,
+                                IHexCastingData castingData, EntityPlayer player,
+                                EnumHand castingHand)
+        throws CastingException {
         CastingVM vm = new CastingVM(stack).enqueue(patterns);
         vm.setCastingData(castingData);
         vm.setPlayer(player);
+        vm.setCastingHand(castingHand);
         try {
             vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
             HexCastingEffects.onPortableCast(player, patterns, true);

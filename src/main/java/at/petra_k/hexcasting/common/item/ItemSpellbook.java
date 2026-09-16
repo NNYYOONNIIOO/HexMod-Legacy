@@ -99,7 +99,7 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
                 result = HexEvaluator.evaluate(Collections.singletonList(pattern));
             } else {
                 HexEvaluator.evaluate(Collections.singletonList(pattern),
-                    data.getCastingStack(), data, player);
+                    data.getCastingStack(), data, player, hand);
                 result = data.getCastingStack();
             }
             String resultText = result.isEmpty()

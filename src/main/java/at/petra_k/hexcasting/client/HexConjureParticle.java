@@ -24,8 +24,18 @@ final class HexConjureParticle extends Particle {
             ((color >> 8) & 0xFF) / 255.0F,
             (color & 0xFF) / 255.0F);
         particleAlpha = 0.30F;
-        particleScale = 0.12F + RANDOM.nextFloat() * 0.035F;
-        particleMaxAge = 20 + RANDOM.nextInt(12);
+        // 1.12.2 renders particleScale as 0.1 * particleScale, whereas
+        // 1.20.1 renders quadSize directly.  Modern Hex starts with a
+        // 0.1..0.2 quad and applies 0.9, so the equivalent 1.12 value is
+        // 0.9..1.8 here.  Using 0.18 directly makes the cloud about ten
+        // times too small.
+        particleScale = 0.9F + RANDOM.nextFloat() * 0.9F;
+        particleAngle = RANDOM.nextFloat() * (float) (Math.PI * 2.0D);
+        prevParticleAngle = particleAngle;
+        particleMaxAge = (int) (64.0D
+            / ((RANDOM.nextDouble() + 3.0D) * 0.25D));
+        particleGravity = motionX != 0.0D && motionY != 0.0D
+            && motionZ != 0.0D ? -0.01F : 0.0F;
         this.motionX = motionX;
         this.motionY = motionY;
         this.motionZ = motionZ;
@@ -54,12 +64,13 @@ final class HexConjureParticle extends Particle {
             setExpired();
             return;
         }
+        motionY -= 0.04D * particleGravity;
         move(motionX, motionY, motionZ);
         motionX *= 0.96D;
         motionY *= 0.96D;
         motionZ *= 0.96D;
         particleAlpha = 0.30F
             * (1.0F - (float) particleAge / (float) particleMaxAge);
-        particleScale *= 0.985F;
+        particleScale *= 0.96F;
     }
 }

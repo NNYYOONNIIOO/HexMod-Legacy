@@ -23,8 +23,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 
 /**
  * Small, server-safe casting VM for the 1.12.2 port.
@@ -85,6 +88,8 @@ public final class CastingVM {
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
     private IHexCastingData castingData;
     private EntityPlayer player;
+    /** The hand containing the staff/focus that started this cast. */
+    private EnumHand castingHand = EnumHand.MAIN_HAND;
 
     public CastingVM() {
         this(new CastingStack());
@@ -191,6 +196,60 @@ public final class CastingVM {
 
     public void setPlayer(EntityPlayer player) {
         this.player = player;
+    }
+
+    public EnumHand getCastingHand() {
+        return castingHand;
+    }
+
+    /**
+     * Set the physical hand from which this VM is being resumed.
+     * The hand is runtime context rather than serialized VM state: a staff can
+     * move between hands while its continuation remains on the item.
+     */
+    public void setCastingHand(EnumHand castingHand) {
+        this.castingHand = castingHand == null ? EnumHand.MAIN_HAND : castingHand;
+    }
+
+    public EnumHand getOtherHand() {
+        return castingHand == EnumHand.MAIN_HAND
+            ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND;
+    }
+
+    /**
+     * Find an item on the caster's primary/secondary hands, checking the other
+     * hand first like modern Hex's CastingEnvironment.
+     */
+    public ItemStack getHeldItemToOperateOn(Predicate<ItemStack> predicate)
+        throws CastingException {
+        if (player == null) {
+            throw new CastingException("hexcasting.error.read_context");
+        }
+        if (predicate == null) {
+            throw new IllegalArgumentException("Held-item predicate cannot be null");
+        }
+
+        ItemStack secondary = player.getHeldItem(getOtherHand());
+        if (predicate.test(secondary)) {
+            return secondary;
+        }
+
+        ItemStack primary = player.getHeldItem(castingHand);
+        return predicate.test(primary) ? primary : null;
+    }
+
+    /** Return the physical hand containing a stack returned by the helper. */
+    public EnumHand getHandForHeldItem(ItemStack held) {
+        if (player == null || held == null || held.isEmpty()) {
+            return null;
+        }
+        if (player.getHeldItem(getOtherHand()) == held) {
+            return getOtherHand();
+        }
+        if (player.getHeldItem(castingHand) == held) {
+            return castingHand;
+        }
+        return null;
     }
 
     public CastingStack getStack() {
@@ -368,11 +427,11 @@ public final class CastingVM {
         if (player == null) {
             throw new CastingException("hexcasting.error.read_context");
         }
-        net.minecraft.item.ItemStack offhand = player.getHeldItemOffhand();
-        if (offhand == null || offhand.isEmpty()) {
+        ItemStack holder = getHeldItemToOperateOn(IotaDataHolder::canRead);
+        if (holder == null || holder.isEmpty()) {
             throw new CastingException("hexcasting.error.data_holder_missing");
         }
-        Iota datum = IotaDataHolder.read(offhand);
+        Iota datum = IotaDataHolder.read(holder);
         parentheses.peek().values.add(new ParenEntry(datum, true));
     }
 

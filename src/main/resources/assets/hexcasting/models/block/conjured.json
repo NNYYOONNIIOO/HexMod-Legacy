@@ -1,6 +1,6 @@
 {
   "render_type": "minecraft:cutout",
   "textures": {
-    "particle": "minecraft:blocks/amethyst_block"
+    "particle": "hexcasting:blocks/smooth_amethyst"
   }
 }

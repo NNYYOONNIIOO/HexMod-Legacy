@@ -95,7 +95,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
                     I18n.translateToLocalFormatted("hexcasting.message.thought_knot_written",
                         HexInline.formatPattern(pattern))));
             } else {
-                execute(knot, player);
+                execute(knot, player, hand);
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, knot);
@@ -192,7 +192,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
         return null;
     }
 
-    private static void execute(ItemStack knot, EntityPlayer player) {
+    private static void execute(ItemStack knot, EntityPlayer player, EnumHand hand) {
         ResourceLocation action = getActionId(knot);
         HexPattern pattern = getPattern(knot);
         
@@ -209,7 +209,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
                 result = HexEvaluator.evaluate(java.util.Collections.singletonList(pattern));
             } else {
                 HexEvaluator.evaluate(java.util.Collections.singletonList(pattern),
-                    data.getCastingStack(), data, player);
+                    data.getCastingStack(), data, player, hand);
                 result = data.getCastingStack();
             }
             String value = result.isEmpty()

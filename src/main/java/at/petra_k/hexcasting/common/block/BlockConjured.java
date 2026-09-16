@@ -3,12 +3,15 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Random;
 
@@ -52,14 +55,6 @@ public class BlockConjured extends Block {
     }
 
     @Override
-    public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
-        TileEntity tile = world.getTileEntity(pos);
-        if (tile instanceof TileEntityConjured) {
-            ((TileEntityConjured) tile).particleEffect();
-        }
-    }
-
-    @Override
     public void onEntityWalk(World world, BlockPos pos, Entity entity) {
         TileEntity tile = world.getTileEntity(pos);
         if (tile instanceof TileEntityConjured) {
@@ -72,6 +67,24 @@ public class BlockConjured extends Block {
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
         return EnumBlockRenderType.INVISIBLE;
+    }
+
+    /**
+     * Use Hex's colored conjure cloud for destruction instead of vanilla's
+     * 4x4x4 block fragments.  The 1.20.1 source deliberately suppresses the
+     * ordinary block-destroy effect for this invisible block; the 1.12.2
+     * port keeps that behavior while supplying the equivalent Hex particle.
+     */
+    @SideOnly(Side.CLIENT)
+    @Override
+    public boolean addDestroyEffects(World world, BlockPos pos,
+                                     ParticleManager manager) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof TileEntityConjured) {
+            ((TileEntityConjured) tile).destroyParticle();
+            return true;
+        }
+        return false;
     }
 
     @Override

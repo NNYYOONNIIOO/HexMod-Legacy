@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
@@ -1888,7 +1889,11 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_item");
                 }
 
-                net.minecraft.item.ItemStack offHand = vm.getPlayer().getHeldItemOffhand();
+                net.minecraft.item.ItemStack offHand = vm.getHeldItemToOperateOn(
+                    stackInHand -> stackInHand != null && !stackInHand.isEmpty()
+                        && stackInHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem
+                        && ((at.petra_k.hexcasting.api.item.MediaHolderItem) stackInHand.getItem())
+                            .canRecharge(stackInHand));
                 if (offHand == null || offHand.isEmpty()
                     || !(offHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
                     throw new CastingException("hexcasting.error.recharge_holder");
@@ -1957,7 +1962,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            stack.push(readIota(offHand(vm)));
+            stack.push(readIota(dataHolder(vm, true)));
         }
     });
 
@@ -1971,7 +1976,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            net.minecraft.item.ItemStack target = offHand(vm);
+            net.minecraft.item.ItemStack target = dataHolder(vm, false);
             Iota value = stack.peek();
             IotaDataHolder.write(target, value);
             stack.pop();
@@ -1988,7 +1993,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            stack.push(new BooleanIota(IotaDataHolder.canRead(offHand(vm))));
+            stack.push(new BooleanIota(IotaDataHolder.canRead(dataHolder(vm, true))));
         }
     });
 
@@ -2002,7 +2007,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            stack.push(new BooleanIota(IotaDataHolder.canWrite(offHand(vm))));
+            stack.push(new BooleanIota(IotaDataHolder.canWrite(dataHolder(vm, false))));
         }
     });
 
@@ -2029,15 +2034,35 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     public static final HexAction WRITABLE_ENTITY = register(WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, stack ->
         stack.push(new BooleanIota(IotaDataHolder.canWrite(entityItem(stack.pop())))));
 
-    private static net.minecraft.item.ItemStack offHand(CastingVM vm) throws CastingException {
-        if (vm == null || vm.getPlayer() == null) {
+    private static net.minecraft.item.ItemStack dataHolder(CastingVM vm, boolean readable)
+        throws CastingException {
+        if (vm == null) {
             throw new CastingException("hexcasting.error.read_context");
         }
-        net.minecraft.item.ItemStack stack = vm.getPlayer().getHeldItemOffhand();
+        net.minecraft.item.ItemStack stack = vm.getHeldItemToOperateOn(
+            readable ? IotaDataHolder::canRead : IotaDataHolder::canWrite);
         if (stack == null || stack.isEmpty()) {
             throw new CastingException("hexcasting.error.data_holder_missing");
         }
         return stack;
+    }
+
+    /**
+     * Resolve the colour that belongs to this cast. A 1.12.2 pigment can be
+     * applied directly to a staff/focus and stores its colour on that stack;
+     * casts made with an uncoloured item use the caster capability instead.
+     */
+    private static int castingPigment(CastingVM vm) {
+        if (vm != null && vm.getPlayer() != null) {
+            net.minecraft.item.ItemStack castingStack = vm.getPlayer()
+                .getHeldItem(vm.getCastingHand());
+            int stackColor = ItemColorizer.getColor(castingStack);
+            if (stackColor >= 0) {
+                return stackColor & 0xFFFFFF;
+            }
+        }
+        IHexCastingData data = vm == null ? null : vm.getCastingData();
+        return data == null ? 0xAA66FF : data.getPigment();
     }
 
     private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {
@@ -2714,13 +2739,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.cycle_variant_context");
                 }
-                net.minecraft.item.ItemStack held = vm.getPlayer().getHeldItemMainhand();
-                if (!(held.getItem() instanceof ItemHexFocus)
-                    && !(held.getItem() instanceof ItemHexStaff)) {
-                    held = vm.getPlayer().getHeldItemOffhand();
-                }
-                if (!(held.getItem() instanceof ItemHexFocus)
-                    && !(held.getItem() instanceof ItemHexStaff)) {
+                net.minecraft.item.ItemStack held = vm.getHeldItemToOperateOn(
+                    candidate -> candidate != null && !candidate.isEmpty()
+                        && (candidate.getItem() instanceof ItemHexFocus
+                            || candidate.getItem() instanceof ItemHexStaff));
+                if (held == null
+                    || (!(held.getItem() instanceof ItemHexFocus)
+                    && !(held.getItem() instanceof ItemHexStaff))) {
                     throw new CastingException("hexcasting.error.cycle_variant_item");
                 }
                 final String key = "hexcasting_variant";
@@ -2768,6 +2793,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
                     player.world.setBlockState(target, conjured.getDefaultState(), 3);
+                    net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
+                    if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
+                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setColor(
+                            castingPigment(vm));
+                    }
                 }
             }
         });
@@ -2809,6 +2839,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
                     player.world.setBlockState(target, conjured.getDefaultState(), 3);
+                    net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
+                    if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
+                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setColor(
+                            castingPigment(vm));
+                    }
                 }
             }
         });
@@ -3047,18 +3082,16 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.colorize_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                net.minecraft.item.ItemStack dye = player.getHeldItemOffhand();
-                if (dye == null || dye.isEmpty()
-                    || dye.getItem() != net.minecraft.init.Items.DYE) {
+                net.minecraft.item.ItemStack dye = vm.getHeldItemToOperateOn(
+                    ItemColorizer::isPigment);
+                if (dye == null || dye.isEmpty()) {
                     throw new CastingException("hexcasting.error.colorize_dye");
                 }
                 IHexCastingData data = player.getCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
                 if (data == null) {
                     throw new CastingException("hexcasting.error.colorize_context");
                 }
-                net.minecraft.item.EnumDyeColor color =
-                    net.minecraft.item.EnumDyeColor.byDyeDamage(dye.getMetadata());
-                data.setPigment(color.getColorValue());
+                data.setPigment(ItemColorizer.getPigmentColor(dye));
                 if (!player.capabilities.isCreativeMode) {
                     dye.shrink(1);
                 }
@@ -3228,16 +3261,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (player.getDistanceSq(itemEntity) > 32.0D * 32.0D) {
                     throw new CastingException("hexcasting.error.craft_battery_range");
                 }
-                net.minecraft.item.ItemStack bottle = player.getHeldItemOffhand();
-                net.minecraft.util.EnumHand hand = net.minecraft.util.EnumHand.OFF_HAND;
-                if (bottle == null || bottle.isEmpty()
-                    || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE) {
-                    bottle = player.getHeldItemMainhand();
-                    hand = net.minecraft.util.EnumHand.MAIN_HAND;
-                }
+                net.minecraft.item.ItemStack bottle = vm.getHeldItemToOperateOn(
+                    candidate -> candidate != null && !candidate.isEmpty()
+                        && candidate.getItem() == net.minecraft.init.Items.GLASS_BOTTLE);
+                net.minecraft.util.EnumHand hand = vm.getHandForHeldItem(bottle);
                 if (bottle == null || bottle.isEmpty()
                     || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE
-                    || bottle.getCount() != 1) {
+                    || bottle.getCount() != 1 || hand == null) {
                     throw new CastingException("hexcasting.error.craft_battery_base");
                 }
                 net.minecraft.item.ItemStack source = itemEntity.getItem();

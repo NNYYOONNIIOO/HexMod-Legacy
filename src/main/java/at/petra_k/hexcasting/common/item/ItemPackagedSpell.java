@@ -177,7 +177,7 @@ public class ItemPackagedSpell extends Item {
             if (data == null) {
                 result = HexEvaluator.evaluate(patterns);
             } else {
-                HexEvaluator.evaluate(patterns, data.getCastingStack(), data, player);
+                HexEvaluator.evaluate(patterns, data.getCastingStack(), data, player, hand);
                 result = data.getCastingStack();
             }
             String resultText = result.isEmpty()

@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.math.HexAngle;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.interop.inline.HexInline;
+import at.petra_k.hexcasting.interop.inline.InlinePatternRenderer;
 import at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
@@ -25,10 +26,13 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +68,8 @@ public final class GuiHexStaff extends GuiScreen {
     private List<String> stackPreview = new ArrayList<>();
     private int parenDepth;
     private boolean escapeNext;
+    private HexPattern hoveredPreviewPattern;
+    private long hoveredPreviewSince;
 
     public GuiHexStaff(EnumHand hand) {
         this.hand = hand == null ? EnumHand.MAIN_HAND : hand;
@@ -77,6 +83,16 @@ public final class GuiHexStaff extends GuiScreen {
     @Override
     public void initGui() {
         refreshProgram();
+        // The server snapshot normally arrives immediately after this
+        // screen is opened.  Use the synchronized item NBT as a race-safe
+        // first frame so the upper-left state is not blank while that packet
+        // is in flight; the authoritative packet is applied afterward.
+        if (mc != null && mc.player != null) {
+            StaffCastExecutor.CastOutcome state = StaffCastExecutor.getCurrentState(
+                mc.player.getHeldItem(hand));
+            setCastingState(state.getStackPreview(), state.getParenDepth(),
+                state.isEscapeNext());
+        }
     }
 
     @Override
@@ -113,6 +129,7 @@ public final class GuiHexStaff extends GuiScreen {
         // upper-left. This is also where an open Introspection is made
         // visible, even though the value stack is currently empty.
         drawStackPreview();
+        drawPatternPreviewTooltip(mouseX, mouseY);
     }
 
     private void drawStackPreview() {
@@ -151,6 +168,100 @@ public final class GuiHexStaff extends GuiScreen {
                 fontRenderer, safe, 15, y, 0xFFEFEFEF);
             y += 10;
         }
+    }
+
+    /**
+     * Show the same three pieces of information as Hexcessible's idle hover:
+     * the compact signature, the rendered pattern plus its action name, and
+     * the action's input/output stack signature. The active path is shown
+     * immediately; completed paths use Hexcessible's half-second hover delay.
+     */
+    private void drawPatternPreviewTooltip(int mouseX, int mouseY) {
+        HexPattern candidate = drawing ? workingPattern : null;
+        boolean immediate = candidate != null && !candidate.getAngles().isEmpty();
+
+        if (!immediate) {
+            DrawnPath hoveredPath = findHoveredPath(mouseX, mouseY);
+            candidate = hoveredPath == null ? null : hoveredPath.pattern;
+        }
+
+        if (candidate == null || candidate.getAngles().isEmpty()) {
+            hoveredPreviewPattern = null;
+            hoveredPreviewSince = 0L;
+            return;
+        }
+
+        if (candidate != hoveredPreviewPattern) {
+            hoveredPreviewPattern = candidate;
+            hoveredPreviewSince = System.currentTimeMillis();
+        }
+        if (!immediate && hoveredPreviewSince + 500L > System.currentTimeMillis()) {
+            return;
+        }
+
+        HexPatternTooltip.Preview preview = HexPatternTooltip.resolve(
+            candidate, mc == null ? null : mc.world);
+        if (preview == null) {
+            return;
+        }
+
+        String signature = preview.getSignature();
+        drawHoveringText(Collections.singletonList(signature), mouseX, mouseY);
+
+        // Keep a private-use inline token in the source string while vanilla
+        // measures the tooltip. The token is replaced with width-preserving
+        // spaces for vanilla, then drawn as real geometry over those spaces.
+        String detailSource = TextFormatting.BLUE.toString()
+            + InlinePatternRenderer.render(preview.getPattern(), 0xFF7385DE)
+            + preview.getName() + TextFormatting.RESET;
+        List<String> detailLines = Arrays.asList(
+            InlinePatternChatRenderer.stripTokenText(detailSource),
+            TextFormatting.DARK_GRAY + preview.getArguments());
+        drawHoveringText(detailLines, mouseX, mouseY + 17);
+        drawInlineTooltipPattern(detailSource, detailLines, mouseX, mouseY + 17);
+    }
+
+    private DrawnPath findHoveredPath(int mouseX, int mouseY) {
+        GridPoint coordinate = pxToCoord(mouseX, mouseY);
+        // Prefer the newest path when two paths share a point after a server
+        // refresh. This mirrors the most recently drawn pattern users expect
+        // to inspect in the grid.
+        for (int index = drawnPaths.size() - 1; index >= 0; index--) {
+            DrawnPath path = drawnPaths.get(index);
+            if (path.points.contains(coordinate)) {
+                return path;
+            }
+        }
+        return null;
+    }
+
+    private void drawInlineTooltipPattern(String sourceLine,
+                                          List<String> renderedLines,
+                                          int mouseX, int mouseY) {
+        if (fontRenderer == null || renderedLines == null
+            || renderedLines.isEmpty()) {
+            return;
+        }
+
+        int maxWidth = 0;
+        for (String line : renderedLines) {
+            maxWidth = Math.max(maxWidth, fontRenderer.getStringWidth(line));
+        }
+        int tooltipX = mouseX + 12;
+        int tooltipY = mouseY - 12;
+        int tooltipHeight = 8;
+        if (renderedLines.size() > 1) {
+            tooltipHeight += 2 + (renderedLines.size() - 1) * 10;
+        }
+        if (tooltipX + maxWidth > width) {
+            tooltipX -= 28 + maxWidth;
+        }
+        if (tooltipY + tooltipHeight + 6 > height) {
+            tooltipY = height - tooltipHeight - 6;
+        }
+
+        InlinePatternChatRenderer.drawInlinePatterns(
+            fontRenderer, sourceLine, tooltipX, tooltipY, 0xFFFFFFFF);
     }
 
     private void postChatMessage(String message) {
@@ -1143,6 +1254,15 @@ private void drawMove(int mouseX, int mouseY) {
         if (!drawing) {
             refreshProgram();
         }
+    }
+
+    /** Restore the server-owned VM display state after a reopen or world join. */
+    public void setCastingState(List<String> preview, int newParenDepth,
+                                boolean newEscapeNext) {
+        stackPreview = preview == null ? new ArrayList<String>()
+            : new ArrayList<>(preview);
+        parenDepth = Math.max(0, newParenDepth);
+        escapeNext = newEscapeNext;
     }
 
     public void showCastResult(String message) {

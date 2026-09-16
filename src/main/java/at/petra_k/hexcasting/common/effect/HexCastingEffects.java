@@ -4,6 +4,8 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
 import at.petra_k.hexcasting.common.network.MsgClearCastingPatternsS2C;
@@ -99,6 +101,71 @@ public final class HexCastingEffects {
             new MsgClearCastingPatternsS2C(player.getUniqueID()));
     }
 
+    /**
+     * Rebuild the client-side spiral after login, respawn, or a dimension
+     * change.  The original cast packets are transient, while an unfinished
+     * staff program is persisted in the staff NBT, so the latter is the
+     * authoritative source for this resynchronization.
+     */
+    public static void syncOrbitPatterns(EntityPlayer player) {
+        if (player == null || player.world == null || player.world.isRemote) {
+            return;
+        }
+        // A respawn or dimension change can leave the client-side cache with
+        // patterns from the previous world.  Send the clear first so the
+        // following authoritative entries are a complete replacement rather
+        // than an append to stale visual state.
+        clearOrbitPatterns(player);
+        // The visual stack belongs to the caster, not to the currently
+        // selected slot.  Scan the whole player inventory so the ring can be
+        // reconstructed even when the staff was moved to another hotbar slot
+        // or the off-hand before rejoining the world.
+        for (ItemStack staff : player.inventory.mainInventory) {
+            if (!ItemHexStaff.isStaff(staff)) {
+                continue;
+            }
+            for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(staff)) {
+                if (entry == null || entry.getPattern() == null) {
+                    continue;
+                }
+                StaffCastExecutor.Resolution[] resolutions =
+                    StaffCastExecutor.Resolution.values();
+                int ordinal = entry.getResolutionOrdinal();
+                StaffCastExecutor.Resolution resolution = ordinal >= 0
+                    && ordinal < resolutions.length
+                    ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
+                int color = resolution == StaffCastExecutor.Resolution.ERRORED
+                    || resolution == StaffCastExecutor.Resolution.INVALID
+                    ? ERROR_COLOR : pigment(player);
+                int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
+                    || resolution == StaffCastExecutor.Resolution.INVALID
+                    ? 36 : ORBIT_LIFETIME;
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color);
+            }
+        }
+        ItemStack offhand = player.getHeldItemOffhand();
+        if (ItemHexStaff.isStaff(offhand)) {
+            for (ItemHexStaff.ProgramEntry entry : ItemHexStaff.getProgramEntries(offhand)) {
+                if (entry == null || entry.getPattern() == null) {
+                    continue;
+                }
+                StaffCastExecutor.Resolution[] resolutions =
+                    StaffCastExecutor.Resolution.values();
+                int ordinal = entry.getResolutionOrdinal();
+                StaffCastExecutor.Resolution resolution = ordinal >= 0
+                    && ordinal < resolutions.length
+                    ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
+                int color = resolution == StaffCastExecutor.Resolution.ERRORED
+                    || resolution == StaffCastExecutor.Resolution.INVALID
+                    ? ERROR_COLOR : pigment(player);
+                int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
+                    || resolution == StaffCastExecutor.Resolution.INVALID
+                    ? 36 : ORBIT_LIFETIME;
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color);
+            }
+        }
+    }
+
     private static void sendOrbitPattern(EntityPlayer player, HexPattern pattern,
                                          int lifetime, int color) {
         PaucalAPI.sendPacketNearS2C(player.getPositionVector(), 128.0D, player.world,
@@ -165,6 +232,16 @@ public final class HexCastingEffects {
     }
 
     private static int pigment(EntityPlayer player) {
+        if (player != null) {
+            int mainhandColor = ItemColorizer.getColor(player.getHeldItemMainhand());
+            if (mainhandColor >= 0) {
+                return mainhandColor & 0xFFFFFF;
+            }
+            int offhandColor = ItemColorizer.getColor(player.getHeldItemOffhand());
+            if (offhandColor >= 0) {
+                return offhandColor & 0xFFFFFF;
+            }
+        }
         IHexCastingData data = player.getCapability(HexCapabilities.CASTING_DATA, null);
         return data == null ? DEFAULT_PIGMENT : data.getPigment();
     }

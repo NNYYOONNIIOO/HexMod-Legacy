@@ -27,6 +27,22 @@ public final class ItemColorizer extends Item {
         setMaxStackSize(1);
     }
 
+    /** The pigment colour represented by this Hex pigment item. */
+    public int getColorValue() {
+        return color;
+    }
+
+    /** Whether a stack is one of the port's Hex pigment items. */
+    public static boolean isPigment(ItemStack stack) {
+        return stack != null && !stack.isEmpty()
+            && stack.getItem() instanceof ItemColorizer;
+    }
+
+    /** Return the pigment colour, or -1 for a non-pigment stack. */
+    public static int getPigmentColor(ItemStack stack) {
+        return isPigment(stack) ? ((ItemColorizer) stack.getItem()).getColorValue() : -1;
+    }
+
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack colorizer = player.getHeldItem(hand);
@@ -86,6 +102,39 @@ public final class ItemColorizer extends Item {
         if (id.contains("black")) return 0x1D1D21;
         if (id.contains("ancient")) return 0xE6B84A;
         if (id.contains("uuid")) return 0xB78CFF;
+        if (id.contains("pride_colorizer_")) {
+            return prideBaseColor(id.substring(id.indexOf("pride_colorizer_")
+                + "pride_colorizer_".length()));
+        }
         return 0xB58CFF;
+    }
+
+    /**
+     * The modern pride pigments are animated palettes rather than a single
+     * colour.  The 1.12.2 capability stores one RGB value, so use the first
+     * exact palette stop as the stable value instead of silently assigning
+     * every pride pigment the default purple.  These stops are copied from
+     * Hex Casting's ItemPridePigment.Type definitions.
+     */
+    private static int prideBaseColor(String pride) {
+        switch (pride) {
+            case "agender": return 0x16A10C;
+            case "aroace": return 0x7210BC;
+            case "aromantic": return 0x16A10C;
+            case "asexual": return 0x333233;
+            case "bisexual": return 0xDB45FF;
+            case "demiboy": return 0x9A9FA1;
+            case "demigirl": return 0x9A9FA1;
+            case "gay": return 0xD82F3A;
+            case "genderfluid": return 0xFBACF9;
+            case "genderqueer": return 0xCA78EF;
+            case "intersex": return 0xEBF367;
+            case "lesbian": return 0xD82F3A;
+            case "nonbinary": return 0xEBF367;
+            case "pansexual": return 0xE278EF;
+            case "plural": return 0x30C69F;
+            case "transgender": return 0xEB92EA;
+            default: return 0xB58CFF;
+        }
     }
 }
