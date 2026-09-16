@@ -208,7 +208,7 @@ public class ItemPackagedSpell extends Item {
         if (actions.isEmpty()) {
             for (HexPattern pattern : patterns) {
                 tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
-                    + HexInline.formatPattern(pattern));
+                    + HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR));
             }
             return;
         }
@@ -216,7 +216,8 @@ public class ItemPackagedSpell extends Item {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(action));
             HexPattern pattern = HexActionRegistry.getPattern(action);
             if (pattern != null) {
-                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
+                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
+                    + HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR));
             }
         }
     }

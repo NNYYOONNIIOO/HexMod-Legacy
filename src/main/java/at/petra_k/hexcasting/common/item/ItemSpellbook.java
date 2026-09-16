@@ -136,7 +136,7 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": "
                 + displayPattern(pattern));
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
-                + HexInline.formatPattern(pattern));
+                + HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR));
         }
     }
 

@@ -127,21 +127,20 @@ public final class ItemHexStaff extends Item {
         if (entry == null || entry.getPattern() == null) {
             return I18n.translateToLocal("hexcasting.tooltip.pattern");
         }
-        if (entry.getActionId() != null) {
-            return localizeAction(entry.getActionId());
+        // A staff tooltip is a compact view of the same drawing state as the
+        // grid. Keep the action's glyph instead of replacing it with its
+        // localized name, and carry the persisted resolution colour through
+        // the inline token so the tooltip does not turn every old path white.
+        return HexInline.formatPattern(entry.getPattern(),
+            resolutionColor(entry.getResolutionOrdinal()));
+    }
+
+    private static int resolutionColor(int ordinal) {
+        StaffCastExecutor.Resolution[] values = StaffCastExecutor.Resolution.values();
+        if (ordinal < 0 || ordinal >= values.length) {
+            ordinal = StaffCastExecutor.Resolution.UNRESOLVED.ordinal();
         }
-        SpecialPatternResolver.Match special =
-            SpecialPatternResolver.match(entry.getPattern());
-        if (special != null) {
-            if (special.getKind() == SpecialPatternResolver.Kind.NUMBER) {
-                return I18n.translateToLocalFormatted(
-                    "hexcasting.special.number", special.getNumber());
-            }
-            return I18n.translateToLocalFormatted(
-                "hexcasting.special.mask", special.maskSignature());
-        }
-        return I18n.translateToLocalFormatted("hexcasting.tooltip.staff_pattern",
-            HexInline.formatPattern(entry.getPattern()));
+        return values[ordinal].getColor();
     }
 
     public static boolean isStaff(ItemStack stack) {

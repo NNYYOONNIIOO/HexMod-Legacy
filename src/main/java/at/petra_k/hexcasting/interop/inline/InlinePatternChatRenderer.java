@@ -39,7 +39,7 @@ public final class InlinePatternChatRenderer {
     private static final Pattern TOKEN = Pattern.compile(
         "(?:" + Pattern.quote(TOKEN_PREFIX) + "|"
             + Pattern.quote(LEGACY_TOKEN_PREFIX) + ")"
-            + "([A-Za-z_/,]+)"
+            + "([A-Za-z_/,]+)(?:\\|([0-9A-Fa-f]{8}))?"
             + "(?:" + Pattern.quote(TOKEN_SUFFIX) + "|"
             + Pattern.quote(LEGACY_TOKEN_SUFFIX) + ")");
     private static final int MAX_TRACKED_MESSAGES = 100;
@@ -81,7 +81,8 @@ public final class InlinePatternChatRenderer {
             int plainStart = plainCursor;
             String replacement = tokenReplacement(matcher.group(1));
             plainCursor += replacement.length();
-            tokens.add(new PatternToken(matcher.group(1), plainStart, plainCursor));
+            tokens.add(new PatternToken(matcher.group(1), parseColor(matcher.group(2)),
+                plainStart, plainCursor));
             rawCursor = matcher.end();
         }
 
@@ -165,7 +166,8 @@ public final class InlinePatternChatRenderer {
         while (matcher.find()) {
             String prefix = stripTokenText(text.substring(0, matcher.start()));
             drawInlinePattern(matcher.group(1),
-                x + font.getStringWidth(prefix), y, argb);
+                x + font.getStringWidth(prefix), y,
+                parseColorOrDefault(matcher.group(2), argb));
         }
     }
 
@@ -199,7 +201,8 @@ public final class InlinePatternChatRenderer {
                 && tokenStart < lineStart + renderedLine.length()) {
                 drawInlinePattern(matcher.group(1),
                     x + font.getStringWidth(
-                        plainSource.substring(lineStart, tokenStart)), y, argb);
+                        plainSource.substring(lineStart, tokenStart)), y,
+                    parseColorOrDefault(matcher.group(2), argb));
                 drawn = true;
             }
         }
@@ -217,7 +220,13 @@ public final class InlinePatternChatRenderer {
 
     /** Render the 1.20.1-style scroll image and its full-size pattern. */
     public static void drawTooltipPattern(HexPattern pattern, int x, int y,
-                                          boolean ancient) {
+                                           boolean ancient) {
+        drawTooltipPattern(pattern, x, y, ancient, false);
+    }
+
+    /** Render a tooltip preview, with the ancient Shift accent when requested. */
+    public static void drawTooltipPattern(HexPattern pattern, int x, int y,
+                                          boolean ancient, boolean shiftAccent) {
         if (pattern == null) {
             return;
         }
@@ -241,7 +250,17 @@ public final class InlinePatternChatRenderer {
         GlStateManager.popMatrix();
 
         HexPatternChatGeometry.drawPreview(pattern, x, y, 128, 255,
-            0xD2C8C8, 0x554D54);
+            shiftAccent ? 0xFF763FA1 : 0xFFD2C8C8,
+            shiftAccent ? 0xFFE7D0F9 : 0xFF554D54);
+    }
+
+    /** Draw the purple Shift overlay used by the original Hex item renderer. */
+    public static void drawItemPatternOverlay(HexPattern pattern, int x, int y) {
+        if (pattern == null) {
+            return;
+        }
+        HexPatternChatGeometry.drawPreview(pattern, x + 1, y + 1, 16, 255,
+            0xFF763FA1, 0xFFE7D0F9, false);
     }
 
     public static void register() {
@@ -331,7 +350,7 @@ public final class InlinePatternChatRenderer {
                     // wrapped/scrollable vanilla chat row.
                     HexPatternChatGeometry.draw(
                         placement.signature, chatX + x,
-                        chatY - visibleLine * 9, alpha);
+                        chatY - visibleLine * 9, alpha, placement.argb);
                 }
             }
         }
@@ -395,7 +414,7 @@ public final class InlinePatternChatRenderer {
                     continue;
                 }
                 placements.add(new PatternPlacement(
-                    token.signature, lineText.substring(0, prefixEnd)));
+                    token.signature, lineText.substring(0, prefixEnd), token.argb));
             }
             return placements;
         }
@@ -419,12 +438,14 @@ public final class InlinePatternChatRenderer {
 
     private static final class PatternToken {
         private final String signature;
+        private final int argb;
         private final int plainStart;
         @SuppressWarnings("unused")
         private final int plainEnd;
 
-        private PatternToken(String signature, int plainStart, int plainEnd) {
+        private PatternToken(String signature, int argb, int plainStart, int plainEnd) {
             this.signature = signature;
+            this.argb = argb;
             this.plainStart = plainStart;
             this.plainEnd = plainEnd;
         }
@@ -433,10 +454,30 @@ public final class InlinePatternChatRenderer {
     private static final class PatternPlacement {
         private final String signature;
         private final String prefix;
+        private final int argb;
 
-        private PatternPlacement(String signature, String prefix) {
+        private PatternPlacement(String signature, String prefix, int argb) {
             this.signature = signature;
             this.prefix = prefix;
+            this.argb = argb;
         }
+    }
+
+    private static int parseColor(String encoded) {
+        if (encoded == null || encoded.length() != 8) {
+            return 0xFFFFFFFF;
+        }
+        try {
+            return (int) Long.parseLong(encoded, 16);
+        } catch (NumberFormatException ignored) {
+            return 0xFFFFFFFF;
+        }
+    }
+
+    private static int parseColorOrDefault(String encoded, int fallback) {
+        if (encoded == null || encoded.length() != 8) {
+            return fallback;
+        }
+        return parseColor(encoded);
     }
 }

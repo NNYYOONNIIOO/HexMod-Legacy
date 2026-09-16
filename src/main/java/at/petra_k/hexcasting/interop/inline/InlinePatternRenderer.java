@@ -35,6 +35,23 @@ public final class InlinePatternRenderer implements InlineRenderer<InlinePattern
         return "\uE000hexcasting:pattern:" + pattern.signature() + "\uE001";
     }
 
+    /**
+     * Return a pattern token carrying an explicit ARGB stroke colour.
+     *
+     * <p>The colour is metadata in the private-use token and is removed before
+     * vanilla measures the line. This keeps old, colourless chat tokens
+     * compatible while allowing item tooltips to use the same state colour as
+     * the staff drawing grid.</p>
+     */
+    public static String render(HexPattern pattern, int argb) {
+        if (pattern == null) {
+            return "";
+        }
+        return "\uE000hexcasting:pattern:" + pattern.signature()
+            + "|" + String.format(java.util.Locale.ROOT, "%08x", argb)
+            + "\uE001";
+    }
+
     private static char segmentChar(int dx, int dy) {
         if (dy == 0) {
             return '\u2500';

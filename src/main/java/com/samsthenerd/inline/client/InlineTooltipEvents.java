@@ -48,6 +48,7 @@ public final class InlineTooltipEvents {
 
         HexPattern previewPattern = null;
         boolean ancient = false;
+        boolean ancientShiftAccent = false;
         if (event.getItemStack() != null
             && event.getItemStack().getItem() instanceof ItemPatternScroll) {
             previewPattern = ItemPatternScroll.getPattern(
@@ -55,6 +56,8 @@ public final class InlineTooltipEvents {
             net.minecraft.nbt.NBTTagCompound tag = event.getItemStack().getTagCompound();
             ancient = tag != null && (tag.hasKey(ItemPatternScroll.TAG_OP_ID, 8)
                 || tag.getBoolean(ItemPatternScroll.TAG_ANCIENT));
+            ancientShiftAccent = ancient && minecraft != null && minecraft.gameSettings != null
+                && minecraft.gameSettings.keyBindSneak.isKeyDown();
             if (previewPattern != null) {
                 // Forge 1.12 has no TooltipComponent hook. Invisible lines
                 // reserve the same 128x128 image area as 1.20.1's component;
@@ -70,7 +73,7 @@ public final class InlineTooltipEvents {
             removeCapture(event.getItemStack());
             if (hasTokens || previewPattern != null) {
                 CAPTURES.add(0, new TooltipCapture(event.getItemStack(), formatted,
-                    previewPattern, ancient, textLineCount));
+                    previewPattern, ancient, ancientShiftAccent, textLineCount));
                 while (CAPTURES.size() > 8) {
                     CAPTURES.remove(CAPTURES.size() - 1);
                 }
@@ -101,7 +104,7 @@ public final class InlineTooltipEvents {
             int previewY = event.getY() + capture.textLineCount * 10
                 + (capture.textLineCount > 0 ? 2 : 0);
             InlinePatternChatRenderer.drawTooltipPattern(capture.previewPattern,
-                event.getX(), previewY, capture.ancient);
+                event.getX(), previewY, capture.ancient, capture.ancientShiftAccent);
         }
 
         int lineY = event.getY();
@@ -163,15 +166,18 @@ public final class InlineTooltipEvents {
         private final List<String> lines;
         private final HexPattern previewPattern;
         private final boolean ancient;
+        private final boolean ancientShiftAccent;
         private final int textLineCount;
 
         private TooltipCapture(ItemStack stack, List<String> lines,
                                HexPattern previewPattern, boolean ancient,
+                               boolean ancientShiftAccent,
                                int textLineCount) {
             this.stack = stack;
             this.lines = Collections.unmodifiableList(new ArrayList<>(lines));
             this.previewPattern = previewPattern;
             this.ancient = ancient;
+            this.ancientShiftAccent = ancientShiftAccent;
             this.textLineCount = Math.max(0, textLineCount);
         }
 

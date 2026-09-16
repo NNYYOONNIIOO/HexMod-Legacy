@@ -2,7 +2,9 @@ package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.entity.player.EntityPlayer;
@@ -65,7 +67,11 @@ public final class ItemAbacus extends Item {
         if (IotaDataHolder.canRead(stack)) {
             try {
                 Iota value = IotaDataHolder.read(stack);
-                return value.getType().getId() + ": " + value.display();
+                String display = value instanceof PatternIota
+                    ? HexInline.formatPattern(((PatternIota) value).getPattern(),
+                        HexInline.DEFAULT_PATTERN_COLOR)
+                    : value.display();
+                return value.getType().getId() + ": " + display;
             } catch (CastingException ignored) {
                 return I18n.translateToLocal("hexcasting.error.data_holder_invalid");
             }

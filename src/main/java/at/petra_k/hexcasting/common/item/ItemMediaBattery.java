@@ -127,8 +127,7 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
 
     @Override
     public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag flag) {
-        tooltip.add(TextFormatting.AQUA + I18n.translateToLocalFormatted(
-            "hexcasting.tooltip.media", getMedia(stack), getMaxMedia(stack)));
+        MediaTooltip.add(tooltip, getMedia(stack), getMaxMedia(stack));
     }
 
     private long clamp(ItemStack stack, long media) {

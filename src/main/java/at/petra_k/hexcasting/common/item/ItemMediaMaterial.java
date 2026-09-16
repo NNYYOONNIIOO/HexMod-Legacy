@@ -78,8 +78,7 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
     @Override
     public void addInformation(ItemStack stack, World world, List<String> tooltip,
                                net.minecraft.client.util.ITooltipFlag flag) {
-        tooltip.add(I18n.translateToLocalFormatted(
-            "hexcasting.tooltip.media_material", getMedia(stack), getMaxMedia(stack)));
+        MediaTooltip.add(tooltip, getMedia(stack), getMaxMedia(stack));
     }
 
     public String getVariant() {

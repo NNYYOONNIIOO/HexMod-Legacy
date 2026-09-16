@@ -138,7 +138,7 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
             : localizeAction(selected);
         String patternText = selectedPattern == null
             ? I18n.translateToLocal("hexcasting.tooltip.none")
-            : HexInline.formatPattern(selectedPattern);
+            : HexInline.formatPattern(selectedPattern, HexInline.DEFAULT_PATTERN_COLOR);
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
             + actionText + " " + patternText);
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));

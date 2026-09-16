@@ -252,7 +252,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         if (id != null) {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": " + localizeAction(id));
         }
-        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": " + HexInline.formatPattern(pattern));
+        tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
+            + HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR));
         tooltip.add(I18n.translateToLocal("hexcasting.tooltip.cycle"));
     }
 

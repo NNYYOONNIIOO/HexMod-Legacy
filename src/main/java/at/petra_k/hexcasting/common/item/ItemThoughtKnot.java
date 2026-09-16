@@ -111,7 +111,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
             action == null ? I18n.translateToLocal("hexcasting.tooltip.none") : localizeAction(action)));
         if (pattern != null) {
             tooltip.add(I18n.translateToLocalFormatted("hexcasting.tooltip.pattern",
-                HexInline.formatPattern(pattern)));
+                HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR)));
         }
     }
 

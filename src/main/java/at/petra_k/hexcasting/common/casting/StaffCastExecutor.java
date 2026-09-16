@@ -243,13 +243,24 @@ public final class StaffCastExecutor {
             : translated;
     }
 
+    /** The solid outer-stroke colour used by the 1.20.1 staff GUI. */
     public enum Resolution {
-        UNRESOLVED,
-        EVALUATED,
-        ESCAPED,
-        UNDONE,
-        ERRORED,
-        INVALID
+        UNRESOLVED(0xFF7F7F7F),
+        EVALUATED(0xFF7385DE),
+        ESCAPED(0xFFDDCC73),
+        UNDONE(0xFFB26B6B),
+        ERRORED(0xFFDE6262),
+        INVALID(0xFFB26B6B);
+
+        private final int color;
+
+        Resolution(int color) {
+            this.color = color;
+        }
+
+        public int getColor() {
+            return color;
+        }
     }
 
     public static final class CastOutcome {

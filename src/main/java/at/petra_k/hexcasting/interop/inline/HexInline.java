@@ -10,6 +10,8 @@ import net.minecraftforge.common.MinecraftForge;
  * Config APIs; callers still get typed pattern data and stable text output.
  */
 public final class HexInline {
+    /** 1.20.1's default readable pattern outer-stroke colour. */
+    public static final int DEFAULT_PATTERN_COLOR = 0xFFD2C8C8;
     private static boolean initialized;
 
     private HexInline() {
@@ -69,5 +71,11 @@ public final class HexInline {
     public static String formatPattern(HexPattern pattern) {
         init();
         return InlineAPI.render(pattern(pattern));
+    }
+
+    /** Format a pattern token with the ARGB colour used by its source UI. */
+    public static String formatPattern(HexPattern pattern, int argb) {
+        init();
+        return InlinePatternRenderer.render(pattern, argb);
     }
 }

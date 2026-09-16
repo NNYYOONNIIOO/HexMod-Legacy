@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
+import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -120,7 +121,8 @@ public final class ItemSlate extends ItemBlock {
         } else {
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.slate_written"));
             tooltip.add(I18n.translateToLocalFormatted(
-                "hexcasting.tooltip.slate_pattern", pattern.signature()));
+                "hexcasting.tooltip.slate_pattern",
+                HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR)));
         }
     }
 

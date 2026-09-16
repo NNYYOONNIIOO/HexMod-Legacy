@@ -83,6 +83,12 @@ final class HexPatternChatGeometry {
             STROKE_RED, STROKE_GREEN, STROKE_BLUE);
     }
 
+    /** Draw one glyph with an explicit ARGB stroke colour. */
+    static void draw(String signature, int x, int y, int alpha, int argb) {
+        drawInternal(signature, x + 2, y + CHAT_VERTICAL_OFFSET, alpha,
+            (argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+    }
+
     /** Draw one glyph in another GUI using the supplied text origin. */
     static void drawAt(String signature, int x, int y, int alpha, int argb) {
         drawInternal(signature, x, y, alpha,
@@ -97,6 +103,12 @@ final class HexPatternChatGeometry {
      */
     static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
                             int outerArgb, int innerArgb) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb, true);
+    }
+
+    /** Draw a fitted preview, optionally omitting the readable-scroll dots. */
+    static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
+                            int outerArgb, int innerArgb, boolean drawDots) {
         if (pattern == null || size <= 0 || alpha <= 3) {
             return;
         }
@@ -125,17 +137,19 @@ final class HexPatternChatGeometry {
             (innerArgb >> 16) & 0xFF, (innerArgb >> 8) & 0xFF, innerArgb & 0xFF);
         tessellator.draw();
 
-        // Match PatternColors.DEFAULT_PATTERN_COLOR.withDots(true, true).
-        // The radii are deliberately small: they are 0.016 and 0.008 pose
-        // units at the 128 px render size, not a fraction of each grid step.
-        drawPreviewDot(preview.dots.get(0), size * READABLE_START_DOT_RADIUS,
-            alpha,
-            0x5B, 0x7B, 0xD7);
-        int gridAlpha = alpha * 0x80 / 0xFF;
-        for (int i = 1; i < preview.dots.size(); i++) {
-            drawPreviewDot(preview.dots.get(i), size * READABLE_GRID_DOT_RADIUS,
-                gridAlpha, (outerArgb >> 16) & 0xFF,
-                (outerArgb >> 8) & 0xFF, outerArgb & 0xFF);
+        if (drawDots) {
+            // Match PatternColors.DEFAULT_PATTERN_COLOR.withDots(true, true).
+            // The radii are deliberately small: they are 0.016 and 0.008 pose
+            // units at the 128 px render size, not a fraction of each grid step.
+            drawPreviewDot(preview.dots.get(0), size * READABLE_START_DOT_RADIUS,
+                alpha,
+                0x5B, 0x7B, 0xD7);
+            int gridAlpha = alpha * 0x80 / 0xFF;
+            for (int i = 1; i < preview.dots.size(); i++) {
+                drawPreviewDot(preview.dots.get(i), size * READABLE_GRID_DOT_RADIUS,
+                    gridAlpha, (outerArgb >> 16) & 0xFF,
+                    (outerArgb >> 8) & 0xFF, outerArgb & 0xFF);
+            }
         }
 
         GlStateManager.enableTexture2D();
