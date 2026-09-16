@@ -9,12 +9,15 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +34,7 @@ import java.util.regex.Pattern;
  * text. This is important because a single global "last message" position
  * cannot follow chat scrolling or disappear with an aged-out message.</p>
  */
+@EventBusSubscriber(modid = "hexcasting", value = Side.CLIENT)
 public final class InlinePatternChatRenderer {
     private static final String TOKEN_PREFIX = "\uE000hexcasting:pattern:";
     private static final String TOKEN_SUFFIX = "\uE001";
@@ -125,6 +129,23 @@ public final class InlinePatternChatRenderer {
         return result.toString();
     }
 
+    /** Remove vanilla formatting codes when comparing independently styled lines. */
+    public static String stripFormatting(String text) {
+        if (text == null || text.isEmpty()) {
+            return text == null ? "" : text;
+        }
+        StringBuilder result = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char value = text.charAt(i);
+            if (value == '\u00a7' && i + 1 < text.length()) {
+                i++;
+            } else {
+                result.append(value);
+            }
+        }
+        return result.toString();
+    }
+
     private static String tokenReplacement(String signature) {
         int width = HexPatternChatGeometry.width(signature);
         // The default 1.12.2 font assigns four pixels to an ASCII space.
@@ -144,6 +165,87 @@ public final class InlinePatternChatRenderer {
     /** Measure text after replacing private tokens with their reserved width. */
     public static int stringWidth(FontRenderer font, String text) {
         return font == null ? 0 : font.getStringWidth(stripTokenText(text));
+    }
+
+    /**
+     * Split an inline-token row at token boundaries without changing its
+     * measured glyph widths.  Vanilla 1.12.2 only wraps ordinary text; the
+     * private-use token is replaced after tooltip text has already been
+     * assembled, so a long run of patterns would otherwise widen the whole
+     * tooltip instead of continuing on the next row.
+     *
+     * <p>Every returned row has its own reset marker.  Besides keeping the
+     * row alive when it contains only spaces, this prevents the formatting of
+     * the previous row from leaking into the next one.</p>
+     */
+    public static List<String> wrapTokenLine(FontRenderer font, String text,
+                                             int maxWidth) {
+        if (font == null || text == null || !containsTokens(text)
+            || maxWidth <= 0) {
+            return Collections.singletonList(text);
+        }
+
+        Matcher matcher = TOKEN.matcher(text);
+        if (!matcher.find()) {
+            return Collections.singletonList(text);
+        }
+        matcher.reset();
+
+        List<String> rows = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int tokenCount = 0;
+        int rawCursor = 0;
+        while (matcher.find()) {
+            String separator = text.substring(rawCursor, matcher.start());
+            String token = text.substring(matcher.start(), matcher.end());
+            String candidate = current.toString() + separator + token;
+
+            if (tokenCount > 0 && stringWidth(font, candidate) > maxWidth) {
+                rows.add(withTrailingReset(current.toString()));
+                current = new StringBuilder(TextFormatting.RESET.toString());
+                tokenCount = 0;
+                // A separator between two tokens is only a visual gap.  It
+                // must not become a leading gap on the continuation row.
+                separator = trimLeadingWhitespace(separator);
+            }
+
+            current.append(separator).append(token);
+            tokenCount++;
+            rawCursor = matcher.end();
+        }
+
+        current.append(text.substring(rawCursor));
+        rows.add(withTrailingReset(current.toString()));
+        return rows;
+    }
+
+    private static String withTrailingReset(String text) {
+        if (text == null || text.isEmpty()) {
+            return TextFormatting.RESET.toString();
+        }
+        String reset = TextFormatting.RESET.toString();
+        return text.endsWith(reset) ? text : text + reset;
+    }
+
+    private static String trimLeadingWhitespace(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        StringBuilder result = new StringBuilder(text.length());
+        boolean leadingWhitespace = true;
+        for (int i = 0; i < text.length(); i++) {
+            char value = text.charAt(i);
+            if (value == '\u00a7' && i + 1 < text.length()) {
+                result.append(value).append(text.charAt(++i));
+            } else if (leadingWhitespace && Character.isWhitespace(value)) {
+                continue;
+            }
+            else {
+                leadingWhitespace = false;
+                result.append(value);
+            }
+        }
+        return result.toString();
     }
 
     /** Draw ordinary text and then place the real pattern glyphs over its blanks. */
@@ -178,16 +280,23 @@ public final class InlinePatternChatRenderer {
      * the same string.
      */
     public static boolean drawInlinePatterns(FontRenderer font, String sourceText,
-                                             String renderedLine, int x, int y,
-                                             int argb) {
+                                              String renderedLine, int x, int y,
+                                              int argb) {
         if (font == null || sourceText == null || renderedLine == null
-            || renderedLine.isEmpty() || !containsTokens(sourceText)) {
+            || !containsTokens(sourceText)) {
             return false;
         }
         String plainSource = stripTokenText(sourceText);
         int lineStart = plainSource.indexOf(renderedLine);
         if (lineStart < 0) {
-            return false;
+            // GuiUtils can remove the reserved spaces from an inline-only
+            // tooltip row, leaving only formatting markers.  In that case
+            // the source row is still the complete row, so its token offsets
+            // are the only reliable positions available.
+            if (!isFormattingOnly(renderedLine)) {
+                return false;
+            }
+            lineStart = 0;
         }
 
         boolean drawn = false;
@@ -197,8 +306,16 @@ public final class InlinePatternChatRenderer {
             // plain string before comparing it with the wrapped line.
             String beforeToken = stripTokenText(sourceText.substring(0, matcher.start()));
             int tokenStart = beforeToken.length();
-            if (tokenStart >= lineStart
-                && tokenStart < lineStart + renderedLine.length()) {
+            int lineEnd = lineStart + renderedLine.length();
+            // GuiUtils trims trailing spaces from a tooltip line. The token
+            // is then immediately after the visible text even though its
+            // reserved width belonged to that line, so accept that boundary
+            // and draw at the end of the rendered text.
+            boolean insideLine = tokenStart >= lineStart && tokenStart <= lineEnd;
+            boolean trimmedTail = tokenStart > lineEnd
+                && onlyWhitespace(plainSource, lineEnd, tokenStart);
+            boolean formattingOnlyLine = isFormattingOnly(renderedLine);
+            if (insideLine || trimmedTail || formattingOnlyLine) {
                 drawInlinePattern(matcher.group(1),
                     x + font.getStringWidth(
                         plainSource.substring(lineStart, tokenStart)), y,
@@ -207,6 +324,34 @@ public final class InlinePatternChatRenderer {
             }
         }
         return drawn;
+    }
+
+    private static boolean isFormattingOnly(String text) {
+        if (text == null || text.isEmpty()) {
+            return true;
+        }
+        boolean hasFormatting = false;
+        for (int i = 0; i < text.length(); i++) {
+            char value = text.charAt(i);
+            if (value == '\u00a7' && i + 1 < text.length()) {
+                hasFormatting = true;
+                i++;
+            } else if (!Character.isWhitespace(value)) {
+                return false;
+            }
+        }
+        return hasFormatting || text.trim().isEmpty();
+    }
+
+    private static boolean onlyWhitespace(String text, int start, int end) {
+        int boundedStart = Math.max(0, Math.min(start, text.length()));
+        int boundedEnd = Math.max(boundedStart, Math.min(end, text.length()));
+        for (int i = boundedStart; i < boundedEnd; i++) {
+            if (!Character.isWhitespace(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Draw one decoded pattern without drawing its text placeholder. */

@@ -24,6 +24,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 
@@ -111,15 +112,24 @@ public final class ItemHexStaff extends Item {
         List<ProgramEntry> entries = getProgramEntries(stack);
         tooltip.add(I18n.translateToLocalFormatted(
             "hexcasting.tooltip.staff_program", entries.size(), MAX_PROGRAM_SIZE));
-        int shown = Math.min(entries.size(), 8);
-        for (int i = 0; i < shown; i++) {
-            tooltip.add(I18n.translateToLocalFormatted(
-                "hexcasting.tooltip.staff_entry", i + 1,
-                describeProgramEntry(entries.get(i))));
-        }
-        if (entries.size() > shown) {
-            tooltip.add(I18n.translateToLocalFormatted(
-                "hexcasting.tooltip.staff_more", entries.size() - shown));
+        if (!entries.isEmpty()) {
+            // Keep the complete program as one flat strip. Vanilla's tooltip
+            // renderer wraps this line when it exceeds the available width;
+            // the RESET prefix is zero-width but prevents 1.12.2 from
+            // trimming a line whose visible content is only an inline glyph.
+            StringBuilder patterns = new StringBuilder(TextFormatting.RESET.toString());
+            for (int i = 0; i < entries.size(); i++) {
+                if (i > 0) {
+                    patterns.append(' ');
+                }
+                patterns.append(describeProgramEntry(entries.get(i)));
+            }
+            // Keep a formatting marker after the reserved spaces.  GuiUtils
+            // trims trailing spaces while preparing a tooltip; the marker
+            // makes the otherwise invisible line survive that pass, so the
+            // PostText renderer can still paint the glyphs on top of it.
+            patterns.append(TextFormatting.RESET);
+            tooltip.add(patterns.toString());
         }
     }
 
