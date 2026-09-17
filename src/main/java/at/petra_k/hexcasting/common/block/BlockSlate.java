@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
