@@ -170,7 +170,9 @@ public final class BrainsweepRecipes {
     private static int villagerLevel(EntityVillager villager) {
         NBTTagCompound data = new NBTTagCompound();
         villager.writeEntityToNBT(data);
-        return data.getInteger("CareerLevel");
+        // 1.12.2 writes zero before the first trade; modern villager data
+        // represents that same adult, untraded state as level one.
+        return Math.max(1, data.getInteger("CareerLevel"));
     }
 
     private static boolean hasProfession(EntityVillager villager, String expectedPath) {
