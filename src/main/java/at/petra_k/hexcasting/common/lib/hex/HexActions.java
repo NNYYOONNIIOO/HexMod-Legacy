@@ -2135,8 +2135,9 @@ throw new CastingException("hexcasting.error.get_media_context");
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm != null && vm.getMediaHolder() != null) {
-                    stack.push(new DoubleIota(((double) Math.max(0L,
-                        vm.getMediaHolder().getMedia()))
+                    long circleMedia = vm.getMediaHolder().getMedia();
+                    stack.push(new DoubleIota(((double) (circleMedia < 0L
+                        ? Long.MAX_VALUE : Math.max(0L, circleMedia)))
                         / (double) MediaConstants.DUST_UNIT));
                     return;
                 }

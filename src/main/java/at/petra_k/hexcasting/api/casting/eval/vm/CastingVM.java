@@ -681,6 +681,9 @@ public final class CastingVM {
             throw new CastingException("hexcasting.error.no_media_context");
         }
         long available = source.getMedia();
+        if (available < 0L) {
+            return;
+        }
         if (available < amount) {
             throw new CastingException("hexcasting.error.not_enough_media");
         }

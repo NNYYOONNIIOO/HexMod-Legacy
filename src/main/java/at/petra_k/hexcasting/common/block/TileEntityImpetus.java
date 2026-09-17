@@ -3,7 +3,10 @@ package at.petra_k.hexcasting.common.block;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
+import at.petra_k.hexcasting.api.item.MediaHolderItem;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
+import at.petra_k.hexcasting.common.item.ItemCreativeUnlocker;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraft.util.EnumFacing;
@@ -15,6 +18,9 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +40,70 @@ public final class TileEntityImpetus extends TileEntity
     private long media;
     private CircleExecutionState executionState;
     private NBTTagCompound lazyExecutionState;
+    private final IItemHandler mediaHandler = new IItemHandler() {
+        @Override
+        public int getSlots() {
+            return 1;
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot != 0 || stack == null || stack.isEmpty() || media < 0L) {
+                return stack == null ? ItemStack.EMPTY : stack.copy();
+            }
+            if (stack.getItem() instanceof ItemCreativeUnlocker) {
+                ItemStack remainder = stack.copy();
+                if (!simulate) {
+                    media = -1L;
+                    markDirty();
+                    remainder.shrink(1);
+                }
+                return remainder;
+            }
+            if (!(stack.getItem() instanceof MediaHolderItem)) {
+                return stack.copy();
+            }
+            MediaHolderItem holder = (MediaHolderItem) stack.getItem();
+            if (!holder.canProvide(stack)) {
+                return stack.copy();
+            }
+            long capacity = MAX_MEDIA - Math.max(0L, media);
+            long available = holder.withdrawMedia(stack, -1L, true);
+            long accepted = Math.min(Math.max(0L, capacity), available);
+            if (accepted <= 0L) {
+                return stack.copy();
+            }
+            ItemStack remainder = stack.copy();
+            if (!simulate) {
+                holder.withdrawMedia(remainder, accepted, false);
+                media += accepted;
+                markDirty();
+            }
+            return remainder;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 64;
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return slot == 0 && stack != null && !stack.isEmpty()
+                && (stack.getItem() instanceof MediaHolderItem
+                    || stack.getItem() instanceof ItemCreativeUnlocker);
+        }
+    };
 
     public int getProgramSize() {
         return patterns.tagCount();
@@ -60,8 +130,29 @@ public final class TileEntityImpetus extends TileEntity
 
     @Override
     public void setMedia(long media) {
-        this.media = Math.max(0L, Math.min(MAX_MEDIA, media));
+        this.media = media < 0L ? -1L : Math.min(MAX_MEDIA, media);
         markDirty();
+    }
+
+    @Override
+    public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+            || capability == HexCapabilities.MEDIA) {
+            return true;
+        }
+        return super.hasCapability(capability, facing);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            return (T) mediaHandler;
+        }
+        if (capability == HexCapabilities.MEDIA) {
+            return (T) this;
+        }
+        return super.getCapability(capability, facing);
     }
 
     @Override
@@ -227,7 +318,8 @@ public final class TileEntityImpetus extends TileEntity
         patterns = compound.hasKey(KEY_PATTERNS, 9)
             ? copyPatterns(compound.getTagList(KEY_PATTERNS, 10)) : new NBTTagList();
         powered = compound.getBoolean(KEY_POWERED);
-        media = Math.max(0L, Math.min(MAX_MEDIA, compound.getLong(KEY_MEDIA)));
+        long storedMedia = compound.getLong(KEY_MEDIA);
+        media = storedMedia < 0L ? -1L : Math.min(MAX_MEDIA, storedMedia);
         executionState = null;
         lazyExecutionState = compound.hasKey("execution", 10)
             ? compound.getCompoundTag("execution").copy() : null;
