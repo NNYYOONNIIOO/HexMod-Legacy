@@ -1,5 +1,7 @@
 package at.petra_k.hexcasting.common.block;
 
+import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
+import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
@@ -8,6 +10,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.Collections;
 
 /** Redstone directrix with a synchronized powered input state. */
 public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
@@ -30,14 +34,15 @@ public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
             .withProperty(FACING, EnumFacing.getFront(meta & 7))
-            .withProperty(POWERED, false)
-            .withProperty(ENERGIZED, (meta & 8) != 0);
+            .withProperty(POWERED, (meta & 8) != 0)
+            .withProperty(ENERGIZED, (meta & 16) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
         return state.getValue(FACING).getIndex()
-            | (state.getValue(ENERGIZED) ? 8 : 0);
+            | (state.getValue(POWERED) ? 8 : 0)
+            | (state.getValue(ENERGIZED) ? 16 : 0);
     }
 
     @Override
@@ -62,5 +67,16 @@ public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
         if (powered != current.getValue(POWERED)) {
             world.setBlockState(pos, current.withProperty(POWERED, powered), 3);
         }
+    }
+
+    @Override
+    public ICircleComponent.ControlFlow acceptControlFlow(CastingVM image,
+        EnumFacing enterDirection, BlockPos pos, IBlockState state, World world) {
+        EnumFacing output = state.getValue(FACING);
+        if (!state.getValue(POWERED)) {
+            output = output.getOpposite();
+        }
+        return new ICircleComponent.Continue(image,
+            Collections.singletonList(exitPositionFromDirection(pos, output)));
     }
 }

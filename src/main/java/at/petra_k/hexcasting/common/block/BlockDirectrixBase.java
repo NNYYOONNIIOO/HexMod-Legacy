@@ -1,8 +1,6 @@
 package at.petra_k.hexcasting.common.block;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -15,9 +13,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 /** Shared face-attached geometry for the three Hex directrix variants. */
-abstract class BlockDirectrixBase extends Block {
+abstract class BlockDirectrixBase extends BlockCircleComponent {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
-    public static final PropertyBool ENERGIZED = PropertyBool.create("energized");
     private static final double THICKNESS = 1.0D / 16.0D;
 
     protected BlockDirectrixBase() {
@@ -88,6 +85,25 @@ abstract class BlockDirectrixBase extends Block {
     @Override
     public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         return FULL_BLOCK_AABB;
+    }
+
+    @Override
+    public boolean canEnterFromDirection(EnumFacing enterDirection, BlockPos pos,
+                                         IBlockState state, World world) {
+        EnumFacing facing = state.getValue(FACING);
+        return enterDirection != facing && enterDirection != facing.getOpposite();
+    }
+
+    @Override
+    public java.util.EnumSet<EnumFacing> possibleExitDirections(
+        BlockPos pos, IBlockState state, World world) {
+        EnumFacing facing = state.getValue(FACING);
+        return java.util.EnumSet.of(facing, facing.getOpposite());
+    }
+
+    @Override
+    public EnumFacing normalDir(BlockPos pos, IBlockState state, World world) {
+        return state.getValue(FACING);
     }
 
     @Override

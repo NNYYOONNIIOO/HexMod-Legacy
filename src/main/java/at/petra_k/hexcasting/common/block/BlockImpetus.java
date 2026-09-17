@@ -5,6 +5,7 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyBool;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -32,9 +33,8 @@ import net.minecraft.util.NonNullList;
  * keeps the trigger independent from whichever staff the player later holds,
  * while the stored VM state remains persistent with the impetus.</p>
  */
-public class BlockImpetus extends Block {
+public class BlockImpetus extends BlockCircleComponent {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
-    public static final PropertyBool ENERGIZED = PropertyBool.create("energized");
 
     public enum TriggerMode {
         EMPTY,
@@ -59,6 +59,38 @@ public class BlockImpetus extends Block {
 
     public TriggerMode getTriggerMode() {
         return triggerMode;
+    }
+
+    @Override
+    public ICircleComponent.ControlFlow acceptControlFlow(
+        at.petra_k.hexcasting.api.casting.eval.vm.CastingVM image,
+        EnumFacing enterDirection, BlockPos pos, IBlockState state, World world) {
+        if (triggerMode == TriggerMode.EMPTY) {
+            return new ICircleComponent.Continue(image,
+                java.util.Collections.singletonList(
+                    exitPositionFromDirection(pos, state.getValue(FACING))));
+        }
+        // Real impetus blocks are the start/end marker of a circle. The
+        // execution state recognizes the return to this block before calling
+        // this method; reaching one as an ordinary component stops safely.
+        return new ICircleComponent.Stop();
+    }
+
+    @Override
+    public boolean canEnterFromDirection(EnumFacing enterDirection, BlockPos pos,
+                                         IBlockState state, World world) {
+        return enterDirection != state.getValue(FACING).getOpposite();
+    }
+
+    @Override
+    public java.util.EnumSet<EnumFacing> possibleExitDirections(
+        BlockPos pos, IBlockState state, World world) {
+        return java.util.EnumSet.of(state.getValue(FACING));
+    }
+
+    @Override
+    public EnumFacing normalDir(BlockPos pos, IBlockState state, World world) {
+        return state.getValue(FACING);
     }
 
     @Override

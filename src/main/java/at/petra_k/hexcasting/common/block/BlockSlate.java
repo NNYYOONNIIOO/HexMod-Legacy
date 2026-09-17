@@ -1,9 +1,10 @@
 package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
+import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
-import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
@@ -24,6 +25,10 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+
 /**
  * A thin, face-attached slate used by Hex's circle structures.
  *
@@ -31,7 +36,7 @@ import net.minecraft.world.World;
  * the opposite face has a solid support block, matching the modern slate's
  * floor, ceiling, and wall placement behavior.</p>
  */
-public final class BlockSlate extends Block {
+public final class BlockSlate extends BlockCircleComponent {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
     private static final double THICKNESS = 1.0D / 16.0D;
 
@@ -39,30 +44,86 @@ public final class BlockSlate extends Block {
         super(Material.ROCK);
         setHardness(1.5F);
         setResistance(6.0F);
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
+        setDefaultState(blockState.getBaseState()
+            .withProperty(FACING, EnumFacing.UP)
+            .withProperty(ENERGIZED, false));
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING);
+        return new BlockStateContainer(this, FACING, ENERGIZED);
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING,
-            EnumFacing.getFront(meta % EnumFacing.values().length));
+            EnumFacing.getFront(meta & 7))
+            .withProperty(ENERGIZED, (meta & 8) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getIndex();
+        return state.getValue(FACING).getIndex()
+            | (state.getValue(ENERGIZED) ? 8 : 0);
     }
 
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
                                             float hitX, float hitY, float hitZ,
                                             int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING, facing);
+        return getDefaultState().withProperty(FACING, facing)
+            .withProperty(ENERGIZED, false);
+    }
+
+    @Override
+    public ICircleComponent.ControlFlow acceptControlFlow(CastingVM image,
+        EnumFacing enterDirection, BlockPos pos, IBlockState state, World world) {
+        EnumSet<EnumFacing> exits = possibleExitDirections(pos, state, world);
+        exits.remove(enterDirection.getOpposite());
+        List<ICircleComponent.Exit> output = new ArrayList<>(exits.size());
+        for (EnumFacing direction : exits) {
+            output.add(exitPositionFromDirection(pos, direction));
+        }
+
+        TileEntity tileEntity = world.getTileEntity(pos);
+        HexPattern pattern = tileEntity instanceof TileEntitySlate
+            ? ((TileEntitySlate) tileEntity).getPattern() : null;
+        if (pattern == null) {
+            return new ICircleComponent.Continue(image, output);
+        }
+        try {
+            image.resetOperationCounter();
+            image.enqueue(pattern);
+            image.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            return new ICircleComponent.Continue(image, output);
+        } catch (Exception ignored) {
+            return new ICircleComponent.Stop();
+        }
+    }
+
+    @Override
+    public boolean canEnterFromDirection(EnumFacing enterDirection, BlockPos pos,
+                                         IBlockState state, World world) {
+        return enterDirection != normalDir(pos, state, world).getOpposite();
+    }
+
+    @Override
+    public EnumSet<EnumFacing> possibleExitDirections(BlockPos pos,
+                                                       IBlockState state,
+                                                       World world) {
+        EnumSet<EnumFacing> exits = EnumSet.allOf(EnumFacing.class);
+        exits.remove(normalDir(pos, state, world));
+        return exits;
+    }
+
+    @Override
+    public EnumFacing normalDir(BlockPos pos, IBlockState state, World world) {
+        return state.getValue(FACING);
+    }
+
+    @Override
+    public float particleHeight(BlockPos pos, IBlockState state, World world) {
+        return 0.5F - 15.0F / 16.0F;
     }
 
     @Override
