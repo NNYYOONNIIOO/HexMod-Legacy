@@ -35,14 +35,17 @@ public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
         return getDefaultState()
             .withProperty(FACING, facingFromMeta(meta))
             .withProperty(POWERED, (meta & 8) != 0)
-            .withProperty(ENERGIZED, (meta & 16) != 0);
+            // 1.12.2 has only four metadata bits.  Energized is a transient
+            // circle-execution state and is deliberately not serialized;
+            // keeping it out of the metadata mapping leaves room for all
+            // six facings and the redstone input state.
+            .withProperty(ENERGIZED, false);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
         return state.getValue(FACING).getIndex()
-            | (state.getValue(POWERED) ? 8 : 0)
-            | (state.getValue(ENERGIZED) ? 16 : 0);
+            | (state.getValue(POWERED) ? 8 : 0);
     }
 
     @Override
