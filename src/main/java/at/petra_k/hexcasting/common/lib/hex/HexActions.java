@@ -29,6 +29,7 @@ import net.minecraft.util.ResourceLocation;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
@@ -2054,9 +2055,8 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
      * casts made with an uncoloured item use the caster capability instead.
      */
     private static int castingPigment(CastingVM vm) {
-        if (vm != null && vm.getPlayer() != null) {
-            net.minecraft.item.ItemStack castingStack = vm.getPlayer()
-                .getHeldItem(vm.getCastingHand());
+        net.minecraft.item.ItemStack castingStack = castingStack(vm);
+        if (castingStack != null) {
             int stackColor = ItemColorizer.getColor(castingStack);
             if (stackColor >= 0) {
                 return stackColor & 0xFFFFFF;
@@ -2064,6 +2064,37 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         }
         IHexCastingData data = vm == null ? null : vm.getCastingData();
         return data == null ? 0xAA66FF : data.getPigment();
+    }
+
+    /** Return the staff/focus that owns the current VM, if it carries pigment NBT. */
+    private static net.minecraft.item.ItemStack castingStack(CastingVM vm) {
+        if (vm == null || vm.getPlayer() == null) {
+            return null;
+        }
+        net.minecraft.item.ItemStack stack = vm.getPlayer()
+            .getHeldItem(vm.getCastingHand());
+        return ItemColorizer.getColor(stack) >= 0 ? stack : null;
+    }
+
+    private static String castingPigmentVariant(CastingVM vm) {
+        net.minecraft.item.ItemStack stack = castingStack(vm);
+        if (stack != null) {
+            return ItemColorizer.getVariant(stack);
+        }
+        IHexCastingData data = vm == null ? null : vm.getCastingData();
+        return data == null ? "default_colorizer" : data.getPigmentVariant();
+    }
+
+    private static UUID castingPigmentOwner(CastingVM vm) {
+        net.minecraft.item.ItemStack stack = castingStack(vm);
+        if (stack != null) {
+            return ItemColorizer.getOwner(stack);
+        }
+        IHexCastingData data = vm == null ? null : vm.getCastingData();
+        if (data != null && data.getPigmentOwner() != null) {
+            return data.getPigmentOwner();
+        }
+        return new UUID(0L, 0L);
     }
 
     private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {
@@ -2796,8 +2827,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                     player.world.setBlockState(target, conjured.getDefaultState(), 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
-                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setColor(
-                            castingPigment(vm));
+                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setPigment(
+                            castingPigment(vm), castingPigmentVariant(vm),
+                            castingPigmentOwner(vm));
                     }
                 }
             }
@@ -2842,8 +2874,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                     player.world.setBlockState(target, conjured.getDefaultState(), 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
-                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setColor(
-                            castingPigment(vm));
+                        ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setPigment(
+                            castingPigment(vm), castingPigmentVariant(vm),
+                            castingPigmentOwner(vm));
                     }
                 }
             }
@@ -3101,6 +3134,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.colorize_context");
                 }
                 data.setPigment(ItemColorizer.getPigmentColor(dye));
+                data.setPigmentVariant(((ItemColorizer) dye.getItem()).getVariant(),
+                    player.getUniqueID());
                 at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
                 if (!player.capabilities.isCreativeMode) {
                     dye.shrink(1);
