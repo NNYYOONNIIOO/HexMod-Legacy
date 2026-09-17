@@ -3048,8 +3048,25 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern CIRCLE_BOUNDS_MAX_PATTERN =
         pattern(HexDir.WEST, "aqwqawaaqa");
     public static final HexAction CIRCLE_BOUNDS_MAX = register(
-        CIRCLE_BOUNDS_MAX_ID, CIRCLE_BOUNDS_MAX_PATTERN, stack ->
-            stack.push(new DoubleIota(0.0D)));
+        CIRCLE_BOUNDS_MAX_ID, CIRCLE_BOUNDS_MAX_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.circle_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
+                    vm == null ? null : vm.getCircleExecutionState();
+                if (circle == null) {
+                    throw new CastingException("hexcasting.error.circle_context");
+                }
+                net.minecraft.util.math.BlockPos max = circle.getGreaterCorner();
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    max.getX() + 0.5D, max.getY() + 0.5D, max.getZ() + 0.5D)));
+            }
+        });
 
     /** Return the lower bound of the current circle context. */
     public static final ResourceLocation CIRCLE_BOUNDS_MIN_ID =
@@ -3057,10 +3074,27 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static final HexPattern CIRCLE_BOUNDS_MIN_PATTERN =
         pattern(HexDir.SOUTH_WEST, "eaqwqaewdd");
     public static final HexAction CIRCLE_BOUNDS_MIN = register(
-        CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, stack ->
-            stack.push(new DoubleIota(0.0D)));
+        CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.circle_context");
+            }
 
-    /** Return the current caster position as a circle impetus fallback. */
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
+                    vm == null ? null : vm.getCircleExecutionState();
+                if (circle == null) {
+                    throw new CastingException("hexcasting.error.circle_context");
+                }
+                net.minecraft.util.math.BlockPos min = circle.getLesserCorner();
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    min.getX() + 0.5D, min.getY() + 0.5D, min.getZ() + 0.5D)));
+            }
+        });
+
+    /** Return the position of the active circle's Impetus. */
     public static final ResourceLocation CIRCLE_IMPETUS_POS_ID =
         new ResourceLocation(HexAPI.MOD_ID, "circle/impetus_pos");
     public static final HexPattern CIRCLE_IMPETUS_POS_PATTERN =
@@ -3074,16 +3108,18 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                if (vm == null || vm.getPlayer() == null) {
+                at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
+                    vm == null ? null : vm.getCircleExecutionState();
+                if (circle == null) {
                     throw new CastingException("hexcasting.error.circle_impetus_context");
                 }
-                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.BlockPos pos = circle.getImpetusPos();
                 stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                    player.posX, player.posY, player.posZ)));
+                    pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D)));
             }
         });
 
-    /** Return the current caster look direction as a circle impetus fallback. */
+    /** Return the active circle Impetus' facing direction as a unit vector. */
     public static final ResourceLocation CIRCLE_IMPETUS_DIR_ID =
         new ResourceLocation(HexAPI.MOD_ID, "circle/impetus_dir");
     public static final HexPattern CIRCLE_IMPETUS_DIR_PATTERN =
@@ -3097,11 +3133,15 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                if (vm == null || vm.getPlayer() == null) {
+                at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
+                    vm == null ? null : vm.getCircleExecutionState();
+                if (circle == null) {
                     throw new CastingException("hexcasting.error.circle_impetus_context");
                 }
-                net.minecraft.util.math.Vec3d look = vm.getPlayer().getLookVec();
-                stack.push(new Vec3Iota(look));
+                net.minecraft.util.EnumFacing direction = circle.getImpetusDirection();
+                net.minecraft.util.math.Vec3i vector = direction.getDirectionVec();
+                stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
+                    vector.getX(), vector.getY(), vector.getZ())));
             }
         });
 

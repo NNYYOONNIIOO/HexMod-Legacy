@@ -142,6 +142,7 @@ public final class CircleExecutionState {
             vm.setCastingData(caster.getCapability(
                 HexCapabilities.CASTING_DATA, null));
         }
+        vm.setCircleExecutionState(null);
         List<at.petra_k.hexcasting.api.casting.math.HexPattern> bound =
             impetus.getBoundPatterns();
         if (!bound.isEmpty()) {
@@ -165,6 +166,7 @@ public final class CircleExecutionState {
         image.setPlayer(player);
         image.setCastingData(player == null ? null : player.getCapability(
             HexCapabilities.CASTING_DATA, null));
+        image.setCircleExecutionState(this);
 
         if (currentPos.equals(impetusPos)) {
             return false;

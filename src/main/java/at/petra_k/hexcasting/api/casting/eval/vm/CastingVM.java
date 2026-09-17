@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
@@ -90,6 +91,8 @@ public final class CastingVM {
     private EntityPlayer player;
     /** The hand containing the staff/focus that started this cast. */
     private EnumHand castingHand = EnumHand.MAIN_HAND;
+    /** Runtime-only circle context; it is rebound after a persisted state loads. */
+    private CircleExecutionState circleExecutionState;
 
     public CastingVM() {
         this(new CastingStack());
@@ -209,6 +212,14 @@ public final class CastingVM {
      */
     public void setCastingHand(EnumHand castingHand) {
         this.castingHand = castingHand == null ? EnumHand.MAIN_HAND : castingHand;
+    }
+
+    public CircleExecutionState getCircleExecutionState() {
+        return circleExecutionState;
+    }
+
+    public void setCircleExecutionState(CircleExecutionState circleExecutionState) {
+        this.circleExecutionState = circleExecutionState;
     }
 
     public EnumHand getOtherHand() {
