@@ -11,6 +11,12 @@ import at.petra_k.hexcasting.common.block.TileEntityImpetus;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
+import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
+import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
+import at.petra_k.hexcasting.common.network.MsgClearCastingPatternsS2C;
+import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
+import at.petra_k.hexcasting.common.network.MsgStaffCastResultS2C;
+import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petrak.paucal.api.PaucalAPI;
 
@@ -37,7 +43,18 @@ public final class HexCasting {
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();
+        // Register the complete message set before any world/player event can
+        // send a synchronization packet.  Previously only the staff GUI's
+        // client-to-server message was registered, so login, orbit, particle,
+        // and authoritative GUI snapshots were silently unavailable on a
+        // fresh client connection.
         at.petra_k.hexcasting.common.network.MsgStaffPatternC2S.register();
+        MsgCastingPatternS2C.register();
+        MsgClearCastingPatternsS2C.register();
+        MsgCastParticlesS2C.register();
+        MsgPerWorldPatternsS2C.register();
+        MsgStaffProgramS2C.register();
+        MsgStaffCastResultS2C.register();
         HexInline.init();
     }
 

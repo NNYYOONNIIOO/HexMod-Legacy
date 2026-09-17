@@ -85,6 +85,7 @@ public final class HexItems {
         "staff/quenched",
         "staff/mindsplice",
         "abacus",
+        "packaged_spell",
         "thought_knot",
         "spellbook",
         "ancient_cypher",
