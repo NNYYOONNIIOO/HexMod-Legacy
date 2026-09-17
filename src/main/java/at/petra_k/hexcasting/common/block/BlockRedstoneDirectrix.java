@@ -33,7 +33,7 @@ public final class BlockRedstoneDirectrix extends BlockDirectrixBase {
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
-            .withProperty(FACING, EnumFacing.getFront(meta & 7))
+            .withProperty(FACING, facingFromMeta(meta))
             .withProperty(POWERED, (meta & 8) != 0)
             .withProperty(ENERGIZED, (meta & 16) != 0);
     }

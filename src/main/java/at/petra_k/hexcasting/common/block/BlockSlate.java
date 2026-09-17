@@ -58,7 +58,7 @@ public final class BlockSlate extends BlockCircleComponent {
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState().withProperty(FACING,
-            EnumFacing.getFront(meta & 7))
+            facingFromMeta(meta))
             .withProperty(ENERGIZED, (meta & 8) != 0);
     }
 

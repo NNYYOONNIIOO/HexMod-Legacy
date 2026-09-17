@@ -36,7 +36,7 @@ abstract class BlockDirectrixBase extends BlockCircleComponent {
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
-            .withProperty(FACING, EnumFacing.getFront(meta & 7))
+            .withProperty(FACING, facingFromMeta(meta))
             .withProperty(ENERGIZED, (meta & 8) != 0);
     }
 

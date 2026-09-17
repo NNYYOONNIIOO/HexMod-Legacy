@@ -250,8 +250,7 @@ public class BlockImpetus extends BlockCircleComponent {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        int facingIndex = meta & 7;
-        EnumFacing facing = facingIndex < 6 ? EnumFacing.getFront(facingIndex) : EnumFacing.UP;
+        EnumFacing facing = facingFromMeta(meta);
         return getDefaultState()
             .withProperty(FACING, facing)
             .withProperty(ENERGIZED, (meta & 8) != 0);

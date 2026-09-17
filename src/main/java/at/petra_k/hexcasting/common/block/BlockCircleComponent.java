@@ -18,6 +18,11 @@ public abstract class BlockCircleComponent extends Block
         super(material);
     }
 
+    protected static EnumFacing facingFromMeta(int meta) {
+        int index = meta & 7;
+        return index < 6 ? EnumFacing.getFront(index) : EnumFacing.UP;
+    }
+
     @Override
     public IBlockState startEnergized(BlockPos pos, IBlockState state, World world) {
         IBlockState newState = state.withProperty(ENERGIZED, true);
