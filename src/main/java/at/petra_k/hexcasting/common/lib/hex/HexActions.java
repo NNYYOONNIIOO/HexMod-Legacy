@@ -3226,6 +3226,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.brainsweep_mob");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                if (entity.world != player.world) {
+                    throw new CastingException("hexcasting.error.brainsweep_range");
+                }
+                net.minecraft.entity.EntityLiving living =
+                    (net.minecraft.entity.EntityLiving) entity;
                 net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
                 if (player.getDistanceSq(entity) > 32.0D * 32.0D
                     || player.getDistanceSq(target.getX() + 0.5D, target.getY() + 0.5D,
@@ -3235,20 +3240,35 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (!player.world.isBlockModifiable(player, target)) {
                     throw new CastingException("hexcasting.error.brainsweep_location");
                 }
-                net.minecraft.nbt.NBTTagCompound entityData = entity.getEntityData();
-                if (entityData.getBoolean("hexcasting.brainswept")) {
+                if (BrainsweepRecipes.isBrainswept(living)) {
                     throw new CastingException("hexcasting.error.brainsweep_already");
                 }
                 net.minecraft.block.state.IBlockState input = player.world.getBlockState(target);
-                BrainsweepMatch match = brainsweepMatch(input, entity);
-                if (match == null || match.result == null) {
+                BrainsweepRecipes.Match match = BrainsweepRecipes.find(input, living);
+                if (match == null || match.getResult() == null) {
                     throw new CastingException("hexcasting.error.brainsweep_recipe");
                 }
-                vm.consumeMedia(match.mediaCost);
+                vm.consumeMedia(match.getMediaCost());
                 if (!player.world.isRemote) {
-                    player.world.setBlockState(target, match.result, 3);
-                    entityData.setBoolean("hexcasting.brainswept", true);
-                    ((net.minecraft.entity.EntityLiving) entity).setNoAI(true);
+                    net.minecraft.tileentity.TileEntity oldTile =
+                        player.world.getTileEntity(target);
+                    net.minecraft.nbt.NBTTagCompound oldTileData = null;
+                    if (oldTile != null) {
+                        oldTileData = oldTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+                    }
+                    player.world.setBlockState(target, match.getResult(), 3);
+                    net.minecraft.tileentity.TileEntity newTile =
+                        player.world.getTileEntity(target);
+                    if (oldTile != null && newTile != null
+                        && oldTile.getClass() == newTile.getClass()
+                        && oldTileData != null) {
+                        newTile.readFromNBT(oldTileData);
+                        newTile.markDirty();
+                    }
+                    BrainsweepRecipes.markBrainswept(living);
+                    player.world.playSound(null, entity.getPosition(),
+                        net.minecraft.init.SoundEvents.ENTITY_PLAYER_LEVELUP,
+                        net.minecraft.util.SoundCategory.AMBIENT, 0.5F, 0.8F);
                 }
             }
         });
@@ -3647,7 +3667,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             || REVERSE == null || LAST_N_LIST == null || RAYCAST == null || RAYCAST_AXIS == null
             || GET_CASTER == null || ENTITY_HEIGHT == null || ENTITY_POS_EYE == null
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
-            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null || BLINK == null) {
+            || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null || BLINK == null || BRAINSWEEP == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
         }
     }
@@ -3671,44 +3691,6 @@ throw new CastingException("hexcasting.error.get_media_context");
 
     private static HexAction register(ResourceLocation id, HexPattern pattern, HexAction action) {
         return HexActionRegistry.register(id, pattern, action);
-    }
-
-    private static final class BrainsweepMatch {
-        private final net.minecraft.block.state.IBlockState result;
-        private final long mediaCost;
-
-        private BrainsweepMatch(net.minecraft.block.state.IBlockState result, long mediaCost) {
-            this.result = result;
-            this.mediaCost = mediaCost;
-        }
-    }
-
-    private static BrainsweepMatch brainsweepMatch(
-        net.minecraft.block.state.IBlockState input,
-        net.minecraft.entity.Entity entity) {
-        String blockId = input.getBlock().getRegistryName() == null
-            ? "" : input.getBlock().getRegistryName().toString();
-        String entityId = net.minecraft.entity.EntityList.getEntityString(entity);
-        if (entityId == null) {
-            entityId = "";
-        }
-        // The upstream recipe is Allay + amethyst block -> quenched Allay.
-        // The checks are retained here so the recipe becomes active automatically
-        // if the corresponding 1.12.2 compatibility content is supplied.
-        if (("minecraft:allay".equals(entityId) || "allay".equals(entityId)
-            || "Allay".equals(entityId))
-            && "minecraft:amethyst_block".equals(blockId)) {
-            return new BrainsweepMatch(
-                resolveBrainsweepBlock("hexcasting:quenched_allay"), 100000L);
-        }
-        return null;
-    }
-
-    private static net.minecraft.block.state.IBlockState resolveBrainsweepBlock(String id) {
-        net.minecraft.block.Block block = net.minecraft.block.Block.REGISTRY.getObject(
-            new net.minecraft.util.ResourceLocation(id));
-        return block == null || block == net.minecraft.init.Blocks.AIR
-            ? null : block.getDefaultState();
     }
 
     private static int requireRoundedInteger(DoubleIota value) throws CastingException {
