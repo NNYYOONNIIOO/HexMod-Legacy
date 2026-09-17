@@ -12,12 +12,17 @@ import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -33,6 +38,8 @@ public final class TileEntityImpetus extends TileEntity
     private static final String KEY_POWERED = "powered";
     private static final String KEY_MEDIA = "media";
     private static final long MAX_MEDIA = 9_000_000_000_000_000_000L;
+    private static final int MAX_LOOK_AMOUNT = 30;
+    private int lookAmount;
 
     private NBTTagList patterns = new NBTTagList();
     private ItemStack caster = ItemStack.EMPTY;
@@ -281,6 +288,9 @@ public final class TileEntityImpetus extends TileEntity
         if (getWorld() == null || getWorld().isRemote) {
             return;
         }
+        if (getTriggerMode() == BlockImpetus.TriggerMode.LOOK && !isExecuting()) {
+            tickLooking();
+        }
         CircleExecutionState current = getExecutionState();
         if (current == null) {
             return;
@@ -294,11 +304,45 @@ public final class TileEntityImpetus extends TileEntity
         markDirty();
     }
 
+    private void tickLooking() {
+        int range = 20;
+        EntityPlayer looker = null;
+        List<EntityPlayer> players = getWorld().getEntitiesWithinAABB(
+            EntityPlayer.class, new AxisAlignedBB(pos).grow(range));
+        for (EntityPlayer player : players) {
+            ItemStack helmet = player.inventory.armorInventory.get(3);
+            if (!helmet.isEmpty() && helmet.getItem() == Item.getItemFromBlock(Blocks.PUMPKIN)) {
+                continue;
+            }
+            Vec3d start = player.getPositionEyes(1.0F);
+            Vec3d end = start.add(player.getLookVec().scale(range / 1.5D));
+            RayTraceResult hit = getWorld().rayTraceBlocks(start, end,
+                false, true, false);
+            if (hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK
+                && pos.equals(hit.getBlockPos())) {
+                looker = player;
+                break;
+            }
+        }
+
+        int previous = lookAmount;
+        lookAmount = Math.max(0, Math.min(MAX_LOOK_AMOUNT,
+            previous + (looker == null ? -1 : 1)));
+        if (lookAmount == MAX_LOOK_AMOUNT) {
+            lookAmount = 0;
+            startExecution(looker);
+        }
+        if (lookAmount != previous) {
+            markDirty();
+        }
+    }
+
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
         compound.setTag(KEY_PATTERNS, getProgramSnapshot());
         compound.setBoolean(KEY_POWERED, powered);
+        compound.setInteger("look_amount", lookAmount);
         compound.setLong(KEY_MEDIA, media);
         CircleExecutionState current = getExecutionState();
         if (current != null) {
@@ -318,6 +362,8 @@ public final class TileEntityImpetus extends TileEntity
         patterns = compound.hasKey(KEY_PATTERNS, 9)
             ? copyPatterns(compound.getTagList(KEY_PATTERNS, 10)) : new NBTTagList();
         powered = compound.getBoolean(KEY_POWERED);
+        lookAmount = Math.max(0, Math.min(MAX_LOOK_AMOUNT,
+            compound.getInteger("look_amount")));
         long storedMedia = compound.getLong(KEY_MEDIA);
         media = storedMedia < 0L ? -1L : Math.min(MAX_MEDIA, storedMedia);
         executionState = null;

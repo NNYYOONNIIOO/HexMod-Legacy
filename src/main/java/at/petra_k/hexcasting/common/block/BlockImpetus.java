@@ -155,9 +155,10 @@ public class BlockImpetus extends BlockCircleComponent {
             impetus.bindProgram(ItemHexStaff.getProgramSnapshot(staff));
             return true;
         }
-        if (triggerMode == TriggerMode.RIGHT_CLICK || triggerMode == TriggerMode.LOOK) {
+        if (triggerMode == TriggerMode.RIGHT_CLICK) {
             impetus.trigger(player, hand);
-        } else if (impetus.getProgramSize() == 0) {
+        } else if (triggerMode == TriggerMode.RIGHT_CLICK
+            && impetus.getProgramSize() == 0) {
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.program_empty"));
         }
@@ -180,10 +181,29 @@ public class BlockImpetus extends BlockCircleComponent {
         if (powered && !impetus.isPowered()) {
             EntityPlayer player = closestPlayer(world, pos);
             if (player != null) {
-                impetus.trigger(player, EnumHand.MAIN_HAND);
+                impetus.startExecution(player);
             }
         }
         impetus.setPowered(powered);
+    }
+
+    @Override
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(world, pos, state);
+        if (!world.isRemote && triggerMode == TriggerMode.REDSTONE
+            && world.getTileEntity(pos) instanceof TileEntityImpetus) {
+            ((TileEntityImpetus) world.getTileEntity(pos))
+                .setPowered(world.isBlockPowered(pos));
+        }
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        TileEntity tileEntity = world.getTileEntity(pos);
+        if (tileEntity instanceof TileEntityImpetus) {
+            ((TileEntityImpetus) tileEntity).endExecution();
+        }
+        super.breakBlock(world, pos, state);
     }
 
     private static EntityPlayer closestPlayer(World world, BlockPos pos) {
