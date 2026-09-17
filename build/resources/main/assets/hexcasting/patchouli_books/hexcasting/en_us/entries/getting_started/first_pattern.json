@@ -1,0 +1,32 @@
+{
+  "name": "Your First Pattern",
+      "icon": "hexcasting:scroll",
+  "category": "hexcasting:getting_started",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "text",
+      "text": "Hex Casting patterns are drawn on a six-direction grid. In this port, the Hex Focus and Pattern Scroll provide a safe first step: right-click to execute the selected action and sneak-right-click to cycle it."
+    },
+    {
+      "type": "spotlight",
+      "item": "hexcasting:focus",
+      "title": "Hex Focus",
+      "text": "The Focus stores the selected action on its NBT. Its player casting stack is persisted through the Forge capability system."
+    },
+    {
+      "type": "crafting",
+      "recipe": "hexcasting:focus"
+    },
+    {
+      "type": "spotlight",
+      "item": "hexcasting:scroll",
+      "title": "Pattern Scroll",
+      "text": "Scrolls expose the registered starter patterns as creative-tab variants. They are intentionally data-driven so more migrated actions can be added without changing the item."
+    },
+    {
+      "type": "crafting",
+      "recipe": "hexcasting:scroll"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "variants": {
+    "normal": [
+      {
+        "model": "hexcasting:edified_planks",
+        "weight": 3
+      },
+      {
+        "model": "hexcasting:edified_planks_2",
+        "weight": 3
+      },
+      {
+        "model": "hexcasting:edified_planks_3"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "north": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "south": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "east": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "west": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "up": "hexcasting:blocks/circle/directrix/empty/top_dim",
+    "down": "hexcasting:blocks/circle/directrix/empty/top_dim"
+  }
+}

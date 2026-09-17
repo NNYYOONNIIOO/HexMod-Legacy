@@ -1,0 +1,16 @@
+{
+  "name": "hexcasting.action.brainsweep",
+  "category": "hexcasting:great_spells",
+  "icon": "minecraft:skull",
+  "sortnum": 7,
+  "pages": [
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:brainsweep",
+      "anchor": "hexcasting:brainsweep",
+      "input": "entity, vector",
+      "output": "",
+      "text": "hexcasting.page.brainsweep_spell.1"
+    }
+  ]
+}

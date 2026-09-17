@@ -1,0 +1,5 @@
+This distribution integrates a 1.12.2 port of selected Paucal and Inline APIs.
+Paucal is Copyright (c) 2022-2024 PetraK and contributors, licensed under the MIT License.
+Inline is Copyright (c) SamsTheNerd and contributors, licensed under the GNU Lesser General Public License version 3 or later.
+The complete corresponding license texts are included beside this notice.
+The port is adapted for Minecraft Forge 1.12.2 and is not binary-compatible with the original 1.20.1 artifacts.

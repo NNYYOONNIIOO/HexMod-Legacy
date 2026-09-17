@@ -1,0 +1,40 @@
+{
+  "variants": {
+    "energized=false,facing=down": {
+      "model": "hexcasting:slate_down"
+    },
+    "energized=false,facing=east": {
+      "model": "hexcasting:slate_east"
+    },
+    "energized=false,facing=north": {
+      "model": "hexcasting:slate_north"
+    },
+    "energized=false,facing=south": {
+      "model": "hexcasting:slate_south"
+    },
+    "energized=false,facing=up": {
+      "model": "hexcasting:slate_up"
+    },
+    "energized=false,facing=west": {
+      "model": "hexcasting:slate_west"
+    },
+    "energized=true,facing=down": {
+      "model": "hexcasting:slate_down"
+    },
+    "energized=true,facing=east": {
+      "model": "hexcasting:slate_east"
+    },
+    "energized=true,facing=north": {
+      "model": "hexcasting:slate_north"
+    },
+    "energized=true,facing=south": {
+      "model": "hexcasting:slate_south"
+    },
+    "energized=true,facing=up": {
+      "model": "hexcasting:slate_up"
+    },
+    "energized=true,facing=west": {
+      "model": "hexcasting:slate_west"
+    }
+  }
+}

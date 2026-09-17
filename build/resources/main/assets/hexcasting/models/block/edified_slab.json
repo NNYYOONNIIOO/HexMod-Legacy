@@ -1,0 +1,21 @@
+{
+  "textures": {
+    "bottom": "hexcasting:blocks/edified_planks",
+    "side": "hexcasting:blocks/edified_planks",
+    "top": "hexcasting:blocks/edified_planks"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 8, 16],
+      "faces": {
+        "down": {"texture": "#bottom", "cullface": "down"},
+        "up": {"texture": "#top"},
+        "north": {"texture": "#side", "cullface": "north"},
+        "south": {"texture": "#side", "cullface": "south"},
+        "west": {"texture": "#side", "cullface": "west"},
+        "east": {"texture": "#side", "cullface": "east"}
+      }
+    }
+  ]
+}

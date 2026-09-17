@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:items/cad/2_trinket",
+    "layer1": "hexcasting:items/cad/2_trinket_overlay"
+  }
+}

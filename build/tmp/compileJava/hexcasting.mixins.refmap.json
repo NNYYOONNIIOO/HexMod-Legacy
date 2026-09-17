@@ -1,0 +1,14 @@
+{
+  "mappings": {
+    "at/petra_k/hexcasting/mixin/MixinRenderItem": {
+      "renderItemOverlayIntoGUI": "Lnet/minecraft/client/renderer/RenderItem;func_180453_a(Lnet/minecraft/client/gui/FontRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "at/petra_k/hexcasting/mixin/MixinRenderItem": {
+        "renderItemOverlayIntoGUI": "Lnet/minecraft/client/renderer/RenderItem;func_180453_a(Lnet/minecraft/client/gui/FontRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V"
+      }
+    }
+  }
+}

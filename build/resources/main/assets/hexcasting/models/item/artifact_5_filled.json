@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:item/handheld_rod",
+  "textures": {
+    "layer0": "hexcasting:items/cad/5_artifact",
+    "layer1": "hexcasting:items/cad/5_artifact_overlay"
+  }
+}
+

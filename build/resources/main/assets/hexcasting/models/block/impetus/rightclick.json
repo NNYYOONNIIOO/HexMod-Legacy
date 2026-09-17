@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "hexcasting:blocks/circle/impetus/rightclick/front_dim"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "north": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "south": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "east": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "west": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "up": "hexcasting:blocks/circle/directrix/boolean/back_not_true",
+    "down": "hexcasting:blocks/circle/directrix/boolean/back_not_true"
+  }
+}

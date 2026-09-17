@@ -1,0 +1,12 @@
+{
+  "name": "item.hexcasting.book",
+  "landing_text": "hexcasting.landing",
+  "version": 1,
+  "creative_tab": "hexcasting",
+  "book_texture": "hexcasting:textures/gui/patchi_book.png",
+  "filler_texture": "hexcasting:textures/gui/patchi_filler.png",
+  "model": "hexcasting:patchouli_book",
+  "show_progress": false,
+  "i18n": true,
+  "use_resource_pack": true
+}

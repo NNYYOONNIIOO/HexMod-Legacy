@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "hexcasting:items/cad/6_spellbook_sealed",
+    "layer1": "hexcasting:items/cad/6_spellbook_sealed_overlay"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "farmers_future_delight:item/amethyst_shard"
+  }
+}

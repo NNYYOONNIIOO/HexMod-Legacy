@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/wooden_door_bottom",
+  "textures": {
+    "particle": "hexcasting:blocks/edified_door_lower",
+    "bottom": "hexcasting:blocks/edified_door_lower",
+    "top": "hexcasting:blocks/edified_door_lower"
+  }
+}

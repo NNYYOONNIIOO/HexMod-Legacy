@@ -1,0 +1,18 @@
+{
+  "name": "hexcasting.action.teleport/great",
+  "category": "hexcasting:great_spells",
+  "icon": "minecraft:ender_pearl",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:teleport/great",
+      "anchor": "hexcasting:teleport/great",
+      "input": "entity, vector",
+      "output": "",
+      "hex_size": 8,
+      "text": "hexcasting.page.teleport/great.1"
+    },
+    { "type": "text", "text": "hexcasting.page.teleport/great.2" }
+  ]
+}

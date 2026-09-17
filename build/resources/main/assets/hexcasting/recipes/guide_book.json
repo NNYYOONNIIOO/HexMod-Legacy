@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:book" },
+    { "item": "hexcasting:focus" }
+  ],
+  "result": {
+    "item": "patchouli:guide_book",
+    "count": 1,
+    "nbt": "{\"patchouli:book\":\"hexcasting:hexcasting\"}"
+  }
+}

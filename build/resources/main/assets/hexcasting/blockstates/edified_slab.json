@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "double=false,half=bottom": {
+      "model": "hexcasting:edified_slab_bottom"
+    },
+    "double=false,half=top": {
+      "model": "hexcasting:edified_slab_top"
+    },
+    "double=true,half=bottom": {
+      "model": "hexcasting:edified_slab_double"
+    },
+    "double=true,half=top": {
+      "model": "hexcasting:edified_slab_double"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "你的第一个图案",
+  "icon": "minecraft:paper",
+  "category": "hexcasting:getting_started",
+  "pages": [
+    {
+      "type": "text",
+      "text": "Hex Casting 使用六边形网格上的图案施放法术。先制作一个法术焦点，再用它记录并执行图案。"
+    },
+    {
+      "type": "text",
+      "text": "图案由一串方向组成。你可以使用图案卷轴查看动作和图案；潜行并右键可以切换当前动作。"
+    }
+  ]
+}

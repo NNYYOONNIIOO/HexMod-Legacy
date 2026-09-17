@@ -1,0 +1,40 @@
+{
+  "variants": {
+    "energized=false,facing=down": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=false,facing=east": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=false,facing=north": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=false,facing=south": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=false,facing=up": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=false,facing=west": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=down": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=east": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=north": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=south": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=up": {
+      "model": "hexcasting:great_impetus"
+    },
+    "energized=true,facing=west": {
+      "model": "hexcasting:great_impetus"
+    }
+  }
+}

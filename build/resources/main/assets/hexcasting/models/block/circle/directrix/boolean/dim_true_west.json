@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "hexcasting:blocks/circle/bottom",
+    "east": "hexcasting:blocks/circle/directrix/boolean/left_true",
+    "north": "hexcasting:blocks/circle/directrix/boolean/front_not_false",
+    "particle": "hexcasting:blocks/slate",
+    "south": "hexcasting:blocks/circle/directrix/boolean/back_dim_true",
+    "up": "hexcasting:blocks/circle/directrix/boolean/top_true",
+    "west": "hexcasting:blocks/circle/directrix/boolean/right_true"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "hexcasting:item/focus",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 0
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_0_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 0
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_0_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 0
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_1",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 1
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_1_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 1
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_1_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 1
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_2",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_2_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_2_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 2
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_3",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 3
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_3_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 3
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_3_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 3
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_4",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 4
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_4_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 4
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_4_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 4
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_5",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 5
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_5_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 5
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_5_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 5
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_6",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 6
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_6_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 6
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_6_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 6
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_7",
+      "predicate": {
+        "hexcasting:overlay_layer": 0,
+        "hexcasting:variant": 7
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_7_filled",
+      "predicate": {
+        "hexcasting:overlay_layer": 1,
+        "hexcasting:variant": 7
+      }
+    },
+    {
+      "model": "hexcasting:item/focus_7_sealed",
+      "predicate": {
+        "hexcasting:overlay_layer": 2,
+        "hexcasting:variant": 7
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "hexcasting:items/cad/0_focus_empty"
+  }
+}

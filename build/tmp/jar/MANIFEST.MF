@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: 1-12-2forge-c-users-wubid
+MixinConfigs: mixins.hexcasting.json
+Implementation-Version: 0.1.0-1.12.2
+Specification-Vendor: examplemodsareus
+Specification-Title: examplemod
+Implementation-Timestamp: 2026-09-17T21:16:49+0800
+Specification-Version: 1
+Implementation-Vendor: examplemodsareus
+
