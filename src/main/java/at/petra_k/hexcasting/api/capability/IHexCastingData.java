@@ -17,4 +17,14 @@ public interface IHexCastingData extends ADMediaHolder {
     int getPigment();
 
     void setPigment(int pigment);
+
+    /** Remaining ordinary flight time, in server ticks. */
+    int getFlightTicks();
+
+    void setFlightTicks(int ticks);
+
+    /** Remaining Altiora collision grace, in server ticks. */
+    int getAltioraTicks();
+
+    void setAltioraTicks(int ticks);
 }

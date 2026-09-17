@@ -11,11 +11,15 @@ public final class HexCastingData implements IHexCastingData {
     private static final String KEY_STACK = "casting_stack";
     private static final String KEY_MEDIA = "media";
     private static final String KEY_PIGMENT = "pigment";
+    private static final String KEY_FLIGHT_TICKS = "flight_ticks";
+    private static final String KEY_ALTIORA_TICKS = "altiora_ticks";
     private static final int DEFAULT_PIGMENT = 0xAA66FF;
 
     private final CastingStack castingStack = new CastingStack();
     private long media;
     private int pigment = DEFAULT_PIGMENT;
+    private int flightTicks;
+    private int altioraTicks;
 
     @Override
     public CastingStack getCastingStack() {
@@ -53,6 +57,26 @@ public final class HexCastingData implements IHexCastingData {
     }
 
     @Override
+    public int getFlightTicks() {
+        return flightTicks;
+    }
+
+    @Override
+    public void setFlightTicks(int ticks) {
+        flightTicks = Math.max(0, ticks);
+    }
+
+    @Override
+    public int getAltioraTicks() {
+        return altioraTicks;
+    }
+
+    @Override
+    public void setAltioraTicks(int ticks) {
+        altioraTicks = Math.max(0, ticks);
+    }
+
+    @Override
     public boolean canRecharge() {
         return true;
     }
@@ -78,6 +102,8 @@ public final class HexCastingData implements IHexCastingData {
         result.setTag(KEY_STACK, castingStack.serialize());
         result.setLong(KEY_MEDIA, media);
         result.setInteger(KEY_PIGMENT, pigment);
+        result.setInteger(KEY_FLIGHT_TICKS, flightTicks);
+        result.setInteger(KEY_ALTIORA_TICKS, altioraTicks);
         result.setTag("casting_state", castingStack.serializeState());
         return result;
     }
@@ -92,6 +118,8 @@ public final class HexCastingData implements IHexCastingData {
         if (nbt.hasKey(KEY_PIGMENT, 3)) {
             pigment = nbt.getInteger(KEY_PIGMENT) & 0xFFFFFF;
         }
+        flightTicks = Math.max(0, nbt.getInteger(KEY_FLIGHT_TICKS));
+        altioraTicks = Math.max(0, nbt.getInteger(KEY_ALTIORA_TICKS));
         if (nbt.hasKey("casting_state", 10)) {
             try {
                 CastingStack loaded = CastingStack.deserializeState(nbt.getCompoundTag("casting_state"));
