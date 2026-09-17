@@ -3,8 +3,11 @@ package at.petra_k.hexcasting.common.capability;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
+import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -20,6 +23,26 @@ public final class HexCapabilityHandler {
     public static void attachPlayerCapability(AttachCapabilitiesEvent<Entity> event) {
         if (event.getObject() instanceof EntityPlayer) {
             event.addCapability(HexAPI.modLoc("casting_data"), new HexCapabilityProvider());
+        }
+    }
+
+    @SubscribeEvent
+    public static void attachItemCapabilities(AttachCapabilitiesEvent<ItemStack> event) {
+        ItemStack stack = event.getObject();
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        if (stack.getItem() instanceof MediaHolderItem) {
+            MediaHolderItem holder = (MediaHolderItem) stack.getItem();
+            event.addCapability(HexAPI.modLoc("media_holder"),
+                new HexItemCapabilityProvider<>(HexCapabilities.MEDIA,
+                    new HexItemMediaHolder(holder, stack)));
+        }
+        if (stack.getItem() instanceof IotaHolderItem) {
+            IotaHolderItem holder = (IotaHolderItem) stack.getItem();
+            event.addCapability(HexAPI.modLoc("iota_holder"),
+                new HexItemCapabilityProvider<>(HexCapabilities.IOTA,
+                    new HexItemIotaHolder(holder, stack)));
         }
     }
 
