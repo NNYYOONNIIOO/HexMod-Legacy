@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
+import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.lib.HexItems;
@@ -19,14 +20,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Stores a bound impetus program and its resumable circle execution state. */
-public final class TileEntityImpetus extends TileEntity implements ITickable {
+public final class TileEntityImpetus extends TileEntity
+    implements ITickable, ADMediaHolder {
     private static final String KEY_PATTERNS = "patterns";
     private static final String KEY_CASTER = "caster";
     private static final String KEY_POWERED = "powered";
+    private static final String KEY_MEDIA = "media";
+    private static final long MAX_MEDIA = 9_000_000_000_000_000_000L;
 
     private NBTTagList patterns = new NBTTagList();
     private ItemStack caster = ItemStack.EMPTY;
     private boolean powered;
+    private long media;
     private CircleExecutionState executionState;
     private NBTTagCompound lazyExecutionState;
 
@@ -41,6 +46,42 @@ public final class TileEntityImpetus extends TileEntity implements ITickable {
     public void setPowered(boolean powered) {
         this.powered = powered;
         markDirty();
+    }
+
+    @Override
+    public long getMedia() {
+        return media;
+    }
+
+    @Override
+    public long getMaxMedia() {
+        return MAX_MEDIA;
+    }
+
+    @Override
+    public void setMedia(long media) {
+        this.media = Math.max(0L, Math.min(MAX_MEDIA, media));
+        markDirty();
+    }
+
+    @Override
+    public boolean canRecharge() {
+        return true;
+    }
+
+    @Override
+    public boolean canProvide() {
+        return true;
+    }
+
+    @Override
+    public int getConsumptionPriority() {
+        return 0;
+    }
+
+    @Override
+    public boolean canConstructBattery() {
+        return false;
     }
 
     public void bindProgram(NBTTagList incoming) {
@@ -167,6 +208,7 @@ public final class TileEntityImpetus extends TileEntity implements ITickable {
         super.writeToNBT(compound);
         compound.setTag(KEY_PATTERNS, getProgramSnapshot());
         compound.setBoolean(KEY_POWERED, powered);
+        compound.setLong(KEY_MEDIA, media);
         CircleExecutionState current = getExecutionState();
         if (current != null) {
             compound.setTag("execution", current.serialize());
@@ -185,6 +227,7 @@ public final class TileEntityImpetus extends TileEntity implements ITickable {
         patterns = compound.hasKey(KEY_PATTERNS, 9)
             ? copyPatterns(compound.getTagList(KEY_PATTERNS, 10)) : new NBTTagList();
         powered = compound.getBoolean(KEY_POWERED);
+        media = Math.max(0L, Math.min(MAX_MEDIA, compound.getLong(KEY_MEDIA)));
         executionState = null;
         lazyExecutionState = compound.hasKey("execution", 10)
             ? compound.getCompoundTag("execution").copy() : null;

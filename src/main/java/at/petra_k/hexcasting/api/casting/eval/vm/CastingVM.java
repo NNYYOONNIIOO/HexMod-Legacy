@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
+import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
@@ -93,6 +94,8 @@ public final class CastingVM {
     private EnumHand castingHand = EnumHand.MAIN_HAND;
     /** Runtime-only circle context; it is rebound after a persisted state loads. */
     private CircleExecutionState circleExecutionState;
+    /** Runtime-only media source; circles bind this to their Impetus. */
+    private ADMediaHolder mediaHolder;
 
     public CastingVM() {
         this(new CastingStack());
@@ -220,6 +223,14 @@ public final class CastingVM {
 
     public void setCircleExecutionState(CircleExecutionState circleExecutionState) {
         this.circleExecutionState = circleExecutionState;
+    }
+
+    public ADMediaHolder getMediaHolder() {
+        return mediaHolder;
+    }
+
+    public void setMediaHolder(ADMediaHolder mediaHolder) {
+        this.mediaHolder = mediaHolder;
     }
 
     public EnumHand getOtherHand() {
@@ -665,14 +676,15 @@ public final class CastingVM {
         if (amount <= 0L) {
             return;
         }
-        if (castingData == null) {
+        ADMediaHolder source = mediaHolder != null ? mediaHolder : castingData;
+        if (source == null) {
             throw new CastingException("hexcasting.error.no_media_context");
         }
-        long available = castingData.getMedia();
+        long available = source.getMedia();
         if (available < amount) {
             throw new CastingException("hexcasting.error.not_enough_media");
         }
-        castingData.setMedia(available - amount);
+        source.setMedia(available - amount);
     }
 
     public CastingStack run() throws CastingException {

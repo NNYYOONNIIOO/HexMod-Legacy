@@ -2134,6 +2134,12 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm != null && vm.getMediaHolder() != null) {
+                    stack.push(new DoubleIota(((double) Math.max(0L,
+                        vm.getMediaHolder().getMedia()))
+                        / (double) MediaConstants.DUST_UNIT));
+                    return;
+                }
                 IHexCastingData data = vm.getCastingData();
                 if (data == null) {
 throw new CastingException("hexcasting.error.get_media_context");

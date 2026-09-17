@@ -143,11 +143,9 @@ public final class CircleExecutionState {
                 HexCapabilities.CASTING_DATA, null));
         }
         vm.setCircleExecutionState(null);
-        List<at.petra_k.hexcasting.api.casting.math.HexPattern> bound =
-            impetus.getBoundPatterns();
-        if (!bound.isEmpty()) {
-            vm.enqueue(bound);
-        }
+        // Circle programs live on Slate components.  The old 1.12 prototype
+        // also copied staff patterns into the Impetus; leave that data intact
+        // for item compatibility, but never enqueue it into a real circle.
         return CreationResult.success(new CircleExecutionState(
             start, startDirection, reached,
             start.offset(startDirection), startDirection, vm,
@@ -167,6 +165,7 @@ public final class CircleExecutionState {
         image.setCastingData(player == null ? null : player.getCapability(
             HexCapabilities.CASTING_DATA, null));
         image.setCircleExecutionState(this);
+        image.setMediaHolder(impetus);
 
         if (currentPos.equals(impetusPos)) {
             return false;
