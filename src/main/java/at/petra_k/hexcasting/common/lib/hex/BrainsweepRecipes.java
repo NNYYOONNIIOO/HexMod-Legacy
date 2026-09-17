@@ -6,8 +6,11 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.passive.EntityVillager;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.VillagerRegistry;
 
@@ -109,6 +112,61 @@ public final class BrainsweepRecipes {
         }
         NBTTagCompound data = living.getEntityData();
         return data.getBoolean(BRAINSWEPT_TAG) || data.getBoolean(LEGACY_BRAINSWEPT_TAG);
+    }
+
+    /**
+     * Apply the one point of true damage used by the modern bad-brainsweep
+     * mishap.  The action is evaluated on the server, but keeping this guard
+     * here prevents a future caller from damaging a client-side mirror.
+     */
+    public static void hurtForFailedBrainsweep(EntityLiving living,
+                                               EntityPlayer caster) {
+        trulyHurt(living, caster, 1.0F);
+    }
+
+    /**
+     * A second attempt to flay an already empty mind kills the subject in the
+     * modern implementation.  Using its current health as the damage amount
+     * keeps ordinary death handling (including totems) intact.
+     */
+    public static void killForRepeatedBrainsweep(EntityLiving living,
+                                                 EntityPlayer caster) {
+        if (living == null || living.isDead) {
+            return;
+        }
+        trulyHurt(living, caster, living.getHealth());
+    }
+
+    /**
+     * 1.12.2 has no equivalent of the modern Mishap.trulyHurt helper.  Reset
+     * the normal hurt-resistance window, use a damage source that bypasses
+     * armor, and fall back to direct health subtraction when vanilla refuses
+     * to apply the hit for a non-invulnerability reason.
+     */
+    private static void trulyHurt(EntityLiving living, EntityPlayer caster,
+                                  float amount) {
+        if (living == null || living.world == null || living.world.isRemote
+            || living.isDead || amount <= 0.0F) {
+            return;
+        }
+
+        DamageSource source = overcastDamage(caster);
+        living.hurtResistantTime = 0;
+        if (!living.attackEntityFrom(source, amount)
+            && !living.isEntityInvulnerable(source)
+            && !living.isDead) {
+            living.setHealth(living.getHealth() - amount);
+            if (living.getHealth() <= 0.0F) {
+                living.setDead();
+            }
+        }
+    }
+
+    private static DamageSource overcastDamage(EntityPlayer caster) {
+        DamageSource source = caster == null
+            ? DamageSource.MAGIC
+            : new EntityDamageSource("hexcasting.overcast", caster);
+        return source.setDamageBypassesArmor().setDamageIsAbsolute().setMagicDamage();
     }
 
     /** Apply the persistent no-AI state after a successful brainsweep. */

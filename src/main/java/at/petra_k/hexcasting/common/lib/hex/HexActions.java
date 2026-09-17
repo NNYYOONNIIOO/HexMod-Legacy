@@ -3241,11 +3241,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.brainsweep_location");
                 }
                 if (BrainsweepRecipes.isBrainswept(living)) {
+                    BrainsweepRecipes.killForRepeatedBrainsweep(living, player);
                     throw new CastingException("hexcasting.error.brainsweep_already");
                 }
                 net.minecraft.block.state.IBlockState input = player.world.getBlockState(target);
                 BrainsweepRecipes.Match match = BrainsweepRecipes.find(input, living);
                 if (match == null || match.getResult() == null) {
+                    BrainsweepRecipes.hurtForFailedBrainsweep(living, player);
                     throw new CastingException("hexcasting.error.brainsweep_recipe");
                 }
                 vm.consumeMedia(match.getMediaCost());
