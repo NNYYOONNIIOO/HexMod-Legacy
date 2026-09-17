@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.event;
 import at.petra_k.hexcasting.HexCasting;
 import at.petra_k.hexcasting.common.effect.HexCastingEffects;
 import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
+import at.petra_k.hexcasting.common.capability.HexCapabilitySync;
 import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -38,6 +39,7 @@ public final class HexWorldSyncEvents {
         }
         EntityPlayerMP serverPlayer = (EntityPlayerMP) player;
         PaucalAPI.sendTo(new MsgPerWorldPatternsS2C(serverPlayer.world), serverPlayer);
+        HexCapabilitySync.send(serverPlayer);
         HexCastingEffects.syncOrbitPatterns(serverPlayer);
     }
 }

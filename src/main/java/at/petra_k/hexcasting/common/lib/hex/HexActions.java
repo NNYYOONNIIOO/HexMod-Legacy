@@ -34,6 +34,7 @@ import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import at.petra_k.hexcasting.common.world.HexEdifiedTreeGenerator;
 
@@ -2950,46 +2951,54 @@ throw new CastingException("hexcasting.error.get_media_context");
         });
 
     private static final class HexFlightState {
-        private static final java.util.Map<java.util.UUID, Integer> REMAINING =
-            new java.util.HashMap<>();
-        private static final java.util.Map<java.util.UUID, Integer> ALTIORA_REMAINING =
-            new java.util.HashMap<>();
-
         private static void grant(net.minecraft.entity.player.EntityPlayer player, int ticks) {
-            java.util.UUID id = player.getUniqueID();
-            REMAINING.put(id, Math.max(ticks, REMAINING.containsKey(id) ? REMAINING.get(id) : 0));
+            IHexCastingData data = data(player);
+            if (data != null) {
+                data.setFlightTicks(Math.max(ticks, data.getFlightTicks()));
+            }
         }
 
         private static double remainingSeconds(net.minecraft.entity.player.EntityPlayer player) {
-            Integer ticks = REMAINING.get(player.getUniqueID());
-            return ticks == null ? 0.0D : Math.max(0, ticks) / 20.0D;
+            IHexCastingData data = data(player);
+            return data == null ? 0.0D : data.getFlightTicks() / 20.0D;
         }
 
         private static void grantAltiora(
             net.minecraft.entity.player.EntityPlayer player) {
-            java.util.UUID id = player.getUniqueID();
-            ALTIORA_REMAINING.put(id, 20);
+            IHexCastingData data = data(player);
+            if (data != null) {
+                data.setAltioraTicks(20);
+                data.setAltioraActive(true);
+            }
         }
 
         private static void tickAltiora(
             net.minecraft.entity.player.EntityPlayer player) {
-            java.util.UUID id = player.getUniqueID();
-            Integer remaining = ALTIORA_REMAINING.get(id);
-            if (remaining == null) {
+            IHexCastingData data = data(player);
+            if (data == null || !data.isAltioraActive()) {
                 return;
             }
-            if (remaining <= 0
+            if (data.getAltioraTicks() <= 0
                 && (player.onGround || player.collidedHorizontally)) {
-                ALTIORA_REMAINING.remove(id);
+                data.setAltioraActive(false);
                 return;
             }
             player.fallDistance = 0.0F;
-            ALTIORA_REMAINING.put(id, Math.max(0, remaining - 1));
+            data.setAltioraTicks(Math.max(0, data.getAltioraTicks() - 1));
         }
 
         private static boolean hasAltiora(
             net.minecraft.entity.player.EntityPlayer player) {
-            return ALTIORA_REMAINING.containsKey(player.getUniqueID());
+            IHexCastingData data = data(player);
+            return data != null && data.isAltioraActive();
+        }
+
+        private static IHexCastingData data(
+            net.minecraft.entity.player.EntityPlayer player) {
+            if (player == null || HexCapabilities.CASTING_DATA == null) {
+                return null;
+            }
+            return player.getCapability(HexCapabilities.CASTING_DATA, null);
         }
     }
 
@@ -3092,6 +3101,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.colorize_context");
                 }
                 data.setPigment(ItemColorizer.getPigmentColor(dye));
+                at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
                 if (!player.capabilities.isCreativeMode) {
                     dye.shrink(1);
                 }

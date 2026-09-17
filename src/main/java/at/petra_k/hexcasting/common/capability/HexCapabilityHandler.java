@@ -33,6 +33,10 @@ public final class HexCapabilityHandler {
         }
         try {
             replacement.setMedia(original.getMedia());
+            replacement.setPigment(original.getPigment());
+            replacement.setFlightTicks(original.getFlightTicks());
+            replacement.setAltioraTicks(original.getAltioraTicks());
+            replacement.setAltioraActive(original.isAltioraActive());
             replacement.getCastingStack().restore(original.getCastingStack().snapshot());
             replacement.getCastingStack().writeLocal(original.getCastingStack().readLocal());
         } catch (CastingException ignored) {

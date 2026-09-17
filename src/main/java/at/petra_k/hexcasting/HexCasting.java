@@ -12,6 +12,7 @@ import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
+import at.petra_k.hexcasting.common.network.MsgCastingDataS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
 import at.petra_k.hexcasting.common.network.MsgClearCastingPatternsS2C;
 import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
@@ -52,6 +53,7 @@ public final class HexCasting {
         MsgCastingPatternS2C.register();
         MsgClearCastingPatternsS2C.register();
         MsgCastParticlesS2C.register();
+        MsgCastingDataS2C.register();
         MsgPerWorldPatternsS2C.register();
         MsgStaffProgramS2C.register();
         MsgStaffCastResultS2C.register();

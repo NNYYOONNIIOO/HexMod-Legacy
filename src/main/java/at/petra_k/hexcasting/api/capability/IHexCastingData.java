@@ -27,4 +27,8 @@ public interface IHexCastingData extends ADMediaHolder {
     int getAltioraTicks();
 
     void setAltioraTicks(int ticks);
+
+    boolean isAltioraActive();
+
+    void setAltioraActive(boolean active);
 }

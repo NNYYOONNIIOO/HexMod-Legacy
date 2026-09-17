@@ -20,6 +20,7 @@ public final class HexCastingData implements IHexCastingData {
     private int pigment = DEFAULT_PIGMENT;
     private int flightTicks;
     private int altioraTicks;
+    private boolean altioraActive;
 
     @Override
     public CastingStack getCastingStack() {
@@ -77,6 +78,19 @@ public final class HexCastingData implements IHexCastingData {
     }
 
     @Override
+    public boolean isAltioraActive() {
+        return altioraActive;
+    }
+
+    @Override
+    public void setAltioraActive(boolean active) {
+        altioraActive = active;
+        if (!active) {
+            altioraTicks = 0;
+        }
+    }
+
+    @Override
     public boolean canRecharge() {
         return true;
     }
@@ -104,6 +118,7 @@ public final class HexCastingData implements IHexCastingData {
         result.setInteger(KEY_PIGMENT, pigment);
         result.setInteger(KEY_FLIGHT_TICKS, flightTicks);
         result.setInteger(KEY_ALTIORA_TICKS, altioraTicks);
+        result.setBoolean("altiora_active", altioraActive);
         result.setTag("casting_state", castingStack.serializeState());
         return result;
     }
@@ -120,6 +135,8 @@ public final class HexCastingData implements IHexCastingData {
         }
         flightTicks = Math.max(0, nbt.getInteger(KEY_FLIGHT_TICKS));
         altioraTicks = Math.max(0, nbt.getInteger(KEY_ALTIORA_TICKS));
+        altioraActive = nbt.getBoolean("altiora_active")
+            || nbt.hasKey(KEY_ALTIORA_TICKS, 3) && altioraTicks > 0;
         if (nbt.hasKey("casting_state", 10)) {
             try {
                 CastingStack loaded = CastingStack.deserializeState(nbt.getCompoundTag("casting_state"));
