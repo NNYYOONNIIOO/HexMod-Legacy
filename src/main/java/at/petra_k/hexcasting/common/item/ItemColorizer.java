@@ -13,10 +13,13 @@ import net.minecraft.world.World;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /** A pigment item that stores a color on a focus or staff in 1.12.2. */
 public final class ItemColorizer extends Item {
     private static final String KEY_COLOR = "hexcasting_color";
+    private static final String KEY_VARIANT = "hexcasting_pigment_variant";
+    private static final String KEY_OWNER = "hexcasting_pigment_owner";
 
     private final String variant;
     private final int color;
@@ -30,6 +33,10 @@ public final class ItemColorizer extends Item {
     /** The pigment colour represented by this Hex pigment item. */
     public int getColorValue() {
         return color;
+    }
+
+    public String getVariant() {
+        return variant;
     }
 
     /** Whether a stack is one of the port's Hex pigment items. */
@@ -55,6 +62,8 @@ public final class ItemColorizer extends Item {
                 target.setTagCompound(tag);
             }
             tag.setInteger(KEY_COLOR, color);
+            tag.setString(KEY_VARIANT, variant);
+            tag.setString(KEY_OWNER, player.getUniqueID().toString());
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.colorized", target.getDisplayName())));
         }
@@ -81,6 +90,29 @@ public final class ItemColorizer extends Item {
             return -1;
         }
         return stack.getTagCompound().getInteger(KEY_COLOR);
+    }
+
+    /** Return the pigment implementation saved on a colorized focus/staff. */
+    public static String getVariant(ItemStack stack) {
+        if (stack == null || stack.getTagCompound() == null
+            || !stack.getTagCompound().hasKey(KEY_VARIANT, 8)) {
+            return "default_colorizer";
+        }
+        String saved = stack.getTagCompound().getString(KEY_VARIANT);
+        return saved.isEmpty() ? "default_colorizer" : saved;
+    }
+
+    /** Return the owner used by UUID pigments, or the nil UUID for old NBT. */
+    public static UUID getOwner(ItemStack stack) {
+        if (stack == null || stack.getTagCompound() == null
+            || !stack.getTagCompound().hasKey(KEY_OWNER, 8)) {
+            return new UUID(0L, 0L);
+        }
+        try {
+            return UUID.fromString(stack.getTagCompound().getString(KEY_OWNER));
+        } catch (IllegalArgumentException ignored) {
+            return new UUID(0L, 0L);
+        }
     }
 
     private static int colorFor(String id) {

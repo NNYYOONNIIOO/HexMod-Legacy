@@ -4,6 +4,8 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import net.minecraft.nbt.NBTTagCompound;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 
+import java.util.UUID;
+
 /** Persistent player state used by the 1.12.2 casting backend. */
 public interface IHexCastingData extends ADMediaHolder {
     CastingStack getCastingStack();
@@ -17,6 +19,12 @@ public interface IHexCastingData extends ADMediaHolder {
     int getPigment();
 
     void setPigment(int pigment);
+
+    String getPigmentVariant();
+
+    UUID getPigmentOwner();
+
+    void setPigmentVariant(String variant, UUID owner);
 
     /** Remaining ordinary flight time, in server ticks. */
     int getFlightTicks();
