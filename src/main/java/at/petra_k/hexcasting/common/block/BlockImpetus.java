@@ -6,6 +6,8 @@ import net.minecraft.block.properties.PropertyBool;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
+import at.petra_k.hexcasting.api.casting.iota.EntityIota;
+import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -155,6 +157,26 @@ public class BlockImpetus extends BlockCircleComponent {
             impetus.bindProgram(ItemHexStaff.getProgramSnapshot(staff));
             return true;
         }
+        if (triggerMode == TriggerMode.REDSTONE) {
+            if (player.isSneaking() && staff.isEmpty()) {
+                impetus.clearPlayer();
+                return true;
+            }
+            ItemStack reference = staff.isEmpty()
+                ? player.getHeldItemOffhand() : staff;
+            if (IotaDataHolder.canRead(reference)) {
+                try {
+                    Object value = IotaDataHolder.read(reference);
+                    if (value instanceof EntityIota) {
+                        EntityIota entity = (EntityIota) value;
+                        impetus.bindPlayer(entity);
+                        return true;
+                    }
+                } catch (Exception ignored) {
+                    // Leave the block unbound when the holder contains bad data.
+                }
+            }
+        }
         if (triggerMode == TriggerMode.RIGHT_CLICK) {
             impetus.trigger(player, hand);
         } else if (triggerMode == TriggerMode.RIGHT_CLICK
@@ -179,7 +201,10 @@ public class BlockImpetus extends BlockCircleComponent {
         TileEntityImpetus impetus = (TileEntityImpetus) tileEntity;
         boolean powered = world.isBlockPowered(pos);
         if (powered && !impetus.isPowered()) {
-            EntityPlayer player = closestPlayer(world, pos);
+            EntityPlayer player = impetus.getStoredPlayer();
+            if (player == null) {
+                player = closestPlayer(world, pos);
+            }
             if (player != null) {
                 impetus.startExecution(player);
             }

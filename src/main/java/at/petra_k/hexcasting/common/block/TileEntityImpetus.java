@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
+import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
@@ -29,6 +30,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /** Stores a bound impetus program and its resumable circle execution state. */
 public final class TileEntityImpetus extends TileEntity
@@ -47,6 +49,8 @@ public final class TileEntityImpetus extends TileEntity
     private long media;
     private CircleExecutionState executionState;
     private NBTTagCompound lazyExecutionState;
+    private UUID storedPlayer;
+    private String storedPlayerName;
     private final IItemHandler mediaHandler = new IItemHandler() {
         @Override
         public int getSlots() {
@@ -118,6 +122,34 @@ public final class TileEntityImpetus extends TileEntity
 
     public boolean isPowered() {
         return powered;
+    }
+
+    public void bindPlayer(EntityIota playerIota) {
+        if (playerIota == null) {
+            return;
+        }
+        storedPlayer = playerIota.getUuid();
+        storedPlayerName = playerIota.display();
+        markDirty();
+    }
+
+    public void clearPlayer() {
+        storedPlayer = null;
+        storedPlayerName = null;
+        markDirty();
+    }
+
+    public UUID getStoredPlayerId() {
+        return storedPlayer;
+    }
+
+    public EntityPlayer getStoredPlayer() {
+        return storedPlayer == null || getWorld() == null
+            ? null : getWorld().getPlayerEntityByUUID(storedPlayer);
+    }
+
+    public String getStoredPlayerName() {
+        return storedPlayerName;
     }
 
     public void setPowered(boolean powered) {
@@ -344,6 +376,12 @@ public final class TileEntityImpetus extends TileEntity
         compound.setBoolean(KEY_POWERED, powered);
         compound.setInteger("look_amount", lookAmount);
         compound.setLong(KEY_MEDIA, media);
+        if (storedPlayer != null) {
+            compound.setString("stored_player", storedPlayer.toString());
+        }
+        if (storedPlayerName != null) {
+            compound.setString("stored_player_name", storedPlayerName);
+        }
         CircleExecutionState current = getExecutionState();
         if (current != null) {
             compound.setTag("execution", current.serialize());
@@ -366,6 +404,16 @@ public final class TileEntityImpetus extends TileEntity
             compound.getInteger("look_amount")));
         long storedMedia = compound.getLong(KEY_MEDIA);
         media = storedMedia < 0L ? -1L : Math.min(MAX_MEDIA, storedMedia);
+        storedPlayer = null;
+        if (compound.hasKey("stored_player", 8)) {
+            try {
+                storedPlayer = UUID.fromString(compound.getString("stored_player"));
+            } catch (IllegalArgumentException ignored) {
+                storedPlayer = null;
+            }
+        }
+        storedPlayerName = compound.hasKey("stored_player_name", 8)
+            ? compound.getString("stored_player_name") : null;
         executionState = null;
         lazyExecutionState = compound.hasKey("execution", 10)
             ? compound.getCompoundTag("execution").copy() : null;
