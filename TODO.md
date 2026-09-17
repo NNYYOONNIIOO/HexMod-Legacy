@@ -4,4 +4,4 @@
 - [x] 能力与同步
 - [x] 构筑粒子 / 染色
 - [x] Impetus / Directrix
-- [ ] Brainsweep
+- [x] Brainsweep
