@@ -5,12 +5,14 @@ import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.MaterialTransparent;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 /** An invisible light source created by Hex Casting. */
 public final class BlockConjuredLight extends BlockConjured {
@@ -90,6 +92,15 @@ public final class BlockConjuredLight extends BlockConjured {
     @Override
     public void onEntityWalk(World world, BlockPos pos, Entity entity) {
         // Intentionally empty; matches Hex's BlockConjuredLight override.
+    }
+
+    /** Light has no solid landing effect, matching Hex's light block. */
+    @Override
+    public boolean addLandingEffects(IBlockState state, WorldServer world,
+                                     BlockPos pos, IBlockState landedState,
+                                     EntityLivingBase entity,
+                                     int numberOfParticles) {
+        return true;
     }
 
     @Override

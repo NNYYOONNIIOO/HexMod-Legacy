@@ -1,5 +1,6 @@
 package at.petra_k.hexcasting.common.block;
 
+import at.petra_k.hexcasting.common.effect.HexPigmentColors;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -9,22 +10,34 @@ import net.minecraft.util.ITickable;
 
 import java.lang.reflect.Method;
 import java.util.Random;
+import java.util.UUID;
 
 /** Client particle state for Hex's invisible conjured block. */
 public final class TileEntityConjured extends TileEntity implements ITickable {
     private static final String KEY_COLOR = "color";
+    private static final String KEY_VARIANT = "pigment_variant";
+    private static final String KEY_OWNER = "pigment_owner";
     private static final int DEFAULT_COLOR = 0xAA66FF;
     private static final Random RANDOM = new Random();
     private static boolean particleBridgeResolved;
     private static Method particleBridge;
     private int color = DEFAULT_COLOR;
+    private String pigmentVariant = "default_colorizer";
+    private UUID pigmentOwner = new UUID(0L, 0L);
 
     public int getColor() {
         return color;
     }
 
     public void setColor(int color) {
+        setPigment(color, "default_colorizer", new UUID(0L, 0L));
+    }
+
+    public void setPigment(int color, String variant, UUID owner) {
         this.color = color & 0xFFFFFF;
+        this.pigmentVariant = variant == null || variant.isEmpty()
+            ? "default_colorizer" : variant;
+        this.pigmentOwner = owner == null ? new UUID(0L, 0L) : owner;
         markDirty();
         if (world != null) {
             IBlockState state = world.getBlockState(pos);
@@ -37,6 +50,8 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
         compound.setInteger(KEY_COLOR, color);
+        compound.setString(KEY_VARIANT, pigmentVariant);
+        compound.setString(KEY_OWNER, pigmentOwner.toString());
         return compound;
     }
 
@@ -45,6 +60,19 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
         super.readFromNBT(compound);
         color = compound.hasKey(KEY_COLOR, 3)
             ? compound.getInteger(KEY_COLOR) & 0xFFFFFF : DEFAULT_COLOR;
+        pigmentVariant = compound.hasKey(KEY_VARIANT, 8)
+            ? compound.getString(KEY_VARIANT) : "default_colorizer";
+        if (pigmentVariant.isEmpty()) {
+            pigmentVariant = "default_colorizer";
+        }
+        pigmentOwner = new UUID(0L, 0L);
+        if (compound.hasKey(KEY_OWNER, 8)) {
+            try {
+                pigmentOwner = UUID.fromString(compound.getString(KEY_OWNER));
+            } catch (IllegalArgumentException ignored) {
+                // Keep the default owner for malformed legacy data.
+            }
+        }
     }
 
     @Override
@@ -73,21 +101,16 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
         readFromNBT(packet.getNbtCompound());
     }
 
-    private int red() {
-        return (color >> 16) & 0xFF;
-    }
-
-    private int green() {
-        return (color >> 8) & 0xFF;
-    }
-
-    private int blue() {
-        return color & 0xFF;
+    private void spawnColoredParticle(double x, double y, double z,
+                                      double motionX, double motionY,
+                                      double motionZ) {
+        spawnColoredParticle(x, y, z, motionX, motionY, motionZ,
+            particleColor(RANDOM.nextFloat() * 16384.0F));
     }
 
     private void spawnColoredParticle(double x, double y, double z,
                                       double motionX, double motionY,
-                                      double motionZ) {
+                                      double motionZ, int particleColor) {
         if (world == null || !world.isRemote) {
             return;
         }
@@ -102,12 +125,19 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
             }
             if (particleBridge != null) {
                 particleBridge.invoke(null, x, y, z, motionX, motionY,
-                    motionZ, color);
+                    motionZ, particleColor);
             }
         } catch (ReflectiveOperationException ignored) {
             // The client-only particle bridge is unavailable on a server or
             // before the client renderer has been loaded.
         }
+    }
+
+    private int particleColor(float time) {
+        double scale = RANDOM.nextDouble() * 3.0D;
+        return HexPigmentColors.color(pigmentVariant, color, pigmentOwner,
+            time, RANDOM.nextDouble() * scale, RANDOM.nextDouble() * scale,
+            RANDOM.nextDouble() * scale);
     }
 
     /** Client-side particle hook used by both the tile tick and block callback. */
@@ -153,6 +183,7 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
         if (world.getBlockState(pos).getBlock() instanceof BlockConjuredLight) {
             return;
         }
+        int time = entity.ticksExisted;
         for (int i = 0; i < 3; i++) {
             spawnColoredParticle(
                 entity.posX + RANDOM.nextDouble() * 0.6D - 0.3D,
@@ -160,7 +191,23 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
                 entity.posZ + RANDOM.nextDouble() * 0.6D - 0.3D,
                 randomBetween(-0.02D, 0.02D),
                 RANDOM.nextDouble() * 0.02D,
-                randomBetween(-0.02D, 0.02D));
+                randomBetween(-0.02D, 0.02D), particleColor(time));
+        }
+    }
+
+    /** Emit Hex's landing burst when an entity touches a conjured block. */
+    public void landParticle(net.minecraft.entity.Entity entity, int number) {
+        if (world == null || !world.isRemote || entity == null
+            || world.getBlockState(pos).getBlock() instanceof BlockConjuredLight) {
+            return;
+        }
+        int count = Math.max(0, number) * 2;
+        for (int i = 0; i < count; i++) {
+            spawnColoredParticle(
+                entity.posX + RANDOM.nextDouble() * 0.8D - 0.2D,
+                pos.getY() + RANDOM.nextDouble() * 0.05D + 0.95D,
+                entity.posZ + RANDOM.nextDouble() * 0.8D - 0.2D,
+                0.0D, 0.0D, 0.0D, particleColor(entity.ticksExisted));
         }
     }
 

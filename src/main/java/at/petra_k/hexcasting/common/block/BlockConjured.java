@@ -10,6 +10,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -61,6 +63,19 @@ public class BlockConjured extends Block {
             ((TileEntityConjured) tile).walkParticle(entity);
         }
         super.onEntityWalk(world, pos, entity);
+    }
+
+    /** Use Hex's colored landing burst instead of vanilla block fragments. */
+    @Override
+    public boolean addLandingEffects(IBlockState state, WorldServer world,
+                                     BlockPos pos, IBlockState landedState,
+                                     EntityLivingBase entity,
+                                     int numberOfParticles) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof TileEntityConjured) {
+            ((TileEntityConjured) tile).landParticle(entity, numberOfParticles);
+        }
+        return true;
     }
 
     /** The visual effect is supplied by the block entity, as in Hex's source. */
