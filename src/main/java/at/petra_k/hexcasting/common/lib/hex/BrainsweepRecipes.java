@@ -1,6 +1,5 @@
 package at.petra_k.hexcasting.common.lib.hex;
 
-import at.petra_k.hexcasting.common.lib.HexBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
