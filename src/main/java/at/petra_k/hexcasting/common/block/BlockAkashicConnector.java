@@ -12,8 +12,8 @@ import net.minecraft.block.material.Material;
 public final class BlockAkashicConnector extends Block {
     public BlockAkashicConnector() {
         super(Material.WOOD);
-        setHardness(2.0F);
-        setResistance(5.0F);
+        setHardness(3.0F);
+        setResistance(4.0F);
         setSoundType(SoundType.WOOD);
         setHarvestLevel("axe", 0);
         setLightLevel(4.0F / 15.0F);
