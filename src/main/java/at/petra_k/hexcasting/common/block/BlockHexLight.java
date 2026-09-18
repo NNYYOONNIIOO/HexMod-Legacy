@@ -19,13 +19,15 @@ public final class BlockHexLight extends Block {
         new AxisAlignedBB(0.25D, 0.25D, 0.25D, 0.75D, 1.0D, 0.75D);
 
     private final boolean sconce;
+    private final boolean paperLantern;
 
     public BlockHexLight(String id) {
-        super(Material.GLASS);
+        super(materialFor(id));
         this.sconce = id != null && id.endsWith("sconce");
-        setHardness(0.8F);
-        setResistance(2.0F);
-        setSoundType(SoundType.GLASS);
+        this.paperLantern = isPaperId(id);
+        setHardness(paperLantern ? 0.0F : 0.8F);
+        setResistance(paperLantern ? 0.0F : 2.0F);
+        setSoundType(paperLantern ? SoundType.PLANT : SoundType.GLASS);
         setLightLevel(id != null && id.contains("ancient_scroll_paper_lantern")
             ? (12.0F / 15.0F) : 1.0F);
         setLightOpacity(0);
@@ -52,8 +54,15 @@ public final class BlockHexLight extends Block {
     }
 
     private boolean isPaperLantern() {
-        return getRegistryName() != null
-            && getRegistryName().getResourcePath().contains("paper");
+        return paperLantern;
+    }
+
+    private static Material materialFor(String id) {
+        return isPaperId(id) ? Material.CLOTH : Material.GLASS;
+    }
+
+    private static boolean isPaperId(String id) {
+        return id != null && id.contains("paper");
     }
 
     @Override
@@ -69,12 +78,12 @@ public final class BlockHexLight extends Block {
 
     @Override
     public int getFlammability(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
-        return isPaperLantern() ? 60 : 0;
+        return isPaperLantern() ? 100 : 0;
     }
 
     @Override
     public int getFireSpreadSpeed(net.minecraft.world.IBlockAccess world, net.minecraft.util.math.BlockPos pos, net.minecraft.util.EnumFacing face) {
-        return isPaperLantern() ? 100 : 0;
+        return isPaperLantern() ? 60 : 0;
     }
 
 }
