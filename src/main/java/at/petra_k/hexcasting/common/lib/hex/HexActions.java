@@ -11,6 +11,7 @@ import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
@@ -3440,7 +3441,12 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(mediaCost);
                 net.minecraft.item.ItemStack result =
                     new net.minecraft.item.ItemStack(output, 1);
-                IotaDataHolder.write(result, spell);
+                ItemPackagedSpell.writePackagedProgram(result, spell.getItems(), mediaCost);
+                IHexCastingData pigmentData = vm.getCastingData();
+                if (pigmentData != null) {
+                    ItemPackagedSpell.setPigment(result, pigmentData.getPigment(),
+                        pigmentData.getPigmentVariant(), pigmentData.getPigmentOwner());
+                }
                 stack.push(new ItemIota(result));
             }
         };
