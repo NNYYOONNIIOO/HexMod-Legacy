@@ -64,17 +64,17 @@ public final class BlockHexDecorative extends Block {
     @Override
     public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face) {
         if (isPaper(blockId)) {
-            return 100;
+            return 60;
         }
-        return isWood(blockId) ? 20 : 0;
+        return isWood(blockId) ? 5 : 0;
     }
 
     @Override
     public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face) {
         if (isPaper(blockId)) {
-            return 60;
+            return 100;
         }
-        return isWood(blockId) ? 5 : 0;
+        return isWood(blockId) ? 20 : 0;
     }
 
     private static Material materialFor(String id) {
