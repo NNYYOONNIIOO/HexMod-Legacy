@@ -111,6 +111,18 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
     private void spawnColoredParticle(double x, double y, double z,
                                       double motionX, double motionY,
                                       double motionZ, int particleColor) {
+        spawnClientParticle(world, x, y, z, motionX, motionY, motionZ,
+            particleColor);
+    }
+
+    /**
+     * Invoke the client-only Hex cloud renderer without making common block
+     * classes load a client class on a dedicated server.
+     */
+    public static void spawnClientParticle(net.minecraft.world.World world,
+                                           double x, double y, double z,
+                                           double motionX, double motionY,
+                                           double motionZ, int particleColor) {
         if (world == null || !world.isRemote) {
             return;
         }
