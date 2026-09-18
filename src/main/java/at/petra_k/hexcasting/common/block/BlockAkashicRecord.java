@@ -8,6 +8,7 @@ import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import at.petra_k.hexcasting.common.world.AkashicRecordData;
 import net.minecraft.block.Block;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,9 +36,12 @@ public final class BlockAkashicRecord extends Block {
 
     public BlockAkashicRecord() {
         super(Material.WOOD);
+        setSoundType(SoundType.WOOD);
         setLightOpacity(0);
-        setHardness(2.0F);
-        setResistance(5.0F);
+        setHardness(3.0F);
+        setResistance(4.0F);
+        setHarvestLevel("axe", 0);
+        setLightLevel(1.0F);
     }
 
     /** Look up a key in connected bookshelves, with the old world-data bridge as fallback. */
