@@ -15,6 +15,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.VillagerRegistry;
 
 import java.util.Locale;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,8 +35,36 @@ public final class BrainsweepRecipes {
     private static final String LEGACY_BRAINSWEPT_TAG = "hexcasting.brainswept";
     private static final long VILLAGER_MEDIA_COST = 1_000_000L;
     private static final long ALLAY_MEDIA_COST = 100_000L;
+    private static final List<DisplayRecipe> DISPLAY_RECIPES = Collections.unmodifiableList(Arrays.asList(
+        new DisplayRecipe("minecraft:amethyst_block", "minecraft:allay", null, 1,
+            "hexcasting:quenched_allay", ALLAY_MEDIA_COST),
+        new DisplayRecipe("minecraft:amethyst_block", "minecraft:villager", null, 3,
+            "minecraft:budding_amethyst", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:akashic_connector", "minecraft:villager", "librarian", 5,
+            "hexcasting:akashic_record", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:impetus/empty", "minecraft:villager", "fletcher", 2,
+            "hexcasting:impetus/look", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:impetus/empty", "minecraft:villager", "toolsmith", 2,
+            "hexcasting:impetus/rightclick", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:impetus/empty", "minecraft:villager", "cleric", 2,
+            "hexcasting:impetus/redstone", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:directrix/empty", "minecraft:villager", "shepherd", 1,
+            "hexcasting:directrix/boolean", VILLAGER_MEDIA_COST),
+        new DisplayRecipe("hexcasting:directrix/empty", "minecraft:villager", "mason", 1,
+            "hexcasting:directrix/redstone", VILLAGER_MEDIA_COST)
+    ));
 
     private BrainsweepRecipes() {
+    }
+
+    /**
+     * Return the data-driven recipe descriptions used by the legacy JEI
+     * adapter.  The action itself still uses {@link #find(IBlockState,
+     * EntityLiving)} as its authoritative matcher; these descriptions only
+     * provide the human-readable recipe list that 1.12.2 lacks.
+     */
+    public static List<DisplayRecipe> displayRecipes() {
+        return DISPLAY_RECIPES;
     }
 
     /** Find the first recipe matching the target block and living entity. */
@@ -265,6 +296,51 @@ public final class BrainsweepRecipes {
 
         public IBlockState getResult() {
             return result;
+        }
+
+        public long getMediaCost() {
+            return mediaCost;
+        }
+    }
+
+    /** Immutable JEI-facing description of one brainsweep recipe. */
+    public static final class DisplayRecipe {
+        private final String blockInputId;
+        private final String entityTypeId;
+        private final String profession;
+        private final int minLevel;
+        private final String resultId;
+        private final long mediaCost;
+
+        private DisplayRecipe(String blockInputId, String entityTypeId,
+                              String profession, int minLevel,
+                              String resultId, long mediaCost) {
+            this.blockInputId = blockInputId;
+            this.entityTypeId = entityTypeId;
+            this.profession = profession;
+            this.minLevel = minLevel;
+            this.resultId = resultId;
+            this.mediaCost = mediaCost;
+        }
+
+        public String getBlockInputId() {
+            return blockInputId;
+        }
+
+        public String getEntityTypeId() {
+            return entityTypeId;
+        }
+
+        public String getProfession() {
+            return profession;
+        }
+
+        public int getMinLevel() {
+            return minLevel;
+        }
+
+        public String getResultId() {
+            return resultId;
         }
 
         public long getMediaCost() {
