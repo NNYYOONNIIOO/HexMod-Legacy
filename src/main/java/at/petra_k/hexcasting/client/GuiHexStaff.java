@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.interop.inline.InlinePatternRenderer;
 import at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.item.ItemScryingLens;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
@@ -21,6 +22,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
@@ -1391,7 +1393,9 @@ private void drawMove(int mouseX, int mouseY) {
         if (width <= 0 || height <= 0) {
             return 42.0F;
         }
-        return (float) Math.sqrt(width * (double) height / 512.0D);
+        double baseScale = Math.sqrt(width * (double) height / 512.0D);
+        EntityPlayer player = mc == null ? null : mc.player;
+        return (float) (baseScale / ItemScryingLens.getGridZoom(player));
     }
 
     /** Exact axial-to-cube rounding, matching Hex's pixel-to-coordinate snap. */

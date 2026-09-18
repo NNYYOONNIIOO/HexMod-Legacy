@@ -1,7 +1,6 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
-import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.IProperty;
@@ -15,8 +14,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import net.minecraft.inventory.IInventory;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -37,7 +34,7 @@ public final class ScryingLensOverlayRenderer {
     public static void onOverlayText(RenderGameOverlayEvent.Text event) {
         Minecraft minecraft = Minecraft.getMinecraft();
         EntityPlayer player = minecraft.player;
-        if (player == null || !isHoldingLens(player)) {
+        if (player == null || ItemScryingLens.getScrySight(player) <= 0.0D) {
             return;
         }
 
@@ -64,63 +61,6 @@ public final class ScryingLensOverlayRenderer {
                 event.getLeft().add("§7" + name + ": " + property.getValue());
             }
         }
-    }
-
-    private static boolean isHoldingLens(EntityPlayer player) {
-        ItemStack main = player.getHeldItemMainhand();
-        ItemStack off = player.getHeldItemOffhand();
-        if (isLensStack(main) || isLensStack(off)) {
-            return true;
-        }
-
-        // 1.12 stores armor separately from the hand inventory.  Scanning all
-        // four slots also covers packs that expose the lens as a head item.
-        for (ItemStack armor : player.inventory.armorInventory) {
-            if (isLensStack(armor)) {
-                return true;
-            }
-        }
-
-        // BaublesEX keeps the same public API name as Baubles, but reflecting
-        // it keeps this client class usable when the optional mod is absent.
-        return BaublesExCompat.contains(player, ScryingLensOverlayRenderer::isLensStack);
-    }
-
-    private static boolean isLensStack(ItemStack stack) {
-        return stack != null && !stack.isEmpty()
-            && stack.getItem() instanceof ItemScryingLens;
-    }
-
-    private static boolean isWearingBaubleLens(EntityPlayer player) {
-        try {
-            Class<?> api = Class.forName("baubles.api.BaublesApi");
-            for (Method method : api.getMethods()) {
-                if (!"getBaubles".equals(method.getName())
-                    || method.getParameterTypes().length != 1) {
-                    continue;
-                }
-
-                Object baubles = method.invoke(null, player);
-                if (baubles instanceof IInventory) {
-                    IInventory inventory = (IInventory) baubles;
-                    for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-                        if (isLensStack(inventory.getStackInSlot(slot))) {
-                            return true;
-                        }
-                    }
-                } else if (baubles instanceof Iterable<?>) {
-                    for (Object entry : (Iterable<?>) baubles) {
-                        if (entry instanceof ItemStack && isLensStack((ItemStack) entry)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-        } catch (ReflectiveOperationException ignored) {
-            // Baubles/BaublesEX is optional at runtime.
-        }
-        return false;
     }
 
     private static boolean isUsefulProperty(String name) {
