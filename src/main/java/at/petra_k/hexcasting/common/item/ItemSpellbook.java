@@ -9,9 +9,9 @@ import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
-import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,15 +31,24 @@ import java.util.List;
 
 /** A 64-page spellbook whose pages preserve complete drawable Hex patterns. */
 public final class ItemSpellbook extends Item implements IotaHolderItem {
-    /** Legacy pages were a list of action-id strings. */
-    private static final String KEY_LEGACY_PAGES = "pages";
-    /** Current pages are a list of serialized HexPattern compounds. */
+    /** One-based selected page; zero means that the book has no pages. */
+    public static final String TAG_SELECTED_PAGE = "page_idx";
+    /** A compound of one-based page numbers to serialized Iotas. */
+    public static final String TAG_PAGES = "pages";
+    /** A compound of one-based page numbers to the page's custom name. */
+    public static final String TAG_PAGE_NAMES = "page_names";
+    /** A compound of one-based page numbers to sealed flags. */
+    public static final String TAG_SEALED = "sealed_pages";
+    /** The visual spellbook variant, clamped to the eight supplied models. */
+    public static final String TAG_VARIANT = "variant";
+
+    /** Data keys used by earlier 1.12.2 snapshots of this port. */
     private static final String KEY_PATTERN_PAGES = "pattern_pages";
-    /** Generic Iota pages use one-based numeric keys, like modern Hex. */
     private static final String KEY_IOTA_PAGES = "iota_pages";
-    private static final String KEY_SEALED_PAGES = "sealed_pages";
     private static final String KEY_ACTIVE = "active_page";
+    private static final String KEY_LEGACY_SEALED = "sealed";
     public static final int MAX_PAGES = 64;
+    public static final int VARIANT_COUNT = 8;
 
     public ItemSpellbook() {
         setMaxStackSize(1);
@@ -74,7 +83,7 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
                         "hexcasting.message.program_added", displayPattern(pattern),
-                        getPageIndex(stack) + 1, MAX_PAGES)));
+                        getPage(stack, 1), MAX_PAGES)));
             } else {
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocalFormatted(
@@ -117,6 +126,34 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
     }
 
     @Override
+    public void onUpdate(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+        super.onUpdate(stack, world, entity, slot, selected);
+        if (world == null || world.isRemote || !(entity instanceof EntityPlayer)
+            || stack == null || stack.isEmpty()) {
+            return;
+        }
+        migrateLegacyData(stack);
+        int page = getPage(stack, 0);
+        if (page <= 0) {
+            return;
+        }
+        NBTTagCompound root = getOrCreateTag(stack);
+        NBTTagCompound names = root.hasKey(TAG_PAGE_NAMES, 10)
+            ? root.getCompoundTag(TAG_PAGE_NAMES) : new NBTTagCompound();
+        String key = String.valueOf(page);
+        if (stack.hasDisplayName()) {
+            names.setString(key, stack.getDisplayName());
+        } else {
+            names.removeTag(key);
+        }
+        if (names.hasNoTags()) {
+            root.removeTag(TAG_PAGE_NAMES);
+        } else {
+            root.setTag(TAG_PAGE_NAMES, names);
+        }
+    }
+
+    @Override
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
         if (tab == getCreativeTab()) {
             items.add(new ItemStack(this));
@@ -127,16 +164,19 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
     public void addInformation(ItemStack stack, World world, List<String> tooltip,
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
-        int pageCount = getPageCount(stack);
-        int active = getPageIndex(stack);
+        int pageCount = highestPage(stack);
+        int active = getPage(stack, 0);
         tooltip.add(I18n.translateToLocalFormatted(
-            "hexcasting.tooltip.staff_program", pageCount == 0 ? 0 : active + 1, pageCount));
-        HexPattern pattern = getPattern(stack);
-        if (pattern != null) {
+            "hexcasting.tooltip.staff_program", active, pageCount));
+        Iota stored = readStoredIota(stack);
+        if (stored instanceof PatternIota) {
+            HexPattern pattern = ((PatternIota) stored).getPattern();
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action") + ": "
                 + displayPattern(pattern));
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.pattern") + ": "
                 + HexInline.formatPattern(pattern, HexInline.DEFAULT_PATTERN_COLOR));
+        } else if (stored != null) {
+            tooltip.add(stored.getType().getId() + ": " + stored.display());
         }
     }
 
@@ -147,24 +187,29 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
 
     /** Returns the complete pattern stored on the current page. */
     public static HexPattern getPattern(ItemStack stack) {
-        NBTTagCompound storedTag = getStoredIotaTag(stack);
-        if (storedTag != null) {
-            Iota stored = readStoredIota(stack);
-            return stored instanceof PatternIota
-                ? ((PatternIota) stored).getPattern() : null;
-        }
-        return getPatternPage(stack);
+        Iota stored = readStoredIota(stack);
+        return stored instanceof PatternIota
+            ? ((PatternIota) stored).getPattern() : null;
+    }
+
+    public static boolean hasIota(ItemStack stack) {
+        return stack != null && !stack.isEmpty()
+            && stack.getItem() instanceof ItemSpellbook
+            && ((ItemSpellbook) stack.getItem()).readIotaTag(stack) != null;
     }
 
     /** Read the current page as a generic Hex Iota, not only as a pattern. */
     @Override
     public NBTTagCompound readIotaTag(ItemStack stack) {
-        NBTTagCompound stored = getStoredIotaTag(stack);
-        if (stored != null) {
-            return stored;
+        migrateLegacyData(stack);
+        NBTTagCompound pages = getIotaPages(stack);
+        int page = getPage(stack, 1);
+        if (page <= 0 || !pages.hasKey(String.valueOf(page), 10)) {
+            return null;
         }
-        HexPattern legacyPattern = getPatternPage(stack);
-        return legacyPattern == null ? null : new PatternIota(legacyPattern).serialize();
+        NBTTagCompound stored = pages.getCompoundTag(String.valueOf(page));
+        return stored.hasKey("type", 8) && stored.hasKey("data", 10)
+            ? stored : null;
     }
 
     @Override
@@ -183,19 +228,20 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
         if (stack == null || stack.isEmpty() || (datum != null && isSealed(stack))) {
             return;
         }
+        migrateLegacyData(stack);
         NBTTagCompound root = getOrCreateTag(stack);
-        NBTTagCompound pages = root.hasKey(KEY_IOTA_PAGES, 10)
-            ? root.getCompoundTag(KEY_IOTA_PAGES) : new NBTTagCompound();
-        String pageKey = String.valueOf(getPageIndex(stack) + 1);
+        NBTTagCompound pages = getIotaPages(stack);
+        String pageKey = String.valueOf(getPage(stack, 1));
         if (datum == null) {
             pages.removeTag(pageKey);
+            removeSealed(root, pageKey);
         } else {
             pages.setTag(pageKey, datum.serialize());
         }
         if (pages.hasNoTags()) {
-            root.removeTag(KEY_IOTA_PAGES);
+            root.removeTag(TAG_PAGES);
         } else {
-            root.setTag(KEY_IOTA_PAGES, pages);
+            root.setTag(TAG_PAGES, pages);
         }
     }
 
@@ -204,22 +250,24 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
         if (stack == null || stack.isEmpty()) {
             return;
         }
+        migrateLegacyData(stack);
         NBTTagCompound root = sealed ? getOrCreateTag(stack) : stack.getTagCompound();
         if (root == null) {
             return;
         }
-        NBTTagCompound sealedPages = root.hasKey(KEY_SEALED_PAGES, 10)
-            ? root.getCompoundTag(KEY_SEALED_PAGES) : new NBTTagCompound();
-        String pageKey = String.valueOf(getPageIndex(stack) + 1);
+        String pageKey = String.valueOf(getPage(stack, 1));
+        NBTTagCompound sealedPages = root.hasKey(TAG_SEALED, 10)
+            ? root.getCompoundTag(TAG_SEALED) : new NBTTagCompound();
         if (sealed) {
             sealedPages.setBoolean(pageKey, true);
         } else {
             sealedPages.removeTag(pageKey);
+            root.removeTag(KEY_LEGACY_SEALED);
         }
         if (sealedPages.hasNoTags()) {
-            root.removeTag(KEY_SEALED_PAGES);
+            root.removeTag(TAG_SEALED);
         } else {
-            root.setTag(KEY_SEALED_PAGES, sealedPages);
+            root.setTag(TAG_SEALED, sealedPages);
         }
     }
 
@@ -227,12 +275,127 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
         if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
             return false;
         }
+        migrateLegacyData(stack);
         NBTTagCompound root = stack.getTagCompound();
-        if (!root.hasKey(KEY_SEALED_PAGES, 10)) {
+        if (root.getBoolean(KEY_LEGACY_SEALED)) {
+            return true;
+        }
+        if (!root.hasKey(TAG_SEALED, 10)) {
             return false;
         }
-        return root.getCompoundTag(KEY_SEALED_PAGES)
-            .getBoolean(String.valueOf(getPageIndex(stack) + 1));
+        return root.getCompoundTag(TAG_SEALED)
+            .getBoolean(String.valueOf(getPage(stack, 1)));
+    }
+
+    public static int getVariant(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null) {
+            return 0;
+        }
+        return Math.max(0, Math.min(VARIANT_COUNT - 1, tag.getInteger(TAG_VARIANT)));
+    }
+
+    public static void setVariant(ItemStack stack, int variant) {
+        if (stack == null || stack.isEmpty() || isSealed(stack)) {
+            return;
+        }
+        NBTTagCompound tag = getOrCreateTag(stack);
+        tag.setInteger(TAG_VARIANT,
+            Math.max(0, Math.min(VARIANT_COUNT - 1, variant)));
+    }
+
+    public static void cycleVariant(ItemStack stack) {
+        setVariant(stack, (getVariant(stack) + 1) % VARIANT_COUNT);
+    }
+
+    /** Number of the highest non-empty page, matching modern Hex's helper. */
+    public static int highestPage(ItemStack stack) {
+        migrateLegacyData(stack);
+        return highestPageWithoutMigration(stack);
+    }
+
+    public static boolean arePagesEmpty(ItemStack stack) {
+        return highestPage(stack) == 0;
+    }
+
+    /** Return the one-based active page, or {@code ifEmpty} for an empty book. */
+    public static int getPage(ItemStack stack, int ifEmpty) {
+        migrateLegacyData(stack);
+        int highest = highestPageWithoutMigration(stack);
+        if (highest <= 0) {
+            return ifEmpty;
+        }
+        NBTTagCompound root = stack == null ? null : stack.getTagCompound();
+        int page;
+        if (root != null && root.hasKey(TAG_SELECTED_PAGE, 3)) {
+            page = root.getInteger(TAG_SELECTED_PAGE);
+        } else if (root != null && root.hasKey(KEY_ACTIVE, 3)) {
+            page = root.getInteger(KEY_ACTIVE) + 1;
+        } else {
+            page = 1;
+        }
+        return Math.max(1, Math.min(highest, page));
+    }
+
+    /** Zero-based index used by the 1.12.2 GUI and item messages. */
+    public static int getPageIndex(ItemStack stack) {
+        int page = getPage(stack, 0);
+        return page <= 0 ? 0 : page - 1;
+    }
+
+    /** Scroll the active page without wrapping past the first or last page. */
+    public static int rotatePageIdx(ItemStack stack, boolean increase) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        int page = getPage(stack, 0);
+        int highest = highestPage(stack);
+        if (page > 0 && highest > 0) {
+            page = Math.max(1, Math.min(highest, page + (increase ? 1 : -1)));
+        } else {
+            page = 0;
+        }
+        getOrCreateTag(stack).setInteger(TAG_SELECTED_PAGE, page);
+        restorePageName(stack, page);
+        return page;
+    }
+
+    private static HexPattern cyclePage(ItemStack stack) {
+        int pageCount = highestPage(stack);
+        NBTTagCompound tag = getOrCreateTag(stack);
+        if (pageCount == 0) {
+            tag.setInteger(TAG_SELECTED_PAGE, 0);
+            restorePageName(stack, 0);
+            return null;
+        }
+        int next = getPage(stack, 1) % pageCount + 1;
+        tag.setInteger(TAG_SELECTED_PAGE, next);
+        restorePageName(stack, next);
+        return getPattern(stack);
+    }
+
+    /** Store a scroll on the current page, appending when that page is occupied. */
+    private static boolean writeActivePage(ItemStack stack, HexPattern pattern) {
+        if (pattern == null || stack == null || stack.isEmpty()) {
+            return false;
+        }
+        migrateLegacyData(stack);
+        int page = getPage(stack, 0);
+        if (page == 0) {
+            page = 1;
+        } else if (readIotaAtPage(stack, page) != null) {
+            page = highestPage(stack) + 1;
+        }
+        if (page > MAX_PAGES) {
+            return false;
+        }
+        NBTTagCompound root = getOrCreateTag(stack);
+        root.setInteger(TAG_SELECTED_PAGE, page);
+        if (isSealed(stack)) {
+            return false;
+        }
+        ((ItemSpellbook) stack.getItem()).writeDatum(stack, new PatternIota(pattern));
+        return readIotaAtPage(stack, page) != null;
     }
 
     private static ResourceLocation getActionId(HexPattern pattern) {
@@ -244,179 +407,169 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
         return action == null ? null : HexActionRegistry.idFor(action);
     }
 
-    private static HexPattern cyclePage(ItemStack stack) {
-        NBTTagCompound tag = getOrCreateTag(stack);
-        int pageCount = getPageCount(stack);
-        if (pageCount == 0) {
-            tag.setInteger(KEY_ACTIVE, 0);
+    private static Iota readStoredIota(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
             return null;
         }
-        int next = (getPageIndex(stack, pageCount) + 1) % pageCount;
-        tag.setInteger(KEY_ACTIVE, next);
-        return getPattern(stack);
+        try {
+            NBTTagCompound tag = ((ItemSpellbook) stack.getItem()).readIotaTag(stack);
+            return tag == null ? null : at.petra_k.hexcasting.common.lib.hex.HexIotaTypes.deserialize(tag);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
-    /** Insert after the current page, matching the old book's page workflow. */
-    private static boolean writeActivePage(ItemStack stack, HexPattern pattern) {
-        if (pattern == null) {
-            return false;
+    private static Iota readIotaAtPage(ItemStack stack, int page) {
+        if (page <= 0) {
+            return null;
         }
-        NBTTagCompound tag = getOrCreateTag(stack);
-        NBTTagList pages = getOrCreatePatternPages(stack);
-        if (pages.tagCount() >= MAX_PAGES) {
-            int active = getPageIndex(stack, pages.tagCount());
-            NBTTagList replacement = new NBTTagList();
-            for (int i = 0; i < pages.tagCount(); i++) {
-                replacement.appendTag(i == active
-                    ? pattern.serializeToNBT() : pages.getCompoundTagAt(i));
-            }
-            tag.setTag(KEY_PATTERN_PAGES, replacement);
-            return true;
-        }
-
-        if (pages.tagCount() == 0) {
-            pages.appendTag(pattern.serializeToNBT());
-            tag.setTag(KEY_PATTERN_PAGES, pages);
-            tag.setInteger(KEY_ACTIVE, 0);
-            return true;
-        }
-
-        int active = getPageIndex(stack, pages.tagCount());
-        NBTTagList replacement = new NBTTagList();
-        for (int i = 0; i < pages.tagCount(); i++) {
-            replacement.appendTag(pages.getCompoundTagAt(i));
-            if (i == active) {
-                replacement.appendTag(pattern.serializeToNBT());
-            }
-        }
-        tag.setTag(KEY_PATTERN_PAGES, replacement);
-        tag.setInteger(KEY_ACTIVE, Math.min(active + 1, MAX_PAGES - 1));
-        return true;
-    }
-
-    /**
-     * Read current pattern pages and migrate old action-id pages once. The
-     * legacy list remains in NBT for old tooling, but the compound list is the
-     * authoritative source after migration.
-     */
-    private static NBTTagList getPatternPages(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
-            return new NBTTagList();
-        }
-        NBTTagCompound tag = stack.getTagCompound();
-        if (tag.hasKey(KEY_PATTERN_PAGES, 9)) {
-            return tag.getTagList(KEY_PATTERN_PAGES, 10);
-        }
-
-        NBTTagList legacy = tag.getTagList(KEY_LEGACY_PAGES, 8);
-        if (legacy.tagCount() == 0) {
-            return new NBTTagList();
-        }
-        HexActionRegistry.bootstrap();
-        NBTTagList migrated = new NBTTagList();
-        for (int i = 0; i < legacy.tagCount(); i++) {
-            try {
-                ResourceLocation id = new ResourceLocation(legacy.getStringTagAt(i));
-                HexPattern pattern = HexActionRegistry.getPattern(id);
-                if (pattern != null) {
-                    migrated.appendTag(pattern.serializeToNBT());
-                }
-            } catch (RuntimeException ignored) {
-                // Ignore only the malformed legacy page.
-            }
-        }
-        if (migrated.tagCount() > 0) {
-            tag.setTag(KEY_PATTERN_PAGES, migrated);
-        }
-        return migrated;
-    }
-
-    private static NBTTagList getOrCreatePatternPages(ItemStack stack) {
-        NBTTagCompound tag = getOrCreateTag(stack);
-        NBTTagList pages = getPatternPages(stack);
-        if (!tag.hasKey(KEY_PATTERN_PAGES, 9)) {
-            tag.setTag(KEY_PATTERN_PAGES, pages);
-        }
-        while (pages.tagCount() > MAX_PAGES) {
-            pages.removeTag(pages.tagCount() - 1);
-        }
-        return pages;
-    }
-
-    private static int getPageCount(ItemStack stack) {
-        return Math.min(MAX_PAGES, Math.max(
-            getPatternPages(stack).tagCount(), getIotaPageCount(stack)));
-    }
-
-    private static int getPageIndex(ItemStack stack) {
-        return getPageIndex(stack, getPageCount(stack));
-    }
-
-    private static int getPageIndex(ItemStack stack, int pageCount) {
-        if (pageCount <= 0 || stack == null || stack.getTagCompound() == null) {
-            return 0;
-        }
-        int active = stack.getTagCompound().getInteger(KEY_ACTIVE);
-        return Math.max(0, Math.min(active, pageCount - 1));
-    }
-
-    private static int getIotaPageCount(ItemStack stack) {
         NBTTagCompound pages = getIotaPages(stack);
-        int highest = 0;
-        for (String key : pages.getKeySet()) {
-            try {
-                highest = Math.max(highest, Integer.parseInt(key));
-            } catch (NumberFormatException ignored) {
-                // Ignore non-page metadata without affecting valid pages.
+        NBTTagCompound tag = pages.getCompoundTag(String.valueOf(page));
+        if (!tag.hasKey("type", 8) || !tag.hasKey("data", 10)) {
+            return null;
+        }
+        try {
+            return at.petra_k.hexcasting.common.lib.hex.HexIotaTypes.deserialize(tag);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    /** Convert both the original port's layout and action lists to modern pages. */
+    private static void migrateLegacyData(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
+            return;
+        }
+        NBTTagCompound root = stack.getTagCompound();
+        NBTTagCompound pages = root.hasKey(TAG_PAGES, 10)
+            ? root.getCompoundTag(TAG_PAGES) : new NBTTagCompound();
+
+        if (root.hasKey(KEY_IOTA_PAGES, 10)) {
+            NBTTagCompound old = root.getCompoundTag(KEY_IOTA_PAGES);
+            copyPageCompounds(old, pages);
+        }
+        if (root.hasKey(KEY_PATTERN_PAGES, 9)) {
+            NBTTagList old = root.getTagList(KEY_PATTERN_PAGES, 10);
+            for (int i = 0; i < Math.min(MAX_PAGES, old.tagCount()); i++) {
+                String key = String.valueOf(i + 1);
+                if (!pages.hasKey(key, 10)) {
+                    try {
+                        pages.setTag(key, new PatternIota(
+                            HexPattern.fromNBT(old.getCompoundTagAt(i))).serialize());
+                    } catch (RuntimeException ignored) {
+                        // Keep valid pages when one old pattern is malformed.
+                    }
+                }
             }
         }
-        return highest;
+        // The first port used a string list under "pages".  A compound and a
+        // list have different NBT types, so both layouts can be detected safely.
+        if (root.hasKey(TAG_PAGES, 9)) {
+            NBTTagList old = root.getTagList(TAG_PAGES, 8);
+            HexActionRegistry.bootstrap();
+            for (int i = 0; i < Math.min(MAX_PAGES, old.tagCount()); i++) {
+                String key = String.valueOf(i + 1);
+                if (pages.hasKey(key, 10)) {
+                    continue;
+                }
+                try {
+                    ResourceLocation id = new ResourceLocation(old.getStringTagAt(i));
+                    HexPattern pattern = HexActionRegistry.getPattern(id);
+                    if (pattern != null) {
+                        pages.setTag(key, new PatternIota(pattern).serialize());
+                    }
+                } catch (RuntimeException ignored) {
+                    // Ignore only malformed legacy action ids.
+                }
+            }
+        }
+        if (!pages.hasNoTags()) {
+            root.setTag(TAG_PAGES, pages);
+        }
+        if (!root.hasKey(TAG_SELECTED_PAGE, 3) && root.hasKey(KEY_ACTIVE, 3)) {
+            root.setInteger(TAG_SELECTED_PAGE,
+                pages.hasNoTags() ? 0 : Math.max(1,
+                    Math.min(MAX_PAGES, root.getInteger(KEY_ACTIVE) + 1)));
+        }
+    }
+
+    private static void copyPageCompounds(NBTTagCompound source, NBTTagCompound target) {
+        for (String key : source.getKeySet()) {
+            try {
+                int page = Integer.parseInt(key);
+                if (page >= 1 && page <= MAX_PAGES && !target.hasKey(key, 10)) {
+                    NBTTagCompound value = source.getCompoundTag(key);
+                    if (value.hasKey("type", 8) && value.hasKey("data", 10)) {
+                        target.setTag(key, value);
+                    }
+                }
+            } catch (NumberFormatException ignored) {
+                // Ignore non-page metadata.
+            }
+        }
     }
 
     private static NBTTagCompound getIotaPages(ItemStack stack) {
+        migrateLegacyData(stack);
         if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
             return new NBTTagCompound();
         }
         NBTTagCompound root = stack.getTagCompound();
-        return root.hasKey(KEY_IOTA_PAGES, 10)
-            ? root.getCompoundTag(KEY_IOTA_PAGES) : new NBTTagCompound();
+        return root.hasKey(TAG_PAGES, 10)
+            ? root.getCompoundTag(TAG_PAGES) : new NBTTagCompound();
     }
 
-    private static NBTTagCompound getStoredIotaTag(ItemStack stack) {
-        NBTTagCompound pages = getIotaPages(stack);
-        String pageKey = String.valueOf(getPageIndex(stack, getIotaPageCount(stack)) + 1);
-        if (!pages.hasKey(pageKey, 10)) {
-            return null;
+    private static int highestPageWithoutMigration(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getTagCompound() == null) {
+            return 0;
         }
-        NBTTagCompound stored = pages.getCompoundTag(pageKey);
-        return stored.hasKey("type", 8) && stored.hasKey("data", 10)
-            ? stored : null;
-    }
-
-    private static Iota readStoredIota(ItemStack stack) {
-        try {
-            return ((ItemSpellbook) stack.getItem()).readIota(stack);
-        } catch (CastingException | RuntimeException ignored) {
-            return null;
+        NBTTagCompound root = stack.getTagCompound();
+        if (!root.hasKey(TAG_PAGES, 10)) {
+            return 0;
         }
-    }
-
-    private static HexPattern getPatternPage(ItemStack stack) {
-        NBTTagList pages = getPatternPages(stack);
-        int active = getPageIndex(stack, pages.tagCount());
-        if (active >= pages.tagCount()) {
-            return null;
-        }
-        try {
-            NBTTagCompound patternTag = pages.getCompoundTagAt(active);
-            if (patternTag.hasKey(HexPattern.TAG_START_DIR, 1)
-                && patternTag.hasKey(HexPattern.TAG_ANGLES, 7)) {
-                return HexPattern.fromNBT(patternTag);
+        int highest = 0;
+        for (String key : root.getCompoundTag(TAG_PAGES).getKeySet()) {
+            try {
+                highest = Math.max(highest, Integer.parseInt(key));
+            } catch (NumberFormatException ignored) {
+                // Ignore non-page metadata.
             }
-        } catch (RuntimeException ignored) {
-            // A malformed page is treated as empty while other pages survive.
         }
-        return null;
+        return Math.min(MAX_PAGES, highest);
+    }
+
+    private static void removeSealed(NBTTagCompound root, String pageKey) {
+        if (!root.hasKey(TAG_SEALED, 10)) {
+            return;
+        }
+        NBTTagCompound sealed = root.getCompoundTag(TAG_SEALED);
+        sealed.removeTag(pageKey);
+        if (sealed.hasNoTags()) {
+            root.removeTag(TAG_SEALED);
+        } else {
+            root.setTag(TAG_SEALED, sealed);
+        }
+    }
+
+    private static void restorePageName(ItemStack stack, int page) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound root = stack.getTagCompound();
+        String name = null;
+        if (page > 0 && root != null && root.hasKey(TAG_PAGE_NAMES, 10)) {
+            NBTTagCompound names = root.getCompoundTag(TAG_PAGE_NAMES);
+            if (names.hasKey(String.valueOf(page), 8)) {
+                name = names.getString(String.valueOf(page));
+            }
+        }
+        if (name == null || name.isEmpty()) {
+            if (stack.hasDisplayName()) {
+                stack.clearCustomName();
+            }
+        } else {
+            stack.setStackDisplayName(name);
+        }
     }
 
     private static NBTTagCompound getOrCreateTag(ItemStack stack) {

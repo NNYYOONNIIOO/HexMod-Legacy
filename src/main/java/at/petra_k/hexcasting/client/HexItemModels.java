@@ -128,7 +128,7 @@ public final class HexItemModels {
             return;
         }
         spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "filled"),
-            (stack, world, entity) -> ItemSpellbook.getPattern(stack) != null ? 1.0F : 0.0F);
+            (stack, world, entity) -> ItemSpellbook.hasIota(stack) ? 1.0F : 0.0F);
         spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "sealed"),
             (stack, world, entity) -> ItemSpellbook.isSealed(stack) ? 1.0F : 0.0F);
         spellbook.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, "variant"),
@@ -142,7 +142,8 @@ public final class HexItemModels {
         }
         return tag.hasKey("pattern", 10) || tag.hasKey("patterns", 9)
             || tag.hasKey("iota", 10) || tag.hasKey("selected_action", 8)
-            || tag.hasKey("action", 8);
+            || tag.hasKey("action", 8) || tag.hasKey(ItemSpellbook.TAG_PAGES, 10)
+            || tag.hasKey(ItemSpellbook.TAG_SELECTED_PAGE, 3);
     }
 
     private static boolean spellbookIsSealed(ItemStack stack) {
@@ -155,7 +156,7 @@ public final class HexItemModels {
         if (tag == null) {
             return 0.0F;
         }
-        return Math.max(0, Math.min(7, tag.getInteger("variant"))) / 7.0F;
+        return ItemSpellbook.getVariant(stack) / 7.0F;
     }
     private static int colorFor(ItemStack stack) {
         int color = ItemColorizer.getColor(stack);
@@ -286,8 +287,8 @@ public final class HexItemModels {
         Item spellbook = HexItems.EXTRA_ITEMS.get("spellbook");
         if (spellbook == null || stack.getItem() != spellbook) return 0.0F;
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag != null && tag.getBoolean("sealed")) return 2.0F;
-        return ItemSpellbook.getPattern(stack) != null ? 1.0F : 0.0F;
+        if (ItemSpellbook.isSealed(stack)) return 2.0F;
+        return ItemSpellbook.hasIota(stack) ? 1.0F : 0.0F;
     }
     private static float batteryMaxMediaProperty(ItemStack stack) {
         if (stack == null || !(stack.getItem() instanceof at.petra_k.hexcasting.common.item.ItemMediaBattery)) return 0.0F;
