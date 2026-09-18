@@ -45,7 +45,7 @@ public final class HexQuenchedAllayRenderer
                     ? "block/" : "block/deco/";
                 ResourceLocation modelLocation = HexAPI.modLoc(
                     prefix + blockId + "_" + i);
-                variants[i] = event.getModelRegistry().get(
+                variants[i] = event.getModelRegistry().getObject(
                     new net.minecraft.client.renderer.block.model.ModelResourceLocation(
                         modelLocation, "normal"));
             }
