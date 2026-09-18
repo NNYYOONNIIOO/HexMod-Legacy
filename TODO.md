@@ -5,3 +5,10 @@
 - [x] 构筑粒子 / 染色
 - [x] Impetus / Directrix
 - [x] Brainsweep
+
+## 下一阶段
+
+- [ ] Quenched Allay
+- [ ] 专用方块行为
+- [ ] JEI
+- [ ] 物品能力
