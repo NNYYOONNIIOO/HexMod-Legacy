@@ -128,4 +128,21 @@ public final class ItemAbacus extends Item implements IotaHolderItem {
         }
         return tag.getDouble(TAG_VALUE);
     }
+
+    /** Store the canonical numeric value used by the scroll-wheel handler. */
+    public static void setValue(ItemStack stack, double value) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
+        }
+        tag.setDouble(TAG_VALUE, value);
+        // Do not leave the old display-only representation behind after a
+        // wheel edit; otherwise legacy readers could show a different value.
+        tag.removeTag(LEGACY_TYPE);
+        tag.removeTag(LEGACY_VALUE);
+    }
 }
