@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
+import at.petra_k.hexcasting.common.effect.HexPigmentColors;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import net.minecraft.client.Minecraft;
@@ -168,17 +169,23 @@ public final class HexClientEffects {
 
     private static int localPigment(EntityPlayer player) {
         try {
-            int mainhandColor = ItemColorizer.getColor(player.getHeldItemMainhand());
+            float time = (float) player.world.getTotalWorldTime()
+                + Minecraft.getMinecraft().getRenderPartialTicks();
+            int mainhandColor = ItemColorizer.getColor(
+                player.getHeldItemMainhand(), time, player.posX, player.posY, player.posZ);
             if (mainhandColor >= 0) {
                 return mainhandColor & 0xFFFFFF;
             }
-            int offhandColor = ItemColorizer.getColor(player.getHeldItemOffhand());
+            int offhandColor = ItemColorizer.getColor(
+                player.getHeldItemOffhand(), time, player.posX, player.posY, player.posZ);
             if (offhandColor >= 0) {
                 return offhandColor & 0xFFFFFF;
             }
             IHexCastingData data = player.getCapability(
                 HexCapabilities.CASTING_DATA, null);
-            return data == null ? 0xAA66FF : data.getPigment();
+            return data == null ? 0xAA66FF
+                : HexPigmentColors.fromData(data, time,
+                    player.posX, player.posY, player.posZ);
         } catch (RuntimeException ignored) {
             return 0xAA66FF;
         }

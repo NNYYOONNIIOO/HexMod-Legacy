@@ -232,18 +232,26 @@ public final class HexCastingEffects {
     }
 
     private static int pigment(EntityPlayer player) {
+        float time = player == null || player.world == null
+            ? 0.0F : (float) player.world.getTotalWorldTime();
+        double x = player == null ? 0.0D : player.posX;
+        double y = player == null ? 0.0D : player.posY;
+        double z = player == null ? 0.0D : player.posZ;
         if (player != null) {
-            int mainhandColor = ItemColorizer.getColor(player.getHeldItemMainhand());
+            int mainhandColor = ItemColorizer.getColor(
+                player.getHeldItemMainhand(), time, x, y, z);
             if (mainhandColor >= 0) {
                 return mainhandColor & 0xFFFFFF;
             }
-            int offhandColor = ItemColorizer.getColor(player.getHeldItemOffhand());
+            int offhandColor = ItemColorizer.getColor(
+                player.getHeldItemOffhand(), time, x, y, z);
             if (offhandColor >= 0) {
                 return offhandColor & 0xFFFFFF;
             }
         }
         IHexCastingData data = player.getCapability(HexCapabilities.CASTING_DATA, null);
-        return data == null ? DEFAULT_PIGMENT : data.getPigment();
+        return data == null ? DEFAULT_PIGMENT
+            : HexPigmentColors.fromData(data, time, x, y, z);
     }
 
     private static void playSound(EntityPlayer player, net.minecraft.util.SoundEvent sound,

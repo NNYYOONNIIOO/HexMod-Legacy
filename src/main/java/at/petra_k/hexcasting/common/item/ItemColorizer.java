@@ -1,5 +1,6 @@
 package at.petra_k.hexcasting.common.item;
 
+import at.petra_k.hexcasting.common.effect.HexPigmentColors;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -90,6 +91,17 @@ public final class ItemColorizer extends Item {
             return -1;
         }
         return stack.getTagCompound().getInteger(KEY_COLOR);
+    }
+
+    /** Resolve a pigment stack at a particular animation time and position. */
+    public static int getColor(ItemStack stack, float time,
+                               double x, double y, double z) {
+        int fallback = getColor(stack);
+        if (fallback < 0) {
+            return -1;
+        }
+        return HexPigmentColors.color(getVariant(stack), fallback,
+            getOwner(stack), time, x, y, z);
     }
 
     /** Return the pigment implementation saved on a colorized focus/staff. */
