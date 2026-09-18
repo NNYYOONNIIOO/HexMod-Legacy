@@ -35,6 +35,7 @@ public final class HexItemModels {
         registerFocusProperties();
         registerSpellbookProperties();
         registerLegacyResourceProperties();
+        registerQuenchedAllayProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
             0,
@@ -208,6 +209,32 @@ public final class HexItemModels {
             (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
         registerNbtProperty(HexItems.TRINKET, "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
+    }
+
+    /** Use the same four-frame gaslighting animation as the block renderer. */
+    private static void registerQuenchedAllayProperties() {
+        IItemPropertyGetter variant = (stack, world, entity) ->
+            HexGaslightingTracker.getVariant();
+        registerProperty(HexBlocks.getBlockItem("quenched_allay"),
+            "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_bricks"),
+            "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_bricks_small"),
+            "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_tiles"),
+            "variant", variant);
+        registerProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"),
+            "variant", variant);
+        registerProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"),
+            "variant", variant);
+    }
+
+    private static void registerProperty(Item item, String key,
+                                          IItemPropertyGetter getter) {
+        if (item != null) {
+            item.addPropertyOverride(new ResourceLocation(HexAPI.MOD_ID, key),
+                getter);
+        }
     }
 
     private static void registerNbtProperty(Item item, String key, IItemPropertyGetter getter) {
