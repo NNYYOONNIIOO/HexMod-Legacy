@@ -4,6 +4,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.common.SidedProxy;
+import at.petra_k.hexcasting.common.CommonProxy;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.block.TileEntityConjured;
@@ -11,6 +13,7 @@ import at.petra_k.hexcasting.common.block.TileEntityImpetus;
 import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
+import at.petra_k.hexcasting.common.block.TileEntityQuenchedAllay;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingDataS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
@@ -29,6 +32,11 @@ public final class HexCasting {
     public static final String NAME = "Hex Casting";
     public static final String VERSION = "0.1.0-1.12.2";
 
+    @SidedProxy(
+        clientSide = "at.petra_k.hexcasting.client.HexClientProxy",
+        serverSide = "at.petra_k.hexcasting.common.CommonProxy")
+    public static CommonProxy PROXY;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         GameRegistry.registerTileEntity(TileEntityConjured.class,
@@ -41,6 +49,8 @@ public final class HexCasting {
             new net.minecraft.util.ResourceLocation(MOD_ID, "akashic_bookshelf"));
         GameRegistry.registerTileEntity(TileEntityAkashicRecord.class,
             new net.minecraft.util.ResourceLocation(MOD_ID, "akashic_record"));
+        GameRegistry.registerTileEntity(TileEntityQuenchedAllay.class,
+            new net.minecraft.util.ResourceLocation(MOD_ID, "quenched_allay"));
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();
@@ -62,6 +72,6 @@ public final class HexCasting {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        // Gameplay and integration handlers will be populated during the port.
+        PROXY.registerRenderers();
     }
 }

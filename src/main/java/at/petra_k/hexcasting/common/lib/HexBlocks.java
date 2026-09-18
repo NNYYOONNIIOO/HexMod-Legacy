@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.BlockConjured;
 import at.petra_k.hexcasting.common.block.BlockHexPillar;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
+import at.petra_k.hexcasting.common.block.BlockQuenchedAllay;
 import at.petra_k.hexcasting.common.block.BlockAkashicRecord;
 import at.petra_k.hexcasting.common.block.BlockAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.BlockAkashicConnector;
@@ -153,6 +154,8 @@ public final class HexBlocks {
                 block = new BlockConjuredLight();
             } else if ("conjured_block".equals(id)) {
                 block = new BlockConjured();
+            } else if (id.startsWith("quenched_allay")) {
+                block = new BlockQuenchedAllay();
             } else if ("amethyst_dust_block".equals(id)) {
                 block = new BlockHexFalling();
             } else if ("slate_pillar".equals(id)
