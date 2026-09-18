@@ -82,6 +82,31 @@ public final class MediaTooltip {
         return I18n.translateToLocal("hexcasting.tooltip.media_amount.advanced");
     }
 
+    /** The vanilla 1.12.2 item-bar colour used by Hex's media holder. */
+    public static int barColor(long media, long maxMedia) {
+        float amount = maxMedia <= 0L ? 0.0F
+            : (float) Math.max(0.0D, Math.min(1.0D,
+                media / (double) maxMedia));
+        int red = lerp(84, 254, amount);
+        int green = lerp(57, 203, amount);
+        int blue = lerp(138, 230, amount);
+        return red << 16 | green << 8 | blue;
+    }
+
+    /** Vanilla's 13-pixel bar is rounded in the same way as Hex's helper. */
+    public static int barWidth(long media, long maxMedia) {
+        if (maxMedia <= 0L) {
+            return 0;
+        }
+        double amount = Math.max(0.0D, Math.min(1.0D,
+            media / (double) maxMedia));
+        return (int) Math.round(13.0D * amount);
+    }
+
+    private static int lerp(int from, int to, float amount) {
+        return Math.round(from + (to - from) * amount);
+    }
+
     public static String blankText(Entry entry, net.minecraft.client.gui.FontRenderer font) {
         if (entry == null || font == null) {
             return "";

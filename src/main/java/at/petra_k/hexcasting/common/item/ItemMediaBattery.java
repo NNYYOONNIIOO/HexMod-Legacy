@@ -24,6 +24,7 @@ import java.util.List;
 /** Portable NBT-backed media storage for the 1.12.2 port. */
 public final class ItemMediaBattery extends Item implements MediaHolderItem {
     public static final String KEY_MEDIA = "media";
+    public static final String SOURCE_MEDIA_KEY = "hexcasting:media";
     public static final String KEY_MAX_MEDIA = "max_media";
     public static final String SOURCE_MAX_MEDIA_KEY = "hexcasting:start_media";
     public static final long DEFAULT_MAX_MEDIA = MediaConstants.CRYSTAL_UNIT * 64L;
@@ -34,11 +35,13 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
     public long getMaxMedia(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag != null) {
-            if (tag.hasKey(KEY_MAX_MEDIA, 4)) {
-                return Math.max(1L, tag.getLong(KEY_MAX_MEDIA));
-            }
-            if (tag.hasKey(SOURCE_MAX_MEDIA_KEY, 4)) {
-                return Math.max(1L, tag.getLong(SOURCE_MAX_MEDIA_KEY));
+            for (String key : new String[] {KEY_MAX_MEDIA, SOURCE_MAX_MEDIA_KEY}) {
+                if (tag.hasKey(key, 4)) {
+                    return Math.max(1L, tag.getLong(key));
+                }
+                if (tag.hasKey(key, 3)) {
+                    return Math.max(1L, tag.getInteger(key));
+                }
             }
         }
         return DEFAULT_MAX_MEDIA;
@@ -47,7 +50,18 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
     @Override
     public long getMedia(ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
-        return tag == null || !tag.hasKey(KEY_MEDIA, 4) ? 0L : clamp(stack, tag.getLong(KEY_MEDIA));
+        if (tag == null) {
+            return 0L;
+        }
+        for (String key : new String[] {KEY_MEDIA, SOURCE_MEDIA_KEY}) {
+            if (tag.hasKey(key, 4)) {
+                return clamp(stack, tag.getLong(key));
+            }
+            if (tag.hasKey(key, 3)) {
+                return clamp(stack, tag.getInteger(key));
+            }
+        }
+        return 0L;
     }
 
     /** Store the capacity on the stack so each phial/battery keeps its own size. */
@@ -60,8 +74,9 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
         long capacity = Math.max(1L, maxMedia);
         tag.setLong(KEY_MAX_MEDIA, capacity);
         tag.setLong(SOURCE_MAX_MEDIA_KEY, capacity);
-        if (tag.hasKey(KEY_MEDIA, 4) && tag.getLong(KEY_MEDIA) > capacity) {
+        if (getMedia(stack) > capacity) {
             tag.setLong(KEY_MEDIA, capacity);
+            tag.setLong(SOURCE_MEDIA_KEY, capacity);
         }
     }
 
@@ -69,7 +84,9 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
     public void setMedia(ItemStack stack, long media) {
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) { tag = new NBTTagCompound(); stack.setTagCompound(tag); }
-        tag.setLong(KEY_MEDIA, clamp(stack, media));
+        long clamped = clamp(stack, media);
+        tag.setLong(KEY_MEDIA, clamped);
+        tag.setLong(SOURCE_MEDIA_KEY, clamped);
     }
 
     @Override public int getConsumptionPriority(ItemStack stack) { return 4000; }
@@ -128,6 +145,22 @@ public final class ItemMediaBattery extends Item implements MediaHolderItem {
     @Override
     public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag flag) {
         MediaTooltip.add(tooltip, getMedia(stack), getMaxMedia(stack));
+    }
+
+    @Override
+    public boolean showDurabilityBar(ItemStack stack) {
+        return getMaxMedia(stack) > 0L;
+    }
+
+    @Override
+    public double getDurabilityForDisplay(ItemStack stack) {
+        long max = getMaxMedia(stack);
+        return max <= 0L ? 0.0D : 1.0D - getMedia(stack) / (double) max;
+    }
+
+    @Override
+    public int getRGBDurabilityForDisplay(ItemStack stack) {
+        return MediaTooltip.barColor(getMedia(stack), getMaxMedia(stack));
     }
 
     private long clamp(ItemStack stack, long media) {
