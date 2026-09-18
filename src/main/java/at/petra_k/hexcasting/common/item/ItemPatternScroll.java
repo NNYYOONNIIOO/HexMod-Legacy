@@ -36,8 +36,11 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
     private final int blockSize;
     private static final String KEY_ACTION = "action";
     public static final String TAG_OP_ID = "op_id";
+    public static final String TAG_PATTERN = "pattern";
+    public static final String TAG_RECALC_WARNING = "recalc_warning";
+    public static final String TAG_NEEDS_PURCHASE = "needs_purchase";
     public static final String TAG_ANCIENT = "ancient";
-    private static final String KEY_PATTERN = "pattern";
+    private static final String KEY_PATTERN = TAG_PATTERN;
 
     public ItemPatternScroll() {
         this(1);
@@ -71,6 +74,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         tag.setBoolean(TAG_ANCIENT, true);
         tag.removeTag(KEY_ACTION);
         tag.removeTag(KEY_PATTERN);
+        tag.removeTag(TAG_RECALC_WARNING);
+        tag.removeTag(TAG_NEEDS_PURCHASE);
         return stack;
     }
 
@@ -210,8 +215,12 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             return;
         }
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null || !tag.hasKey(TAG_OP_ID, 8)
-            || tag.hasKey(KEY_PATTERN, 10)) {
+        if (tag == null) {
+            return;
+        }
+        // Trader scrolls conceal their contents until they enter an inventory.
+        tag.removeTag(TAG_NEEDS_PURCHASE);
+        if (!tag.hasKey(TAG_OP_ID, 8) || tag.hasKey(KEY_PATTERN, 10)) {
             return;
         }
         try {
@@ -220,9 +229,13 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             if (pattern != null) {
                 tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
                 tag.setBoolean(TAG_ANCIENT, true);
+                tag.removeTag(TAG_RECALC_WARNING);
+            } else {
+                tag.setString(TAG_RECALC_WARNING, action.toString());
+                tag.removeTag(TAG_OP_ID);
             }
         } catch (RuntimeException ignored) {
-            // Invalid op_id data is left alone so the tooltip can explain it.
+            tag.removeTag(TAG_OP_ID);
         }
     }
 
@@ -243,9 +256,31 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
     public void addInformation(ItemStack stack, World world, List<String> tooltip,
                                net.minecraft.client.util.ITooltipFlag flag) {
         HexActionRegistry.bootstrap();
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag != null && tag.getBoolean(TAG_NEEDS_PURCHASE)) {
+            tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.needs_purchase"));
+            return;
+        }
+        if (tag != null && tag.hasKey(TAG_RECALC_WARNING, 8)) {
+            try {
+                tooltip.add(I18n.translateToLocalFormatted(
+                    "hexcasting.tooltip.scroll.recalc_warning.line1",
+                    localizeAction(new ResourceLocation(tag.getString(TAG_RECALC_WARNING)))));
+            } catch (RuntimeException ignored) {
+                tooltip.add(I18n.translateToLocal(
+                    "hexcasting.tooltip.scroll.recalc_warning.line1"));
+            }
+            tooltip.add(I18n.translateToLocal(
+                "hexcasting.tooltip.scroll.recalc_warning.line2"));
+            return;
+        }
         ResourceLocation id = getActionId(stack);
         HexPattern pattern = getPattern(stack, world);
         if (pattern == null) {
+            if (tag != null && tag.hasKey(TAG_OP_ID, 8)) {
+                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.pattern_not_loaded"));
+                return;
+            }
             tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.empty"));
             return;
         }
@@ -261,7 +296,10 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
     public String getItemStackDisplayName(ItemStack stack) {
         ResourceLocation id = getActionId(stack);
         if (id == null) {
-            return super.getItemStackDisplayName(stack);
+            NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+            return tag != null && tag.hasKey(TAG_PATTERN, 10)
+                ? super.getItemStackDisplayName(stack)
+                : I18n.translateToLocal(getScrollLocalizationKey("empty"));
         }
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
         if (tag != null && tag.hasKey(TAG_OP_ID, 8)) {
@@ -349,6 +387,10 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
 
     /** Return the exact pattern, resolving op_id against the server/client world table. */
     public static HexPattern getPattern(ItemStack stack, World world) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag != null && tag.getBoolean(TAG_NEEDS_PURCHASE)) {
+            return null;
+        }
         HexPattern stored = getStoredPattern(stack);
         if (stored != null) {
             return stored;
@@ -377,6 +419,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                 tag.removeTag(KEY_ACTION);
                 tag.removeTag(TAG_OP_ID);
                 tag.removeTag(TAG_ANCIENT);
+                tag.removeTag(TAG_RECALC_WARNING);
+                tag.removeTag(TAG_NEEDS_PURCHASE);
             }
             return;
         }
@@ -388,6 +432,8 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         tag.removeTag(KEY_ACTION);
         tag.removeTag(TAG_OP_ID);
         tag.removeTag(TAG_ANCIENT);
+        tag.removeTag(TAG_RECALC_WARNING);
+        tag.removeTag(TAG_NEEDS_PURCHASE);
     }
 
     /** Consumes a written scroll unless the player is in creative mode. */
