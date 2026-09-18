@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
@@ -34,8 +35,10 @@ public final class BlockAkashicBookshelf extends Block {
 
     public BlockAkashicBookshelf() {
         super(Material.WOOD);
-        setHardness(2.0F);
-        setResistance(5.0F);
+        setSoundType(SoundType.WOOD);
+        setHardness(3.0F);
+        setResistance(4.0F);
+        setHarvestLevel("axe", 0);
         setDefaultState(blockState.getBaseState()
             .withProperty(FACING, EnumFacing.NORTH)
             .withProperty(HAS_BOOKS, false));
