@@ -37,6 +37,10 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
 
     @Override
     public NBTTagCompound readIotaTag(ItemStack stack) {
+        NBTTagCompound data = stack == null ? null : stack.getTagCompound();
+        if (data != null && data.hasKey(TAG_DATA, 10)) {
+            return data.getCompoundTag(TAG_DATA);
+        }
         HexPattern pattern = getPattern(stack);
         return pattern == null ? null : new PatternIota(pattern).serialize();
     }
@@ -53,22 +57,24 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
 
     @Override
     public void writeDatum(ItemStack stack, Iota datum) {
-        if (stack == null || stack.isEmpty()) {
+        if (stack == null || stack.isEmpty() || datum == null || !writeable(stack)) {
             return;
         }
-        if (datum == null) {
-            setPattern(stack, null);
-            return;
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            tag = new NBTTagCompound();
+            stack.setTagCompound(tag);
         }
-        if (datum instanceof PatternIota) {
-            setPattern(stack, ((PatternIota) datum).getPattern());
-        }
+        tag.setTag(TAG_DATA, datum.serialize());
+        tag.removeTag(KEY_PATTERN);
+        tag.removeTag(KEY_ACTION);
     }
 
     public static void clearDatum(ItemStack stack) {
         if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
             stack.getTagCompound().removeTag(TAG_DATA);
             stack.getTagCompound().removeTag(KEY_ACTION);
+            stack.getTagCompound().removeTag(KEY_PATTERN);
         }
     }
 
@@ -119,6 +125,15 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
     public static HexPattern getPattern(ItemStack stack) {
         if (stack != null && !stack.isEmpty() && stack.getTagCompound() != null) {
             NBTTagCompound tag = stack.getTagCompound();
+            if (tag.hasKey(TAG_DATA, 10)) {
+                try {
+                    Iota stored = ((ItemThoughtKnot) stack.getItem()).readIota(stack);
+                    return stored instanceof PatternIota
+                        ? ((PatternIota) stored).getPattern() : null;
+                } catch (CastingException | RuntimeException ignored) {
+                    return null;
+                }
+            }
             if (tag.hasKey(KEY_PATTERN, 10)) {
                 try {
                     return HexPattern.fromNBT(tag.getCompoundTag(KEY_PATTERN));
@@ -138,18 +153,19 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
         }
         NBTTagCompound tag = stack.getTagCompound();
         if (pattern == null) {
-            if (tag != null) {
-                tag.removeTag(KEY_PATTERN);
-                tag.removeTag(KEY_ACTION);
-            }
+            clearDatum(stack);
             return;
         }
-        if (tag == null) {
-            tag = new NBTTagCompound();
-            stack.setTagCompound(tag);
+        if (stack.getItem() instanceof ItemThoughtKnot) {
+            ((ItemThoughtKnot) stack.getItem()).writeDatum(stack, new PatternIota(pattern));
+        } else {
+            if (tag == null) {
+                tag = new NBTTagCompound();
+                stack.setTagCompound(tag);
+            }
+            tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
+            tag.removeTag(KEY_ACTION);
         }
-        tag.setTag(KEY_PATTERN, pattern.serializeToNBT());
-        tag.removeTag(KEY_ACTION);
     }
 
     public static ResourceLocation getActionId(ItemStack stack) {

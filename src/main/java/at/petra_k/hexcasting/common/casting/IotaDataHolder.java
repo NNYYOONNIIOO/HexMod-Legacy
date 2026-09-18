@@ -31,8 +31,13 @@ public final class IotaDataHolder {
     }
 
     public static boolean canWrite(ItemStack stack) {
-        return stack != null && !stack.isEmpty()
-            && !(stack.getItem() instanceof ItemAbacus);
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (stack.getItem() instanceof IotaHolderItem) {
+            return ((IotaHolderItem) stack.getItem()).writeable(stack);
+        }
+        return !(stack.getItem() instanceof ItemAbacus);
     }
 
     public static Iota read(ItemStack stack) throws CastingException {
@@ -58,6 +63,14 @@ public final class IotaDataHolder {
     public static void write(ItemStack stack, Iota value) throws CastingException {
         if (!canWrite(stack) || value == null) {
             throw new CastingException("hexcasting.error.data_holder_not_writable");
+        }
+        if (stack.getItem() instanceof IotaHolderItem) {
+            IotaHolderItem holder = (IotaHolderItem) stack.getItem();
+            if (!holder.canWrite(stack, value)) {
+                throw new CastingException("hexcasting.error.data_holder_not_writable");
+            }
+            holder.writeDatum(stack, value);
+            return;
         }
         NBTTagCompound tag = stack.hasTagCompound() ? stack.getTagCompound() : new NBTTagCompound();
         tag.setTag(TAG_IOTA, value.serialize());
