@@ -1,8 +1,10 @@
 package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
+import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.item.Item;
@@ -19,12 +21,35 @@ import net.minecraft.world.World;
 import java.util.List;
 
 /** Read-only iota storage item corresponding to Hex Casting's abacus. */
-public final class ItemAbacus extends Item {
-    private static final String KEY_VALUE = "hexcasting_value";
-    private static final String KEY_TYPE = "hexcasting_value_type";
+public final class ItemAbacus extends Item implements IotaHolderItem {
+    /** The canonical key used by Hex's abacus and by the scroll handler. */
+    public static final String TAG_VALUE = "value";
+    /** Keys written by the first 1.12.2 port, retained for old stacks. */
+    private static final String LEGACY_VALUE = "hexcasting_value";
+    private static final String LEGACY_TYPE = "hexcasting_value_type";
 
     public ItemAbacus() {
         setMaxStackSize(1);
+    }
+
+    @Override
+    public NBTTagCompound readIotaTag(ItemStack stack) {
+        return new DoubleIota(getValue(stack)).serialize();
+    }
+
+    @Override
+    public boolean writeable(ItemStack stack) {
+        return false;
+    }
+
+    @Override
+    public boolean canWrite(ItemStack stack, Iota datum) {
+        return false;
+    }
+
+    @Override
+    public void writeDatum(ItemStack stack, Iota datum) {
+        // The abacus is intentionally read-only to casting actions.
     }
 
     @Override
@@ -59,8 +84,8 @@ public final class ItemAbacus extends Item {
             tag = new NBTTagCompound();
             stack.setTagCompound(tag);
         }
-        tag.setString(KEY_TYPE, type == null ? "unknown" : type);
-        tag.setString(KEY_VALUE, value == null ? "" : value);
+        tag.setString(LEGACY_TYPE, type == null ? "unknown" : type);
+        tag.setString(LEGACY_VALUE, value == null ? "" : value);
     }
 
     public static String getDisplayValue(ItemStack stack) {
@@ -77,17 +102,30 @@ public final class ItemAbacus extends Item {
             }
         }
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
-        if (tag == null || !tag.hasKey(KEY_VALUE, 8)) {
-            return I18n.translateToLocal("hexcasting.tooltip.none");
+        if (tag != null && tag.hasKey(TAG_VALUE, 99)) {
+            return Double.toString(getValue(stack));
         }
-        String type = tag.hasKey(KEY_TYPE, 8) ? tag.getString(KEY_TYPE) : "iota";
-        return type + ": " + tag.getString(KEY_VALUE);
+        if (tag == null || !tag.hasKey(LEGACY_VALUE, 8)) {
+            return Double.toString(getValue(stack));
+        }
+        String type = tag.hasKey(LEGACY_TYPE, 8) ? tag.getString(LEGACY_TYPE) : "iota";
+        return type + ": " + tag.getString(LEGACY_VALUE);
     }
 
     public static void clear(ItemStack stack) {
         if (stack != null && stack.getTagCompound() != null) {
-            stack.getTagCompound().removeTag(KEY_TYPE);
-            stack.getTagCompound().removeTag(KEY_VALUE);
+            stack.getTagCompound().removeTag(TAG_VALUE);
+            stack.getTagCompound().removeTag(LEGACY_TYPE);
+            stack.getTagCompound().removeTag(LEGACY_VALUE);
         }
+    }
+
+    /** Read the canonical numeric value, accepting the old integer/double NBT types. */
+    public static double getValue(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null || !tag.hasKey(TAG_VALUE, 99)) {
+            return 0.0D;
+        }
+        return tag.getDouble(TAG_VALUE);
     }
 }
