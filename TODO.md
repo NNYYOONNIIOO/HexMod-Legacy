@@ -8,7 +8,7 @@
 
 ## 下一阶段
 
-- [ ] Quenched Allay
+- [x] Quenched Allay
 - [ ] 专用方块行为
 - [ ] JEI
 - [ ] 物品能力
