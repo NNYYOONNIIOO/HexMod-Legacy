@@ -59,6 +59,29 @@ public final class BlockAkashicBookshelf extends Block {
             | (state.getValue(HAS_BOOKS) ? 4 : 0);
     }
 
+    /** A filled shelf glows faintly, matching the modern block property. */
+    @Override
+    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return state.getValue(HAS_BOOKS) ? 4 : 0;
+    }
+
+    /** Akashic shelves count as a single bookshelf for enchanting. */
+    @Override
+    public float getEnchantPowerBonus(World world, BlockPos pos) {
+        return 1.0F;
+    }
+
+    @Override
+    public boolean hasComparatorInputOverride(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getComparatorInputOverride(IBlockState state, World world,
+                                         BlockPos pos) {
+        return state.getValue(HAS_BOOKS) ? 15 : 0;
+    }
+
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
                                             float hitX, float hitY, float hitZ,
