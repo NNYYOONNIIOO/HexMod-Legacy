@@ -97,27 +97,45 @@ public final class BlockHexDecorative extends Block {
         if (isLightSource(id) || isMetal(id)) {
             return SoundType.METAL;
         }
-        if (id.contains("scroll") || id.contains("paper")) {
-            return SoundType.CLOTH;
+        if (isPaper(id)) {
+            return SoundType.PLANT;
         }
         return SoundType.STONE;
     }
 
     private static float hardnessFor(String id) {
+        if (isPaper(id)) {
+            return 0.0F;
+        }
         if (isLightSource(id)) {
             return 0.8F;
         }
         if (isWood(id)) {
             return 2.0F;
         }
-        if (id.contains("slate") || id.contains("amethyst") || id.contains("quenched")) {
+        if (id.contains("slate")) {
+            return 2.0F;
+        }
+        if (id.contains("amethyst") && !id.contains("slate")) {
+            return 1.5F;
+        }
+        if (id.contains("quenched")) {
             return 3.0F;
         }
         return 1.5F;
     }
 
     private static float resistanceFor(String id) {
-        if (id.contains("slate") || id.contains("amethyst") || id.contains("quenched")) {
+        if (isPaper(id)) {
+            return 0.0F;
+        }
+        if (id.contains("slate")) {
+            return 4.0F;
+        }
+        if (id.contains("amethyst") && !id.contains("slate")) {
+            return 6.0F;
+        }
+        if (id.contains("quenched")) {
             return 12.0F;
         }
         return 6.0F;
