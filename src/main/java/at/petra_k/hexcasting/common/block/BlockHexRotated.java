@@ -8,8 +8,8 @@ import net.minecraft.block.material.Material;
 public final class BlockHexRotated extends BlockRotatedPillar {
     public BlockHexRotated() {
         super(Material.ROCK);
-        setHardness(3.0F);
-        setResistance(12.0F);
+        setHardness(2.0F);
+        setResistance(4.0F);
         setSoundType(SoundType.STONE);
         setHarvestLevel("pickaxe", 0);
     }
