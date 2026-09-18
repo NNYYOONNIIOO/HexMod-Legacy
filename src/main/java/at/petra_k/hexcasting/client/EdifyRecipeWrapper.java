@@ -4,7 +4,7 @@ import at.petra_k.hexcasting.common.lib.HexBlocks;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
-import net.minecraft.init.Items;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
@@ -21,7 +21,8 @@ public final class EdifyRecipeWrapper implements IRecipeWrapper {
 
     private EdifyRecipeWrapper(List<ItemStack> leaves, List<ItemStack> logs) {
         this.inputs = Collections.singletonList(Collections.singletonList(
-            new ItemStack(Items.SAPLING, 1, OreDictionary.WILDCARD_VALUE)));
+            new ItemStack(Item.getItemFromBlock(Blocks.SAPLING), 1,
+                OreDictionary.WILDCARD_VALUE)));
         this.outputs = Arrays.asList(leaves, logs);
     }
 
