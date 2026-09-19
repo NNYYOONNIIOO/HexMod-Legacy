@@ -431,7 +431,12 @@ public final class HexClientEffects {
         if (PARTICLE_WORLD != minecraft.world) {
             PARTICLE_WORLD = minecraft.world;
             ORBITS.clear();
-            PLAYER_PIGMENTS.clear();
+            // Keep the last authoritative pigment snapshot through the
+            // client-world replacement.  The staff NBT does not contain an
+            // internalized pigment, so clearing this cache before the login
+            // capability packet arrives makes the restored staff orbits use
+            // the neutral colour even though constructed blocks still have
+            // their persisted pigment.
             CONJURE_PARTICLES.clear();
             ORBIT_RESTORE_TICKS = 40;
             restoreOrbitPatterns(minecraft.player);
