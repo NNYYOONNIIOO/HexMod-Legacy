@@ -52,21 +52,21 @@ public final class HexCastingEffects {
         if (success) {
             // Hex sprays a small upward fan for every accepted staff pattern.
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
-                0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color);
+                0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color, source);
             playSound(player, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, 0.62F, 1.15F);
             if (outcome.isStackClear()) {
                 // The final pattern is a real spell completion, not merely a
                 // parenthesized/escaped step. Give both caster and target a
                 // stronger burst, then fade the orbiting source patterns.
-                sendTargetFeedback(player, color);
+                sendTargetFeedback(player, color, source);
                 sendSpray(player, player.posX, player.posY + 1.0D, player.posZ,
-                    1.0D, 0.0D, 0.0D, 0.0D, Math.PI, 42, color);
+                    1.0D, 0.0D, 0.0D, 0.0D, Math.PI, 42, color, source);
                 playSound(player, SoundEvents.ENTITY_PLAYER_LEVELUP, 0.75F, 1.35F);
                 clearOrbitPatterns(player);
             }
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
-                0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color);
+                0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
             playSound(player, SoundEvents.BLOCK_NOTE_BASS, 0.8F, 0.55F);
         }
     }
@@ -97,12 +97,12 @@ public final class HexCastingEffects {
         }
         if (success) {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
-                0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color);
-            sendTargetFeedback(player, color);
+                0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color, source);
+            sendTargetFeedback(player, color, source);
             playSound(player, SoundEvents.ENTITY_PLAYER_LEVELUP, 0.72F, 1.25F);
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
-                0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color);
+                0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
             playSound(player, SoundEvents.BLOCK_NOTE_BASS, 0.8F, 0.55F);
         }
     }
@@ -192,17 +192,19 @@ public final class HexCastingEffects {
 
     private static void sendSpray(EntityPlayer player, double posX, double posY,
                                   double posZ, double velX, double velY, double velZ,
-                                  double fuzziness, double spread, int count, int color) {
+                                  double fuzziness, double spread, int count, int color,
+                                  HexPigmentSource source) {
         PaucalAPI.sendPacketNearS2C(new Vec3d(posX, posY, posZ), 128.0D, player.world,
             new MsgCastParticlesS2C(posX, posY, posZ, velX, velY, velZ,
-                fuzziness, spread, count, color));
+                fuzziness, spread, count, color, source));
     }
 
     /** Feedback at the looked-at block/entity and at an off-hand data holder. */
-    private static void sendTargetFeedback(EntityPlayer player, int color) {
+    private static void sendTargetFeedback(EntityPlayer player, int color,
+                                           HexPigmentSource source) {
         Vec3d target = findLookTarget(player);
         sendSpray(player, target.x, target.y, target.z,
-            0.0D, 0.8D, 0.0D, 0.45D, Math.PI, 34, color);
+            0.0D, 0.8D, 0.0D, 0.45D, Math.PI, 34, color, source);
 
         ItemStack offhand = player.getHeldItemOffhand();
         if (offhand != null && !offhand.isEmpty()) {
@@ -210,7 +212,7 @@ public final class HexCastingEffects {
                 .add(player.getLookVec().scale(0.75D))
                 .addVector(0.0D, -0.35D, 0.0D);
             sendSpray(player, hand.x, hand.y, hand.z,
-                0.0D, 0.35D, 0.0D, 0.18D, Math.PI, 14, color);
+                0.0D, 0.35D, 0.0D, 0.18D, Math.PI, 14, color, source);
         }
     }
 
