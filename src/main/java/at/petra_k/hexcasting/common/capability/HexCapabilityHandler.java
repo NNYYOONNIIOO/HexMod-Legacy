@@ -66,6 +66,7 @@ public final class HexCapabilityHandler {
             replacement.setPigment(original.getPigment());
             replacement.setPigmentVariant(original.getPigmentVariant(),
                 original.getPigmentOwner());
+            replacement.setInternalizedPigment(original.hasInternalizedPigment());
             replacement.setFlightTicks(original.getFlightTicks());
             replacement.setAltioraTicks(original.getAltioraTicks());
             replacement.setAltioraActive(original.isAltioraActive());

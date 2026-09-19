@@ -49,6 +49,12 @@ public final class HexPigmentSource {
             data.getPigmentVariant(), data.getPigmentOwner());
     }
 
+    /** Return the caster's explicitly internalized pigment, if present. */
+    public static HexPigmentSource fromInternalData(IHexCastingData data) {
+        return data != null && data.hasInternalizedPigment()
+            ? fromData(data) : null;
+    }
+
     /**
      * Snapshot pigment NBT stored on a casting item.  The packaged spell has
      * its own frozen pigment tag, while staffs and foci use ItemColorizer's
@@ -121,20 +127,31 @@ public final class HexPigmentSource {
     /** Resolve a staff pigment while preserving the concrete staff stack. */
     public static HexPigmentSource resolveStaff(EntityPlayer player,
                                                 ItemStack staff) {
+        return resolveStaff(player, staff, null);
+    }
+
+    /** Resolve a staff pigment using an already-bound casting capability. */
+    public static HexPigmentSource resolveStaff(EntityPlayer player,
+                                                ItemStack staff,
+                                                IHexCastingData boundData) {
         if (player == null) {
             return defaultSource();
         }
-        IHexCastingData data = HexCapabilities.CASTING_DATA == null
-            ? null : player.getCapability(HexCapabilities.CASTING_DATA, null);
-        HexPigmentSource internal = fromData(data);
-        if (internal != null && !internal.isNeutralDefault()) {
+        IHexCastingData data = boundData != null ? boundData
+            : HexCapabilities.CASTING_DATA == null ? null
+            : player.getCapability(HexCapabilities.CASTING_DATA, null);
+        HexPigmentSource internal = fromInternalData(data);
+        if (internal != null) {
             return internal;
         }
+        // Preserve colourized staffs from pre-internalization versions and
+        // legacy direct staff colouring when no internal pigment is active.
         HexPigmentSource source = fromStack(staff);
         if (source != null) {
             return source;
         }
-        return internal == null ? defaultSource() : internal;
+        HexPigmentSource fallback = fromData(data);
+        return fallback == null ? defaultSource() : fallback;
     }
 
     /** Sample the frozen pigment at a world/render position. */

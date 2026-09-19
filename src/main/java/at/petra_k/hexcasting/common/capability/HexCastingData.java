@@ -13,6 +13,7 @@ public final class HexCastingData implements IHexCastingData {
     private static final String KEY_STACK = "casting_stack";
     private static final String KEY_MEDIA = "media";
     private static final String KEY_PIGMENT = "pigment";
+    private static final String KEY_PIGMENT_INTERNALIZED = "pigment_internalized";
     private static final String KEY_FLIGHT_TICKS = "flight_ticks";
     private static final String KEY_ALTIORA_TICKS = "altiora_ticks";
     private static final int DEFAULT_PIGMENT = 0xAA66FF;
@@ -23,6 +24,7 @@ public final class HexCastingData implements IHexCastingData {
     private int pigment = DEFAULT_PIGMENT;
     private String pigmentVariant = DEFAULT_PIGMENT_VARIANT;
     private UUID pigmentOwner = new UUID(0L, 0L);
+    private boolean pigmentInternalized;
     private int flightTicks;
     private int altioraTicks;
     private boolean altioraActive;
@@ -77,6 +79,16 @@ public final class HexCastingData implements IHexCastingData {
         pigmentVariant = variant == null || variant.isEmpty()
             ? DEFAULT_PIGMENT_VARIANT : variant;
         pigmentOwner = owner == null ? new UUID(0L, 0L) : owner;
+    }
+
+    @Override
+    public boolean hasInternalizedPigment() {
+        return pigmentInternalized;
+    }
+
+    @Override
+    public void setInternalizedPigment(boolean internalized) {
+        pigmentInternalized = internalized;
     }
 
     @Override
@@ -140,6 +152,7 @@ public final class HexCastingData implements IHexCastingData {
         result.setInteger(KEY_PIGMENT, pigment);
         result.setString("pigment_variant", pigmentVariant);
         result.setString("pigment_owner", pigmentOwner.toString());
+        result.setBoolean(KEY_PIGMENT_INTERNALIZED, pigmentInternalized);
         result.setInteger(KEY_FLIGHT_TICKS, flightTicks);
         result.setInteger(KEY_ALTIORA_TICKS, altioraTicks);
         result.setBoolean("altiora_active", altioraActive);
@@ -152,6 +165,9 @@ public final class HexCastingData implements IHexCastingData {
         castingStack.clear();
         media = 0L;
         pigment = DEFAULT_PIGMENT;
+        pigmentVariant = DEFAULT_PIGMENT_VARIANT;
+        pigmentOwner = new UUID(0L, 0L);
+        pigmentInternalized = false;
         if (nbt == null) return;
         media = clampMedia(nbt.getLong(KEY_MEDIA));
         if (nbt.hasKey(KEY_PIGMENT, 3)) {
@@ -169,6 +185,16 @@ public final class HexCastingData implements IHexCastingData {
             } catch (IllegalArgumentException ignored) {
                 // Keep the default owner for malformed legacy data.
             }
+        }
+        if (nbt.hasKey(KEY_PIGMENT_INTERNALIZED, 1)) {
+            pigmentInternalized = nbt.getBoolean(KEY_PIGMENT_INTERNALIZED);
+        } else {
+            // Older saves did not carry an explicit marker. Preserve their
+            // non-default pigments instead of silently treating them as an
+            // untouched capability.
+            pigmentInternalized = pigment != DEFAULT_PIGMENT
+                || !DEFAULT_PIGMENT_VARIANT.equals(pigmentVariant)
+                || !new UUID(0L, 0L).equals(pigmentOwner);
         }
         flightTicks = Math.max(0, nbt.getInteger(KEY_FLIGHT_TICKS));
         altioraTicks = Math.max(0, nbt.getInteger(KEY_ALTIORA_TICKS));

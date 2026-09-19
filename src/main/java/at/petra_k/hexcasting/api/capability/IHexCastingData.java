@@ -26,6 +26,11 @@ public interface IHexCastingData extends ADMediaHolder {
 
     void setPigmentVariant(String variant, UUID owner);
 
+    /** Whether the caster has explicitly internalized a pigment. */
+    boolean hasInternalizedPigment();
+
+    void setInternalizedPigment(boolean internalized);
+
     /** Remaining ordinary flight time, in server ticks. */
     int getFlightTicks();
 

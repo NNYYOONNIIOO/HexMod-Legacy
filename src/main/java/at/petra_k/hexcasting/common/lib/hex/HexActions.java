@@ -2068,7 +2068,8 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         net.minecraft.item.ItemStack heldStack = castingStack(vm);
         if (vm != null && vm.getPlayer() != null
             && ItemHexStaff.isStaff(heldStack)) {
-            return HexPigmentSource.resolveStaff(vm.getPlayer(), heldStack);
+            return HexPigmentSource.resolveStaff(vm.getPlayer(), heldStack,
+                castingData(vm));
         }
         HexPigmentSource source = HexPigmentSource.fromStack(heldStack);
         if (source != null) {
@@ -3199,6 +3200,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 data.setPigment(ItemColorizer.getPigmentColor(dye));
                 data.setPigmentVariant(((ItemColorizer) dye.getItem()).getVariant(),
                     player.getUniqueID());
+                data.setInternalizedPigment(true);
                 at.petra_k.hexcasting.common.capability.HexCapabilityHandler
                     .savePersistent(player, data);
                 at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
