@@ -41,11 +41,10 @@ public final class BlockQuenchedAllay extends Block {
 
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
-        // This block is rendered by HexQuenchedAllayRenderer.  The standard
-        // tile-entity render type keeps it in the client tile-render list;
-        // INVISIBLE can make the renderer skip the world block entirely even
-        // though the item model remains visible in inventories.
-        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+        // The block entity renderer supplies the visible model.  Keeping the
+        // block itself invisible matches modern Hex and prevents the chunk
+        // renderer from trying to draw a second, empty block model.
+        return EnumBlockRenderType.INVISIBLE;
     }
 
     @Override
