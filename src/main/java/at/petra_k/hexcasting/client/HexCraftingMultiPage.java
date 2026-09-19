@@ -72,7 +72,8 @@ public final class HexCraftingMultiPage extends BookPage {
                 % loadedRecipes.size()));
             drawRecipe(recipe, mouseX, mouseY);
         } else {
-            fontRenderer.drawString("Recipe unavailable", left + 8, top + 30,
+            fontRenderer.drawString(translate(
+                "hexcasting.patchouli.recipe_unavailable"), left + 8, top + 30,
                 0xAA3333);
         }
 
@@ -104,7 +105,8 @@ public final class HexCraftingMultiPage extends BookPage {
         }
 
         FontRenderer font = fontRenderer;
-        font.drawString("->", left + 66, top + 32,
+        font.drawString(translate("hexcasting.patchouli.recipe_arrow"),
+            left + 66, top + 32,
             book == null ? 0x404040 : book.textColor);
     }
 

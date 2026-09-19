@@ -64,7 +64,8 @@ public final class HexBrainsweepPage extends BookPage {
             headerColor);
 
         if (displayRecipe == null) {
-            fontRenderer.drawString("Recipe unavailable", left + 8, top + 30,
+            fontRenderer.drawString(translate(
+                "hexcasting.patchouli.recipe_unavailable"), left + 8, top + 30,
                 0xAA3333);
         } else {
             if (!input.isEmpty()) {

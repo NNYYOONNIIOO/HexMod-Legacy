@@ -118,11 +118,13 @@ public final class HexPatternPage extends BookPage {
 
         int textTop = top + 96;
         if (input != null && !input.isEmpty()) {
-            font.drawString("Input: " + input, left + 5, textTop, 0x666666);
+            font.drawString(I18n.format("hexcasting.patchouli.input", input),
+                left + 5, textTop, 0x666666);
             textTop += 10;
         }
         if (output != null && !output.isEmpty()) {
-            font.drawString("Output: " + output, left + 5, textTop, 0x666666);
+            font.drawString(I18n.format("hexcasting.patchouli.output", output),
+                left + 5, textTop, 0x666666);
             textTop += 10;
         }
         if (text != null && !text.isEmpty()) {
