@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.Mod;
@@ -35,6 +36,7 @@ public final class HexItemModels {
         registerFocusProperties();
         registerSpellbookProperties();
         registerGaslightingProperties();
+        registerGaslightingModels();
         registerLegacyResourceProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
@@ -144,6 +146,32 @@ public final class HexItemModels {
         registerProperty(HexBlocks.getBlockItem("quenched_allay_tiles"), "variant", variant);
         registerProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"), "variant", variant);
         registerProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"), "variant", variant);
+    }
+
+    /**
+     * The four gaslighting models are referenced by item overrides, but a
+     * 1.12.2 model bake only loads models reachable from registered variants.
+     * Register the block-model locations explicitly, matching the modern
+     * port's extra-model hook, so the block entity renderer can use them too.
+     */
+    private static void registerGaslightingModels() {
+        registerGaslightingModels("quenched_allay", false);
+        registerGaslightingModels("quenched_allay_bricks", true);
+        registerGaslightingModels("quenched_allay_bricks_small", true);
+        registerGaslightingModels("quenched_allay_tiles", true);
+    }
+
+    private static void registerGaslightingModels(String blockId, boolean decorative) {
+        Item item = HexBlocks.getBlockItem(blockId);
+        if (item == null) {
+            return;
+        }
+        String prefix = decorative ? "block/deco/" : "block/";
+        ResourceLocation[] models = new ResourceLocation[4];
+        for (int i = 0; i < models.length; i++) {
+            models[i] = HexAPI.modLoc(prefix + blockId + "_" + i);
+        }
+        ModelBakery.registerItemVariants(item, models);
     }
 
     private static boolean spellbookHasPayload(ItemStack stack) {

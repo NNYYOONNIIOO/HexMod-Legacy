@@ -40,6 +40,7 @@ public final class HexQuenchedAllayRenderer
     public static void onModelBake(ModelBakeEvent event) {
         for (String blockId : BLOCK_IDS) {
             IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
+            IBakedModel fallback = findBakedModel(event, blockId, "normal");
             for (int i = 0; i < variants.length; i++) {
                 String modelPath = ("quenched_allay".equals(blockId)
                     ? "" : "deco/") + blockId + "_" + i;
@@ -50,6 +51,13 @@ public final class HexQuenchedAllayRenderer
                     // same JSON is still a valid block model for the TESR.
                     variants[i] = findBakedModel(event, "block/" + modelPath,
                         "inventory");
+                }
+                // Keep the block visible even if a third-party model loader
+                // declines an extra variant.  Variant zero is the same
+                // fallback used by the blockstate and is still a valid
+                // server/client-safe model.
+                if (variants[i] == null) {
+                    variants[i] = fallback;
                 }
             }
             MODELS.put(blockId, variants);
