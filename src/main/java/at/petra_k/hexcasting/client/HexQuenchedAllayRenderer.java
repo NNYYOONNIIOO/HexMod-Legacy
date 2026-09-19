@@ -23,7 +23,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Renders the invisible Quenched Allay block using its animated model. */
+/** Renders the invisible Quenched Allay block using its fixed model. */
 @SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID, value = Side.CLIENT)
 public final class HexQuenchedAllayRenderer
@@ -41,8 +41,13 @@ public final class HexQuenchedAllayRenderer
         for (String blockId : BLOCK_IDS) {
             IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
             for (int i = 0; i < variants.length; i++) {
+                // Blockstate model ids are rooted at assets/<mod>/models,
+                // whereas item models may refer to them with a block/
+                // prefix.  The old lookup used the item-model form here,
+                // so the block entity renderer received null models for all
+                // four decorative variants.
                 String prefix = "quenched_allay".equals(blockId)
-                    ? "block/" : "block/deco/";
+                    ? "" : "deco/";
                 ResourceLocation modelLocation = HexAPI.modLoc(
                     prefix + blockId + "_" + i);
                 variants[i] = event.getModelRegistry().getObject(
@@ -68,7 +73,10 @@ public final class HexQuenchedAllayRenderer
         if (variants == null || variants.length == 0) {
             return;
         }
-        IBakedModel model = variants[HexGaslightingTracker.getVariant() % variants.length];
+        // The 1.12 port does not have the modern gaslighting animation.  A
+        // placed block must keep the same texture instead of changing its
+        // model every client tick.
+        IBakedModel model = variants[0];
         if (model == null) {
             return;
         }
