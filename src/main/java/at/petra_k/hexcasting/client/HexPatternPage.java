@@ -1,7 +1,11 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.casting.math.HexCoord;
+import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -18,6 +22,8 @@ import vazkii.patchouli.client.book.ClientBookRegistry;
 import vazkii.patchouli.client.book.BookEntry;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * The 1.12.2 Patchouli equivalent of Hex's custom pattern page.
@@ -33,32 +39,51 @@ public final class HexPatternPage extends BookPage {
     private String text;
     private String input;
     private String output;
+    private String header;
     private int hex_size = 8;
+    private JsonElement patterns;
 
     private transient HexPattern pattern;
+    private transient List<HexPattern> manualPatterns = Collections.emptyList();
     private transient String actionName;
 
     public static void register() {
         ClientBookRegistry.INSTANCE.pageTypes.put(
             "hexcasting:pattern", HexPatternPage.class);
+        ClientBookRegistry.INSTANCE.pageTypes.put(
+            "hexcasting:manual_pattern", HexPatternPage.class);
+        ClientBookRegistry.INSTANCE.pageTypes.put(
+            "hexcasting:manual_pattern_nosig", HexPatternPage.class);
     }
 
     @Override
     public void build(BookEntry entry, int pageNum) {
         super.build(entry, pageNum);
         pattern = null;
-        actionName = op_id == null ? "" : op_id;
+        manualPatterns = parsePatterns(patterns);
+        if (!manualPatterns.isEmpty()) {
+            pattern = manualPatterns.get(0);
+        }
+        actionName = header == null ? (op_id == null ? "" : op_id) : header;
+        if (header != null && !header.isEmpty()) {
+            String translatedHeader = I18n.format(header);
+            if (!header.equals(translatedHeader)) {
+                actionName = translatedHeader;
+            }
+        }
         try {
             HexActionRegistry.bootstrap();
             ResourceLocation id = op_id == null
                 ? null : new ResourceLocation(op_id);
             if (id != null) {
-                pattern = HexActionRegistry.getPattern(id);
+                if (pattern == null) {
+                    pattern = HexActionRegistry.getPattern(id);
+                }
                 String key = "hexcasting.action." + id.getResourcePath();
                 String translated = I18n.format(key);
-                if (!key.equals(translated)) {
+                if (header == null && !key.equals(translated)) {
                     actionName = translated;
-                } else {
+                } else if (header == null) {
                     actionName = id.getResourcePath();
                 }
             }
@@ -78,8 +103,10 @@ public final class HexPatternPage extends BookPage {
 
         font.drawString(actionName == null ? "" : actionName,
             left + 5, top + 4, headerColor);
-        if (pattern != null) {
-            drawPattern(left + 64, top + 54);
+        if (!manualPatterns.isEmpty()) {
+            drawPatterns();
+        } else if (pattern != null) {
+            drawPattern(pattern, left + 64, top + 54);
         } else {
             font.drawString(I18n.format("hexcasting.gui.staff.unknown"),
                 left + 8, top + 48, 0xAA3333);
@@ -101,8 +128,21 @@ public final class HexPatternPage extends BookPage {
         }
     }
 
-    private void drawPattern(int centerX, int centerY) {
-        List<HexCoord> positions = pattern.positions();
+    private void drawPatterns() {
+        int count = manualPatterns.size();
+        int columns = Math.min(3, count);
+        int rows = (count + columns - 1) / columns;
+        for (int i = 0; i < count; i++) {
+            int column = i % columns;
+            int row = i / columns;
+            int centerX = left + 24 + column * 40;
+            int centerY = top + 34 + row * 38;
+            drawPattern(manualPatterns.get(i), centerX, centerY);
+        }
+    }
+
+    private void drawPattern(HexPattern drawn, int centerX, int centerY) {
+        List<HexCoord> positions = drawn.positions();
         if (positions == null || positions.size() < 2) {
             return;
         }
@@ -154,6 +194,39 @@ public final class HexPatternPage extends BookPage {
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
+    }
+
+    private static List<HexPattern> parsePatterns(JsonElement raw) {
+        if (raw == null || raw.isJsonNull()) {
+            return Collections.emptyList();
+        }
+        List<HexPattern> result = new ArrayList<>();
+        if (raw.isJsonArray()) {
+            JsonArray array = raw.getAsJsonArray();
+            for (JsonElement element : array) {
+                appendPattern(result, element);
+            }
+        } else {
+            appendPattern(result, raw);
+        }
+        return result;
+    }
+
+    private static void appendPattern(List<HexPattern> result, JsonElement raw) {
+        if (raw == null || !raw.isJsonObject()) {
+            return;
+        }
+        JsonObject object = raw.getAsJsonObject();
+        if (!object.has("signature") || !object.has("startdir")) {
+            return;
+        }
+        try {
+            result.add(HexPattern.fromAngles(
+                object.get("signature").getAsString(),
+                HexDir.fromString(object.get("startdir").getAsString())));
+        } catch (RuntimeException ignored) {
+            // One malformed optional manual pattern must not blank the book.
+        }
     }
 
     private static float axialX(HexCoord point, float size) {
