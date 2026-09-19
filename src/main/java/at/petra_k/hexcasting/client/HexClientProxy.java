@@ -10,6 +10,7 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 public final class HexClientProxy extends CommonProxy {
     @Override
     public void registerRenderers() {
+        HexShaders.register();
         RenderingRegistry.registerEntityRenderingHandler(
             EntityWallScroll.class, RenderWallScroll::new);
         ClientRegistry.bindTileEntitySpecialRenderer(
