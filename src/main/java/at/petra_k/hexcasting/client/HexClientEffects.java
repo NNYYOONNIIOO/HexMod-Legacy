@@ -470,6 +470,7 @@ public final class HexClientEffects {
 
         if (!ORBITS.isEmpty()) {
             GlStateManager.pushMatrix();
+            GlStateManager.pushAttrib();
             beginOrbitRender();
 
             boolean inventoryPlayerRender = minecraft.currentScreen instanceof GuiInventory;
@@ -503,6 +504,7 @@ public final class HexClientEffects {
             }
 
             endOrbitRender(false);
+            GlStateManager.popAttrib();
             GlStateManager.popMatrix();
         }
         renderConjureParticles(minecraft, camera, partialTicks);
@@ -527,6 +529,7 @@ public final class HexClientEffects {
         }
 
         GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
         beginOrbitRender();
         long worldTime = event.getEntityPlayer().world.getTotalWorldTime();
         for (int i = 0; i < patterns.size(); i++) {
@@ -534,6 +537,7 @@ public final class HexClientEffects {
                 event.getPartialRenderTick(), worldTime, 0.0D, 0.0D, 0.0D);
         }
         endOrbitRender(true);
+        GlStateManager.popAttrib();
         GlStateManager.popMatrix();
     }
 
@@ -555,6 +559,7 @@ public final class HexClientEffects {
         Minecraft.getMinecraft().getTextureManager().bindTexture(
             TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
         GlStateManager.enableDepth();
         GlStateManager.depthMask(false);
         GlStateManager.enableBlend();
@@ -562,6 +567,11 @@ public final class HexClientEffects {
             GL11.GL_SRC_ALPHA, GL11.GL_ONE,
             GL11.GL_ONE, GL11.GL_ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER, 0.003921569F);
+        // Particle colors are stored in the vertex stream.  The fixed
+        // pipeline's current color must stay neutral so a preceding rune
+        // pass cannot multiply every particle into white or another stale
+        // color.
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
         buffer.begin(GL11.GL_QUADS,
             DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
@@ -578,6 +588,7 @@ public final class HexClientEffects {
         GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();
+        GlStateManager.popAttrib();
         GlStateManager.popMatrix();
     }
 
