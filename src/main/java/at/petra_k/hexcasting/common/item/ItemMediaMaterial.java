@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.item;
 
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -68,6 +69,78 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
     @Override
     public boolean canConstructBattery(ItemStack stack) {
         return true;
+    }
+
+    /**
+     * Withdraw media from a dropped stack while keeping per-item media
+     * semantics.  An ItemStack has one NBT compound for the whole stack, so a
+     * partially consumed material must be split into a full stack and one
+     * separately tagged item rather than tagging every remaining item.
+     */
+    public long withdrawMediaFromEntity(EntityItem entity, long amount,
+                                        boolean simulate) {
+        if (entity == null) {
+            return 0L;
+        }
+        ItemStack stack = entity.getItem();
+        if (stack == null || stack.isEmpty()) {
+            return 0L;
+        }
+
+        long available = Math.max(0L, getMedia(stack));
+        long requested = amount < 0L
+            ? available : Math.max(0L, amount);
+        long extracted = Math.min(available, requested);
+        if (simulate || extracted <= 0L) {
+            return extracted;
+        }
+
+        splitRemainingEntity(entity, stack, available - extracted);
+        return extracted;
+    }
+
+    private void splitRemainingEntity(EntityItem entity, ItemStack stack,
+                                      long remainingMedia) {
+        if (remainingMedia <= 0L || mediaPerItem <= 0L) {
+            entity.setItem(ItemStack.EMPTY);
+            entity.setDead();
+            return;
+        }
+
+        long fullCount = remainingMedia / mediaPerItem;
+        long partialMedia = remainingMedia % mediaPerItem;
+        if (partialMedia <= 0L) {
+            stack.setCount((int) Math.min(Integer.MAX_VALUE, fullCount));
+            // A complete stack needs no media tag.  Calling setMedia also
+            // removes a legacy total-stack tag left by older port versions.
+            setMedia(stack, remainingMedia);
+            entity.setItem(stack);
+            return;
+        }
+
+        if (fullCount <= 0L) {
+            stack.setCount(1);
+            setMedia(stack, partialMedia);
+            entity.setItem(stack);
+            return;
+        }
+
+        // Copy before clearing the legacy total-media tag from the full stack
+        // so that the partial item keeps all unrelated item NBT.
+        ItemStack partialStack = stack.copy();
+        partialStack.setCount(1);
+        setMedia(partialStack, partialMedia);
+
+        stack.setCount((int) Math.min(Integer.MAX_VALUE, fullCount));
+        setMedia(stack, fullCount * mediaPerItem);
+        entity.setItem(stack);
+
+        EntityItem partialEntity = new EntityItem(entity.world,
+            entity.posX, entity.posY, entity.posZ, partialStack);
+        partialEntity.motionX = entity.motionX;
+        partialEntity.motionY = entity.motionY;
+        partialEntity.motionZ = entity.motionZ;
+        entity.world.spawnEntity(partialEntity);
     }
 
     @Override

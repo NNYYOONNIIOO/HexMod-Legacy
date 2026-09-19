@@ -3431,14 +3431,21 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 // Withdraw only what fits.  Media holders keep the remainder
                 // on the item stack, so an over-capacity entity is not lost.
-                long drained = holder.withdrawMedia(source, maxBatteryMedia, false);
+                boolean splitMaterial = source.getItem()
+                    instanceof at.petra_k.hexcasting.common.item.ItemMediaMaterial;
+                long drained = splitMaterial
+                    ? ((at.petra_k.hexcasting.common.item.ItemMediaMaterial)
+                        source.getItem()).withdrawMediaFromEntity(
+                            itemEntity, maxBatteryMedia, false)
+                    : holder.withdrawMedia(source, maxBatteryMedia, false);
                 if (drained <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 battery.setMaxMedia(result, drained);
                 battery.setMedia(result, drained);
                 player.setHeldItem(hand, result);
-                if (!player.world.isRemote && holder.getMedia(source) <= 0L) {
+                if (!player.world.isRemote && !splitMaterial
+                    && holder.getMedia(source) <= 0L) {
                     // Remove the entity only after its entire media payload
                     // was transferred.  A capped survival extraction leaves
                     // the source entity alive with its remaining media.
