@@ -3411,27 +3411,32 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (sourceMedia <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
+                // A survival phial is limited to the normal 64-crystal
+                // capacity.  Creative players keep the complete media
+                // amount, which is useful for testing and preserves the
+                // old unrestricted behavior there.
+                long maxBatteryMedia = player.capabilities.isCreativeMode
+                    ? sourceMedia
+                    : Math.min(sourceMedia,
+                        at.petra_k.hexcasting.common.item.ItemMediaBattery.DEFAULT_MAX_MEDIA);
                 net.minecraft.item.ItemStack result = new net.minecraft.item.ItemStack(
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY, 1);
                 at.petra_k.hexcasting.common.item.ItemMediaBattery battery =
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY;
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
-                // Modern Hex drains the complete media-bearing item entity,
-                // then gives the phial exactly that amount of capacity.  A
-                // fixed default capacity would truncate a whole stack of
-                // quenched shards to the first few items and could lose the
-                // rest when the source stack is rewritten.
-                long drained = holder.withdrawMedia(source, -1L, false);
+                // Withdraw only what fits.  Media holders keep the remainder
+                // on the item stack, so an over-capacity entity is not lost.
+                long drained = holder.withdrawMedia(source, maxBatteryMedia, false);
                 if (drained <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 battery.setMaxMedia(result, drained);
                 battery.setMedia(result, drained);
                 player.setHeldItem(hand, result);
-                if (!player.world.isRemote) {
-                    // The source was drained with cost=-1, so the dropped
-                    // entity is consumed only after the full amount has been
-                    // transferred to the new phial.
+                if (!player.world.isRemote && holder.getMedia(source) <= 0L) {
+                    // Remove the entity only after its entire media payload
+                    // was transferred.  A capped survival extraction leaves
+                    // the source entity alive with its remaining media.
                     itemEntity.setDead();
                 }
             }
