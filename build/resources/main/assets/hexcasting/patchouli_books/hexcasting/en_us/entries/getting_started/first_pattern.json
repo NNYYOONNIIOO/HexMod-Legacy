@@ -1,6 +1,6 @@
 {
   "name": "Your First Pattern",
-      "icon": "hexcasting:scroll",
+  "icon": "hexcasting:scroll",
   "category": "hexcasting:getting_started",
   "sortnum": 0,
   "pages": [

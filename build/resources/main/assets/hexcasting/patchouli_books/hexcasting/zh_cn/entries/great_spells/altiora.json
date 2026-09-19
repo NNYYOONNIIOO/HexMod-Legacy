@@ -12,6 +12,9 @@
       "output": "",
       "text": "hexcasting.page.altiora.1"
     },
-    { "type": "text", "text": "hexcasting.page.altiora.2" }
+    {
+      "type": "text",
+      "text": "hexcasting.page.altiora.2"
+    }
   ]
 }

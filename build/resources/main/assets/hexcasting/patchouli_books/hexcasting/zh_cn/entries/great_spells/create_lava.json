@@ -12,6 +12,9 @@
       "output": "",
       "text": "hexcasting.page.create_lava.1"
     },
-    { "type": "text", "text": "hexcasting.page.create_lava.2" }
+    {
+      "type": "text",
+      "text": "hexcasting.page.create_lava.2"
+    }
   ]
 }

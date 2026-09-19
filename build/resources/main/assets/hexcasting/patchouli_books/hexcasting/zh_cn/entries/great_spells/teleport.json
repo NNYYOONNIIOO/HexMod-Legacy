@@ -13,6 +13,9 @@
       "hex_size": 8,
       "text": "hexcasting.page.teleport/great.1"
     },
-    { "type": "text", "text": "hexcasting.page.teleport/great.2" }
+    {
+      "type": "text",
+      "text": "hexcasting.page.teleport/great.2"
+    }
   ]
 }
