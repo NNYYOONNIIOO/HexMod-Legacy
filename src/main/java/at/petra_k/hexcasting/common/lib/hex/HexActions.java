@@ -2065,7 +2065,12 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     }
 
     private static HexPigmentSource castingPigmentSource(CastingVM vm) {
-        HexPigmentSource source = HexPigmentSource.fromStack(castingStack(vm));
+        net.minecraft.item.ItemStack heldStack = castingStack(vm);
+        if (vm != null && vm.getPlayer() != null
+            && ItemHexStaff.isStaff(heldStack)) {
+            return HexPigmentSource.resolveStaff(vm.getPlayer(), heldStack);
+        }
+        HexPigmentSource source = HexPigmentSource.fromStack(heldStack);
         if (source != null) {
             return source;
         }
@@ -3464,10 +3469,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack result =
                     new net.minecraft.item.ItemStack(output, 1);
                 ItemPackagedSpell.writePackagedProgram(result, spell.getItems(), mediaCost);
-                HexPigmentSource pigment = HexPigmentSource.fromStack(castingStack(vm));
-                if (pigment == null) {
-                    pigment = HexPigmentSource.fromData(castingData(vm));
-                }
+                HexPigmentSource pigment = castingPigmentSource(vm);
                 if (pigment != null) {
                     ItemPackagedSpell.setPigment(result, pigment.getColor(),
                         pigment.getVariant(), pigment.getOwner());
