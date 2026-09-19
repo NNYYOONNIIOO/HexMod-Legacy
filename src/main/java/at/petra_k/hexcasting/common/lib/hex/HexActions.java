@@ -2109,11 +2109,18 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         if (vm == null) {
             return null;
         }
-        if (vm.getCastingData() != null) {
-            return vm.getCastingData();
+        // A VM may be restored from a staff/circle snapshot before its
+        // environmental data is rebound.  The live player capability is the
+        // authoritative internal pigment and must win over that stale
+        // snapshot whenever a player is available.
+        if (vm.getPlayer() != null && HexCapabilities.CASTING_DATA != null) {
+            IHexCastingData live = vm.getPlayer().getCapability(
+                HexCapabilities.CASTING_DATA, null);
+            if (live != null) {
+                return live;
+            }
         }
-        return vm.getPlayer() == null ? null
-            : vm.getPlayer().getCapability(HexCapabilities.CASTING_DATA, null);
+        return vm.getCastingData();
     }
 
     private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {
@@ -3473,7 +3480,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack result =
                     new net.minecraft.item.ItemStack(output, 1);
                 ItemPackagedSpell.writePackagedProgram(result, spell.getItems(), mediaCost);
-                IHexCastingData pigmentData = vm.getCastingData();
+                IHexCastingData pigmentData = castingData(vm);
                 if (pigmentData != null) {
                     ItemPackagedSpell.setPigment(result, pigmentData.getPigment(),
                         pigmentData.getPigmentVariant(), pigmentData.getPigmentOwner());
