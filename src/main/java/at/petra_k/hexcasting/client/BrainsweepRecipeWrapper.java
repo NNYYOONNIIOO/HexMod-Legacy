@@ -95,8 +95,7 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
                     "hexcasting.tooltip.brainsweep.min_level", recipe.getMinLevel()));
             }
             if (recipe.getProfession() != null) {
-                tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal(
-                    "entity.minecraft.villager." + recipe.getProfession()));
+                tooltip.add(localizeProfession(recipe.getProfession()));
             } else {
                 tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal(
                     "entity.minecraft.villager"));
@@ -105,6 +104,28 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             tooltip.add(entityType == null ? "" : entityType);
         }
         return tooltip;
+    }
+
+    /**
+     * Use a profession key supplied by another 1.12.2 mod when available,
+     * then fall back to this mod's translations.  Modern Hex's
+     * entity.minecraft.villager.<profession> keys do not exist in vanilla
+     * 1.12.2, which previously left the raw key visible in JEI.
+     */
+    private static String localizeProfession(String profession) {
+        String path = profession == null ? "" : profession.toLowerCase(java.util.Locale.ROOT);
+        for (String key : new String[] {
+            "entity.minecraft.villager." + path,
+            "entity.villager." + path,
+            "entity.Villager." + path,
+            "hexcasting.jei.profession." + path
+        }) {
+            String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
+            if (!key.equals(translated)) {
+                return translated;
+            }
+        }
+        return path;
     }
 
     @Override

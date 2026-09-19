@@ -6,6 +6,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -45,22 +47,35 @@ public final class ScryingLensOverlayRenderer {
 
         BlockPos pos = hit.getBlockPos();
         IBlockState state = player.world.getBlockState(pos);
-        event.getLeft().add("§5" + state.getBlock().getLocalizedName());
-        event.getLeft().add("§7Hex: redstone " + player.world.getRedstonePower(pos, EnumFacing.UP));
+        event.getLeft().add(TextFormatting.DARK_PURPLE
+            + I18n.format("hexcasting.overlay.block", state.getBlock().getLocalizedName()));
+        event.getLeft().add(TextFormatting.GRAY
+            + I18n.format("hexcasting.overlay.redstone",
+                player.world.getRedstonePower(pos, EnumFacing.UP)));
         if (player.hasCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null)) {
             at.petra_k.hexcasting.api.capability.IHexCastingData data = player.getCapability(
                 at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
             if (data != null) {
-                event.getLeft().add("§7Hex: media " + data.getMedia() + " / " + data.getMaxMedia());
+                event.getLeft().add(TextFormatting.GRAY
+                    + I18n.format("hexcasting.overlay.media",
+                        data.getMedia(), data.getMaxMedia()));
             }
         }
 
         for (Map.Entry<IProperty<?>, Comparable<?>> property : state.getProperties().entrySet()) {
             String name = property.getKey().getName();
             if (isUsefulProperty(name)) {
-                event.getLeft().add("§7" + name + ": " + property.getValue());
+                event.getLeft().add(TextFormatting.GRAY
+                    + I18n.format("hexcasting.overlay.property",
+                        localizeProperty(name), property.getValue()));
             }
         }
+    }
+
+    private static String localizeProperty(String name) {
+        String key = "hexcasting.overlay.property." + name;
+        String translated = I18n.format(key);
+        return key.equals(translated) ? name : translated;
     }
 
     private static boolean isUsefulProperty(String name) {

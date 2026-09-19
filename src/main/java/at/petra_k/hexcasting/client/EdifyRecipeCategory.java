@@ -65,9 +65,9 @@ public final class EdifyRecipeCategory implements IRecipeCategory<EdifyRecipeWra
                           EdifyRecipeWrapper recipeWrapper,
                           IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 12, 22);
-        itemStacks.init(1, false, 51, 10);
-        itemStacks.init(2, false, 51, 35);
+        itemStacks.init(0, true, 11, 21);
+        itemStacks.init(1, false, 50, 9);
+        itemStacks.init(2, false, 50, 34);
         itemStacks.set(ingredients);
     }
 }

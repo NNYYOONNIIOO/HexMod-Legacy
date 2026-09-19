@@ -12,8 +12,6 @@ import net.minecraft.item.ItemStack;
  */
 @JEIPlugin
 public final class HexJeiPlugin implements IModPlugin {
-    private static final String CRAFTING_UID = "minecraft.crafting";
-
     @Override
     public void register(IModRegistry registry) {
         registry.addRecipeCategories(
@@ -24,12 +22,6 @@ public final class HexJeiPlugin implements IModPlugin {
         registry.addRecipes(PhialRecipeWrapper.createRecipes(), PhialRecipeCategory.UID);
         registry.addRecipes(EdifyRecipeWrapper.createRecipes(), EdifyRecipeCategory.UID);
         registry.addRecipes(BrainsweepRecipeWrapper.createRecipes(), BrainsweepRecipeCategory.UID);
-
-        registry.addRecipeCatalyst(new ItemStack(HexItems.FOCUS), CRAFTING_UID);
-        registry.addRecipeCatalyst(new ItemStack(HexItems.STAFF), CRAFTING_UID);
-        registry.addRecipeCatalyst(new ItemStack(HexItems.SCRYING_LENS), CRAFTING_UID);
-        registry.addRecipeCatalyst(new ItemStack(HexItems.BATTERY), CRAFTING_UID);
-        registry.addRecipeCatalyst(new ItemStack(HexItems.EXTRA_ITEMS.get("scroll")), CRAFTING_UID);
 
         addStaffCatalysts(registry);
     }

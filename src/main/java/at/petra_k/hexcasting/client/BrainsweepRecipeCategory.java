@@ -65,8 +65,8 @@ public final class BrainsweepRecipeCategory
                           BrainsweepRecipeWrapper recipeWrapper,
                           IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 12, 35);
-        itemStacks.init(1, false, 87, 35);
+        itemStacks.init(0, true, 11, 34);
+        itemStacks.init(1, false, 86, 34);
         itemStacks.set(ingredients);
     }
 }

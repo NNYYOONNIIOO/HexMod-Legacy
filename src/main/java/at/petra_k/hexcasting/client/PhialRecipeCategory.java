@@ -64,9 +64,9 @@ public final class PhialRecipeCategory implements IRecipeCategory<PhialRecipeWra
                           PhialRecipeWrapper recipeWrapper,
                           IIngredients ingredients) {
         IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 12, 12);
-        itemStacks.init(1, true, 47, 12);
-        itemStacks.init(2, false, 85, 12);
+        itemStacks.init(0, true, 11, 11);
+        itemStacks.init(1, true, 46, 11);
+        itemStacks.init(2, false, 84, 11);
         itemStacks.set(ingredients);
     }
 }
