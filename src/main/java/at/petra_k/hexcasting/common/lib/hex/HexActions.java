@@ -3423,47 +3423,31 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 long sourceMedia = holder.getMedia(source);
+                if (sourceMedia <= 0L) {
+                    throw new CastingException("hexcasting.error.craft_battery_media");
+                }
                 net.minecraft.item.ItemStack result = new net.minecraft.item.ItemStack(
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY, 1);
                 at.petra_k.hexcasting.common.item.ItemMediaBattery battery =
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY;
-                long mediaAmount = Math.min(sourceMedia, battery.getMaxMedia(result));
-                if (mediaAmount <= 0L) {
-                    throw new CastingException("hexcasting.error.craft_battery_media");
-                }
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
-                long drained = holder.withdrawMedia(source, mediaAmount, false);
+                // Modern Hex drains the complete media-bearing item entity,
+                // then gives the phial exactly that amount of capacity.  A
+                // fixed default capacity would truncate a whole stack of
+                // quenched shards to the first few items and could lose the
+                // rest when the source stack is rewritten.
+                long drained = holder.withdrawMedia(source, -1L, false);
                 if (drained <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
+                battery.setMaxMedia(result, drained);
                 battery.setMedia(result, drained);
                 player.setHeldItem(hand, result);
                 if (!player.world.isRemote) {
-                    long remainingMedia = Math.max(0L, sourceMedia - drained);
-                    if (remainingMedia <= 0L) {
-                        itemEntity.setDead();
-                    } else {
-                        // ItemMediaMaterial stores one media total on the
-                        // stack, so a partial drain must be represented as
-                        // full items plus one partially filled item.  The
-                        // count is reduced before writing the NBT value;
-                        // otherwise ItemMediaMaterial would clamp the
-                        // remaining media against the old 64-item capacity
-                        // and the excess would be lost.
-                        int remainingCount = source.getCount();
-                        net.minecraft.item.ItemStack one = source.copy();
-                        one.setCount(1);
-                        long mediaPerItem = holder.getMaxMedia(one);
-                        if (mediaPerItem > 0L) {
-                            long count = (remainingMedia + mediaPerItem - 1L)
-                                / mediaPerItem;
-                            remainingCount = (int) Math.max(1L, Math.min(
-                                source.getCount(), count));
-                        }
-                        source.setCount(remainingCount);
-                        holder.setMedia(source, remainingMedia);
-                        itemEntity.setItem(source);
-                    }
+                    // The source was drained with cost=-1, so the dropped
+                    // entity is consumed only after the full amount has been
+                    // transferred to the new phial.
+                    itemEntity.setDead();
                 }
             }
         });
