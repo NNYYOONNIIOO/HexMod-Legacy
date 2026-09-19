@@ -1,6 +1,5 @@
 package at.petra_k.hexcasting.client;
 
-import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.block.TileEntityQuenchedAllay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -47,7 +46,10 @@ public final class HexQuenchedAllayRenderer
         }
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, z);
+        // RenderItem's model path centers item models by translating -0.5 in
+        // each axis; offset the TESR origin first so the cube occupies the
+        // actual block space [x, x + 1] rather than half a block beside it.
+        GlStateManager.translate(x + 0.5D, y + 0.5D, z + 0.5D);
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(
             GlStateManager.SourceFactor.SRC_ALPHA,
