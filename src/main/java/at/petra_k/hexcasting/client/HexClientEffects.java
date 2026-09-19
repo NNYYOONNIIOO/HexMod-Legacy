@@ -56,6 +56,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID, value = Side.CLIENT)
 public final class HexClientEffects {
     private static final double SQRT_3 = Math.sqrt(3.0D);
+    private static final int ERROR_COLOR = 0xE05252;
     private static final Map<UUID, List<OrbitPattern>> ORBITS =
         new HashMap<>();
     /**
@@ -93,6 +94,7 @@ public final class HexClientEffects {
                 existing.maxLifetime = Math.max(existing.maxLifetime,
                     finiteLifetime(lifetime));
                 existing.color = 0xFF000000 | (color & 0xFFFFFF);
+                existing.dynamicColor = color != ERROR_COLOR;
                 return;
             }
         }
@@ -101,7 +103,7 @@ public final class HexClientEffects {
         }
         int safeLifetime = lifetime <= 0 ? 1 : lifetime;
         patterns.add(new OrbitPattern(pattern, safeLifetime,
-            finiteLifetime(safeLifetime), color));
+            finiteLifetime(safeLifetime), color, color != ERROR_COLOR));
     }
 
     /** Called by MsgClearCastingPatternsS2C; clear with the same soft fade as Hex. */
@@ -588,7 +590,7 @@ public final class HexClientEffects {
         List<double[]> line = makeZappy(positions, time, index,
             player == null ? 0L : (long) player.hashCode());
         int alpha = Math.max(0, Math.min(255, (int) (lifeAlpha * 255.0F)));
-        int rgb = orbit.color & 0x00FFFFFF;
+        int rgb = orbit.getColor(player) & 0x00FFFFFF;
         int outerColor = (alpha << 24) | rgb;
         int innerColor = screenColor(outerColor);
         // The original uses pose-space widths 0.35 and 0.14.  Our pattern
@@ -1079,12 +1081,27 @@ public final class HexClientEffects {
         private int lifetime;
         private int maxLifetime;
         private int color;
+        private boolean dynamicColor;
 
-        private OrbitPattern(HexPattern pattern, int lifetime, int maxLifetime, int color) {
+        private OrbitPattern(HexPattern pattern, int lifetime, int maxLifetime,
+                             int color, boolean dynamicColor) {
             this.pattern = pattern;
             this.lifetime = lifetime;
             this.maxLifetime = maxLifetime;
             this.color = 0xFF000000 | (color & 0xFFFFFF);
+            this.dynamicColor = dynamicColor;
+        }
+
+        private int getColor(EntityPlayer player) {
+            if (!dynamicColor || player == null) {
+                return color;
+            }
+            // The server packet carries a useful initial colour, but a
+            // pigment such as a pride/ancient/UUID pigment is a time-varying
+            // provider.  Resolve it from the synchronized client capability
+            // for every render so the orbit keeps animating after the staff
+            // GUI is closed.
+            return 0xFF000000 | (localPigment(player) & 0xFFFFFF);
         }
 
         private float alpha() {
