@@ -11,4 +11,4 @@
 - [x] Quenched Allay
 - [x] 专用方块行为
 - [x] JEI
-- [ ] 物品能力
+- [x] 物品能力
