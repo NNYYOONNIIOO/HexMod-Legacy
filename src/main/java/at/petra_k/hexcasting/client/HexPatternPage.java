@@ -54,6 +54,10 @@ public final class HexPatternPage extends BookPage {
             "hexcasting:manual_pattern", HexPatternPage.class);
         ClientBookRegistry.INSTANCE.pageTypes.put(
             "hexcasting:manual_pattern_nosig", HexPatternPage.class);
+        ClientBookRegistry.INSTANCE.pageTypes.put(
+            "hexcasting:crafting_multi", HexCraftingMultiPage.class);
+        ClientBookRegistry.INSTANCE.pageTypes.put(
+            "hexcasting:brainsweep", HexBrainsweepPage.class);
     }
 
     @Override
