@@ -47,25 +47,30 @@ public final class AmethystClusterDrops {
         // using it also avoids depending on the backport's registry timing.
         ResourceLocation clusterId = event.getState().getBlock().getRegistryName();
         int fortune = Math.max(0, event.getFortuneLevel());
-        int maximum = 4 + fortune;
-        int count = 2 + event.getWorld().rand.nextInt(maximum - 1);
-        ItemStack shardDrop = effectiveShardStack(clusterId, count);
-        if (shardDrop.isEmpty()) {
-            return;
+        int dustCount = 2 + event.getWorld().rand.nextInt(3) + fortune;
+        Item dust = HexItems.EXTRA_ITEMS.get("amethyst_dust");
+        if (dust != null) {
+            event.getDrops().add(new ItemStack(dust, dustCount));
         }
 
-        // Replace the backport's fixed 2/4 shard result, and also prevent a
-        // second shard entry supplied by another harvest hook from stacking
-        // on top of the adjusted amount.
+        // The provider's normal shard drop is retained, but reduced by the
+        // same 50% modifier as Hex's amethyst-cluster loot injection.  Do not
+        // replace it with a random stack: that would discard other drop
+        // conditions and could create shards when the provider supplied none.
+        ItemStack shardIdentity = effectiveShardStack(clusterId, 1);
+
         Iterator<ItemStack> drops = event.getDrops().iterator();
         while (drops.hasNext()) {
             ItemStack stack = drops.next();
-            if (isAmethystShard(stack, shardDrop)) {
-                drops.remove();
+            if (isAmethystShard(stack, shardIdentity)) {
+                int reducedCount = stack.getCount() / 2;
+                if (reducedCount <= 0) {
+                    drops.remove();
+                } else {
+                    stack.setCount(reducedCount);
+                }
             }
         }
-
-        event.getDrops().add(shardDrop);
 
         Item charged = HexItems.EXTRA_ITEMS.get("charged_amethyst");
         if (charged != null && event.getWorld().rand.nextFloat()
