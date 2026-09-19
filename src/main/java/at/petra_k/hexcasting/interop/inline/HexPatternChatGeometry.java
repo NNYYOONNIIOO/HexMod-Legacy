@@ -109,6 +109,26 @@ public final class HexPatternChatGeometry {
     /** Draw a fitted preview, optionally omitting the readable-scroll dots. */
     public static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
                                    int outerArgb, int innerArgb, boolean drawDots) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, false);
+    }
+
+    /**
+     * Draw a fitted preview while preserving the depth test used by a world
+     * renderer.  The ordinary preview is deliberately depthless because it
+     * is used by GUI and wall-scroll overlays; block-entity previews must be
+     * occluded by the block and nearby geometry instead of showing through it.
+     */
+    public static void drawWorldPreview(HexPattern pattern, int x, int y, int size,
+                                        int alpha, int outerArgb, int innerArgb,
+                                        boolean drawDots) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, true);
+    }
+
+    private static void drawPreview(HexPattern pattern, int x, int y, int size,
+                                    int alpha, int outerArgb, int innerArgb,
+                                    boolean drawDots, boolean depthTest) {
         if (pattern == null || size <= 0 || alpha <= 3) {
             return;
         }
@@ -120,7 +140,11 @@ public final class HexPatternChatGeometry {
         GlStateManager.pushMatrix();
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
-        GlStateManager.disableDepth();
+        if (depthTest) {
+            GlStateManager.enableDepth();
+        } else {
+            GlStateManager.disableDepth();
+        }
         GlStateManager.disableCull();
         GlStateManager.tryBlendFuncSeparate(
             GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
