@@ -1,10 +1,13 @@
 package at.petra_k.hexcasting.common.item;
 
 import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
@@ -42,17 +45,21 @@ public final class ItemKnowledgeFragment extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
-        if (!world.isRemote) {
-            if ("lore_fragment".equals(variant)) {
-                useLoreFragment(world, player, stack);
-            } else if ("creative_unlocker".equals(variant)) {
-                player.getEntityData().setBoolean(KEY_UNLOCKED, true);
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocal("hexcasting.message." + variant)));
+        player.playSound(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, 1.0F, 1.0F);
+        if ("lore_fragment".equals(variant)) {
+            if (world.isRemote) {
+                // Match vanilla consumables: the client predicts the hand
+                // stack change while the server remains authoritative.
+                stack.shrink(1);
             } else {
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocal("hexcasting.message." + variant)));
+                useLoreFragment(world, player, stack);
             }
+        } else if (!world.isRemote) {
+            if ("creative_unlocker".equals(variant)) {
+                player.getEntityData().setBoolean(KEY_UNLOCKED, true);
+            }
+            player.sendMessage(new TextComponentString(
+                I18n.translateToLocal("hexcasting.message." + variant)));
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
     }
@@ -89,7 +96,12 @@ public final class ItemKnowledgeFragment extends Item {
             serverPlayer.sendStatusMessage(new TextComponentString(
                 I18n.translateToLocal("hexcasting.message.lore_fragment")), true);
             serverPlayer.addExperience(20);
+            world.playSound(null, player.posX, player.posY, player.posZ,
+                SoundEvents.ENTITY_PLAYER_LEVELUP,
+                net.minecraft.util.SoundCategory.PLAYERS, 1.0F, 1.0F);
         }
+        CriteriaTriggers.CONSUME_ITEM.trigger(serverPlayer, stack);
+        serverPlayer.addStat(StatList.getObjectUseStats(this));
         stack.shrink(1);
     }
 
