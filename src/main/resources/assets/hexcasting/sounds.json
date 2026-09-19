@@ -1,0 +1,177 @@
+{
+  "casting.pattern.start": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.pattern.start",
+    "sounds": [
+      {
+        "name": "hexcasting:add_segment",
+        "volume": 1.0,
+        "pitch": 0.8
+      }
+    ]
+  },
+  "casting.pattern.add_segment": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.pattern.add_segment",
+    "sounds": [
+      {
+        "name": "hexcasting:add_segment",
+        "volume": 0.8,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "casting.ambiance": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.ambiance",
+    "sounds": [
+      "hexcasting:casting_ambiance"
+    ]
+  },
+  "casting.cast.normal": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.cast.normal",
+    "sounds": [
+      "hexcasting:cast/normal"
+    ]
+  },
+  "casting.cast.spell": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.cast.spell",
+    "sounds": [
+      "hexcasting:cast/spell"
+    ]
+  },
+  "casting.cast.hermes": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.cast.hermes",
+    "sounds": [
+      "hexcasting:cast/hermes"
+    ]
+  },
+  "casting.cast.thoth": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.cast.thoth",
+    "sounds": [
+      "hexcasting:cast/thoth"
+    ]
+  },
+  "casting.cast.fail": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.casting.cast.fail",
+    "sounds": [
+      "hexcasting:cast/fail"
+    ]
+  },
+  "abacus": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.abacus",
+    "sounds": [
+      "hexcasting:abacus1",
+      "hexcasting:abacus2",
+      "hexcasting:abacus3"
+    ]
+  },
+  "abacus.shake": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.abacus.shake",
+    "sounds": [
+      "hexcasting:abacus_shake"
+    ]
+  },
+  "staff.reset": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.staff.reset",
+    "sounds": [
+      {
+        "name": "hexcasting:cast/fail",
+        "pitch": 0.8
+      }
+    ]
+  },
+  "spellcircle.find_block": {
+    "category": "blocks",
+    "subtitle": "hexcasting.subtitles.spellcircle.add_pattern",
+    "sounds": [
+      {
+        "name": "hexcasting:cast/normal",
+        "pitch": 0.8
+      }
+    ]
+  },
+  "spellcircle.fail": {
+    "category": "blocks",
+    "subtitle": "hexcasting.subtitles.spellcircle.fail",
+    "sounds": [
+      {
+        "name": "hexcasting:cast/fail",
+        "pitch": 0.8
+      }
+    ]
+  },
+  "scroll.dust": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.scroll.dust",
+    "sounds": [
+      "minecraft:dig/sand1",
+      "minecraft:dig/sand2",
+      "minecraft:dig/sand3",
+      "minecraft:dig/sand4"
+    ]
+  },
+  "scroll.scribble": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.scroll.scribble",
+    "sounds": [
+      "minecraft:item/book/open_flip1",
+      "minecraft:item/book/open_flip2",
+      "minecraft:item/book/open_flip3"
+    ]
+  },
+  "impetus.fletcher.tick": {
+    "category": "blocks",
+    "subtitle": "hexcasting.subtitles.impetus.fletcher.tick",
+    "sounds": [
+      "minecraft:note/hat"
+    ]
+  },
+  "impetus.redstone.register": {
+    "category": "blocks",
+    "subtitle": "hexcasting.subtitles.impetus.redstone.register",
+    "sounds": [
+      "minecraft:random/orb"
+    ]
+  },
+  "impetus.redstone.clear": {
+    "category": "blocks",
+    "subtitle": "hexcasting.subtitles.impetus.redstone.clear",
+    "sounds": [
+      "hexcasting:cast/fail"
+    ]
+  },
+  "lore_fragment.read": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.lore_fragment.read",
+    "sounds": [
+      "minecraft:block/enchantment_table/enchant1",
+      "minecraft:block/enchantment_table/enchant2",
+      "minecraft:block/enchantment_table/enchant3"
+    ]
+  },
+  "flight.ambience": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.flight.ambience",
+    "sounds": [
+      "minecraft:block/enchantment_table/enchant1"
+    ]
+  },
+  "flight.finish": {
+    "category": "player",
+    "subtitle": "hexcasting.subtitles.flight.finish",
+    "sounds": [
+      "minecraft:dig/glass1",
+      "minecraft:dig/glass2",
+      "minecraft:dig/glass3"
+    ]
+  }
+}
