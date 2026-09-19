@@ -16,10 +16,20 @@ import java.util.Iterator;
 /** Adjusts Farmers Future Delight's mature amethyst cluster drops. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID)
 public final class AmethystClusterDrops {
-    private static final ResourceLocation CLUSTER =
-        new ResourceLocation("farmers_future_delight", "amethyst_cluster");
-    private static final ResourceLocation SHARD =
-        new ResourceLocation("farmers_future_delight", "amethyst_shard");
+    private static final ResourceLocation[] CLUSTERS = {
+        new ResourceLocation("farmers_future_delight", "amethyst_cluster"),
+        // Farmers Future Delight can hand this feature to an installed
+        // backport in AUTO mode.  In that case the world contains the
+        // provider's block rather than an FFD block, while the gameplay
+        // expectation is still the FFD cluster drop rule.
+        new ResourceLocation("cavesnotcliffs", "amethyst_cluster"),
+        new ResourceLocation("depthsupdate", "amethyst_cluster")
+    };
+    private static final ResourceLocation[] SHARDS = {
+        new ResourceLocation("farmers_future_delight", "amethyst_shard"),
+        new ResourceLocation("cavesnotcliffs", "amethyst_shard"),
+        new ResourceLocation("depthsupdate", "amethyst_shard")
+    };
 
     private AmethystClusterDrops() {
     }
@@ -35,7 +45,8 @@ public final class AmethystClusterDrops {
 
         // Forge's registry is the authoritative view for third-party items;
         // using it also avoids depending on the backport's registry timing.
-        Item shard = ForgeRegistries.ITEMS.getValue(SHARD);
+        ResourceLocation clusterId = event.getState().getBlock().getRegistryName();
+        Item shard = findShard(clusterId);
         if (shard == null) {
             return;
         }
@@ -46,7 +57,7 @@ public final class AmethystClusterDrops {
         Iterator<ItemStack> drops = event.getDrops().iterator();
         while (drops.hasNext()) {
             ItemStack stack = drops.next();
-            if (stack != null && !stack.isEmpty() && shard == stack.getItem()) {
+            if (isAmethystShard(stack)) {
                 drops.remove();
             }
         }
@@ -65,8 +76,52 @@ public final class AmethystClusterDrops {
 
     private static boolean isTargetCluster(IBlockState state) {
         ResourceLocation registryName = state.getBlock().getRegistryName();
-        return CLUSTER.equals(registryName)
-            || state.getBlock() == ForgeRegistries.BLOCKS.getValue(CLUSTER);
+        if (registryName != null) {
+            for (ResourceLocation cluster : CLUSTERS) {
+                if (cluster.equals(registryName)) {
+                    return true;
+                }
+            }
+        }
+        for (ResourceLocation cluster : CLUSTERS) {
+            if (state.getBlock() == ForgeRegistries.BLOCKS.getValue(cluster)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Item findShard(ResourceLocation clusterId) {
+        if (clusterId != null) {
+            Item matching = ForgeRegistries.ITEMS.getValue(
+                new ResourceLocation(clusterId.getNamespace(), "amethyst_shard"));
+            if (matching != null) {
+                return matching;
+            }
+        }
+        for (ResourceLocation shardId : SHARDS) {
+            Item shard = ForgeRegistries.ITEMS.getValue(shardId);
+            if (shard != null) {
+                return shard;
+            }
+        }
+        return null;
+    }
+
+    private static boolean isAmethystShard(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getItem() == null) {
+            return false;
+        }
+        ResourceLocation itemId = stack.getItem().getRegistryName();
+        if (itemId == null || !"amethyst_shard".equals(itemId.getResourcePath())) {
+            return false;
+        }
+        for (ResourceLocation shard : SHARDS) {
+            if (shard.equals(itemId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static float chargedChance(int fortune) {
