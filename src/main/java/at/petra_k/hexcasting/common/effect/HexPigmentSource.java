@@ -62,7 +62,8 @@ public final class HexPigmentSource {
         if (player == null || HexCapabilities.CASTING_DATA == null) {
             return null;
         }
-        return fromData(player.getCapability(HexCapabilities.CASTING_DATA, null));
+        return fromInternalData(player.getCapability(
+            HexCapabilities.CASTING_DATA, null));
     }
 
     /** Whether this is the untouched fallback pigment. */
