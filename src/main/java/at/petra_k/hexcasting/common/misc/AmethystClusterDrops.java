@@ -46,8 +46,11 @@ public final class AmethystClusterDrops {
         // Forge's registry is the authoritative view for third-party items;
         // using it also avoids depending on the backport's registry timing.
         ResourceLocation clusterId = event.getState().getBlock().getRegistryName();
-        Item shard = findShard(clusterId);
-        if (shard == null) {
+        int fortune = Math.max(0, event.getFortuneLevel());
+        int maximum = 4 + fortune;
+        int count = 2 + event.getWorld().rand.nextInt(maximum - 1);
+        ItemStack shardDrop = effectiveShardStack(clusterId, count);
+        if (shardDrop.isEmpty()) {
             return;
         }
 
@@ -57,15 +60,12 @@ public final class AmethystClusterDrops {
         Iterator<ItemStack> drops = event.getDrops().iterator();
         while (drops.hasNext()) {
             ItemStack stack = drops.next();
-            if (isAmethystShard(stack)) {
+            if (isAmethystShard(stack, shardDrop)) {
                 drops.remove();
             }
         }
 
-        int fortune = Math.max(0, event.getFortuneLevel());
-        int maximum = 4 + fortune;
-        int count = 2 + event.getWorld().rand.nextInt(maximum - 1);
-        event.getDrops().add(new ItemStack(shard, count));
+        event.getDrops().add(shardDrop);
 
         Item charged = HexItems.EXTRA_ITEMS.get("charged_amethyst");
         if (charged != null && event.getWorld().rand.nextFloat()
@@ -75,6 +75,45 @@ public final class AmethystClusterDrops {
         // HarvestDropsEvent is filtered once more by Block#dropBlockAsItem;
         // the replacement shards and charged crystal are intentional drops.
         event.setDropChance(1.0F);
+    }
+
+    /**
+     * Resolve FFD's effective item before falling back to the registry.  FFD
+     * deliberately leaves its local shard unregistered in AUTO mode when a
+     * supported backport supplies the content, so looking up only
+     * farmers_future_delight:amethyst_shard can produce no drop at all.
+     */
+    private static ItemStack effectiveShardStack(ResourceLocation clusterId,
+                                                 int count) {
+        ItemStack effective = invokeFfdEffectiveShard(count);
+        if (!effective.isEmpty()) {
+            return effective;
+        }
+        Item shard = findShard(clusterId);
+        return shard == null ? ItemStack.EMPTY : new ItemStack(shard, count);
+    }
+
+    private static ItemStack invokeFfdEffectiveShard(int count) {
+        try {
+            Class<?> itemsClass = Class.forName(
+                "xy177.farmersfuturedelight.common.registry.FFDItems");
+            java.lang.reflect.Field field = itemsClass.getField("AMETHYST_SHARD");
+            Object localItem = field.get(null);
+            java.lang.reflect.Method method = itemsClass.getMethod(
+                "effectiveStack", Item.class, int.class);
+            Object result = method.invoke(null, localItem, count);
+            if (result instanceof ItemStack) {
+                ItemStack stack = (ItemStack) result;
+                if (!stack.isEmpty()) {
+                    stack.setCount(count);
+                    return stack;
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            // FFD is optional and its compatibility implementation is not a
+            // compile-time dependency of this mod.
+        }
+        return ItemStack.EMPTY;
     }
 
     private static boolean isTargetCluster(IBlockState state) {
@@ -125,20 +164,21 @@ public final class AmethystClusterDrops {
         return null;
     }
 
-    private static boolean isAmethystShard(ItemStack stack) {
+    private static boolean isAmethystShard(ItemStack stack, ItemStack replacement) {
         if (stack == null || stack.isEmpty() || stack.getItem() == null) {
             return false;
         }
+        if (replacement != null && !replacement.isEmpty()
+            && stack.getItem() == replacement.getItem()
+            && stack.getMetadata() == replacement.getMetadata()) {
+            return true;
+        }
         ResourceLocation itemId = stack.getItem().getRegistryName();
-        if (itemId == null || !"amethyst_shard".equals(itemId.getResourcePath())) {
-            return false;
-        }
-        for (ResourceLocation shard : SHARDS) {
-            if (shard.equals(itemId)) {
-                return true;
-            }
-        }
-        return false;
+        // A compatibility provider may rename the local item (for example to
+        // crystal_shard), so the replacement identity check above is the
+        // authoritative test.  Registry-path matching covers the normal FFD
+        // and backport registrations as well.
+        return itemId != null && "amethyst_shard".equals(itemId.getResourcePath());
     }
 
     private static float chargedChance(int fortune) {
