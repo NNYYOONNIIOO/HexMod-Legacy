@@ -144,14 +144,21 @@ public final class HexPigmentSource {
         if (internal != null) {
             return internal;
         }
+        // A capability restored from an older save, or received before the
+        // explicit marker was introduced, can still contain the player's
+        // actual internal pigment.  Do not let a stale colour on the staff
+        // hide that non-neutral capability value.
+        HexPigmentSource capability = fromData(data);
+        if (capability != null && !capability.isNeutralDefault()) {
+            return capability;
+        }
         // Preserve colourized staffs from pre-internalization versions and
         // legacy direct staff colouring when no internal pigment is active.
         HexPigmentSource source = fromStack(staff);
         if (source != null) {
             return source;
         }
-        HexPigmentSource fallback = fromData(data);
-        return fallback == null ? defaultSource() : fallback;
+        return capability == null ? defaultSource() : capability;
     }
 
     /** Sample the frozen pigment at a world/render position. */
