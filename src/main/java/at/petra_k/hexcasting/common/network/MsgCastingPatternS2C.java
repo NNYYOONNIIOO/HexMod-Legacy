@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
 import io.netty.buffer.ByteBuf;
@@ -18,21 +19,39 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
     private NBTTagCompound patternData;
     private int lifetime;
     private int color;
+    private String pigmentVariant;
+    private UUID pigmentOwner;
+    private int pigmentBaseColor;
 
     public MsgCastingPatternS2C() {
         playerUuid = new UUID(0L, 0L);
         patternData = new NBTTagCompound();
         lifetime = 0;
         color = 0xFFAA66FF;
+        pigmentVariant = HexPigmentSource.DEFAULT_VARIANT;
+        pigmentOwner = HexPigmentSource.NIL_UUID;
+        pigmentBaseColor = HexPigmentSource.DEFAULT_COLOR;
     }
 
     public MsgCastingPatternS2C(UUID playerUuid, HexPattern pattern,
                                 int lifetime, int color) {
+        this(playerUuid, pattern, lifetime, color,
+            HexPigmentSource.defaultSource());
+    }
+
+    public MsgCastingPatternS2C(UUID playerUuid, HexPattern pattern,
+                                int lifetime, int color,
+                                HexPigmentSource pigment) {
         this.playerUuid = playerUuid == null ? new UUID(0L, 0L) : playerUuid;
         this.patternData = pattern == null ? new NBTTagCompound()
             : pattern.serializeToNBT();
         this.lifetime = Math.max(0, lifetime);
         this.color = 0xFF000000 | (color & 0xFFFFFF);
+        HexPigmentSource safe = pigment == null
+            ? HexPigmentSource.defaultSource() : pigment;
+        this.pigmentVariant = safe.getVariant();
+        this.pigmentOwner = safe.getOwner();
+        this.pigmentBaseColor = safe.getColor();
     }
 
     @Override
@@ -41,6 +60,9 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         patternData = ByteBufUtils.readTag(buf);
         lifetime = Math.max(0, buf.readInt());
         color = 0xFF000000 | (buf.readInt() & 0xFFFFFF);
+        pigmentVariant = ByteBufUtils.readUTF8String(buf);
+        pigmentOwner = new UUID(buf.readLong(), buf.readLong());
+        pigmentBaseColor = buf.readInt() & 0xFFFFFF;
     }
 
     @Override
@@ -50,6 +72,13 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         ByteBufUtils.writeTag(buf, patternData == null ? new NBTTagCompound() : patternData);
         buf.writeInt(Math.max(0, lifetime));
         buf.writeInt(color & 0xFFFFFF);
+        ByteBufUtils.writeUTF8String(buf,
+            pigmentVariant == null || pigmentVariant.isEmpty()
+                ? HexPigmentSource.DEFAULT_VARIANT : pigmentVariant);
+        UUID owner = pigmentOwner == null ? HexPigmentSource.NIL_UUID : pigmentOwner;
+        buf.writeLong(owner.getMostSignificantBits());
+        buf.writeLong(owner.getLeastSignificantBits());
+        buf.writeInt(pigmentBaseColor & 0xFFFFFF);
     }
 
     @Override
@@ -67,8 +96,9 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
             Class<?> bridge = Class.forName(
                 "at.petra_k.hexcasting.client.HexClientEffects");
             bridge.getMethod("addSpiralPattern", UUID.class, HexPattern.class,
-                int.class, int.class).invoke(null, playerUuid, pattern,
-                lifetime, color);
+                int.class, int.class, String.class, UUID.class, int.class)
+                .invoke(null, playerUuid, pattern, lifetime, color,
+                    pigmentVariant, pigmentOwner, pigmentBaseColor);
         } catch (ReflectiveOperationException | RuntimeException ignored) {
             // Client-only rendering is deliberately optional on a dedicated server.
         }

@@ -56,12 +56,12 @@ public final class HexEvaluator {
         vm.setCastingHand(castingHand);
         try {
             vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
-            HexCastingEffects.onPortableCast(player, patterns, true);
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, true);
         } catch (CastingException exception) {
-            HexCastingEffects.onPortableCast(player, patterns, false);
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, false);
             throw exception;
         } catch (RuntimeException exception) {
-            HexCastingEffects.onPortableCast(player, patterns, false);
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, false);
             throw exception;
         }
     }

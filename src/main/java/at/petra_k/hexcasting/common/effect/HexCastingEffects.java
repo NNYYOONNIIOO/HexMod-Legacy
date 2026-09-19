@@ -1,10 +1,7 @@
 package at.petra_k.hexcasting.common.effect;
 
-import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
-import at.petra_k.hexcasting.common.capability.HexCapabilities;
-import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
@@ -13,6 +10,7 @@ import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
@@ -24,7 +22,6 @@ import java.util.List;
 
 /** Server-side bridge for the visual and audio feedback of Hex casting. */
 public final class HexCastingEffects {
-    private static final int DEFAULT_PIGMENT = 0xAA66FF;
     private static final int ERROR_COLOR = 0xE05252;
     private static final int ORBIT_LIFETIME = Integer.MAX_VALUE;
 
@@ -34,13 +31,22 @@ public final class HexCastingEffects {
     /** Send feedback for a single pattern appended through the staff GUI. */
     public static void onStaffPattern(EntityPlayer player, HexPattern pattern,
                                       StaffCastExecutor.CastOutcome outcome) {
+        onStaffPattern(player, EnumHand.MAIN_HAND, pattern, outcome);
+    }
+
+    /** Send staff feedback using the hand containing the colourized staff. */
+    public static void onStaffPattern(EntityPlayer player, EnumHand hand,
+                                      HexPattern pattern,
+                                      StaffCastExecutor.CastOutcome outcome) {
         if (player == null || player.world == null || player.world.isRemote) {
             return;
         }
         boolean success = outcome != null && outcome.isSuccess();
-        int color = success ? pigment(player) : ERROR_COLOR;
+        HexPigmentSource source = HexPigmentSource.resolve(player, hand);
+        int color = success ? sample(source, player) : ERROR_COLOR;
         if (pattern != null) {
-            sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36, color);
+            sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36,
+                color, source);
         }
 
         if (success) {
@@ -68,17 +74,25 @@ public final class HexCastingEffects {
     /** Feedback for a completed cast launched from a scroll, focus or packaged item. */
     public static void onPortableCast(EntityPlayer player, List<HexPattern> patterns,
                                       boolean success) {
+        onPortableCast(player, EnumHand.MAIN_HAND, patterns, success);
+    }
+
+    /** Feedback for a portable cast using the hand containing its source item. */
+    public static void onPortableCast(EntityPlayer player, EnumHand hand,
+                                      List<HexPattern> patterns, boolean success) {
         if (player == null || player.world == null || player.world.isRemote) {
             return;
         }
-        int color = success ? pigment(player) : ERROR_COLOR;
+        HexPigmentSource source = HexPigmentSource.resolve(player, hand);
+        int color = success ? sample(source, player) : ERROR_COLOR;
         List<HexPattern> safePatterns = patterns == null
             ? Collections.<HexPattern>emptyList() : patterns;
         for (HexPattern pattern : safePatterns) {
             if (pattern != null) {
                 // PackagedItemCastEnv in modern Hex keeps these visible for
                 // 140 ticks instead of the staff's open-ended spiral.
-                sendOrbitPattern(player, pattern, success ? 140 : 36, color);
+                sendOrbitPattern(player, pattern, success ? 140 : 36,
+                    color, source);
             }
         }
         if (success) {
@@ -134,13 +148,17 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
+                HexPigmentSource source = HexPigmentSource.fromStack(staff);
+                if (source == null) {
+                    source = HexPigmentSource.resolve(player, EnumHand.MAIN_HAND);
+                }
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
-                    ? ERROR_COLOR : pigment(player);
+                    ? ERROR_COLOR : sample(source, player);
                 int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? 36 : ORBIT_LIFETIME;
-                sendOrbitPattern(player, entry.getPattern(), lifetime, color);
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color, source);
             }
         }
         ItemStack offhand = player.getHeldItemOffhand();
@@ -155,21 +173,27 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
+                HexPigmentSource source = HexPigmentSource.fromStack(offhand);
+                if (source == null) {
+                    source = HexPigmentSource.resolve(player, EnumHand.OFF_HAND);
+                }
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
-                    ? ERROR_COLOR : pigment(player);
+                    ? ERROR_COLOR : sample(source, player);
                 int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? 36 : ORBIT_LIFETIME;
-                sendOrbitPattern(player, entry.getPattern(), lifetime, color);
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color, source);
             }
         }
     }
 
     private static void sendOrbitPattern(EntityPlayer player, HexPattern pattern,
-                                         int lifetime, int color) {
+                                         int lifetime, int color,
+                                         HexPigmentSource source) {
         PaucalAPI.sendPacketNearS2C(player.getPositionVector(), 128.0D, player.world,
-            new MsgCastingPatternS2C(player.getUniqueID(), pattern, lifetime, color));
+            new MsgCastingPatternS2C(player.getUniqueID(), pattern, lifetime, color,
+                source));
     }
 
     private static void sendSpray(EntityPlayer player, double posX, double posY,
@@ -231,30 +255,15 @@ public final class HexCastingEffects {
         return start.add(look.scale(1.25D));
     }
 
-    private static int pigment(EntityPlayer player) {
+    private static int sample(HexPigmentSource source, EntityPlayer player) {
+        HexPigmentSource safe = source == null
+            ? HexPigmentSource.defaultSource() : source;
         float time = player == null || player.world == null
             ? 0.0F : (float) player.world.getTotalWorldTime();
         double x = player == null ? 0.0D : player.posX;
         double y = player == null ? 0.0D : player.posY;
         double z = player == null ? 0.0D : player.posZ;
-        IHexCastingData data = player == null ? null
-            : player.getCapability(HexCapabilities.CASTING_DATA, null);
-        if (data != null) {
-            return HexPigmentColors.fromData(data, time, x, y, z);
-        }
-        if (player != null) {
-            int mainhandColor = ItemColorizer.getColor(
-                player.getHeldItemMainhand(), time, x, y, z);
-            if (mainhandColor >= 0) {
-                return mainhandColor & 0xFFFFFF;
-            }
-            int offhandColor = ItemColorizer.getColor(
-                player.getHeldItemOffhand(), time, x, y, z);
-            if (offhandColor >= 0) {
-                return offhandColor & 0xFFFFFF;
-            }
-        }
-        return DEFAULT_PIGMENT;
+        return safe.sample(time, x, y, z);
     }
 
     private static void playSound(EntityPlayer player, net.minecraft.util.SoundEvent sound,

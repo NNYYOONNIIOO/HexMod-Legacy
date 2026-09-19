@@ -195,7 +195,7 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
                         staff, i, outcome.getResolution());
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, i, outcome), player);
-                    HexCastingEffects.onStaffPattern(player, pattern, outcome);
+                    HexCastingEffects.onStaffPattern(player, hand, pattern, outcome);
                     if (outcome.isSuccess() && outcome.isStackClear()) {
                         StaffCastExecutor.clear(staff);
                         ItemHexStaff.clearProgram(player, hand, staff);
@@ -207,7 +207,7 @@ public final class MsgStaffPatternC2S implements PaucalMessage {
                         staff, i, StaffCastExecutor.Resolution.ERRORED);
                     PaucalAPI.sendTo(new MsgStaffCastResultS2C(
                         hand, false, StaffCastExecutor.getStackSize(staff)), player);
-                    HexCastingEffects.onStaffPattern(player, null,
+                    HexCastingEffects.onStaffPattern(player, hand, null,
                         null);
                 }
             }

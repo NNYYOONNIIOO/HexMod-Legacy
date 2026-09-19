@@ -340,7 +340,7 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
                 : result.peek().display();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_result", resultText)));
-            HexCastingEffects.onPortableCast(player, visualPatterns, true);
+            HexCastingEffects.onPortableCast(player, hand, visualPatterns, true);
             player.getCooldownTracker().setCooldown(this, Math.max(0, cooldown()));
             if (breakAfterDepletion() && getMedia(stack) <= 0L
                 && !player.capabilities.isCreativeMode) {
@@ -350,7 +350,7 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
         } catch (CastingException exception) {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.staff_error", exception.getMessage())));
-            HexCastingEffects.onPortableCast(player, visualPatterns, false);
+            HexCastingEffects.onPortableCast(player, hand, visualPatterns, false);
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
     }
