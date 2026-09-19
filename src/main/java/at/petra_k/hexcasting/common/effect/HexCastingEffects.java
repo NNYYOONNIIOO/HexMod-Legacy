@@ -42,7 +42,7 @@ public final class HexCastingEffects {
             return;
         }
         boolean success = outcome != null && outcome.isSuccess();
-        HexPigmentSource source = HexPigmentSource.resolve(player, hand);
+        HexPigmentSource source = HexPigmentSource.resolveStaff(player, hand);
         int color = success ? sample(source, player) : ERROR_COLOR;
         if (pattern != null) {
             sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36,
@@ -148,10 +148,7 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
-                HexPigmentSource source = HexPigmentSource.fromStack(staff);
-                if (source == null) {
-                    source = HexPigmentSource.resolve(player, EnumHand.MAIN_HAND);
-                }
+                HexPigmentSource source = HexPigmentSource.resolveStaff(player, staff);
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? ERROR_COLOR : sample(source, player);
@@ -173,10 +170,7 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
-                HexPigmentSource source = HexPigmentSource.fromStack(offhand);
-                if (source == null) {
-                    source = HexPigmentSource.resolve(player, EnumHand.OFF_HAND);
-                }
+                HexPigmentSource source = HexPigmentSource.resolveStaff(player, offhand);
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? ERROR_COLOR : sample(source, player);
