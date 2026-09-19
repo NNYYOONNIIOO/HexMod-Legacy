@@ -12,6 +12,9 @@
       "output": "",
       "text": "hexcasting.page.greater_sentinel.1"
     },
-    { "type": "text", "text": "hexcasting.page.greater_sentinel.2" }
+    {
+      "type": "text",
+      "text": "hexcasting.page.greater_sentinel.2"
+    }
   ]
 }

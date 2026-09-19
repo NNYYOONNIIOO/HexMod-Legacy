@@ -1,0 +1,59 @@
+{
+  "processor": "at.petrak.hexcasting.interop.patchouli.BrainsweepProcessor",
+  "components": [
+    {
+      "type": "image",
+      "image": "hexcasting:textures/gui/brainsweep_recipe_nobg.png",
+      "width": 128,
+      "height": 128,
+      "texture_width": 128,
+      "texture_height": 128
+    },
+    {
+      "type": "header",
+      "text": "#header",
+      "x": -1,
+      "y": -1
+    },
+    {
+      "type": "entity",
+      "x": 50,
+      "y": 44,
+      "render_size": 50,
+      "entity": "#entity"
+    },
+    {
+      "type": "custom",
+      "class": "at.petrak.hexcasting.interop.patchouli.CustomComponentTooltip",
+      "x": 36,
+      "y": 18,
+      "width": 26,
+      "height": 49,
+      "tooltip": "#entityTooltip"
+    },
+    {
+      "type": "item",
+      "x": 12,
+      "y": 35,
+      "item": "#input"
+    },
+    {
+      "type": "item",
+      "x": 12,
+      "y": 55,
+      "item": "#mediaCost"
+    },
+    {
+      "type": "item",
+      "x": 87,
+      "y": 35,
+      "item": "#result",
+      "link_recipe": true
+    },
+    {
+      "type": "text",
+      "text": "#text",
+      "y": 77
+    }
+  ]
+}

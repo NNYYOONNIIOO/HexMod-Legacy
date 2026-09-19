@@ -1,0 +1,27 @@
+{
+  "name": "hexcasting.entry.thought_knot",
+  "icon": "hexcasting:thought_knot",
+  "category": "hexcasting:items",
+  "sortnum": 4,
+  "priority": true,
+  "advancement": "hexcasting:root",
+  "pages": [
+    {
+      "type": "text",
+      "text": "hexcasting.page.thought_knot.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.thought_knot.2"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.thought_knot.3"
+    },
+    {
+      "type": "crafting",
+      "recipe": "hexcasting:thought_knot",
+      "text": "hexcasting.page.thought_knot.crafting.desc"
+    }
+  ]
+}

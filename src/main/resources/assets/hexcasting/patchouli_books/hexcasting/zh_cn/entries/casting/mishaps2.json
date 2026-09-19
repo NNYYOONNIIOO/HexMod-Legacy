@@ -1,0 +1,34 @@
+{
+  "name": "hexcasting.entry.mishaps2",
+  "category": "hexcasting:casting",
+  "icon": "minecraft:flint_and_steel",
+  "sortnum": 3,
+  "advancement": "hexcasting:enlightenment",
+  "entry_color": "54398a",
+  "pages": [
+    {
+      "type": "text",
+      "text": "hexcasting.page.mishaps2.1"
+    },
+    {
+      "type": "text",
+      "title": "hexcasting.page.mishaps2.bad_mindflay.title",
+      "text": "hexcasting.page.mishaps2.bad_mindflay"
+    },
+    {
+      "type": "text",
+      "title": "hexcasting.page.mishaps2.no_circle.title",
+      "text": "hexcasting.page.mishaps2.no_circle"
+    },
+    {
+      "type": "text",
+      "title": "hexcasting.page.mishaps2.no_record.title",
+      "text": "hexcasting.page.mishaps2.no_record"
+    },
+    {
+      "type": "text",
+      "title": "hexcasting.page.mishaps2.bad_shepherd.title",
+      "text": "hexcasting.page.mishaps2.bad_shepherd"
+    }
+  ]
+}

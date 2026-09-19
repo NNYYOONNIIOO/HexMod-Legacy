@@ -1,0 +1,57 @@
+{
+  "name": "hexcasting.entry.lore.cardamom3",
+  "icon": "hexcasting:lore_fragment",
+  "category": "hexcasting:lore",
+  "advancement": "hexcasting:lore/cardamom3",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.2"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.3"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.4"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.5"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.6"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.7"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.8"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.9"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.10"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.11"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.lore.cardamom3.12"
+    }
+  ]
+}

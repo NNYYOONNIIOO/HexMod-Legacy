@@ -1,0 +1,54 @@
+{
+  "name": "hexcasting.entry.flights",
+  "category": "hexcasting:patterns/spells",
+  "icon": "minecraft:feather",
+  "advancement": "hexcasting:root",
+  "sortnum": 7,
+  "read_by_default": true,
+  "pages": [
+    {
+      "type": "text",
+      "text": "hexcasting.page.flights.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.flights.2"
+    },
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:flight/range",
+      "anchor": "hexcasting:flight/range",
+      "input": "entity, number",
+      "output": "",
+      "text": "hexcasting.page.flights.range.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.flights.range.2"
+    },
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:flight/time",
+      "anchor": "hexcasting:flight/time",
+      "input": "entity, number",
+      "output": "",
+      "text": "hexcasting.page.flights.time.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.flights.time.2"
+    },
+    {
+      "type": "hexcasting:pattern",
+      "op_id": "hexcasting:flight/can_fly",
+      "anchor": "hexcasting:flight/can_fly",
+      "input": "entity",
+      "output": "boolean",
+      "text": "hexcasting.page.flights.can_fly.1"
+    },
+    {
+      "type": "text",
+      "text": "hexcasting.page.flights.can_fly.2"
+    }
+  ]
+}

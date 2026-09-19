@@ -1,0 +1,42 @@
+{
+  "processor": "at.petrak.hexcasting.interop.patchouli.PatternProcessor",
+  "components": [
+    {
+      "type": "header",
+      "text": "#translation_key",
+      "x": -1,
+      "y": -1
+    },
+    {
+      "type": "separator",
+      "x": -1,
+      "y": -1
+    },
+    {
+      "type": "custom",
+      "class": "at.petrak.hexcasting.interop.patchouli.ManualPatternComponent",
+      "x": 58,
+      "y": 48,
+      "patterns": "#patterns",
+      "stroke_order": "#stroke_order"
+    },
+    {
+      "type": "text",
+      "text": "$(n)#input#/$ → $(n)#output#/$",
+      "guard": "#has_signature#",
+      "y": 80
+    },
+    {
+      "type": "text",
+      "text": "#text#",
+      "guard": "#has_signature->inv#",
+      "y": 80
+    },
+    {
+      "type": "text",
+      "text": "#text#",
+      "guard": "#has_signature#",
+      "y": 89
+    }
+  ]
+}
