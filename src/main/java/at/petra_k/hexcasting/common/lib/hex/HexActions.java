@@ -2055,20 +2055,19 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     }
 
     /**
-     * Resolve the colour that belongs to this cast. A 1.12.2 pigment can be
-     * applied directly to a staff/focus and stores its colour on that stack;
-     * casts made with an uncoloured item use the caster capability instead.
+     * Resolve the colour that belongs to this cast. The player's internal
+     * pigment is the authoritative source, matching modern Hex Casting;
+     * pigment NBT on an old staff/focus is only a compatibility fallback for
+     * VMs which have no player capability attached.
      */
     private static int castingPigment(CastingVM vm) {
-        net.minecraft.item.ItemStack castingStack = castingStack(vm);
-        if (castingStack != null) {
-            int stackColor = ItemColorizer.getColor(castingStack);
-            if (stackColor >= 0) {
-                return stackColor & 0xFFFFFF;
-            }
+        IHexCastingData data = castingData(vm);
+        if (data != null) {
+            return data.getPigment();
         }
-        IHexCastingData data = vm == null ? null : vm.getCastingData();
-        return data == null ? 0xAA66FF : data.getPigment();
+        net.minecraft.item.ItemStack castingStack = castingStack(vm);
+        int stackColor = ItemColorizer.getColor(castingStack);
+        return stackColor < 0 ? 0xAA66FF : stackColor & 0xFFFFFF;
     }
 
     /** Return the staff/focus that owns the current VM, if it carries pigment NBT. */
@@ -2082,24 +2081,39 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     }
 
     private static String castingPigmentVariant(CastingVM vm) {
+        IHexCastingData data = castingData(vm);
+        if (data != null) {
+            return data.getPigmentVariant();
+        }
         net.minecraft.item.ItemStack stack = castingStack(vm);
         if (stack != null) {
             return ItemColorizer.getVariant(stack);
         }
-        IHexCastingData data = vm == null ? null : vm.getCastingData();
-        return data == null ? "default_colorizer" : data.getPigmentVariant();
+        return "default_colorizer";
     }
 
     private static UUID castingPigmentOwner(CastingVM vm) {
+        IHexCastingData data = castingData(vm);
+        if (data != null && data.getPigmentOwner() != null) {
+            return data.getPigmentOwner();
+        }
         net.minecraft.item.ItemStack stack = castingStack(vm);
         if (stack != null) {
             return ItemColorizer.getOwner(stack);
         }
-        IHexCastingData data = vm == null ? null : vm.getCastingData();
-        if (data != null && data.getPigmentOwner() != null) {
-            return data.getPigmentOwner();
-        }
         return new UUID(0L, 0L);
+    }
+
+    /** Resolve the persistent player pigment without losing old VM support. */
+    private static IHexCastingData castingData(CastingVM vm) {
+        if (vm == null) {
+            return null;
+        }
+        if (vm.getCastingData() != null) {
+            return vm.getCastingData();
+        }
+        return vm.getPlayer() == null ? null
+            : vm.getPlayer().getCapability(HexCapabilities.CASTING_DATA, null);
     }
 
     private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {

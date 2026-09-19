@@ -237,6 +237,11 @@ public final class HexCastingEffects {
         double x = player == null ? 0.0D : player.posX;
         double y = player == null ? 0.0D : player.posY;
         double z = player == null ? 0.0D : player.posZ;
+        IHexCastingData data = player == null ? null
+            : player.getCapability(HexCapabilities.CASTING_DATA, null);
+        if (data != null) {
+            return HexPigmentColors.fromData(data, time, x, y, z);
+        }
         if (player != null) {
             int mainhandColor = ItemColorizer.getColor(
                 player.getHeldItemMainhand(), time, x, y, z);
@@ -249,9 +254,7 @@ public final class HexCastingEffects {
                 return offhandColor & 0xFFFFFF;
             }
         }
-        IHexCastingData data = player.getCapability(HexCapabilities.CASTING_DATA, null);
-        return data == null ? DEFAULT_PIGMENT
-            : HexPigmentColors.fromData(data, time, x, y, z);
+        return DEFAULT_PIGMENT;
     }
 
     private static void playSound(EntityPlayer player, net.minecraft.util.SoundEvent sound,

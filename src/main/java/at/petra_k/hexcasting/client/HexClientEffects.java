@@ -173,6 +173,12 @@ public final class HexClientEffects {
         try {
             float time = (float) player.world.getTotalWorldTime()
                 + Minecraft.getMinecraft().getRenderPartialTicks();
+            IHexCastingData data = player.getCapability(
+                HexCapabilities.CASTING_DATA, null);
+            if (data != null) {
+                return HexPigmentColors.fromData(data, time,
+                    player.posX, player.posY, player.posZ);
+            }
             int mainhandColor = ItemColorizer.getColor(
                 player.getHeldItemMainhand(), time, player.posX, player.posY, player.posZ);
             if (mainhandColor >= 0) {
@@ -183,11 +189,7 @@ public final class HexClientEffects {
             if (offhandColor >= 0) {
                 return offhandColor & 0xFFFFFF;
             }
-            IHexCastingData data = player.getCapability(
-                HexCapabilities.CASTING_DATA, null);
-            return data == null ? 0xAA66FF
-                : HexPigmentColors.fromData(data, time,
-                    player.posX, player.posY, player.posZ);
+            return 0xAA66FF;
         } catch (RuntimeException ignored) {
             return 0xAA66FF;
         }
