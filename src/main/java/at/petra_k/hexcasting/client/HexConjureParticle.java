@@ -1,8 +1,8 @@
 package at.petra_k.hexcasting.client;
 
+import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -16,13 +16,13 @@ final class HexConjureParticle extends Particle {
     private static final Random RANDOM = new Random();
 
     private HexConjureParticle(World world, double x, double y, double z,
-                               double motionX, double motionY, double motionZ,
-                               TextureAtlasSprite sprite, int color) {
+                                double motionX, double motionY, double motionZ,
+                                TextureAtlasSprite sprite, int color,
+                                HexPigmentSource pigment) {
         super(world, x, y, z, motionX, motionY, motionZ);
+        this.pigment = pigment;
         setParticleTexture(sprite);
-        setRBGColorF(((color >> 16) & 0xFF) / 255.0F,
-            ((color >> 8) & 0xFF) / 255.0F,
-            (color & 0xFF) / 255.0F);
+        setColor(color);
         particleAlpha = 0.30F;
         // 1.12.2 renders particleScale as 0.1 * particleScale, whereas
         // 1.20.1 renders quadSize directly.  Modern Hex starts with a
@@ -42,11 +42,27 @@ final class HexConjureParticle extends Particle {
         canCollide = false;
     }
 
+    private final HexPigmentSource pigment;
+
+    private void setColor(int color) {
+        setRBGColorF(((color >> 16) & 0xFF) / 255.0F,
+            ((color >> 8) & 0xFF) / 255.0F,
+            (color & 0xFF) / 255.0F);
+    }
+
+    static HexConjureParticle create(World world, double x, double y, double z,
+                                      double motionX, double motionY, double motionZ,
+                                      TextureAtlasSprite sprite, int color) {
+        return new HexConjureParticle(world, x, y, z, motionX, motionY,
+            motionZ, sprite, color, null);
+    }
+
     static HexConjureParticle create(World world, double x, double y, double z,
                                      double motionX, double motionY, double motionZ,
-                                     TextureAtlasSprite sprite, int color) {
+                                     TextureAtlasSprite sprite, int color,
+                                     HexPigmentSource pigment) {
         return new HexConjureParticle(world, x, y, z, motionX, motionY,
-            motionZ, sprite, color);
+            motionZ, sprite, color, pigment);
     }
 
     @Override
@@ -69,6 +85,10 @@ final class HexConjureParticle extends Particle {
         motionX *= 0.96D;
         motionY *= 0.96D;
         motionZ *= 0.96D;
+        if (pigment != null && world != null) {
+            setColor(pigment.sample((float) world.getTotalWorldTime(),
+                posX, posY, posZ));
+        }
         particleAlpha = 0.30F
             * (1.0F - (float) particleAge / (float) particleMaxAge);
         particleScale *= 0.96F;
