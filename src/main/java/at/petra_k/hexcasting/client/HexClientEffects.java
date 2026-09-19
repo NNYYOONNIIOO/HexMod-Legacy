@@ -102,15 +102,34 @@ public final class HexClientEffects {
                                         boolean usePlayerPigment) {
         addSpiralPattern(playerUuid, pattern, lifetime, color,
             HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner),
-            usePlayerPigment);
+            usePlayerPigment, true);
     }
 
     private static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
                                          int lifetime, int color,
                                          HexPigmentSource pigment,
                                          boolean usePlayerPigment) {
+        addSpiralPattern(playerUuid, pattern, lifetime, color, pigment,
+            usePlayerPigment, false);
+    }
+
+    private static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
+                                         int lifetime, int color,
+                                         HexPigmentSource pigment,
+                                         boolean usePlayerPigment,
+                                         boolean authoritativePigment) {
         if (playerUuid == null || pattern == null) {
             return;
+        }
+        if (authoritativePigment && usePlayerPigment) {
+            // A network snapshot is authoritative.  Local staff-NBT
+            // restoration must not replace it with a default value while the
+            // client capability is still being synchronized after login.
+            if (pigment == null) {
+                PLAYER_PIGMENTS.remove(playerUuid);
+            } else {
+                PLAYER_PIGMENTS.put(playerUuid, pigment);
+            }
         }
         List<OrbitPattern> patterns = ORBITS.get(playerUuid);
         if (patterns == null) {
