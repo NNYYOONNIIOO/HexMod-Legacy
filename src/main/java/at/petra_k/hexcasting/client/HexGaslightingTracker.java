@@ -38,6 +38,13 @@ public final class HexGaslightingTracker {
             cooldown = 40;
             return;
         }
+        // ClientTickCounter in modern Hex does not advance while a single
+        // player screen pauses the game.  In particular, opening a GUI must
+        // not silently age an unseen Quenched Allay stack while the world is
+        // paused.
+        if (minecraft.isGamePaused()) {
+            return;
+        }
         if (cooldown > 0) {
             cooldown--;
         } else {
