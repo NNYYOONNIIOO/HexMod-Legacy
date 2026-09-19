@@ -48,6 +48,19 @@ public final class MsgCastingDataS2C implements PaucalMessage {
             HexCapabilities.CASTING_DATA, null);
         if (target != null) {
             target.deserializeNBT(data == null ? new NBTTagCompound() : data);
+            // The orbit renderer may already have restored staff patterns
+            // before this authoritative capability snapshot arrives.  Push
+            // the same source into its client cache so existing orbits are
+            // recolored immediately instead of waiting for a new cast.
+            try {
+                Class<?> bridge = Class.forName(
+                    "at.petra_k.hexcasting.client.HexClientEffects");
+                bridge.getMethod("updatePlayerPigment",
+                    EntityPlayer.class, IHexCastingData.class)
+                    .invoke(null, player, target);
+            } catch (ReflectiveOperationException ignored) {
+                // Client-only rendering is optional on a dedicated server.
+            }
         }
     }
 

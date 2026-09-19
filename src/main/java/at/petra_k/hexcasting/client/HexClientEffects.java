@@ -56,6 +56,9 @@ public final class HexClientEffects {
     private static final int ERROR_COLOR = 0xE05252;
     private static final Map<UUID, List<OrbitPattern>> ORBITS =
         new HashMap<>();
+    /** Internal pigments received from the authoritative client sync. */
+    private static final Map<UUID, HexPigmentSource> PLAYER_PIGMENTS =
+        new HashMap<>();
     /**
      * Hex's 1.20.1 particle has its own additive render type.  1.12.2's
      * ParticleManager only offers the vanilla alpha-blended layers, so these
@@ -147,6 +150,21 @@ public final class HexClientEffects {
         if (Minecraft.getMinecraft().player != null
             && Minecraft.getMinecraft().player.getUniqueID().equals(playerUuid)) {
             ORBIT_RESTORE_TICKS = 0;
+        }
+    }
+
+    /** Update live staff-orbit color after the player capability syncs. */
+    public static void updatePlayerPigment(EntityPlayer player,
+                                           at.petra_k.hexcasting.api.capability.IHexCastingData data) {
+        if (player == null) {
+            return;
+        }
+        UUID playerUuid = player.getUniqueID();
+        HexPigmentSource source = HexPigmentSource.fromInternalData(data);
+        if (source == null) {
+            PLAYER_PIGMENTS.remove(playerUuid);
+        } else {
+            PLAYER_PIGMENTS.put(playerUuid, source);
         }
     }
 
@@ -413,6 +431,7 @@ public final class HexClientEffects {
         if (PARTICLE_WORLD != minecraft.world) {
             PARTICLE_WORLD = minecraft.world;
             ORBITS.clear();
+            PLAYER_PIGMENTS.clear();
             CONJURE_PARTICLES.clear();
             ORBIT_RESTORE_TICKS = 40;
             restoreOrbitPatterns(minecraft.player);
@@ -1168,7 +1187,11 @@ public final class HexClientEffects {
                 return color;
             }
             if (usePlayerPigment) {
-                HexPigmentSource current = HexPigmentSource.resolvePlayer(player);
+                HexPigmentSource current = PLAYER_PIGMENTS.get(
+                    player.getUniqueID());
+                if (current == null) {
+                    current = HexPigmentSource.resolvePlayer(player);
+                }
                 if (current != null) {
                     // An internalized pigment is an attribute of the caster,
                     // not a world-space paint source.  Keep its gradient
