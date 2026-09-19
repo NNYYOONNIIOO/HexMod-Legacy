@@ -46,11 +46,20 @@ public final class HexQuenchedAllayRenderer
             IBakedModel fallback = findBakedModel(event, blockId, "normal");
             for (int i = 0; i < variants.length; i++) {
                 String modelPath = ("quenched_allay".equals(blockId)
-                    ? "block/" : "block/deco/") + blockId + "_" + i;
-                // These are additional block models, not item models.  Forge
-                // stores them under the normal block-model variant, with the
-                // block/ prefix included in the resource path.
+                    ? "" : "deco/") + blockId + "_" + i;
+                // The extra gaslighting models are referenced from item
+                // overrides, so 1.12 normally bakes them under the
+                // block/<model>#inventory key.  A normal block key is also
+                // accepted for resource-pack/model-loader compatibility.
                 variants[i] = findBakedModel(event, modelPath, "normal");
+                if (variants[i] == null) {
+                    variants[i] = findBakedModel(event, "block/" + modelPath,
+                        "inventory");
+                }
+                if (variants[i] == null) {
+                    variants[i] = findBakedModel(event, "block/" + modelPath,
+                        "normal");
+                }
                 // Keep the block visible even if a third-party model loader
                 // declines an extra variant.  Variant zero is the same
                 // fallback used by the blockstate and is still a valid
