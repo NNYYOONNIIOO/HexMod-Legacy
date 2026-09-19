@@ -19,6 +19,11 @@ public final class HexGaslightingTracker {
     }
 
     public static int getVariant() {
+        // Rendering an item or block means that the player can currently
+        // observe it.  Keep the variant stable while it is being observed;
+        // the counter only advances after the object has been out of view
+        // for the full cooldown, matching Hex's gaslighting behaviour.
+        cooldown = 40;
         return Math.abs(amount % 4);
     }
 

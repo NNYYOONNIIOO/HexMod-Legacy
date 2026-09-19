@@ -73,10 +73,8 @@ public final class HexQuenchedAllayRenderer
         if (variants == null || variants.length == 0) {
             return;
         }
-        // The 1.12 port does not have the modern gaslighting animation.  A
-        // placed block must keep the same texture instead of changing its
-        // model every client tick.
-        IBakedModel model = variants[0];
+        IBakedModel model = variants[HexGaslightingTracker.getVariant()
+            % variants.length];
         if (model == null) {
             return;
         }

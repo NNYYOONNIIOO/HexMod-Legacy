@@ -14,13 +14,12 @@ import java.lang.reflect.Method;
 import java.util.Random;
 
 /**
- * The solid-but-invisible block used to hold a quenched Allay's model.
+ * The solid block used to hold a quenched Allay's model.
  *
  * <p>Modern Hex renders the visible model from a block entity so that the
  * four gaslighting variants can be swapped without changing block state.
- * 1.12.2 has no block-entity renderer registration API equivalent to the
- * modern one, so this class keeps the same invisible block contract and the
- * client proxy supplies the renderer.</p>
+ * The visible model is supplied by the block-entity renderer, while the
+ * solid block remains present for collision, selection, and interaction.</p>
  */
 public final class BlockQuenchedAllay extends Block {
     public static final int VARIANTS = 4;

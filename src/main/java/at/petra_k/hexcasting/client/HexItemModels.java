@@ -34,6 +34,7 @@ public final class HexItemModels {
         registerPackagedSpellProperties();
         registerFocusProperties();
         registerSpellbookProperties();
+        registerGaslightingProperties();
         registerLegacyResourceProperties();
         ModelLoader.setCustomModelResourceLocation(
             HexItems.FOCUS,
@@ -134,6 +135,17 @@ public final class HexItemModels {
             (stack, world, entity) -> spellbookVariant(stack));
     }
 
+    private static void registerGaslightingProperties() {
+        IItemPropertyGetter variant = (stack, world, entity) ->
+            HexGaslightingTracker.getVariant();
+        registerProperty(HexBlocks.getBlockItem("quenched_allay"), "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_bricks"), "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_bricks_small"), "variant", variant);
+        registerProperty(HexBlocks.getBlockItem("quenched_allay_tiles"), "variant", variant);
+        registerProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"), "variant", variant);
+        registerProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"), "variant", variant);
+    }
+
     private static boolean spellbookHasPayload(ItemStack stack) {
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
         if (tag == null) {
@@ -183,16 +195,6 @@ public final class HexItemModels {
             (stack, world, entity) -> nbtNumberProperty(stack, "has_patterns"));
         registerNbtProperty(HexItems.CYPHER, "variant",
             (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_bricks"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_bricks_small"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("quenched_allay_shard"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
-        registerNbtProperty(HexBlocks.getBlockItem("quenched_allay_tiles"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll"), "ancient",
             (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("scroll_medium"), "ancient",
@@ -201,8 +203,6 @@ public final class HexItemModels {
             (stack, world, entity) -> nbtBooleanProperty(stack, "ancient"));
         registerNbtProperty(HexBlocks.getBlockItem("slate"), "written",
             (stack, world, entity) -> nbtBooleanProperty(stack, "written"));
-        registerNbtProperty(HexItems.EXTRA_ITEMS.get("staff/quenched"), "variant",
-            (stack, world, entity) -> nbtNumberProperty(stack, "variant"));
         registerNbtProperty(HexItems.EXTRA_ITEMS.get("thought_knot"), "written",
             (stack, world, entity) -> nbtBooleanProperty(stack, "written"));
         registerNbtProperty(HexItems.TRINKET, "has_patterns",
