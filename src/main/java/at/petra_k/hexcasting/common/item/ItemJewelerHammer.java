@@ -27,12 +27,12 @@ public final class ItemJewelerHammer extends ItemPickaxe {
         setMaxDamage(Item.ToolMaterial.DIAMOND.getMaxUses());
     }
 
-    /** Prevent the hammer from breaking full cubes; it is intended for jewelers' shapes. */
+    /** Prevent the hammer from breaking states whose collision shape fills a cube. */
     public static boolean shouldFailToBreak(EntityPlayer player, IBlockState state, BlockPos pos) {
         return player != null
             && player.getHeldItemMainhand().getItem() instanceof ItemJewelerHammer
             && state != null
-            && state.getBlock().isFullCube(state);
+            && state.isFullCube();
     }
 
     @SubscribeEvent
