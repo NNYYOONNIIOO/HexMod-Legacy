@@ -42,7 +42,7 @@ public final class HexCastingEffects {
             return;
         }
         boolean success = outcome != null && outcome.isSuccess();
-        HexPigmentSource source = HexPigmentSource.resolveStaff(player, hand);
+        HexPigmentSource source = playerPigment(player);
         int color = success ? sample(source, player) : ERROR_COLOR;
         if (pattern != null) {
             sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36,
@@ -148,7 +148,7 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
-                HexPigmentSource source = HexPigmentSource.resolveStaff(player, staff);
+                HexPigmentSource source = playerPigment(player);
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? ERROR_COLOR : sample(source, player);
@@ -171,7 +171,7 @@ public final class HexCastingEffects {
                 StaffCastExecutor.Resolution resolution = ordinal >= 0
                     && ordinal < resolutions.length
                     ? resolutions[ordinal] : StaffCastExecutor.Resolution.UNRESOLVED;
-                HexPigmentSource source = HexPigmentSource.resolveStaff(player, offhand);
+                HexPigmentSource source = playerPigment(player);
                 int color = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? ERROR_COLOR : sample(source, player);
@@ -191,6 +191,12 @@ public final class HexCastingEffects {
         PaucalAPI.sendPacketNearS2C(player.getPositionVector(), 128.0D, player.world,
             new MsgCastingPatternS2C(player.getUniqueID(), pattern, lifetime, color,
                 source, usePlayerPigment));
+    }
+
+    /** Staff orbits always use the caster's internalized pigment. */
+    private static HexPigmentSource playerPigment(EntityPlayer player) {
+        HexPigmentSource source = HexPigmentSource.resolvePlayer(player);
+        return source == null ? HexPigmentSource.defaultSource() : source;
     }
 
     private static void sendSpray(EntityPlayer player, double posX, double posY,

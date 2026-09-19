@@ -186,11 +186,11 @@ public final class HexClientEffects {
         if (player == null) {
             return;
         }
+        HexPigmentSource pigment = pigmentForPlayer(player);
         for (ItemStack staff : player.inventory.mainInventory) {
-            restoreStaffPatterns(player, staff, pigmentForStaff(player, staff));
+            restoreStaffPatterns(player, staff, pigment);
         }
-        restoreStaffPatterns(player, player.getHeldItemOffhand(),
-            pigmentForStaff(player, player.getHeldItemOffhand()));
+        restoreStaffPatterns(player, player.getHeldItemOffhand(), pigment);
     }
 
     private static void restoreStaffPatterns(EntityPlayer player, ItemStack staff,
@@ -216,8 +216,14 @@ public final class HexClientEffects {
         }
     }
 
-    private static HexPigmentSource pigmentForStaff(EntityPlayer player, ItemStack staff) {
-        return HexPigmentSource.resolveStaff(player, staff);
+    private static HexPigmentSource pigmentForPlayer(EntityPlayer player) {
+        HexPigmentSource cached = player == null ? null
+            : PLAYER_PIGMENTS.get(player.getUniqueID());
+        if (cached != null) {
+            return cached;
+        }
+        HexPigmentSource source = HexPigmentSource.resolvePlayer(player);
+        return source == null ? HexPigmentSource.defaultSource() : source;
     }
 
     private static HexPigmentSource localPigmentSource(EntityPlayer player) {
