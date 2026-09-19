@@ -24,6 +24,7 @@ import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
 import at.petra_k.hexcasting.common.network.MsgStaffCastResultS2C;
 import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import at.petra_k.hexcasting.common.network.MsgShiftScrollC2S;
+import at.petra_k.hexcasting.common.network.MsgSentinelStatusS2C;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petrak.paucal.api.PaucalAPI;
 
@@ -74,6 +75,7 @@ public final class HexCasting {
         MsgStaffProgramS2C.register();
         MsgStaffCastResultS2C.register();
         MsgShiftScrollC2S.register();
+        MsgSentinelStatusS2C.register();
         HexInline.init();
     }
 

@@ -9,7 +9,10 @@ import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.world.SentinelData;
+import at.petra_k.hexcasting.common.network.MsgSentinelStatusS2C;
+import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 
@@ -65,6 +68,7 @@ public final class SentinelActions {
                 SentinelData.get(player.world).set(
                     player.getUniqueID(), extendedRange, target.x, target.y, target.z,
                     player.world.provider.getDimension());
+                sync(player);
             }
         };
     }
@@ -85,6 +89,7 @@ public final class SentinelActions {
                     throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
                 }
                 SentinelData.get(player.world).clear(player.getUniqueID());
+                sync(player);
             }
         };
     }
@@ -153,6 +158,12 @@ public final class SentinelActions {
             throw new CastingException("hexcasting.error.sentinel_context");
         }
         return vm.getPlayer();
+    }
+
+    private static void sync(EntityPlayer player) {
+        if (player instanceof EntityPlayerMP) {
+            PaucalAPI.sendTo(new MsgSentinelStatusS2C(player), player);
+        }
     }
 
     private static void assertTargetInRange(EntityPlayer player, Vec3d target,
