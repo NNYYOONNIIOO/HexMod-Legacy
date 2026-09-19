@@ -217,6 +217,22 @@ public final class HexClientEffects {
                                   double velX, double velY, double velZ,
                                   double fuzziness, double spread, int count,
                                   int color) {
+        spawnSpray(posX, posY, posZ, velX, velY, velZ, fuzziness, spread,
+            count, color, null, HexPigmentSource.NIL_UUID,
+            HexPigmentSource.DEFAULT_COLOR);
+    }
+
+    /**
+     * Spawn a spray with the immutable pigment snapshot captured by the
+     * server.  A plain RGB value is enough for error feedback, but a
+     * colourized cast must retain its variant and owner so every particle can
+     * keep sampling a gradient after the packet arrives on the client.
+     */
+    public static void spawnSpray(double posX, double posY, double posZ,
+                                  double velX, double velY, double velZ,
+                                  double fuzziness, double spread, int count,
+                                  int color, String pigmentVariant,
+                                  UUID pigmentOwner, int pigmentBaseColor) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.world == null) {
             return;
@@ -233,6 +249,8 @@ public final class HexClientEffects {
             ? new Vec3d(0.0D, 0.0D, 0.0D)
             : suppliedVelocity.scale(1.0D / originalSpeed);
         TextureAtlasSprite sprite = CONJURE_SPRITE;
+        HexPigmentSource pigment = pigmentVariant == null ? null
+            : HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner);
 
         for (int i = 0; i < amount; i++) {
             // This is the same randomInCircle/velocity-cone construction as
@@ -259,7 +277,7 @@ public final class HexClientEffects {
                 addConjureParticle(HexConjureParticle.create(
                     minecraft.world, posX + offset.x, posY + offset.y,
                     posZ + offset.z, particleMotion.x, particleMotion.y,
-                    particleMotion.z, sprite, color));
+                    particleMotion.z, sprite, color, pigment));
             }
         }
     }
