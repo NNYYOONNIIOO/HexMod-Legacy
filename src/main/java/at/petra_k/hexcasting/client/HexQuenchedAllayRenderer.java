@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -40,17 +39,20 @@ public final class HexQuenchedAllayRenderer
     public static void onModelBake(ModelBakeEvent event) {
         for (String blockId : BLOCK_IDS) {
             IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
-            IBakedModel fallback = findBakedModel(event, blockId, "normal");
+            IBakedModel fallback = findBakedModel(event, "block/" + blockId,
+                "normal");
             for (int i = 0; i < variants.length; i++) {
                 String modelPath = ("quenched_allay".equals(blockId)
                     ? "" : "deco/") + blockId + "_" + i;
-                variants[i] = findBakedModel(event, modelPath, "normal");
+                // 1.12 registers these extra models through the item-model
+                // path.  The small wrapper files in models/item/block/**
+                // inherit the real block models, so inventory is the stable
+                // baked-model key for all four gaslighting variants.
+                variants[i] = findBakedModel(event, "block/" + modelPath,
+                    "inventory");
                 if (variants[i] == null) {
-                    // Models referenced by an item override are registered
-                    // with the item-model path and inventory variant.  The
-                    // same JSON is still a valid block model for the TESR.
                     variants[i] = findBakedModel(event, "block/" + modelPath,
-                        "inventory");
+                        "normal");
                 }
                 // Keep the block visible even if a third-party model loader
                 // declines an extra variant.  Variant zero is the same
