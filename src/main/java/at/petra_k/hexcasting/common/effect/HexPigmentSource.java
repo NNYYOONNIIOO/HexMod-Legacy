@@ -86,19 +86,13 @@ public final class HexPigmentSource {
         return new HexPigmentSource(packagedColor, variant, owner);
     }
 
-    /** Resolve the item pigment first, then the player's persistent pigment. */
+    /** Resolve the current casting item's pigment, then the player's pigment. */
     public static HexPigmentSource resolve(EntityPlayer player, EnumHand preferredHand) {
         if (player == null) {
             return defaultSource();
         }
         EnumHand preferred = preferredHand == null ? EnumHand.MAIN_HAND : preferredHand;
         HexPigmentSource source = fromStack(player.getHeldItem(preferred));
-        if (source != null) {
-            return source;
-        }
-        EnumHand other = preferred == EnumHand.MAIN_HAND
-            ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND;
-        source = fromStack(player.getHeldItem(other));
         if (source != null) {
             return source;
         }
