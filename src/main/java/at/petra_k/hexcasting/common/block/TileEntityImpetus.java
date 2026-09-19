@@ -284,6 +284,10 @@ public final class TileEntityImpetus extends TileEntity
         CircleExecutionState.CreationResult result =
             CircleExecutionState.createNew(this, player);
         if (!result.isSuccess()) {
+            BlockPos soundPos = result.getErrorPosition() == null
+                ? pos : result.getErrorPosition();
+            getWorld().playSound(null, soundPos, HexSounds.SPELL_CIRCLE_FAIL,
+                SoundCategory.BLOCKS, 1.0F, 1.0F);
             return;
         }
         executionState = result.getState();

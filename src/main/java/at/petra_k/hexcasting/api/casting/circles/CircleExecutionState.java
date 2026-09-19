@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.common.block.BlockImpetus;
 import at.petra_k.hexcasting.common.block.BlockCircleComponent;
 import at.petra_k.hexcasting.common.block.TileEntityImpetus;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -173,6 +174,8 @@ public final class CircleExecutionState {
 
         IBlockState state = world.getBlockState(currentPos);
         if (!(state.getBlock() instanceof ICircleComponent)) {
+            world.playSound(null, currentPos, HexSounds.SPELL_CIRCLE_FAIL,
+                net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
             return false;
         }
         ICircleComponent component = (ICircleComponent) state.getBlock();
@@ -183,6 +186,8 @@ public final class CircleExecutionState {
         ICircleComponent.ControlFlow flow = component.acceptControlFlow(
             image, enteredFrom, currentPos, world.getBlockState(currentPos), world);
         if (!(flow instanceof ICircleComponent.Continue)) {
+            world.playSound(null, currentPos, HexSounds.SPELL_CIRCLE_FAIL,
+                net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
             return false;
         }
         ICircleComponent.Continue continued = (ICircleComponent.Continue) flow;
@@ -200,13 +205,20 @@ public final class CircleExecutionState {
                 continue;
             }
             if (found != null) {
+                world.playSound(null, currentPos, HexSounds.SPELL_CIRCLE_FAIL,
+                    net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
                 return false;
             }
             found = exit;
         }
         if (found == null) {
+            world.playSound(null, currentPos, HexSounds.SPELL_CIRCLE_FAIL,
+                net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
             return false;
         }
+
+        world.playSound(null, currentPos, HexSounds.SPELL_CIRCLE_FIND_BLOCK,
+            net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
 
         currentPos = found.getPosition();
         enteredFrom = found.getEnterDirection();
