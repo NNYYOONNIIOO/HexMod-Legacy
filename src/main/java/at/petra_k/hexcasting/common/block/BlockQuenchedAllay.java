@@ -41,10 +41,13 @@ public final class BlockQuenchedAllay extends Block {
 
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
-        // The block entity renderer supplies the visible model.  Keeping the
-        // block itself invisible matches modern Hex and prevents the chunk
-        // renderer from trying to draw a second, empty block model.
-        return EnumBlockRenderType.INVISIBLE;
+        // Forge 1.12 only puts a tile entity in the world-render pass when
+        // the block advertises an entity-backed render shape.  The block
+        // entity renderer supplies the actual gaslighting model; returning
+        // INVISIBLE here leaves the tile entity out of that pass entirely,
+        // which makes the placed block look transparent even though its
+        // inventory model is still valid.
+        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     @Override
