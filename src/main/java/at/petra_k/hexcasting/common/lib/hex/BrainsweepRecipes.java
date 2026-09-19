@@ -36,7 +36,7 @@ public final class BrainsweepRecipes {
     private static final long VILLAGER_MEDIA_COST = 1_000_000L;
     private static final long ALLAY_MEDIA_COST = 100_000L;
     private static final List<DisplayRecipe> DISPLAY_RECIPES = Collections.unmodifiableList(Arrays.asList(
-        new DisplayRecipe("minecraft:amethyst_block", "minecraft:allay", null, 1,
+        new DisplayRecipe("minecraft:amethyst_block", "raids:allay", null, 1,
             "hexcasting:quenched_allay", ALLAY_MEDIA_COST),
         new DisplayRecipe("minecraft:amethyst_block", "minecraft:villager", null, 3,
             "minecraft:budding_amethyst", VILLAGER_MEDIA_COST),
@@ -75,9 +75,9 @@ public final class BrainsweepRecipes {
 
         String blockId = blockId(input.getBlock());
 
-        // 1.12.2 does not contain either of these vanilla entries.  Keeping
-        // them conditional makes the port interoperate with a compatibility
-        // mod without making an otherwise impossible recipe appear to work.
+        // 1.12.2 does not contain the vanilla entries.  Keeping the recipe
+        // conditional makes the port use the Raids Backport Allay and avoids
+        // treating a fictional minecraft:allay entity as a valid target.
         if (isAllayLike(victim) && isAmethystInput(blockId)) {
             Match result = result(input, "hexcasting:quenched_allay", ALLAY_MEDIA_COST);
             if (result != null) {
@@ -242,17 +242,13 @@ public final class BrainsweepRecipes {
         // amethyst_dust_block is this port's 1.12.2 replacement for the
         // post-1.12 vanilla amethyst block used by the upstream recipes.
         return "minecraft:amethyst_block".equals(blockId)
-            || "hexcasting:amethyst_dust_block".equals(blockId);
+            || "hexcasting:amethyst_dust_block".equals(blockId)
+            || "farmers_future_delight:amethyst_block".equals(blockId);
     }
 
     private static boolean isAllayLike(Entity entity) {
-        String id = EntityListName(entity);
-        return "allay".equalsIgnoreCase(id);
-    }
-
-    private static String EntityListName(Entity entity) {
-        String id = net.minecraft.entity.EntityList.getEntityString(entity);
-        return id == null ? "" : id;
+        ResourceLocation id = net.minecraft.entity.EntityList.getKey(entity);
+        return new ResourceLocation("raids", "allay").equals(id);
     }
 
     private static int villagerLevel(EntityVillager villager) {

@@ -29,7 +29,7 @@ import at.petrak.paucal.api.PaucalAPI;
 
 /** 1.12.2 Forge entry point for the Hex Casting port. */
 @Mod(modid = HexCasting.MOD_ID, name = HexCasting.NAME, version = HexCasting.VERSION,
-    dependencies = "required-after:patchouli;required-after:jei;required-after:baubles;required-after:forgelin")
+    dependencies = "required-after:patchouli;required-after:jei;required-after:baubles;required-after:raids;required-after:forgelin")
 public final class HexCasting {
     public static final String MOD_ID = "hexcasting";
     public static final String NAME = "Hex Casting";
