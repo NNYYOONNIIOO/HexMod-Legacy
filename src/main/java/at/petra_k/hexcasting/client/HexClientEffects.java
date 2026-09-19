@@ -184,8 +184,7 @@ public final class HexClientEffects {
     }
 
     private static HexPigmentSource pigmentForStaff(EntityPlayer player, ItemStack staff) {
-        HexPigmentSource source = HexPigmentSource.fromStack(staff);
-        return source == null ? localPigmentSource(player) : source;
+        return HexPigmentSource.resolveStaff(player, staff);
     }
 
     private static HexPigmentSource localPigmentSource(EntityPlayer player) {
