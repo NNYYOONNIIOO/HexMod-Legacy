@@ -39,6 +39,7 @@ import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import at.petra_k.hexcasting.common.world.HexEdifiedTreeGenerator;
+import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 
 /**
  * First portable action slice of Hex Casting.
@@ -2055,53 +2056,37 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     }
 
     /**
-     * Resolve the colour that belongs to this cast. The player's internal
-     * pigment is the authoritative source, matching modern Hex Casting;
-     * pigment NBT on an old staff/focus is only a compatibility fallback for
-     * VMs which have no player capability attached.
+     * Resolve the pigment that belongs to this cast. A colourized casting
+     * item is the frozen source for that VM; the player's internal pigment is
+     * the fallback used by uncoloured staffs and portable items.
      */
     private static int castingPigment(CastingVM vm) {
-        IHexCastingData data = castingData(vm);
-        if (data != null) {
-            return data.getPigment();
-        }
-        net.minecraft.item.ItemStack castingStack = castingStack(vm);
-        int stackColor = ItemColorizer.getColor(castingStack);
-        return stackColor < 0 ? 0xAA66FF : stackColor & 0xFFFFFF;
+        return castingPigmentSource(vm).getColor();
     }
 
-    /** Return the staff/focus that owns the current VM, if it carries pigment NBT. */
+    private static HexPigmentSource castingPigmentSource(CastingVM vm) {
+        HexPigmentSource source = HexPigmentSource.fromStack(castingStack(vm));
+        if (source != null) {
+            return source;
+        }
+        source = HexPigmentSource.fromData(castingData(vm));
+        return source == null ? HexPigmentSource.defaultSource() : source;
+    }
+
+    /** Return the physical item that owns the current VM. */
     private static net.minecraft.item.ItemStack castingStack(CastingVM vm) {
         if (vm == null || vm.getPlayer() == null) {
             return null;
         }
-        net.minecraft.item.ItemStack stack = vm.getPlayer()
-            .getHeldItem(vm.getCastingHand());
-        return ItemColorizer.getColor(stack) >= 0 ? stack : null;
+        return vm.getPlayer().getHeldItem(vm.getCastingHand());
     }
 
     private static String castingPigmentVariant(CastingVM vm) {
-        IHexCastingData data = castingData(vm);
-        if (data != null) {
-            return data.getPigmentVariant();
-        }
-        net.minecraft.item.ItemStack stack = castingStack(vm);
-        if (stack != null) {
-            return ItemColorizer.getVariant(stack);
-        }
-        return "default_colorizer";
+        return castingPigmentSource(vm).getVariant();
     }
 
     private static UUID castingPigmentOwner(CastingVM vm) {
-        IHexCastingData data = castingData(vm);
-        if (data != null && data.getPigmentOwner() != null) {
-            return data.getPigmentOwner();
-        }
-        net.minecraft.item.ItemStack stack = castingStack(vm);
-        if (stack != null) {
-            return ItemColorizer.getOwner(stack);
-        }
-        return new UUID(0L, 0L);
+        return castingPigmentSource(vm).getOwner();
     }
 
     /** Resolve the persistent player pigment without losing old VM support. */
@@ -3474,10 +3459,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack result =
                     new net.minecraft.item.ItemStack(output, 1);
                 ItemPackagedSpell.writePackagedProgram(result, spell.getItems(), mediaCost);
-                IHexCastingData pigmentData = castingData(vm);
-                if (pigmentData != null) {
-                    ItemPackagedSpell.setPigment(result, pigmentData.getPigment(),
-                        pigmentData.getPigmentVariant(), pigmentData.getPigmentOwner());
+                HexPigmentSource pigment = HexPigmentSource.fromStack(castingStack(vm));
+                if (pigment == null) {
+                    pigment = HexPigmentSource.fromData(castingData(vm));
+                }
+                if (pigment != null) {
+                    ItemPackagedSpell.setPigment(result, pigment.getColor(),
+                        pigment.getVariant(), pigment.getOwner());
                 }
                 stack.push(new ItemIota(result));
             }
