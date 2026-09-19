@@ -24,7 +24,7 @@ import java.util.Set;
  * keeps the 1.20.1 inline dimensions (9 px high, 1 px stroke) while using
  * 1.12.2's immediate-mode GUI primitives.</p>
  */
-final class HexPatternChatGeometry {
+public final class HexPatternChatGeometry {
     private static final double SQRT_3 = Math.sqrt(3.0D);
     private static final double BASE_SCALE = 4.0D / 1.5D;
     private static final double TARGET_HEIGHT = 9.0D;
@@ -101,14 +101,14 @@ final class HexPatternChatGeometry {
      * the same axial layout here keeps the tooltip preview geometrically
      * identical to the inline glyph instead of falling back to text art.
      */
-    static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
-                            int outerArgb, int innerArgb) {
+    public static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
+                                   int outerArgb, int innerArgb) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb, true);
     }
 
     /** Draw a fitted preview, optionally omitting the readable-scroll dots. */
-    static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
-                            int outerArgb, int innerArgb, boolean drawDots) {
+    public static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
+                                   int outerArgb, int innerArgb, boolean drawDots) {
         if (pattern == null || size <= 0 || alpha <= 3) {
             return;
         }

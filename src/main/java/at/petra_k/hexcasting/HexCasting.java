@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import at.petra_k.hexcasting.common.CommonProxy;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
@@ -14,6 +15,7 @@ import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
 import at.petra_k.hexcasting.common.block.TileEntityQuenchedAllay;
+import at.petra_k.hexcasting.common.entity.EntityWallScroll;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingDataS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
@@ -52,6 +54,9 @@ public final class HexCasting {
             new net.minecraft.util.ResourceLocation(MOD_ID, "akashic_record"));
         GameRegistry.registerTileEntity(TileEntityQuenchedAllay.class,
             new net.minecraft.util.ResourceLocation(MOD_ID, "quenched_allay"));
+        EntityRegistry.registerModEntity(
+            new net.minecraft.util.ResourceLocation(MOD_ID, "wall_scroll"),
+            EntityWallScroll.class, "wall_scroll", 1, this, 64, 10, false);
         HexCapabilities.register();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();

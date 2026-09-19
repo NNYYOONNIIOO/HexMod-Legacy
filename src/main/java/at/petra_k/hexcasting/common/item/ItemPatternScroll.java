@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.entity.EntityWallScroll;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.HexCreativeTab;
 import at.petra_k.hexcasting.common.world.PerWorldPatternData;
@@ -20,9 +21,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
@@ -204,6 +207,33 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+    }
+
+    /** Place the scroll as a persistent hanging display on a wall. */
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos,
+                                      EnumHand hand, EnumFacing facing, float hitX,
+                                      float hitY, float hitZ) {
+        ItemStack stack = player.getHeldItem(hand);
+        if (facing.getAxis().isVertical()) {
+            return EnumActionResult.FAIL;
+        }
+        BlockPos displayPos = pos.offset(facing);
+        if (!player.canPlayerEdit(displayPos, facing, stack)) {
+            return EnumActionResult.FAIL;
+        }
+
+        EntityWallScroll wallScroll = new EntityWallScroll(world, displayPos,
+            facing, stack, false, blockSize);
+        if (!wallScroll.onValidSurface()) {
+            return EnumActionResult.FAIL;
+        }
+        if (!world.isRemote) {
+            wallScroll.playPlaceSound();
+            world.spawnEntity(wallScroll);
+        }
+        stack.shrink(1);
+        return EnumActionResult.SUCCESS;
     }
 
     /** Load an op_id into the exact world-specific pattern as soon as it enters an inventory. */
