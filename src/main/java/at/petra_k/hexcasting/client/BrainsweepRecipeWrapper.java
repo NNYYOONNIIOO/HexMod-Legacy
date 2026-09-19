@@ -18,6 +18,9 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,9 +104,20 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
                     "entity.minecraft.villager"));
             }
         } else {
-            tooltip.add(entityType == null ? "" : entityType);
+            tooltip.add(localizeEntity(entityType));
         }
         return tooltip;
+    }
+
+    private static String localizeEntity(String entityType) {
+        if (entityType == null || entityType.isEmpty()) {
+            return "";
+        }
+        ResourceLocation id = new ResourceLocation(entityType);
+        String key = "entity." + id.getResourceDomain() + "."
+            + id.getResourcePath();
+        String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
+        return key.equals(translated) ? entityType : translated;
     }
 
     /**
@@ -131,12 +145,14 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
     @Override
     public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight,
                          int mouseX, int mouseY) {
-        if (minecraft == null || minecraft.world == null
-            || !"minecraft:villager".equals(recipe.getEntityTypeId())) {
+        if (minecraft == null || minecraft.world == null) {
             return;
         }
 
-        Entity entity = new EntityVillager(minecraft.world);
+        Entity entity = createDisplayEntity(minecraft.world, recipe.getEntityTypeId());
+        if (entity == null) {
+            return;
+        }
         RenderManager renderManager = minecraft.getRenderManager();
         Render renderer = renderManager.getEntityRenderObject(entity);
         if (renderer == null) {
@@ -151,5 +167,35 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
         renderer.doRender(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
         RenderHelper.disableStandardItemLighting();
         GlStateManager.popMatrix();
+    }
+
+    /**
+     * JEI used to render only the vanilla villager. The Allay recipe is
+     * supplied by Raids Backport, so resolve its registered entity class at
+     * runtime instead of inventing a second model in Hex Casting.
+     */
+    private static Entity createDisplayEntity(World world, String entityType) {
+        if (world == null || entityType == null || entityType.isEmpty()) {
+            return null;
+        }
+        if ("minecraft:villager".equals(entityType)) {
+            return new EntityVillager(world);
+        }
+
+        EntityEntry entry = ForgeRegistries.ENTITIES.getValue(
+            new ResourceLocation(entityType));
+        if (entry == null || entry.getEntityClass() == null) {
+            return null;
+        }
+        try {
+            java.lang.reflect.Constructor<? extends Entity> constructor =
+                entry.getEntityClass().getDeclaredConstructor(World.class);
+            if (!constructor.isAccessible()) {
+                constructor.setAccessible(true);
+            }
+            return constructor.newInstance(world);
+        } catch (ReflectiveOperationException | SecurityException ignored) {
+            return null;
+        }
     }
 }

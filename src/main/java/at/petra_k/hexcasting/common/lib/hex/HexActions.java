@@ -1462,7 +1462,11 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.entity.Entity nearest = null;
                 double nearestDistance = Double.MAX_VALUE;
                 for (net.minecraft.entity.Entity candidate : candidates) {
-                    if (candidate == null || !candidate.canBeCollidedWith()) {
+                    // Item entities deliberately report canBeCollidedWith() as
+                    // false in 1.12.2, but modern Hex still lets the entity
+                    // raycast select them by their pick box. Filtering on
+                    // collision here made dropped items impossible to target.
+                    if (candidate == null || candidate.isDead) {
                         continue;
                     }
                     net.minecraft.util.math.AxisAlignedBB box = candidate.getEntityBoundingBox();
@@ -3184,6 +3188,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 data.setPigment(ItemColorizer.getPigmentColor(dye));
                 data.setPigmentVariant(((ItemColorizer) dye.getItem()).getVariant(),
                     player.getUniqueID());
+                at.petra_k.hexcasting.common.capability.HexCapabilityHandler
+                    .savePersistent(player, data);
                 at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
                 if (!player.capabilities.isCreativeMode) {
                     dye.shrink(1);

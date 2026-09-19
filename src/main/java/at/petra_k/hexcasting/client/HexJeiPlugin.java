@@ -27,9 +27,6 @@ public final class HexJeiPlugin implements IModPlugin {
     }
 
     private static void addStaffCatalysts(IModRegistry registry) {
-        registry.addRecipeCatalyst(new ItemStack(HexItems.STAFF),
-            PhialRecipeCategory.UID, EdifyRecipeCategory.UID, BrainsweepRecipeCategory.UID);
-
         for (String id : new String[] {
             "staff/oak", "staff/spruce", "staff/birch", "staff/jungle",
             "staff/acacia", "staff/dark_oak", "staff/crimson", "staff/warped",

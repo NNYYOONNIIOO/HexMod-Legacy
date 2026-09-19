@@ -57,7 +57,8 @@ public final class BrainsweepRecipeCategory
 
     @Override
     public void drawExtras(Minecraft minecraft) {
-        // BrainsweepRecipeWrapper draws the villager in the center panel.
+        // BrainsweepRecipeWrapper draws the registered target entity in the
+        // center panel (including the Raids Backport Allay).
     }
 
     @Override
