@@ -17,6 +17,7 @@ import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.network.MsgStaffPatternC2S;
 import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -27,6 +28,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
@@ -72,6 +74,7 @@ public final class GuiHexStaff extends GuiScreen {
     private boolean escapeNext;
     private HexPattern hoveredPreviewPattern;
     private long hoveredPreviewSince;
+    private HexGridSound ambianceSound;
 
     public GuiHexStaff(EnumHand hand) {
         this.hand = hand == null ? EnumHand.MAIN_HAND : hand;
@@ -79,11 +82,13 @@ public final class GuiHexStaff extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
+        stopAmbianceSound();
         super.onGuiClosed();
     }
 
     @Override
     public void initGui() {
+        startAmbianceSound();
         refreshProgram();
         // The server snapshot normally arrives immediately after this
         // screen is opened.  Use the synchronized item NBT as a race-safe
@@ -95,6 +100,30 @@ public final class GuiHexStaff extends GuiScreen {
             setCastingState(state.getStackPreview(), state.getParenDepth(),
                 state.isEscapeNext());
         }
+    }
+
+    private void startAmbianceSound() {
+        if (mc == null || mc.player == null) {
+            return;
+        }
+        stopAmbianceSound();
+        ambianceSound = new HexGridSound(mc.player);
+        mc.getSoundHandler().playSound(ambianceSound);
+    }
+
+    private void stopAmbianceSound() {
+        if (mc != null && ambianceSound != null) {
+            mc.getSoundHandler().stopSound(ambianceSound);
+            ambianceSound = null;
+        }
+    }
+
+    private void playGridSound(SoundEvent sound, float volume, float pitch) {
+        if (mc == null || mc.player == null || sound == null) {
+            return;
+        }
+        mc.getSoundHandler().playSound(
+            PositionedSoundRecord.getRecord(sound, volume, pitch));
     }
 
     @Override
@@ -968,6 +997,8 @@ public final class GuiHexStaff extends GuiScreen {
         workingPattern = null;
         drawing = true;
         status = "";
+        playGridSound(at.petra_k.hexcasting.common.lib.HexSounds.START_PATTERN,
+            0.25F, 1.0F);
     }
 
     @Override
@@ -1012,7 +1043,10 @@ private void drawMove(int mouseX, int mouseY) {
         if (!backtracking && usedSpots.contains(next)) {
             return;
         }
-        appendSnappedPoint(next);
+        if (appendSnappedPoint(next)) {
+            playGridSound(at.petra_k.hexcasting.common.lib.HexSounds.ADD_TO_PATTERN,
+                0.25F, 1.0F + (mc.world.rand.nextFloat() - 0.5F) * 0.1F);
+        }
     }
 
     @Override
@@ -1086,25 +1120,25 @@ private void drawMove(int mouseX, int mouseY) {
             && current.equals(currentPoints.get(0));
     }
 
-    private void appendSnappedPoint(GridPoint next) {
+    private boolean appendSnappedPoint(GridPoint next) {
         if (next == null || current == null || !isAdjacent(current, next)) {
-            return;
+            return false;
         }
         boolean closing = next.equals(currentPoints.get(0));
         boolean backtracking = currentPoints.size() > 1
             && next.equals(currentPoints.get(currentPoints.size() - 2));
         if (!closing && !backtracking && usedSpots.contains(next)) {
-            return;
+            return false;
         }
         HexDir direction = directionBetween(current, next);
         if (direction == null) {
-            return;
+            return false;
         }
         if (workingPattern == null) {
             workingPattern = new HexPattern(direction);
             currentPoints.add(next);
             current = next;
-            return;
+            return true;
         }
         HexDir last = workingPattern.finalDir();
         if (direction == last.rotatedBy(HexAngle.BACK)) {
@@ -1123,12 +1157,14 @@ private void drawMove(int mouseX, int mouseY) {
                 }
                 current = currentPoints.get(currentPoints.size() - 1);
             }
-            return;
+            return true;
         }
         if (workingPattern.tryAppendDir(direction)) {
             currentPoints.add(next);
             current = next;
+            return true;
         }
+        return false;
     }
 
     private static HexDir directionBetween(GridPoint from, GridPoint to) {
@@ -1167,6 +1203,8 @@ private void drawMove(int mouseX, int mouseY) {
             if (mc != null && mc.player != null) {
                 ItemHexStaff.clearProgram(mc.player, hand, mc.player.getHeldItem(hand));
                 HexClientEffects.clearSpiralPatterns(mc.player.getUniqueID());
+                playGridSound(at.petra_k.hexcasting.common.lib.HexSounds.STAFF_RESET,
+                    0.8F, 1.0F);
             }
             PaucalAPI.sendToServer(new MsgStaffPatternC2S(
                 hand,
