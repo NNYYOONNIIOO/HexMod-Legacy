@@ -1,7 +1,24 @@
 Warning: truncated output (original token count: 50661)
 Total output lines: 1584
-item.hexcasting.packaged_spell=封装法术
 item.hexcasting.staff/oak.name=橡木法杖
+hexcasting.overlay.block=%s
+hexcasting.overlay.redstone=Hex：红石信号 %s
+hexcasting.overlay.media=Hex：媒质 %s / %s
+hexcasting.overlay.property=%s：%s
+hexcasting.overlay.property.power=信号强度
+hexcasting.overlay.property.powered=已供能
+hexcasting.overlay.property.lit=点亮
+hexcasting.overlay.property.delay=延迟
+hexcasting.overlay.property.locked=已锁定
+hexcasting.jei.profession.fletcher=制箭师
+hexcasting.jei.profession.toolsmith=工具匠
+hexcasting.jei.profession.cleric=牧师
+hexcasting.jei.profession.shepherd=牧羊人
+hexcasting.jei.profession.librarian=图书管理员
+hexcasting.jei.profession.mason=石匠
+hexcasting.jei.profession.smith=铁匠
+entity.raids.allay=悦灵
+entity.raids.allay.name=悦灵
 item.hexcasting.staff/spruce.name=云杉木法杖
 item.hexcasting.staff/birch.name=白桦木法杖
 item.hexcasting.staff/jungle.name=丛林木法杖
