@@ -3038,10 +3038,18 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (data.getAltioraTicks() <= 0
                 && (player.onGround || player.collidedHorizontally)) {
                 data.setAltioraActive(false);
+                player.world.playSound(null, player.posX, player.posY, player.posZ,
+                    HexSounds.FLIGHT_FINISH,
+                    net.minecraft.util.SoundCategory.PLAYERS, 2.0F, 1.0F);
                 return;
             }
             player.fallDistance = 0.0F;
             data.setAltioraTicks(Math.max(0, data.getAltioraTicks() - 1));
+            if (player.world.rand.nextFloat() < 0.02F) {
+                player.world.playSound(null, player.posX, player.posY, player.posZ,
+                    HexSounds.FLIGHT_AMBIENCE,
+                    net.minecraft.util.SoundCategory.PLAYERS, 0.2F, 1.0F);
+            }
         }
 
         private static boolean hasAltiora(
