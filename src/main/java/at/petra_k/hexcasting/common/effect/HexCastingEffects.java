@@ -46,7 +46,7 @@ public final class HexCastingEffects {
         int color = success ? sample(source, player) : ERROR_COLOR;
         if (pattern != null) {
             sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36,
-                color, source);
+                color, source, true);
         }
 
         if (success) {
@@ -92,7 +92,7 @@ public final class HexCastingEffects {
                 // PackagedItemCastEnv in modern Hex keeps these visible for
                 // 140 ticks instead of the staff's open-ended spiral.
                 sendOrbitPattern(player, pattern, success ? 140 : 36,
-                    color, source);
+                    color, source, false);
             }
         }
         if (success) {
@@ -155,7 +155,8 @@ public final class HexCastingEffects {
                 int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? 36 : ORBIT_LIFETIME;
-                sendOrbitPattern(player, entry.getPattern(), lifetime, color, source);
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color,
+                    source, true);
             }
         }
         ItemStack offhand = player.getHeldItemOffhand();
@@ -177,17 +178,19 @@ public final class HexCastingEffects {
                 int lifetime = resolution == StaffCastExecutor.Resolution.ERRORED
                     || resolution == StaffCastExecutor.Resolution.INVALID
                     ? 36 : ORBIT_LIFETIME;
-                sendOrbitPattern(player, entry.getPattern(), lifetime, color, source);
+                sendOrbitPattern(player, entry.getPattern(), lifetime, color,
+                    source, true);
             }
         }
     }
 
     private static void sendOrbitPattern(EntityPlayer player, HexPattern pattern,
                                          int lifetime, int color,
-                                         HexPigmentSource source) {
+                                         HexPigmentSource source,
+                                         boolean usePlayerPigment) {
         PaucalAPI.sendPacketNearS2C(player.getPositionVector(), 128.0D, player.world,
             new MsgCastingPatternS2C(player.getUniqueID(), pattern, lifetime, color,
-                source));
+                source, usePlayerPigment));
     }
 
     private static void sendSpray(EntityPlayer player, double posX, double posY,

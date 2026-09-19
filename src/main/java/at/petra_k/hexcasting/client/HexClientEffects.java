@@ -26,7 +26,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -78,7 +77,8 @@ public final class HexClientEffects {
     /** Called by MsgCastingPatternS2C through the common-side bridge. */
     public static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
                                         int lifetime, int color) {
-        addSpiralPattern(playerUuid, pattern, lifetime, color, null);
+        addSpiralPattern(playerUuid, pattern, lifetime, color,
+            HexPigmentSource.defaultSource(), false);
     }
 
     /** Called by MsgCastingPatternS2C with the frozen pigment payload. */
@@ -87,12 +87,25 @@ public final class HexClientEffects {
                                         String pigmentVariant, UUID pigmentOwner,
                                         int pigmentBaseColor) {
         addSpiralPattern(playerUuid, pattern, lifetime, color,
-            HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner));
+            HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner),
+            false);
+    }
+
+    /** Called for staff spirals; their colour is the caster's live pigment. */
+    public static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
+                                        int lifetime, int color,
+                                        String pigmentVariant, UUID pigmentOwner,
+                                        int pigmentBaseColor,
+                                        boolean usePlayerPigment) {
+        addSpiralPattern(playerUuid, pattern, lifetime, color,
+            HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner),
+            usePlayerPigment);
     }
 
     private static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
                                          int lifetime, int color,
-                                         HexPigmentSource pigment) {
+                                         HexPigmentSource pigment,
+                                         boolean usePlayerPigment) {
         if (playerUuid == null || pattern == null) {
             return;
         }
@@ -108,6 +121,7 @@ public final class HexClientEffects {
                     finiteLifetime(lifetime));
                 existing.color = 0xFF000000 | (color & 0xFFFFFF);
                 existing.pigment = pigment;
+                existing.usePlayerPigment |= usePlayerPigment;
                 existing.dynamicColor = color != ERROR_COLOR;
                 return;
             }
@@ -117,7 +131,8 @@ public final class HexClientEffects {
         }
         int safeLifetime = lifetime <= 0 ? 1 : lifetime;
         patterns.add(new OrbitPattern(pattern, safeLifetime,
-            finiteLifetime(safeLifetime), color, pigment, color != ERROR_COLOR));
+            finiteLifetime(safeLifetime), color, pigment, color != ERROR_COLOR,
+            usePlayerPigment));
     }
 
     /** Called by MsgClearCastingPatternsS2C; clear with the same soft fade as Hex. */
@@ -179,7 +194,7 @@ public final class HexClientEffects {
                 || resolution == StaffCastExecutor.Resolution.INVALID;
             addSpiralPattern(player.getUniqueID(), entry.getPattern(),
                 error ? 36 : Integer.MAX_VALUE,
-                error ? 0xE05252 : sample(pigment, player), pigment);
+                error ? 0xE05252 : sample(pigment, player), pigment, true);
         }
     }
 
@@ -188,7 +203,9 @@ public final class HexClientEffects {
     }
 
     private static HexPigmentSource localPigmentSource(EntityPlayer player) {
-        return HexPigmentSource.resolve(player, EnumHand.MAIN_HAND);
+        HexPigmentSource playerPigment = HexPigmentSource.resolvePlayer(player);
+        return playerPigment == null
+            ? HexPigmentSource.defaultSource() : playerPigment;
     }
 
     private static int sample(HexPigmentSource source, EntityPlayer player) {
@@ -1120,26 +1137,42 @@ public final class HexClientEffects {
         private int color;
         private HexPigmentSource pigment;
         private boolean dynamicColor;
+        private boolean usePlayerPigment;
 
         private OrbitPattern(HexPattern pattern, int lifetime, int maxLifetime,
                              int color, HexPigmentSource pigment,
-                             boolean dynamicColor) {
+                             boolean dynamicColor,
+                             boolean usePlayerPigment) {
             this.pattern = pattern;
             this.lifetime = lifetime;
             this.maxLifetime = maxLifetime;
             this.color = 0xFF000000 | (color & 0xFFFFFF);
             this.pigment = pigment;
             this.dynamicColor = dynamicColor;
+            this.usePlayerPigment = usePlayerPigment;
         }
 
         private int getColor(EntityPlayer player, float time) {
             if (!dynamicColor || player == null) {
                 return color;
             }
-            // Keep sampling the exact source that produced this orbit.  This
-            // matters when a colourized staff is put away: the player's
-            // capability may contain a different pigment, while the staff's
-            // frozen pride/ancient/UUID source must keep animating.
+            if (usePlayerPigment) {
+                HexPigmentSource current = HexPigmentSource.resolvePlayer(player);
+                // The local player's capability is synchronized after login.
+                // For other players only use a capability snapshot when it is
+                // non-neutral; otherwise retain the authoritative packet
+                // snapshot so their staff does not silently turn purple.
+                boolean localPlayer = Minecraft.getMinecraft().player != null
+                    && Minecraft.getMinecraft().player.getUniqueID()
+                        .equals(player.getUniqueID());
+                if (current != null && (localPlayer
+                    || !current.isNeutralDefault())) {
+                    return 0xFF000000 | current.sample(time,
+                        player.posX, player.posY, player.posZ);
+                }
+            }
+            // Portable casts and legacy item-colourized staffs retain the
+            // immutable source carried by their server packet.
             if (pigment != null) {
                 return 0xFF000000 | pigment.sample(time,
                     player.posX, player.posY, player.posZ);

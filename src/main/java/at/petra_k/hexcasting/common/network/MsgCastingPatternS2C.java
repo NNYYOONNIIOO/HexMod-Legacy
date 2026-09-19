@@ -22,6 +22,7 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
     private String pigmentVariant;
     private UUID pigmentOwner;
     private int pigmentBaseColor;
+    private boolean usePlayerPigment;
 
     public MsgCastingPatternS2C() {
         playerUuid = new UUID(0L, 0L);
@@ -31,6 +32,7 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         pigmentVariant = HexPigmentSource.DEFAULT_VARIANT;
         pigmentOwner = HexPigmentSource.NIL_UUID;
         pigmentBaseColor = HexPigmentSource.DEFAULT_COLOR;
+        usePlayerPigment = false;
     }
 
     public MsgCastingPatternS2C(UUID playerUuid, HexPattern pattern,
@@ -42,6 +44,13 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
     public MsgCastingPatternS2C(UUID playerUuid, HexPattern pattern,
                                 int lifetime, int color,
                                 HexPigmentSource pigment) {
+        this(playerUuid, pattern, lifetime, color, pigment, false);
+    }
+
+    public MsgCastingPatternS2C(UUID playerUuid, HexPattern pattern,
+                                int lifetime, int color,
+                                HexPigmentSource pigment,
+                                boolean usePlayerPigment) {
         this.playerUuid = playerUuid == null ? new UUID(0L, 0L) : playerUuid;
         this.patternData = pattern == null ? new NBTTagCompound()
             : pattern.serializeToNBT();
@@ -52,6 +61,7 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         this.pigmentVariant = safe.getVariant();
         this.pigmentOwner = safe.getOwner();
         this.pigmentBaseColor = safe.getColor();
+        this.usePlayerPigment = usePlayerPigment;
     }
 
     @Override
@@ -63,6 +73,7 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         pigmentVariant = ByteBufUtils.readUTF8String(buf);
         pigmentOwner = new UUID(buf.readLong(), buf.readLong());
         pigmentBaseColor = buf.readInt() & 0xFFFFFF;
+        usePlayerPigment = buf.readBoolean();
     }
 
     @Override
@@ -79,6 +90,7 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
         buf.writeLong(owner.getMostSignificantBits());
         buf.writeLong(owner.getLeastSignificantBits());
         buf.writeInt(pigmentBaseColor & 0xFFFFFF);
+        buf.writeBoolean(usePlayerPigment);
     }
 
     @Override
@@ -96,9 +108,11 @@ public final class MsgCastingPatternS2C implements PaucalMessage {
             Class<?> bridge = Class.forName(
                 "at.petra_k.hexcasting.client.HexClientEffects");
             bridge.getMethod("addSpiralPattern", UUID.class, HexPattern.class,
-                int.class, int.class, String.class, UUID.class, int.class)
+                int.class, int.class, String.class, UUID.class, int.class,
+                boolean.class)
                 .invoke(null, playerUuid, pattern, lifetime, color,
-                    pigmentVariant, pigmentOwner, pigmentBaseColor);
+                    pigmentVariant, pigmentOwner, pigmentBaseColor,
+                    usePlayerPigment);
         } catch (ReflectiveOperationException | RuntimeException ignored) {
             // Client-only rendering is deliberately optional on a dedicated server.
         }

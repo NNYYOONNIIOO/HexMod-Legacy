@@ -55,6 +55,23 @@ public final class HexPigmentSource {
             ? fromData(data) : null;
     }
 
+    /** Snapshot the pigment currently attached to a player, without looking
+     * at the item in either hand.  Staff spirals use this path so changing
+     * the internalized pigment recolors an already-existing spiral too. */
+    public static HexPigmentSource resolvePlayer(EntityPlayer player) {
+        if (player == null || HexCapabilities.CASTING_DATA == null) {
+            return null;
+        }
+        return fromData(player.getCapability(HexCapabilities.CASTING_DATA, null));
+    }
+
+    /** Whether this is the untouched fallback pigment. */
+    public boolean isNeutralDefault() {
+        return color == DEFAULT_COLOR
+            && DEFAULT_VARIANT.equals(variant)
+            && NIL_UUID.equals(owner);
+    }
+
     /**
      * Snapshot pigment NBT stored on a casting item.  The packaged spell has
      * its own frozen pigment tag, while staffs and foci use ItemColorizer's
@@ -178,9 +195,4 @@ public final class HexPigmentSource {
         return owner;
     }
 
-    private boolean isNeutralDefault() {
-        return color == DEFAULT_COLOR
-            && DEFAULT_VARIANT.equals(variant)
-            && NIL_UUID.equals(owner);
-    }
 }
