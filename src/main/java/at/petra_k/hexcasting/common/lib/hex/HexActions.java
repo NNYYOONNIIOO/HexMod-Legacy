@@ -3398,15 +3398,23 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 at.petra_k.hexcasting.api.item.MediaHolderItem holder =
                     (at.petra_k.hexcasting.api.item.MediaHolderItem) source.getItem();
-                if (!holder.canProvide(source)) {
+                // Media materials store their total media on the stack.  A
+                // dropped stack can contain 64 items, so asking the holder
+                // about the entity's stack directly would make one bottle
+                // consume the whole stack.  Craft from a one-item view and
+                // apply the drained amount to exactly one item below.
+                net.minecraft.item.ItemStack sourceUnit = source.copy();
+                sourceUnit.setCount(1);
+                if (!holder.canProvide(sourceUnit)) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
-                long mediaAmount = holder.withdrawMedia(source, -1L, true);
+                long sourceMedia = holder.getMedia(source);
+                long mediaAmount = holder.withdrawMedia(sourceUnit, -1L, true);
                 if (mediaAmount <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
-                long drained = holder.withdrawMedia(source, mediaAmount, false);
+                long drained = holder.withdrawMedia(sourceUnit, mediaAmount, false);
                 if (drained <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
@@ -3417,9 +3425,12 @@ throw new CastingException("hexcasting.error.get_media_context");
                 battery.setMedia(result, drained);
                 player.setHeldItem(hand, result);
                 if (!player.world.isRemote) {
-                    if (source.isEmpty()) {
+                    int remainingCount = source.getCount() - 1;
+                    if (remainingCount <= 0) {
                         itemEntity.setDead();
                     } else {
+                        source.setCount(remainingCount);
+                        holder.setMedia(source, Math.max(0L, sourceMedia - drained));
                         itemEntity.setItem(source);
                     }
                 }
