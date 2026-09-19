@@ -1169,17 +1169,13 @@ public final class HexClientEffects {
             }
             if (usePlayerPigment) {
                 HexPigmentSource current = HexPigmentSource.resolvePlayer(player);
-                // The local player's capability is synchronized after login.
-                // For other players only use a capability snapshot when it is
-                // non-neutral; otherwise retain the authoritative packet
-                // snapshot so their staff does not silently turn purple.
-                boolean localPlayer = Minecraft.getMinecraft().player != null
-                    && Minecraft.getMinecraft().player.getUniqueID()
-                        .equals(player.getUniqueID());
-                if (current != null && (localPlayer
-                    || !current.isNeutralDefault())) {
+                if (current != null) {
+                    // An internalized pigment is an attribute of the caster,
+                    // not a world-space paint source.  Keep its gradient
+                    // phase tied to the clock so walking around cannot make
+                    // an orbit jump between palette stops.
                     return 0xFF000000 | current.sample(time,
-                        player.posX, player.posY, player.posZ);
+                        0.0D, 0.0D, 0.0D);
                 }
             }
             // Portable casts and legacy item-colourized staffs retain the
