@@ -41,21 +41,26 @@ public final class HexQuenchedAllayRenderer
         for (String blockId : BLOCK_IDS) {
             IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
             for (int i = 0; i < variants.length; i++) {
-                // Blockstate model ids are rooted at assets/<mod>/models,
-                // whereas item models may refer to them with a block/
-                // prefix.  The old lookup used the item-model form here,
-                // so the block entity renderer received null models for all
-                // four decorative variants.
-                String prefix = "quenched_allay".equals(blockId)
-                    ? "" : "deco/";
-                ResourceLocation modelLocation = HexAPI.modLoc(
-                    prefix + blockId + "_" + i);
-                variants[i] = event.getModelRegistry().getObject(
-                    new net.minecraft.client.renderer.block.model.ModelResourceLocation(
-                        modelLocation, "normal"));
+                String modelPath = ("quenched_allay".equals(blockId)
+                    ? "" : "deco/") + blockId + "_" + i;
+                variants[i] = findBakedModel(event, modelPath, "normal");
+                if (variants[i] == null) {
+                    // Models referenced by an item override are registered
+                    // with the item-model path and inventory variant.  The
+                    // same JSON is still a valid block model for the TESR.
+                    variants[i] = findBakedModel(event, "block/" + modelPath,
+                        "inventory");
+                }
             }
             MODELS.put(blockId, variants);
         }
+    }
+
+    private static IBakedModel findBakedModel(ModelBakeEvent event,
+                                               String path, String variant) {
+        return event.getModelRegistry().getObject(
+            new net.minecraft.client.renderer.block.model.ModelResourceLocation(
+                HexAPI.modLoc(path), variant));
     }
 
     @Override
