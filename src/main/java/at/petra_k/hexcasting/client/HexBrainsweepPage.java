@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
