@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityHanging;
@@ -137,6 +138,7 @@ public final class EntityWallScroll extends EntityHanging
                 held.shrink(1);
             }
             setShowsStrokeOrder(true);
+            player.playSound(HexSounds.SCROLL_DUST, 1.0F, 1.0F);
             return true;
         }
         return super.processInitialInteract(player, hand);
