@@ -12,7 +12,6 @@ import at.petra_k.hexcasting.common.item.ItemCreativeUnlocker;
 import at.petra_k.hexcasting.common.item.ItemAncientCypher;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
-import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemCypher;
 import at.petra_k.hexcasting.common.item.ItemTrinket;
 import at.petra_k.hexcasting.common.item.ItemArtifact;
@@ -35,10 +34,15 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".focus")
         .setCreativeTab(HexCreativeTab.HEX);
 
-    public static final ItemHexStaff STAFF = (ItemHexStaff) new ItemHexStaff()
-        .setRegistryName(HexAPI.MOD_ID, "staff")
-        .setUnlocalizedName(HexAPI.MOD_ID + ".staff")
-        .setCreativeTab(HexCreativeTab.HEX);
+    /**
+     * Compatibility alias for the ordinary oak staff.
+     *
+     * <p>Modern Hex has no standalone {@code hexcasting:staff} item; its
+     * source staff is {@code hexcasting:staff/oak}.  Keep the Java field so
+     * existing 1.12 code can still ask for the ordinary staff, but point it
+     * at the real oak registration instead of registering a duplicate item.</p>
+     */
+    public static final ItemHexStaff STAFF;
 
     public static final ItemScryingLens SCRYING_LENS = (ItemScryingLens) new ItemScryingLens()
         .setRegistryName(HexAPI.MOD_ID, "lens")
@@ -85,7 +89,6 @@ public final class HexItems {
         "staff/quenched",
         "staff/mindsplice",
         "abacus",
-        "packaged_spell",
         "thought_knot",
         "spellbook",
         "ancient_cypher",
@@ -139,8 +142,6 @@ public final class HexItems {
             Item item;
             if (id.equals("spellbook")) {
                 item = new ItemSpellbook();
-            } else if (id.equals("packaged_spell")) {
-                item = new ItemPackagedSpell();
             } else if (id.equals("ancient_cypher")) {
                 item = new ItemAncientCypher();
             } else if (id.equals("abacus")) {
@@ -175,12 +176,12 @@ public final class HexItems {
                 .setCreativeTab(id.equals("scroll_small") || id.equals("scroll_medium")
                     || id.equals("scroll") ? HexCreativeTab.SCROLLS : HexCreativeTab.HEX));
         }
+        STAFF = (ItemHexStaff) EXTRA_ITEMS.get("staff/oak");
     }
 
     public static java.util.List<Item> allItems() {
         java.util.List<Item> items = new java.util.ArrayList<>();
         items.add(FOCUS);
-        items.add(STAFF);
         items.add(SCRYING_LENS);
         items.add(BATTERY);
         items.add(CYPHER);
@@ -206,7 +207,6 @@ public final class HexItems {
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(FOCUS);
-        event.getRegistry().register(STAFF);
         event.getRegistry().register(SCRYING_LENS);
         event.getRegistry().register(BATTERY);
         event.getRegistry().register(CYPHER);
