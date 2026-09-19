@@ -39,20 +39,22 @@ public final class HexQuenchedAllayRenderer
     public static void onModelBake(ModelBakeEvent event) {
         for (String blockId : BLOCK_IDS) {
             IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
-            IBakedModel fallback = findBakedModel(event, "block/" + blockId,
-                "normal");
+            // In 1.12 a blockstate model named "hexcasting:foo" is loaded
+            // from assets/hexcasting/models/block/foo.json.  The block/
+            // prefix belongs to direct item-model references and must not be
+            // added to this blockstate key.
+            IBakedModel fallback = findBakedModel(event, blockId, "normal");
             for (int i = 0; i < variants.length; i++) {
                 String modelPath = ("quenched_allay".equals(blockId)
                     ? "" : "deco/") + blockId + "_" + i;
-                // 1.12 registers these extra models through the item-model
-                // path.  The small wrapper files in models/item/block/**
-                // inherit the real block models, so inventory is the stable
-                // baked-model key for all four gaslighting variants.
-                variants[i] = findBakedModel(event, "block/" + modelPath,
-                    "inventory");
+                // The variant is not referenced by a blockstate, so it is
+                // explicitly registered as an item-model variant.  The
+                // matching models/item/block/** wrappers make the inventory
+                // key resolve to the real block model on 1.12.2.
+                variants[i] = findBakedModel(event, modelPath, "normal");
                 if (variants[i] == null) {
                     variants[i] = findBakedModel(event, "block/" + modelPath,
-                        "normal");
+                        "inventory");
                 }
                 // Keep the block visible even if a third-party model loader
                 // declines an extra variant.  Variant zero is the same

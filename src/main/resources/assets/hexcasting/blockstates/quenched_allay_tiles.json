@@ -1,7 +1,7 @@
 {
   "variants": {
     "normal": {
-      "model": "hexcasting:block/quenched_allay_tiles"
+      "model": "hexcasting:quenched_allay_tiles"
     }
   }
 }
