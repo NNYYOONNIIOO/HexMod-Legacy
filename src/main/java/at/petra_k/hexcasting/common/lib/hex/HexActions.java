@@ -3296,6 +3296,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                         newTile.markDirty();
                     }
                     BrainsweepRecipes.markBrainswept(living);
+                    net.minecraft.util.SoundEvent deathSound =
+                        ((at.petra_k.hexcasting.mixin.AccessorEntityLivingBase) living)
+                            .hexcasting$getDeathSound();
+                    if (deathSound != null) {
+                        player.world.playSound(null, entity.getPosition(), deathSound,
+                            net.minecraft.util.SoundCategory.AMBIENT, 0.8F, 1.0F);
+                    }
                     player.world.playSound(null, entity.getPosition(),
                         net.minecraft.init.SoundEvents.ENTITY_PLAYER_LEVELUP,
                         net.minecraft.util.SoundCategory.AMBIENT, 0.5F, 0.8F);
