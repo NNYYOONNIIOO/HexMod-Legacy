@@ -56,7 +56,8 @@ public final class HexEvaluator {
         vm.setCastingHand(castingHand);
         try {
             vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
-            HexCastingEffects.onPortableCast(player, castingHand, patterns, true);
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, true,
+                vm.getSound() == null ? null : vm.getSound().getSound());
         } catch (CastingException exception) {
             HexCastingEffects.onPortableCast(player, castingHand, patterns, false);
             throw exception;

@@ -340,7 +340,8 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
                 : result.peek().display();
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.program_result", resultText)));
-            HexCastingEffects.onPortableCast(player, hand, visualPatterns, true);
+            HexCastingEffects.onPortableCast(player, hand, visualPatterns, true,
+                vm.getSound() == null ? null : vm.getSound().getSound());
             player.getCooldownTracker().setCooldown(this, Math.max(0, cooldown()));
             if (breakAfterDepletion() && getMedia(stack) <= 0L
                 && !player.capabilities.isCreativeMode) {

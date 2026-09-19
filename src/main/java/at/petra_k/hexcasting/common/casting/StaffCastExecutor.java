@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
@@ -12,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 
@@ -89,14 +91,14 @@ public final class StaffCastExecutor {
                                               ItemStack staff, HexPattern pattern) {
         if (player == null || staff == null || staff.isEmpty() || pattern == null) {
             return CastOutcome.failure(Resolution.ERRORED,
-                Collections.<String>emptyList(), 0, 0, false);
+                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE);
         }
         IHexCastingData castingData =
             player.getCapability(HexCapabilities.CASTING_DATA, null);
         if (castingData == null) {
             sendError(player, "hexcasting.message.staff_error");
             return CastOutcome.failure(Resolution.ERRORED,
-                Collections.<String>emptyList(), 0, 0, false);
+                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE);
         }
 
         CastingVM vm = null;
@@ -119,7 +121,7 @@ public final class StaffCastExecutor {
                 wasInParens, vm);
             return CastOutcome.success(resolution, preview(vm),
                 vm.getStack().size(), vm.getParenDepth(), vm.isEscapeNext(),
-                isStackClear(vm));
+                isStackClear(vm), soundFor(vm, true));
         } catch (CastingException exception) {
             if (vm != null) {
                 vm.clearPendingWork();
@@ -127,7 +129,8 @@ public final class StaffCastExecutor {
             }
             sendError(player, exception.getMessage());
             return CastOutcome.failure(Resolution.ERRORED,
-                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm));
+                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
+                soundFor(vm, false));
         } catch (RuntimeException exception) {
             if (vm != null) {
                 vm.clearPendingWork();
@@ -135,8 +138,16 @@ public final class StaffCastExecutor {
             }
             sendError(player, "hexcasting.message.staff_error");
             return CastOutcome.failure(Resolution.ERRORED,
-                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm));
+                preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
+                soundFor(vm, false));
         }
+    }
+
+    private static SoundEvent soundFor(CastingVM vm, boolean success) {
+        if (vm != null && vm.getSound() != null && vm.getSound().getSound() != null) {
+            return vm.getSound().getSound();
+        }
+        return success ? HexSounds.CAST_NORMAL : HexSounds.CAST_FAILURE;
     }
 
     private static boolean isStackClear(CastingVM vm) {
@@ -192,16 +203,16 @@ public final class StaffCastExecutor {
     public static CastOutcome getCurrentState(ItemStack staff) {
         if (staff == null || staff.isEmpty()) {
             return CastOutcome.success(Resolution.UNRESOLVED,
-                Collections.<String>emptyList(), 0, 0, false, true);
+                Collections.<String>emptyList(), 0, 0, false, true, null);
         }
         try {
             CastingVM vm = load(staff);
             return CastOutcome.success(Resolution.UNRESOLVED, preview(vm),
                 stackSize(vm), parenDepth(vm), escapeNext(vm),
-                isStackClear(vm));
+                isStackClear(vm), null);
         } catch (RuntimeException ignored) {
             return CastOutcome.success(Resolution.UNRESOLVED,
-                Collections.<String>emptyList(), 0, 0, false, false);
+                Collections.<String>emptyList(), 0, 0, false, false, null);
         }
     }
 
@@ -295,10 +306,11 @@ public final class StaffCastExecutor {
         private final int parenDepth;
         private final boolean escapeNext;
         private final boolean stackClear;
+        private final SoundEvent sound;
 
         private CastOutcome(Resolution resolution, List<String> stackPreview,
                             int stackSize, int parenDepth, boolean escapeNext,
-                            boolean stackClear) {
+                            boolean stackClear, SoundEvent sound) {
             this.resolution = resolution == null ? Resolution.ERRORED : resolution;
             this.stackPreview = Collections.unmodifiableList(new ArrayList<>(
                 stackPreview == null ? Collections.<String>emptyList() : stackPreview));
@@ -306,22 +318,23 @@ public final class StaffCastExecutor {
             this.parenDepth = Math.max(0, parenDepth);
             this.escapeNext = escapeNext;
             this.stackClear = stackClear;
+            this.sound = sound;
         }
 
         private static CastOutcome success(Resolution resolution,
                                            List<String> stackPreview,
                                            int stackSize, int parenDepth, boolean escapeNext,
-                                           boolean stackClear) {
+                                           boolean stackClear, SoundEvent sound) {
             return new CastOutcome(resolution, stackPreview, stackSize,
-                parenDepth, escapeNext, stackClear);
+                parenDepth, escapeNext, stackClear, sound);
         }
 
         private static CastOutcome failure(Resolution resolution,
                                            List<String> stackPreview,
                                            int stackSize, int parenDepth,
-                                           boolean escapeNext) {
+                                           boolean escapeNext, SoundEvent sound) {
             return new CastOutcome(resolution, stackPreview, stackSize,
-                parenDepth, escapeNext, false);
+                parenDepth, escapeNext, false, sound);
         }
 
         public boolean isSuccess() {
@@ -351,6 +364,10 @@ public final class StaffCastExecutor {
 
         public boolean isStackClear() {
             return stackClear;
+        }
+
+        public SoundEvent getSound() {
+            return sound;
         }
     }
 }

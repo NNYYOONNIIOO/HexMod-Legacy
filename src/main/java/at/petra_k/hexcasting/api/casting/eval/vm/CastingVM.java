@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.api.casting.eval.vm;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.sideeffects.EvalSound;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
@@ -15,6 +16,7 @@ import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.lib.hex.HexEvalSounds;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagByte;
@@ -30,6 +32,7 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * Small, server-safe casting VM for the 1.12.2 port.
@@ -96,6 +99,8 @@ public final class CastingVM {
     private CircleExecutionState circleExecutionState;
     /** Runtime-only media source; circles bind this to their Impetus. */
     private ADMediaHolder mediaHolder;
+    /** Highest-precedence sound produced by the current evaluation. */
+    private EvalSound sound = HexEvalSounds.NOTHING;
 
     public CastingVM() {
         this(new CastingStack());
@@ -231,6 +236,22 @@ public final class CastingVM {
 
     public void setMediaHolder(ADMediaHolder mediaHolder) {
         this.mediaHolder = mediaHolder;
+    }
+
+    /** Return the sound selected by the actions evaluated so far. */
+    public EvalSound getSound() {
+        return sound;
+    }
+
+    /** Clear the runtime sound accumulator before starting a fresh cast. */
+    public void resetSound() {
+        sound = HexEvalSounds.NOTHING;
+    }
+
+    private void recordSound(EvalSound candidate) {
+        if (candidate != null) {
+            sound = sound.greaterOf(candidate);
+        }
     }
 
     public EnumHand getOtherHand() {
@@ -639,6 +660,7 @@ public final class CastingVM {
             ? SpecialPatternResolver.match(pattern) : null;
         if (pattern != null && action == null && special == null
             && parenCount == 0 && !escapeNext) {
+            recordSound(HexEvalSounds.MISHAP);
             throw new CastingException("No action is registered for pattern " + pattern);
         }
         Iota value = pattern == null ? work.iota : new PatternIota(pattern);
@@ -664,6 +686,15 @@ public final class CastingVM {
             } else {
                 stack.push(value);
             }
+            ResourceLocation actionId = action == null
+                ? null : HexActionRegistry.idFor(action);
+            recordSound(HexEvalSounds.forAction(action, actionId));
+        } catch (CastingException exception) {
+            recordSound(HexEvalSounds.MISHAP);
+            throw exception;
+        } catch (RuntimeException exception) {
+            recordSound(HexEvalSounds.MISHAP);
+            throw exception;
         } finally {
             activeOperationLimit = previousLimit;
         }

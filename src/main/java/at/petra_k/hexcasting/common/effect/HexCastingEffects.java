@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.effect;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingPatternS2C;
 import at.petra_k.hexcasting.common.network.MsgClearCastingPatternsS2C;
@@ -12,10 +13,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.init.SoundEvents;
 
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +54,8 @@ public final class HexCastingEffects {
             // Hex sprays a small upward fan for every accepted staff pattern.
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color, source);
-            playSound(player, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, 0.62F, 1.15F);
+            playSound(player, outcome == null || outcome.getSound() == null
+                ? HexSounds.CAST_NORMAL : outcome.getSound(), 1.0F, 1.0F);
             if (outcome.isStackClear()) {
                 // The final pattern is a real spell completion, not merely a
                 // parenthesized/escaped step. Give both caster and target a
@@ -61,25 +63,31 @@ public final class HexCastingEffects {
                 sendTargetFeedback(player, color, source);
                 sendSpray(player, player.posX, player.posY + 1.0D, player.posZ,
                     1.0D, 0.0D, 0.0D, 0.0D, Math.PI, 42, color, source);
-                playSound(player, SoundEvents.ENTITY_PLAYER_LEVELUP, 0.75F, 1.35F);
                 clearOrbitPatterns(player);
             }
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
-            playSound(player, SoundEvents.BLOCK_NOTE_BASS, 0.8F, 0.55F);
+            playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }
 
     /** Feedback for a completed cast launched from a scroll, focus or packaged item. */
     public static void onPortableCast(EntityPlayer player, List<HexPattern> patterns,
                                       boolean success) {
-        onPortableCast(player, EnumHand.MAIN_HAND, patterns, success);
+        onPortableCast(player, EnumHand.MAIN_HAND, patterns, success, null);
     }
 
     /** Feedback for a portable cast using the hand containing its source item. */
     public static void onPortableCast(EntityPlayer player, EnumHand hand,
                                       List<HexPattern> patterns, boolean success) {
+        onPortableCast(player, hand, patterns, success, null);
+    }
+
+    /** Feedback with the sound selected by the casting VM. */
+    public static void onPortableCast(EntityPlayer player, EnumHand hand,
+                                      List<HexPattern> patterns, boolean success,
+                                      SoundEvent castSound) {
         if (player == null || player.world == null || player.world.isRemote) {
             return;
         }
@@ -99,11 +107,12 @@ public final class HexCastingEffects {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.5D, 0.0D, 0.4D, Math.PI / 3.0D, 30, color, source);
             sendTargetFeedback(player, color, source);
-            playSound(player, SoundEvents.ENTITY_PLAYER_LEVELUP, 0.72F, 1.25F);
+            playSound(player, castSound == null ? HexSounds.CAST_NORMAL : castSound,
+                1.0F, 1.0F);
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
-            playSound(player, SoundEvents.BLOCK_NOTE_BASS, 0.8F, 0.55F);
+            playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }
 
