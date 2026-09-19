@@ -1,83 +1,22 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
-import at.petra_k.hexcasting.common.block.BlockQuenchedAllay;
 import at.petra_k.hexcasting.common.block.TileEntityQuenchedAllay;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.lwjgl.opengl.GL11;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/** Renders the invisible Quenched Allay block using its fixed model. */
+/** Renders the invisible Quenched Allay block using its item model. */
 @SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber(modid = HexAPI.MOD_ID, value = Side.CLIENT)
 public final class HexQuenchedAllayRenderer
     extends TileEntitySpecialRenderer<TileEntityQuenchedAllay> {
-    private static final String[] BLOCK_IDS = {
-        "quenched_allay",
-        "quenched_allay_bricks",
-        "quenched_allay_bricks_small",
-        "quenched_allay_tiles"
-    };
-    private static final Map<String, IBakedModel[]> MODELS = new HashMap<>();
-
-    @SubscribeEvent
-    public static void onModelBake(ModelBakeEvent event) {
-        for (String blockId : BLOCK_IDS) {
-            IBakedModel[] variants = new IBakedModel[BlockQuenchedAllay.VARIANTS];
-            // In 1.12 a blockstate model named "hexcasting:foo" is loaded
-            // from assets/hexcasting/models/block/foo.json.  The block/
-            // prefix belongs to direct item-model references and must not be
-            // added to this blockstate key.
-            IBakedModel fallback = findBakedModel(event, blockId, "normal");
-            for (int i = 0; i < variants.length; i++) {
-                String modelPath = ("quenched_allay".equals(blockId)
-                    ? "" : "deco/") + blockId + "_" + i;
-                // The extra gaslighting models are referenced from item
-                // overrides, so 1.12 normally bakes them under the
-                // block/<model>#inventory key.  A normal block key is also
-                // accepted for resource-pack/model-loader compatibility.
-                variants[i] = findBakedModel(event, modelPath, "normal");
-                if (variants[i] == null) {
-                    variants[i] = findBakedModel(event, "block/" + modelPath,
-                        "inventory");
-                }
-                if (variants[i] == null) {
-                    variants[i] = findBakedModel(event, "block/" + modelPath,
-                        "normal");
-                }
-                // Keep the block visible even if a third-party model loader
-                // declines an extra variant.  Variant zero is the same
-                // fallback used by the blockstate and is still a valid
-                // server/client-safe model.
-                if (variants[i] == null) {
-                    variants[i] = fallback;
-                }
-            }
-            MODELS.put(blockId, variants);
-        }
-    }
-
-    private static IBakedModel findBakedModel(ModelBakeEvent event,
-                                               String path, String variant) {
-        return event.getModelRegistry().getObject(
-            new net.minecraft.client.renderer.block.model.ModelResourceLocation(
-                HexAPI.modLoc(path), variant));
-    }
 
     @Override
     public void render(TileEntityQuenchedAllay tile, double x, double y,
@@ -89,21 +28,23 @@ public final class HexQuenchedAllayRenderer
             return;
         }
 
-        String blockId = tile.getBlockType().getRegistryName().getResourcePath();
-        IBakedModel[] variants = MODELS.get(blockId);
-        if (variants == null || variants.length == 0) {
-            return;
-        }
-        IBakedModel model = variants[HexGaslightingTracker.getVariant()
-            % variants.length];
-        if (model == null) {
+        Item item = Item.getItemFromBlock(tile.getBlockType());
+        if (item == null) {
             return;
         }
 
-        IBlockState state = tile.getWorld().getBlockState(tile.getPos());
-        BlockRendererDispatcher dispatcher =
-            Minecraft.getMinecraft().getBlockRendererDispatcher();
-        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        // The inventory model is the authoritative resource path for these
+        // blocks: it already contains the four gaslighting overrides and is
+        // known to be baked by 1.12.2.  Resolving the override here avoids
+        // depending on the ModelResourceLocation spelling used internally by
+        // ModelBakery for models that are only referenced from an item JSON.
+        ItemStack stack = new ItemStack(item);
+        RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+        IBakedModel model = renderItem.getItemModelWithOverrides(
+            stack, tile.getWorld(), null);
+        if (model == null) {
+            return;
+        }
 
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);
@@ -118,12 +59,9 @@ public final class HexQuenchedAllayRenderer
         Minecraft.getMinecraft().getTextureManager().bindTexture(
             TextureMap.LOCATION_BLOCKS_TEXTURE);
 
-        buffer.begin(GL11.GL_QUADS,
-            net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-        dispatcher.getBlockModelRenderer().renderModel(
-            tile.getWorld(), model, state, tile.getPos(), buffer, false);
-        Tessellator.getInstance().draw();
+        renderItem.renderItem(stack, model);
 
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
     }
