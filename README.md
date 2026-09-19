@@ -4,10 +4,10 @@ This is a branch of Hex Casting for version 1.12.2. It is currently under develo
 
 **Required dependencies:**
 - mixinbooter
-- Forgelin-Continuous
 - BaublesEX
 - jei
 - Patchouli
+- Raids Backport
 - farmers-future-delight
 
 Thanks to the Hex Casting development team for making such a beautiful mod!
