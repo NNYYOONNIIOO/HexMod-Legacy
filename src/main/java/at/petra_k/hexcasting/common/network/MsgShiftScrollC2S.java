@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.network;
 
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemSpellbook;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petrak.paucal.api.PaucalAPI;
 import at.petrak.paucal.api.PaucalMessage;
 import io.netty.buffer.ByteBuf;
@@ -121,7 +122,7 @@ public final class MsgShiftScrollC2S implements PaucalMessage {
         pitch *= increase ? 1.05F : 0.95F;
         pitch += (player.world.rand.nextFloat() - 0.5F) * 0.1F;
         player.world.playSound(null, player.posX, player.posY, player.posZ,
-            net.minecraft.init.SoundEvents.BLOCK_NOTE_HAT,
+            HexSounds.ABACUS,
             net.minecraft.util.SoundCategory.PLAYERS, 0.5F, pitch);
         player.sendStatusMessage(new TextComponentTranslation(
             "hexcasting.tooltip.abacus", ItemAbacus.getDisplayValue(stack))

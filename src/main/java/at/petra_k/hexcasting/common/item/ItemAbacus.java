@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -58,6 +59,7 @@ public final class ItemAbacus extends Item implements IotaHolderItem {
         if (!world.isRemote) {
             if (player.isSneaking()) {
                 clear(abacus);
+                player.playSound(HexSounds.ABACUS_SHAKE, 1.0F, 1.0F);
                 player.sendMessage(new TextComponentString(
                     I18n.translateToLocal("hexcasting.message.abacus_cleared")));
             } else {

@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemCreativeUnlocker;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,6 +21,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
@@ -358,13 +360,22 @@ public final class TileEntityImpetus extends TileEntity
         }
 
         int previous = lookAmount;
-        lookAmount = Math.max(0, Math.min(MAX_LOOK_AMOUNT,
+        int next = Math.max(0, Math.min(MAX_LOOK_AMOUNT,
             previous + (looker == null ? -1 : 1)));
-        if (lookAmount == MAX_LOOK_AMOUNT) {
+        if (next == MAX_LOOK_AMOUNT) {
             lookAmount = 0;
             startExecution(looker);
+        } else {
+            if (next != previous && next % 5 == 1) {
+                float progress = (float) next / (float) MAX_LOOK_AMOUNT;
+                float pitch = 0.5F + (1.2F - 0.5F) * progress;
+                float volume = 0.2F + (1.2F - 0.2F) * progress;
+                getWorld().playSound(null, pos, HexSounds.IMPETUS_LOOK_TICK,
+                    SoundCategory.BLOCKS, volume, pitch);
+            }
+            lookAmount = next;
         }
-        if (lookAmount != previous) {
+        if (next != previous) {
             markDirty();
         }
     }

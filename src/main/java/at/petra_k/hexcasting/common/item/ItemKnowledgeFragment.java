@@ -4,7 +4,7 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.SoundEvents;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
@@ -45,7 +45,7 @@ public final class ItemKnowledgeFragment extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
-        player.playSound(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, 1.0F, 1.0F);
+        player.playSound(HexSounds.READ_LORE_FRAGMENT, 1.0F, 1.0F);
         if ("lore_fragment".equals(variant)) {
             if (world.isRemote) {
                 // Match vanilla consumables: the client predicts the hand
@@ -97,7 +97,7 @@ public final class ItemKnowledgeFragment extends Item {
                 I18n.translateToLocal("hexcasting.message.lore_fragment")), true);
             serverPlayer.addExperience(20);
             world.playSound(null, player.posX, player.posY, player.posZ,
-                SoundEvents.ENTITY_PLAYER_LEVELUP,
+                HexSounds.READ_LORE_FRAGMENT,
                 net.minecraft.util.SoundCategory.PLAYERS, 1.0F, 1.0F);
         }
         CriteriaTriggers.CONSUME_ITEM.trigger(serverPlayer, stack);

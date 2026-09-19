@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -21,6 +22,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -160,6 +162,8 @@ public class BlockImpetus extends BlockCircleComponent {
         if (triggerMode == TriggerMode.REDSTONE) {
             if (player.isSneaking() && staff.isEmpty()) {
                 impetus.clearPlayer();
+                world.playSound(null, pos, HexSounds.IMPETUS_REDSTONE_CLEAR,
+                    SoundCategory.BLOCKS, 1.0F, 1.0F);
                 return true;
             }
             ItemStack reference = staff.isEmpty()
@@ -170,6 +174,8 @@ public class BlockImpetus extends BlockCircleComponent {
                     if (value instanceof EntityIota) {
                         EntityIota entity = (EntityIota) value;
                         impetus.bindPlayer(entity);
+                        world.playSound(null, pos, HexSounds.IMPETUS_REDSTONE_DING,
+                            SoundCategory.BLOCKS, 1.0F, 1.0F);
                         return true;
                     }
                 } catch (Exception ignored) {
