@@ -1,10 +1,9 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -71,10 +70,13 @@ public final class HexBrainsweepPage extends BookPage {
                 parent.renderItemStack(left + 12, top + 35, mouseX, mouseY,
                     input);
             }
-            ItemStack media = new ItemStack(Items.AMETHYST_SHARD,
-                mediaCount(displayRecipe.getMediaCost()), 0);
-            parent.renderItemStack(left + 12, top + 55, mouseX, mouseY,
-                media);
+            Item mediaItem = HexItems.EXTRA_ITEMS.get("charged_amethyst");
+            if (mediaItem != null) {
+                ItemStack media = new ItemStack(mediaItem,
+                    mediaCount(displayRecipe.getMediaCost()), 0);
+                parent.renderItemStack(left + 12, top + 55, mouseX, mouseY,
+                    media);
+            }
             if (!result.isEmpty()) {
                 parent.renderItemStack(left + 87, top + 35, mouseX, mouseY,
                     result);
