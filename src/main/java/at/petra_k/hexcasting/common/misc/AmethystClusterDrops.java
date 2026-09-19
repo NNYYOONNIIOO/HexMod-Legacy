@@ -94,7 +94,7 @@ public final class AmethystClusterDrops {
     private static Item findShard(ResourceLocation clusterId) {
         if (clusterId != null) {
             Item matching = ForgeRegistries.ITEMS.getValue(
-                new ResourceLocation(clusterId.getNamespace(), "amethyst_shard"));
+                new ResourceLocation(clusterId.getResourceDomain(), "amethyst_shard"));
             if (matching != null) {
                 return matching;
             }
