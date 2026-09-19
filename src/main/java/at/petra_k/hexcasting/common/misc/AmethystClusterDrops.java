@@ -13,24 +13,9 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.Iterator;
 
-/** Adjusts Farmers Future Delight's mature amethyst cluster drops. */
+/** Adjusts the selected provider's mature amethyst cluster drops. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID)
 public final class AmethystClusterDrops {
-    private static final ResourceLocation[] CLUSTERS = {
-        new ResourceLocation("farmers_future_delight", "amethyst_cluster"),
-        // Farmers Future Delight can hand this feature to an installed
-        // backport in AUTO mode.  In that case the world contains the
-        // provider's block rather than an FFD block, while the gameplay
-        // expectation is still the FFD cluster drop rule.
-        new ResourceLocation("cavesnotcliffs", "amethyst_cluster"),
-        new ResourceLocation("depthsupdate", "amethyst_cluster")
-    };
-    private static final ResourceLocation[] SHARDS = {
-        new ResourceLocation("farmers_future_delight", "amethyst_shard"),
-        new ResourceLocation("cavesnotcliffs", "amethyst_shard"),
-        new ResourceLocation("depthsupdate", "amethyst_shard")
-    };
-
     private AmethystClusterDrops() {
     }
 
@@ -125,33 +110,41 @@ public final class AmethystClusterDrops {
 
     private static boolean isTargetCluster(IBlockState state) {
         ResourceLocation registryName = state.getBlock().getRegistryName();
-        if (registryName != null) {
-            for (ResourceLocation cluster : CLUSTERS) {
-                if (cluster.equals(registryName)) {
-                    return true;
-                }
-            }
+        if (AmethystCompat.isSelectedCluster(registryName)) {
+            return true;
         }
-        for (ResourceLocation cluster : CLUSTERS) {
-            if (state.getBlock() == ForgeRegistries.BLOCKS.getValue(cluster)) {
-                return true;
-            }
+        // Keep the old third-party integration only when neither preferred
+        // provider is present.  This prevents FFD drops from being applied to
+        // both providers when Caves Not Cliffs has priority.
+        if (!AmethystCompat.hasProvider()
+            && AmethystCompat.legacyClusterId().equals(registryName)) {
+            return true;
         }
-        return false;
+        ResourceLocation target = AmethystCompat.hasProvider()
+            ? AmethystCompat.clusterId() : AmethystCompat.legacyClusterId();
+        return target != null
+            && state.getBlock() == ForgeRegistries.BLOCKS.getValue(target);
     }
 
     private static Item findShard(ResourceLocation clusterId) {
-        if (clusterId != null) {
+        ResourceLocation selectedShard = AmethystCompat.shardId();
+        if (selectedShard != null) {
+            Item matching = ForgeRegistries.ITEMS.getValue(selectedShard);
+            if (matching != null) {
+                return matching;
+            }
+        } else if (clusterId != null) {
             Item matching = ForgeRegistries.ITEMS.getValue(
                 new ResourceLocation(clusterId.getResourceDomain(), "amethyst_shard"));
             if (matching != null) {
                 return matching;
             }
         }
-        for (ResourceLocation shardId : SHARDS) {
-            Item shard = ForgeRegistries.ITEMS.getValue(shardId);
-            if (shard != null) {
-                return shard;
+        if (!AmethystCompat.hasProvider()) {
+            Item legacy = ForgeRegistries.ITEMS.getValue(
+                AmethystCompat.legacyShardId());
+            if (legacy != null) {
+                return legacy;
             }
         }
         // Some backports expose the effective item under a compatibility
@@ -162,10 +155,13 @@ public final class AmethystClusterDrops {
             if (id == null || !"amethyst_shard".equals(id.getResourcePath())) {
                 continue;
             }
-            for (ResourceLocation known : SHARDS) {
-                if (known.getResourceDomain().equals(id.getResourceDomain())) {
+            if (AmethystCompat.hasProvider()) {
+                if (AmethystCompat.provider().equals(id.getResourceDomain())) {
                     return candidate;
                 }
+            } else if (AmethystCompat.legacyShardId().getResourceDomain()
+                .equals(id.getResourceDomain())) {
+                return candidate;
             }
         }
         return null;
@@ -185,7 +181,12 @@ public final class AmethystClusterDrops {
         // crystal_shard), so the replacement identity check above is the
         // authoritative test.  Registry-path matching covers the normal FFD
         // and backport registrations as well.
-        return itemId != null && "amethyst_shard".equals(itemId.getResourcePath());
+        if (itemId == null || !"amethyst_shard".equals(itemId.getResourcePath())) {
+            return false;
+        }
+        return AmethystCompat.isSelectedShard(itemId)
+            || (!AmethystCompat.hasProvider()
+                && AmethystCompat.legacyShardId().equals(itemId));
     }
 
     private static float chargedChance(int fortune) {

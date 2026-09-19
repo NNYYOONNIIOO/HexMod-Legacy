@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.misc.AmethystCompat;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
@@ -15,14 +16,21 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraft.util.ResourceLocation;
 import vazkii.patchouli.common.item.PatchouliItems;
+import com.google.common.collect.ImmutableMap;
 
 /** Client-only 1.12.2 item model registration. */
 @Mod.EventBusSubscriber(modid = HexAPI.MOD_ID, value = Side.CLIENT)
@@ -91,6 +99,71 @@ public final class HexItemModels {
                     item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
             }
         }
+    }
+
+    /** Register Caves Not Cliffs' legacy 1.12 texture paths in the atlas. */
+    @SubscribeEvent
+    public static void registerAmethystTextures(TextureStitchEvent.Pre event) {
+        if (event == null || event.getMap() == null
+            || !AmethystCompat.CAVES_NOT_CLIFFS.equals(AmethystCompat.provider())) {
+            return;
+        }
+        event.getMap().registerSprite(AmethystCompat.sconceCopperTexture());
+        event.getMap().registerSprite(AmethystCompat.sconceAmethystTexture());
+        event.getMap().registerSprite(AmethystCompat.shardTexture());
+    }
+
+    /**
+     * Keep models that were authored against Farmer's Future Delight usable
+     * when Caves Not Cliffs is the selected provider.  The blockstate event
+     * has already expanded all sconce facing variants at this point, so each
+     * variant is re-baked with its original transform intact.
+     */
+    @SubscribeEvent
+    public static void retextureAmethystModels(ModelBakeEvent event) {
+        if (event == null
+            || !AmethystCompat.CAVES_NOT_CLIFFS.equals(AmethystCompat.provider())) {
+            return;
+        }
+
+        for (ModelResourceLocation location : event.getModelRegistry().getKeys()) {
+            if (!HexAPI.MOD_ID.equals(location.getResourceDomain())) {
+                continue;
+            }
+
+            ImmutableMap<String, String> textures = texturesFor(location);
+            if (textures.isEmpty()) {
+                continue;
+            }
+
+            try {
+                IModel model = ModelLoaderRegistry.getModel(location);
+                IModel retextured = model.retexture(textures);
+                boolean inventory = "inventory".equals(location.getVariant());
+                IBakedModel baked = retextured.bake(
+                    retextured.getDefaultState(),
+                    inventory ? DefaultVertexFormats.ITEM : DefaultVertexFormats.BLOCK,
+                    ModelLoader.defaultTextureGetter());
+                event.getModelRegistry().putObject(location, baked);
+            } catch (Exception ignored) {
+                // The original model remains in the registry if a third-party
+                // loader rejects retexturing; this must not prevent startup.
+            }
+        }
+    }
+
+    private static ImmutableMap<String, String> texturesFor(ModelResourceLocation location) {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        String path = location.getResourcePath();
+        if ("amethyst_sconce".equals(path)) {
+            builder.put("0", AmethystCompat.sconceCopperTexture().toString());
+            builder.put("3", AmethystCompat.sconceAmethystTexture().toString());
+            builder.put("particle", AmethystCompat.sconceCopperTexture().toString());
+        } else if ("conjured_block".equals(path)
+            || "conjured_light".equals(path)) {
+            builder.put("layer0", AmethystCompat.shardTexture().toString());
+        }
+        return builder.build();
     }
 
     private static void registerPackagedSpellProperties() {

@@ -84,6 +84,7 @@ dependencies {
     implementation fg.deobf(files('libs/jei_1.12.2-4.16.5.1030.jar'))
     implementation fg.deobf(files('libs/BaublesEX-1.12.2-2.3.7.jar'))
     implementation fg.deobf(files('libs/Raids-Backport-1.12.2-1.1.5b.jar'))
+    implementation fg.deobf(files('libs/cavesnotcliffs-2.0.4.jar'))
 
     def mixin = files('libs/!mixinbooter-11.17.jar')
     implementation mixin

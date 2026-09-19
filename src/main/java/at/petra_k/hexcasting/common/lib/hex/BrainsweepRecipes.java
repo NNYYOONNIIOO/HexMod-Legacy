@@ -1,5 +1,6 @@
 package at.petra_k.hexcasting.common.lib.hex;
 
+import at.petra_k.hexcasting.common.misc.AmethystCompat;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
@@ -15,6 +16,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.VillagerRegistry;
 
 import java.util.Locale;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +37,7 @@ public final class BrainsweepRecipes {
     private static final String LEGACY_BRAINSWEPT_TAG = "hexcasting.brainswept";
     private static final long VILLAGER_MEDIA_COST = 1_000_000L;
     private static final long ALLAY_MEDIA_COST = 100_000L;
-    private static final List<DisplayRecipe> DISPLAY_RECIPES = Collections.unmodifiableList(Arrays.asList(
+    private static final List<DisplayRecipe> BASE_DISPLAY_RECIPES = Collections.unmodifiableList(Arrays.asList(
         new DisplayRecipe("minecraft:amethyst_block", "raids:allay", null, 1,
             "hexcasting:quenched_allay", ALLAY_MEDIA_COST),
         new DisplayRecipe("minecraft:amethyst_block", "minecraft:villager", null, 3,
@@ -64,7 +66,28 @@ public final class BrainsweepRecipes {
      * provide the human-readable recipe list that 1.12.2 lacks.
      */
     public static List<DisplayRecipe> displayRecipes() {
-        return DISPLAY_RECIPES;
+        List<DisplayRecipe> recipes = new ArrayList<>();
+        if (AmethystCompat.hasProvider()) {
+            ResourceLocation block = AmethystCompat.blockId();
+            ResourceLocation budding = AmethystCompat.buddingBlockId();
+            if (block != null && budding != null) {
+                recipes.add(new DisplayRecipe(block.toString(),
+                    "minecraft:villager", null, 3, budding.toString(),
+                    VILLAGER_MEDIA_COST));
+                recipes.add(new DisplayRecipe(block.toString(),
+                    "raids:allay", null, 1, "hexcasting:quenched_allay",
+                    ALLAY_MEDIA_COST));
+            }
+        } else {
+            // Preserve the pre-provider fallback for worlds using the
+            // Hex/vanilla stand-in or another mod's vanilla amethyst blocks.
+            recipes.addAll(BASE_DISPLAY_RECIPES);
+        }
+
+        if (AmethystCompat.hasProvider()) {
+            recipes.addAll(BASE_DISPLAY_RECIPES.subList(2, BASE_DISPLAY_RECIPES.size()));
+        }
+        return Collections.unmodifiableList(recipes);
     }
 
     /** Find the first recipe matching the target block and living entity. */
@@ -92,10 +115,13 @@ public final class BrainsweepRecipes {
         EntityVillager villager = (EntityVillager) victim;
 
         // Any sufficiently experienced villager can grow budding amethyst in
-        // modern Hex.  The output is only enabled when a 1.12.2 compatibility
-        // block with that registry name is present.
+        // modern Hex.  The provider-specific pair is selected dynamically so
+        // installing both backports cannot make the same recipe target both.
         if (isAmethystInput(blockId) && villagerLevel(villager) >= 3) {
-            Match result = result(input, "minecraft:budding_amethyst", VILLAGER_MEDIA_COST);
+            ResourceLocation budding = AmethystCompat.buddingBlockId();
+            Match result = result(input,
+                budding == null ? "minecraft:budding_amethyst" : budding.toString(),
+                VILLAGER_MEDIA_COST);
             if (result != null) {
                 return result;
             }
@@ -239,6 +265,10 @@ public final class BrainsweepRecipes {
     }
 
     private static boolean isAmethystInput(String blockId) {
+        ResourceLocation selected = AmethystCompat.blockId();
+        if (selected != null) {
+            return selected.toString().equals(blockId);
+        }
         // amethyst_dust_block is this port's 1.12.2 replacement for the
         // post-1.12 vanilla amethyst block used by the upstream recipes.
         return "minecraft:amethyst_block".equals(blockId)
