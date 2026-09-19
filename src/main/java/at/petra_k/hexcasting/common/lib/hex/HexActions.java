@@ -3588,6 +3588,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (!written) {
                     throw new CastingException("hexcasting.error.akashic_duplicate");
                 }
+                vm.getPlayer().world.playSound(null, target,
+                    HexSounds.SCROLL_SCRIBBLE,
+                    net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.8F);
             }
         });
 
