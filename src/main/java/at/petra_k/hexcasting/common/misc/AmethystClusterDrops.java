@@ -85,12 +85,14 @@ public final class AmethystClusterDrops {
      */
     private static ItemStack effectiveShardStack(ResourceLocation clusterId,
                                                  int count) {
-        ItemStack effective = invokeFfdEffectiveShard(count);
-        if (!effective.isEmpty()) {
-            return effective;
-        }
+        // The requested gameplay item is FFD's own shard.  Prefer it when it
+        // is registered; the compatibility helper may intentionally redirect
+        // the item to a different provider in AUTO mode.
         Item shard = findShard(clusterId);
-        return shard == null ? ItemStack.EMPTY : new ItemStack(shard, count);
+        if (shard != null) {
+            return new ItemStack(shard, count);
+        }
+        return invokeFfdEffectiveShard(count);
     }
 
     private static ItemStack invokeFfdEffectiveShard(int count) {
