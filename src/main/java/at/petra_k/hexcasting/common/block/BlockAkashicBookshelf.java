@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -153,6 +154,8 @@ public final class BlockAkashicBookshelf extends Block {
                 Iota datum = holder.readIota(other);
                 if (pattern != null && datum != null) {
                     shelf.setMapping(pattern, datum);
+                    world.playSound(null, pos, HexSounds.SCROLL_SCRIBBLE,
+                        net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
                     player.sendMessage(new TextComponentTranslation(
                         "hexcasting.message.akashic_shelf_written", pattern.signature()));
                     return true;
@@ -164,12 +167,16 @@ public final class BlockAkashicBookshelf extends Block {
 
         if (held.getItem() instanceof ItemPatternScroll && shelf.getPattern() != null) {
             ItemPatternScroll.setPattern(held, shelf.getPattern());
+            world.playSound(null, pos, HexSounds.SCROLL_SCRIBBLE,
+                net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 1.0F);
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.akashic_scroll_written", shelf.getPattern().signature()));
             return true;
         }
         if (player.isSneaking() && held.isEmpty()) {
             shelf.clearMapping();
+            world.playSound(null, pos, HexSounds.SCROLL_SCRIBBLE,
+                net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.8F);
             player.sendMessage(new TextComponentTranslation(
                 "hexcasting.message.akashic_cleared"));
             return true;
