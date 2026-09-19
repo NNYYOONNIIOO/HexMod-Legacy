@@ -102,6 +102,41 @@ public final class HexPigmentSource {
         return source == null ? defaultSource() : source;
     }
 
+    /**
+     * Resolve the pigment for a staff cast.  Internalized pigments belong to
+     * the caster and therefore take precedence over a pigment left on the
+     * physical staff.  A newly-created capability still contains the neutral
+     * default, so an explicitly colourized legacy staff remains usable until
+     * the player actually internalizes a different pigment.
+     */
+    public static HexPigmentSource resolveStaff(EntityPlayer player,
+                                                EnumHand preferredHand) {
+        if (player == null) {
+            return defaultSource();
+        }
+        EnumHand preferred = preferredHand == null ? EnumHand.MAIN_HAND : preferredHand;
+        return resolveStaff(player, player.getHeldItem(preferred));
+    }
+
+    /** Resolve a staff pigment while preserving the concrete staff stack. */
+    public static HexPigmentSource resolveStaff(EntityPlayer player,
+                                                ItemStack staff) {
+        if (player == null) {
+            return defaultSource();
+        }
+        IHexCastingData data = HexCapabilities.CASTING_DATA == null
+            ? null : player.getCapability(HexCapabilities.CASTING_DATA, null);
+        HexPigmentSource internal = fromData(data);
+        if (internal != null && !internal.isNeutralDefault()) {
+            return internal;
+        }
+        HexPigmentSource source = fromStack(staff);
+        if (source != null) {
+            return source;
+        }
+        return internal == null ? defaultSource() : internal;
+    }
+
     /** Sample the frozen pigment at a world/render position. */
     public int sample(float time, double x, double y, double z) {
         return HexPigmentColors.color(variant, color, owner, time, x, y, z);
@@ -117,5 +152,11 @@ public final class HexPigmentSource {
 
     public UUID getOwner() {
         return owner;
+    }
+
+    private boolean isNeutralDefault() {
+        return color == DEFAULT_COLOR
+            && DEFAULT_VARIANT.equals(variant)
+            && NIL_UUID.equals(owner);
     }
 }
