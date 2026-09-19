@@ -1,14 +1,11 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
-import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.math.HexCoord;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
-import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
-import at.petra_k.hexcasting.common.effect.HexPigmentColors;
-import at.petra_k.hexcasting.common.item.ItemColorizer;
+import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -29,6 +26,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -80,6 +78,21 @@ public final class HexClientEffects {
     /** Called by MsgCastingPatternS2C through the common-side bridge. */
     public static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
                                         int lifetime, int color) {
+        addSpiralPattern(playerUuid, pattern, lifetime, color, null);
+    }
+
+    /** Called by MsgCastingPatternS2C with the frozen pigment payload. */
+    public static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
+                                        int lifetime, int color,
+                                        String pigmentVariant, UUID pigmentOwner,
+                                        int pigmentBaseColor) {
+        addSpiralPattern(playerUuid, pattern, lifetime, color,
+            HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner));
+    }
+
+    private static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
+                                         int lifetime, int color,
+                                         HexPigmentSource pigment) {
         if (playerUuid == null || pattern == null) {
             return;
         }
@@ -94,6 +107,7 @@ public final class HexClientEffects {
                 existing.maxLifetime = Math.max(existing.maxLifetime,
                     finiteLifetime(lifetime));
                 existing.color = 0xFF000000 | (color & 0xFFFFFF);
+                existing.pigment = pigment;
                 existing.dynamicColor = color != ERROR_COLOR;
                 return;
             }
@@ -103,7 +117,7 @@ public final class HexClientEffects {
         }
         int safeLifetime = lifetime <= 0 ? 1 : lifetime;
         patterns.add(new OrbitPattern(pattern, safeLifetime,
-            finiteLifetime(safeLifetime), color, color != ERROR_COLOR));
+            finiteLifetime(safeLifetime), color, pigment, color != ERROR_COLOR));
     }
 
     /** Called by MsgClearCastingPatternsS2C; clear with the same soft fade as Hex. */
@@ -139,15 +153,15 @@ public final class HexClientEffects {
         if (player == null) {
             return;
         }
-        int pigment = localPigment(player);
         for (ItemStack staff : player.inventory.mainInventory) {
-            restoreStaffPatterns(player, staff, pigment);
+            restoreStaffPatterns(player, staff, pigmentForStaff(player, staff));
         }
-        restoreStaffPatterns(player, player.getHeldItemOffhand(), pigment);
+        restoreStaffPatterns(player, player.getHeldItemOffhand(),
+            pigmentForStaff(player, player.getHeldItemOffhand()));
     }
 
     private static void restoreStaffPatterns(EntityPlayer player, ItemStack staff,
-                                             int pigment) {
+                                             HexPigmentSource pigment) {
         if (!ItemHexStaff.isStaff(staff)) {
             return;
         }
@@ -165,33 +179,37 @@ public final class HexClientEffects {
                 || resolution == StaffCastExecutor.Resolution.INVALID;
             addSpiralPattern(player.getUniqueID(), entry.getPattern(),
                 error ? 36 : Integer.MAX_VALUE,
-                error ? 0xE05252 : pigment);
+                error ? 0xE05252 : sample(pigment, player), pigment);
         }
+    }
+
+    private static HexPigmentSource pigmentForStaff(EntityPlayer player, ItemStack staff) {
+        HexPigmentSource source = HexPigmentSource.fromStack(staff);
+        return source == null ? localPigmentSource(player) : source;
+    }
+
+    private static HexPigmentSource localPigmentSource(EntityPlayer player) {
+        return HexPigmentSource.resolve(player, EnumHand.MAIN_HAND);
+    }
+
+    private static int sample(HexPigmentSource source, EntityPlayer player) {
+        if (source == null) {
+            source = HexPigmentSource.defaultSource();
+        }
+        float time = player == null || player.world == null
+            ? 0.0F : (float) player.world.getTotalWorldTime()
+                + Minecraft.getMinecraft().getRenderPartialTicks();
+        double x = player == null ? 0.0D : player.posX;
+        double y = player == null ? 0.0D : player.posY;
+        double z = player == null ? 0.0D : player.posZ;
+        return source.sample(time, x, y, z);
     }
 
     private static int localPigment(EntityPlayer player) {
         try {
-            float time = (float) player.world.getTotalWorldTime()
-                + Minecraft.getMinecraft().getRenderPartialTicks();
-            IHexCastingData data = player.getCapability(
-                HexCapabilities.CASTING_DATA, null);
-            if (data != null) {
-                return HexPigmentColors.fromData(data, time,
-                    player.posX, player.posY, player.posZ);
-            }
-            int mainhandColor = ItemColorizer.getColor(
-                player.getHeldItemMainhand(), time, player.posX, player.posY, player.posZ);
-            if (mainhandColor >= 0) {
-                return mainhandColor & 0xFFFFFF;
-            }
-            int offhandColor = ItemColorizer.getColor(
-                player.getHeldItemOffhand(), time, player.posX, player.posY, player.posZ);
-            if (offhandColor >= 0) {
-                return offhandColor & 0xFFFFFF;
-            }
-            return 0xAA66FF;
+            return sample(localPigmentSource(player), player);
         } catch (RuntimeException ignored) {
-            return 0xAA66FF;
+            return HexPigmentSource.DEFAULT_COLOR;
         }
     }
 
@@ -592,7 +610,7 @@ public final class HexClientEffects {
         List<double[]> line = makeZappy(positions, time, index,
             player == null ? 0L : (long) player.hashCode());
         int alpha = Math.max(0, Math.min(255, (int) (lifeAlpha * 255.0F)));
-        int rgb = orbit.getColor(player) & 0x00FFFFFF;
+        int rgb = orbit.getColor(player, time) & 0x00FFFFFF;
         int outerColor = (alpha << 24) | rgb;
         int innerColor = screenColor(outerColor);
         // The original uses pose-space widths 0.35 and 0.14.  Our pattern
@@ -1083,26 +1101,32 @@ public final class HexClientEffects {
         private int lifetime;
         private int maxLifetime;
         private int color;
+        private HexPigmentSource pigment;
         private boolean dynamicColor;
 
         private OrbitPattern(HexPattern pattern, int lifetime, int maxLifetime,
-                             int color, boolean dynamicColor) {
+                             int color, HexPigmentSource pigment,
+                             boolean dynamicColor) {
             this.pattern = pattern;
             this.lifetime = lifetime;
             this.maxLifetime = maxLifetime;
             this.color = 0xFF000000 | (color & 0xFFFFFF);
+            this.pigment = pigment;
             this.dynamicColor = dynamicColor;
         }
 
-        private int getColor(EntityPlayer player) {
+        private int getColor(EntityPlayer player, float time) {
             if (!dynamicColor || player == null) {
                 return color;
             }
-            // The server packet carries a useful initial colour, but a
-            // pigment such as a pride/ancient/UUID pigment is a time-varying
-            // provider.  Resolve it from the synchronized client capability
-            // for every render so the orbit keeps animating after the staff
-            // GUI is closed.
+            // Keep sampling the exact source that produced this orbit.  This
+            // matters when a colourized staff is put away: the player's
+            // capability may contain a different pigment, while the staff's
+            // frozen pride/ancient/UUID source must keep animating.
+            if (pigment != null) {
+                return 0xFF000000 | pigment.sample(time,
+                    player.posX, player.posY, player.posZ);
+            }
             return 0xFF000000 | (localPigment(player) & 0xFFFFFF);
         }
 
