@@ -13,6 +13,7 @@ import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
