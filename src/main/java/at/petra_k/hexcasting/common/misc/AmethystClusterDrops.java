@@ -72,6 +72,9 @@ public final class AmethystClusterDrops {
             < chargedChance(fortune)) {
             event.getDrops().add(new ItemStack(charged, 1));
         }
+        // HarvestDropsEvent is filtered once more by Block#dropBlockAsItem;
+        // the replacement shards and charged crystal are intentional drops.
+        event.setDropChance(1.0F);
     }
 
     private static boolean isTargetCluster(IBlockState state) {
@@ -103,6 +106,20 @@ public final class AmethystClusterDrops {
             Item shard = ForgeRegistries.ITEMS.getValue(shardId);
             if (shard != null) {
                 return shard;
+            }
+        }
+        // Some backports expose the effective item under a compatibility
+        // registry name while retaining the amethyst_shard path.  Keep this
+        // hook independent of that implementation detail.
+        for (Item candidate : ForgeRegistries.ITEMS.getValuesCollection()) {
+            ResourceLocation id = candidate == null ? null : candidate.getRegistryName();
+            if (id == null || !"amethyst_shard".equals(id.getResourcePath())) {
+                continue;
+            }
+            for (ResourceLocation known : SHARDS) {
+                if (known.getResourceDomain().equals(id.getResourceDomain())) {
+                    return candidate;
+                }
             }
         }
         return null;
