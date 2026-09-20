@@ -264,8 +264,7 @@ public final class HexClientEffects {
             source = HexPigmentSource.defaultSource();
         }
         float time = player == null || player.world == null
-            ? 0.0F : (float) player.world.getTotalWorldTime()
-                + Minecraft.getMinecraft().getRenderPartialTicks();
+            ? 0.0F : HexClientTickCounter.getTotal();
         double x = player == null ? 0.0D : player.posX;
         double y = player == null ? 0.0D : player.posY;
         double z = player == null ? 0.0D : player.posZ;
@@ -480,6 +479,9 @@ public final class HexClientEffects {
             restoreOrbitPatterns(minecraft.player);
             ORBIT_RESTORE_TICKS--;
         }
+        if (minecraft.isGamePaused()) {
+            return;
+        }
         Iterator<HexConjureParticle> particles = CONJURE_PARTICLES.iterator();
         while (particles.hasNext()) {
             HexConjureParticle particle = particles.next();
@@ -525,7 +527,7 @@ public final class HexClientEffects {
             + (camera.posY - camera.lastTickPosY) * partialTicks;
         double cameraZ = camera.lastTickPosZ
             + (camera.posZ - camera.lastTickPosZ) * partialTicks;
-        long worldTime = minecraft.world.getTotalWorldTime();
+        float visualTime = HexClientTickCounter.getTotal();
 
         if (!ORBITS.isEmpty()) {
             GlStateManager.pushMatrix();
@@ -558,7 +560,7 @@ public final class HexClientEffects {
                 }
                 for (int i = 0; i < owner.getValue().size(); i++) {
                     renderPattern(owner.getValue().get(i), i, player,
-                        partialTicks, worldTime, dx, dy, dz);
+                        partialTicks, visualTime, dx, dy, dz);
                 }
             }
 
@@ -566,7 +568,7 @@ public final class HexClientEffects {
             GlStateManager.popAttrib();
             GlStateManager.popMatrix();
         }
-        HexSentinelRenderer.render(minecraft, camera, partialTicks, worldTime);
+        HexSentinelRenderer.render(minecraft, camera, partialTicks, visualTime);
         renderConjureParticles(minecraft, camera, partialTicks);
     }
 
@@ -594,7 +596,8 @@ public final class HexClientEffects {
         long worldTime = event.getEntityPlayer().world.getTotalWorldTime();
         for (int i = 0; i < patterns.size(); i++) {
             renderPattern(patterns.get(i), i, event.getEntityPlayer(),
-                event.getPartialRenderTick(), worldTime, 0.0D, 0.0D, 0.0D);
+                event.getPartialRenderTick(), HexClientTickCounter.getTotal(),
+                0.0D, 0.0D, 0.0D);
         }
         endOrbitRender(true);
         GlStateManager.popAttrib();
@@ -660,7 +663,7 @@ public final class HexClientEffects {
 
     private static void renderPattern(OrbitPattern orbit, int index,
                                       EntityPlayer player, float partialTicks,
-                                      long worldTime, double x, double y, double z) {
+                                       float visualTime, double x, double y, double z) {
         List<HexCoord> positions = orbit.pattern.positions();
         if (positions.size() < 2) {
             return;
@@ -691,7 +694,7 @@ public final class HexClientEffects {
         if (lifeAlpha <= 0.01F) {
             return;
         }
-        float time = (float) worldTime + partialTicks;
+        float time = visualTime;
 
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);

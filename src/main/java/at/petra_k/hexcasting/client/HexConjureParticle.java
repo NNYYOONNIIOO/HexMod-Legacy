@@ -86,7 +86,7 @@ final class HexConjureParticle extends Particle {
         motionY *= 0.96D;
         motionZ *= 0.96D;
         if (pigment != null && world != null) {
-            setColor(pigment.sample((float) world.getTotalWorldTime(),
+            setColor(pigment.sample(HexClientTickCounter.getTotal(),
                 posX, posY, posZ));
         }
         particleAlpha = 0.30F

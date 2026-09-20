@@ -59,7 +59,7 @@ final class HexSentinelRenderer {
     }
 
     static void render(Minecraft minecraft, Entity camera, float partialTicks,
-                       long worldTime) {
+                       float visualTime) {
         if (minecraft == null || minecraft.world == null || camera == null
             || SENTINELS.isEmpty()) {
             return;
@@ -96,7 +96,7 @@ final class HexSentinelRenderer {
             if (pigment == null) {
                 pigment = HexPigmentSource.defaultSource();
             }
-            renderSentinel(sentinel, pigment, worldTime + partialTicks,
+            renderSentinel(sentinel, pigment, visualTime,
                 dx, dy, dz);
         }
     }

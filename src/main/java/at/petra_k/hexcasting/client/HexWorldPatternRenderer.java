@@ -25,7 +25,7 @@ final class HexWorldPatternRenderer {
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized,
-                       float partialTicks, long worldTime, long seed) {
+                       float partialTicks, float worldTime, long seed) {
         if (pattern == null || facing == null) {
             return;
         }
