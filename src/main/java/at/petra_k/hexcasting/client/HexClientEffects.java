@@ -77,6 +77,14 @@ public final class HexClientEffects {
     private HexClientEffects() {
     }
 
+    /** Apply the authoritative client copy of a player's sentinel. */
+    public static void updateSentinel(UUID playerUuid, boolean exists,
+                                      boolean extendedRange, double x,
+                                      double y, double z, int dimension) {
+        HexSentinelRenderer.update(playerUuid, exists, extendedRange,
+            x, y, z, dimension);
+    }
+
     /** Called by MsgCastingPatternS2C through the common-side bridge. */
     public static void addSpiralPattern(UUID playerUuid, HexPattern pattern,
                                         int lifetime, int color) {
@@ -448,6 +456,7 @@ public final class HexClientEffects {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft == null || minecraft.world == null) {
             ORBITS.clear();
+            HexSentinelRenderer.clear();
             CONJURE_PARTICLES.clear();
             PARTICLE_WORLD = null;
             ORBIT_RESTORE_TICKS = 0;
@@ -456,6 +465,7 @@ public final class HexClientEffects {
         if (PARTICLE_WORLD != minecraft.world) {
             PARTICLE_WORLD = minecraft.world;
             ORBITS.clear();
+            HexSentinelRenderer.clear();
             // Keep the last authoritative pigment snapshot through the
             // client-world replacement.  The staff NBT does not contain an
             // internalized pigment, so clearing this cache before the login
@@ -556,6 +566,7 @@ public final class HexClientEffects {
             GlStateManager.popAttrib();
             GlStateManager.popMatrix();
         }
+        HexSentinelRenderer.render(minecraft, camera, partialTicks, worldTime);
         renderConjureParticles(minecraft, camera, partialTicks);
     }
 
