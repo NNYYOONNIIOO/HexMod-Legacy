@@ -21,17 +21,28 @@ final class HexWorldPatternRenderer {
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized) {
-        render(pattern, facing, energized, 0.0F, 0L, 0L);
+        render(pattern, facing, energized, 0.0F, 0L, 0L, false);
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized,
                        float partialTicks, float worldTime, long seed) {
+        render(pattern, facing, energized, partialTicks, worldTime, seed, true);
+    }
+
+    private static void render(HexPattern pattern, EnumFacing facing,
+                               boolean energized, float partialTicks,
+                               float worldTime, long seed,
+                               boolean slateSurface) {
         if (pattern == null || facing == null) {
             return;
         }
 
         GlStateManager.pushMatrix();
-        transformToFace(facing);
+        if (slateSurface) {
+            transformToSlateFace(facing);
+        } else {
+            transformToFace(facing);
+        }
         GlStateManager.scale(1.0D / PREVIEW_SIZE, 1.0D / PREVIEW_SIZE,
             1.0D / PREVIEW_SIZE);
         if (energized) {
@@ -75,6 +86,48 @@ final class HexWorldPatternRenderer {
             case EAST:
             default:
                 GlStateManager.translate(1.0D + FACE_OFFSET, 0.5D, 0.5D);
+                GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+                break;
+        }
+    }
+
+    /**
+     * A slate is only one pixel thick and its block model is deliberately
+     * placed against the supporting face.  The ordinary face transform above
+     * is correct for a full block (and is used by the bookshelf renderer),
+     * but would put a slate's glyph at the opposite side of the block.  Keep
+     * the glyph just outside the actual visible surface instead.
+     */
+    private static void transformToSlateFace(EnumFacing facing) {
+        double thickness = 1.0D / 16.0D;
+        switch (facing) {
+            case DOWN:
+                GlStateManager.translate(0.5D, 1.0D - thickness - FACE_OFFSET,
+                    0.5D);
+                GlStateManager.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+                break;
+            case UP:
+                GlStateManager.translate(0.5D, thickness + FACE_OFFSET, 0.5D);
+                GlStateManager.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+                break;
+            case NORTH:
+                GlStateManager.translate(0.5D, 0.5D,
+                    1.0D - thickness - FACE_OFFSET);
+                GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+                break;
+            case SOUTH:
+                GlStateManager.translate(0.5D, 0.5D,
+                    thickness + FACE_OFFSET);
+                break;
+            case WEST:
+                GlStateManager.translate(1.0D - thickness - FACE_OFFSET,
+                    0.5D, 0.5D);
+                GlStateManager.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
+                break;
+            case EAST:
+            default:
+                GlStateManager.translate(thickness + FACE_OFFSET, 0.5D,
+                    0.5D);
                 GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
                 break;
         }
