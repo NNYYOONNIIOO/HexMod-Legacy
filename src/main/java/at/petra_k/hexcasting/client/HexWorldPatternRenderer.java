@@ -21,6 +21,11 @@ final class HexWorldPatternRenderer {
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized) {
+        render(pattern, facing, energized, 0.0F, 0L, 0L);
+    }
+
+    static void render(HexPattern pattern, EnumFacing facing, boolean energized,
+                       float partialTicks, long worldTime, long seed) {
         if (pattern == null || facing == null) {
             return;
         }
@@ -29,10 +34,20 @@ final class HexWorldPatternRenderer {
         transformToFace(facing);
         GlStateManager.scale(1.0D / PREVIEW_SIZE, 1.0D / PREVIEW_SIZE,
             1.0D / PREVIEW_SIZE);
-        HexPatternChatGeometry.drawWorldPreview(pattern, -PREVIEW_SIZE / 2,
-            -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
-            energized ? ENERGIZED_OUTER : DEFAULT_OUTER,
-            energized ? ENERGIZED_INNER : DEFAULT_INNER, false);
+        if (energized) {
+            // Hex's active slate uses the WOBBLY zappy settings: the broad
+            // purple ribbon moves over time and the screen-colour inner line
+            // supplies the bright wash.  Static previews remain on the
+            // ordinary readable geometry path.
+            HexPatternChatGeometry.drawWobblyWorldPreview(pattern,
+                -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
+                0xFFCFA0F3, 0xFFE7CFF9, false,
+                (float) worldTime + partialTicks, seed);
+        } else {
+            HexPatternChatGeometry.drawWorldPreview(pattern,
+                -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
+                DEFAULT_OUTER, DEFAULT_INNER, false);
+        }
         GlStateManager.popMatrix();
     }
 

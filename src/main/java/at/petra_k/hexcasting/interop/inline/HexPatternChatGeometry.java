@@ -103,14 +103,18 @@ public final class HexPatternChatGeometry {
      */
     public static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
                                    int outerArgb, int innerArgb) {
-        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb, true);
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb, true,
+            false, READABLE_VARIANCE, 0.0D, READABLE_FLOW_IRREGULAR,
+            READABLE_OFFSET, READABLE_LAST_SEGMENT, 0.0D, 0.0D);
     }
 
     /** Draw a fitted preview, optionally omitting the readable-scroll dots. */
     public static void drawPreview(HexPattern pattern, int x, int y, int size, int alpha,
                                    int outerArgb, int innerArgb, boolean drawDots) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
-            drawDots, false);
+            drawDots, false, READABLE_VARIANCE, 0.0D,
+            READABLE_FLOW_IRREGULAR, READABLE_OFFSET, READABLE_LAST_SEGMENT,
+            0.0D, 0.0D);
     }
 
     /**
@@ -123,16 +127,35 @@ public final class HexPatternChatGeometry {
                                         int alpha, int outerArgb, int innerArgb,
                                         boolean drawDots) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
-            drawDots, true);
+            drawDots, true, READABLE_VARIANCE, 0.0D,
+            READABLE_FLOW_IRREGULAR, 0.0D, 1.0D, 0.0D, 0.0D);
+    }
+
+    /** Draw the animated WOBBLY pattern used by an energized world slate. */
+    public static void drawWobblyWorldPreview(HexPattern pattern, int x, int y,
+                                               int size, int alpha,
+                                               int outerArgb, int innerArgb,
+                                               boolean drawDots, float time,
+                                               double seed) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, true, 2.5D, 0.1D, READABLE_FLOW_IRREGULAR,
+            0.0D, 1.0D, time, seed);
     }
 
     private static void drawPreview(HexPattern pattern, int x, int y, int size,
                                     int alpha, int outerArgb, int innerArgb,
-                                    boolean drawDots, boolean depthTest) {
+                                    boolean drawDots, boolean depthTest,
+                                    double variance, double speed,
+                                    double flowIrregular,
+                                    double readabilityOffset,
+                                    double lastSegmentLength,
+                                    double time, double seed) {
         if (pattern == null || size <= 0 || alpha <= 3) {
             return;
         }
-        PreviewLayout preview = readablePreviewLayout(pattern, x, y, size);
+        PreviewLayout preview = readablePreviewLayout(pattern, x, y, size,
+            variance, speed, flowIrregular, readabilityOffset,
+            lastSegmentLength, time, seed);
         if (preview == null || preview.linePoints.size() < 2) {
             return;
         }
@@ -486,7 +509,12 @@ public final class HexPatternChatGeometry {
 
     private static PreviewLayout readablePreviewLayout(HexPattern pattern,
                                                         int originX, int originY,
-                                                        int size) {
+                                                        int size, double variance,
+                                                        double speed,
+                                                        double flowIrregular,
+                                                        double readabilityOffset,
+                                                        double lastSegmentLength,
+                                                        double time, double seed) {
         List<Point> dots = new ArrayList<>();
         for (HexCoord position : pattern.positions()) {
             dots.add(new Point(
@@ -506,7 +534,8 @@ public final class HexPatternChatGeometry {
                 }
             }
         }
-        List<Point> zappy = makeReadableZappy(dots, duplicates, 0.0D);
+        List<Point> zappy = makeReadableZappy(dots, duplicates, variance, speed,
+            flowIrregular, readabilityOffset, lastSegmentLength, time, seed);
         if (zappy.size() < 2) {
             return null;
         }
@@ -576,9 +605,14 @@ public final class HexPatternChatGeometry {
 
     private static List<Point> makeReadableZappy(List<Point> barePoints,
                                                   Set<Integer> duplicateIndices,
-                                                  double seed) {
+                                                  double variance, double speed,
+                                                  double flowIrregular,
+                                                  double readabilityOffset,
+                                                  double lastSegmentLength,
+                                                  double time, double seed) {
         if (duplicateIndices == null || duplicateIndices.isEmpty()) {
-            return zappify(barePoints, true, seed, 0);
+            return zappify(barePoints, true, seed, 0, variance, speed,
+                flowIrregular, lastSegmentLength, time);
         }
         List<Point> output = new ArrayList<>(barePoints.size() * READABLE_HOPS);
         List<Point> chain = new ArrayList<>();
@@ -586,8 +620,8 @@ public final class HexPatternChatGeometry {
         for (int i = 0; i + 1 < barePoints.size(); i++) {
             Point head = barePoints.get(i);
             Point tail = barePoints.get(i + 1);
-            double tangentX = (tail.x - head.x) * READABLE_OFFSET;
-            double tangentY = (tail.y - head.y) * READABLE_OFFSET;
+            double tangentX = (tail.x - head.x) * readabilityOffset;
+            double tangentY = (tail.y - head.y) * readabilityOffset;
             if (i != 0 && duplicateIndices.contains(i)) {
                 chain.add(new Point(head.x + tangentX, head.y + tangentY));
             } else {
@@ -596,10 +630,12 @@ public final class HexPatternChatGeometry {
 
             if (i == barePoints.size() - 2) {
                 chain.add(new Point(tail.x, tail.y));
-                output.addAll(zappify(chain, true, seed, chainStart));
+                output.addAll(zappify(chain, true, seed, chainStart, variance,
+                    speed, flowIrregular, lastSegmentLength, time));
             } else if (duplicateIndices.contains(i + 1)) {
                 chain.add(new Point(tail.x - tangentX, tail.y - tangentY));
-                output.addAll(zappify(chain, false, seed, chainStart));
+                output.addAll(zappify(chain, false, seed, chainStart, variance,
+                    speed, flowIrregular, lastSegmentLength, time));
                 chain.clear();
                 chainStart = i + 1;
             }
@@ -608,7 +644,11 @@ public final class HexPatternChatGeometry {
     }
 
     private static List<Point> zappify(List<Point> points, boolean truncateLast,
-                                       double seed, int segmentOffset) {
+                                       double seed, int segmentOffset,
+                                       double variance, double speed,
+                                       double flowIrregular,
+                                       double lastSegmentLength,
+                                       double time) {
         List<Point> output = new ArrayList<>(points.size() * READABLE_HOPS);
         if (points.isEmpty()) {
             return output;
@@ -621,23 +661,24 @@ public final class HexPatternChatGeometry {
             double dy = target.y - source.y;
             double distance = length(dx, dy);
             double hopDistance = distance / READABLE_HOPS;
-            double maxVariance = hopDistance * READABLE_VARIANCE;
+            double maxVariance = hopDistance * variance;
             int maxJ = truncateLast && i == points.size() - 2
-                ? (int) Math.round(READABLE_LAST_SEGMENT * READABLE_HOPS)
+                ? (int) Math.round(lastSegmentLength * READABLE_HOPS)
                 : READABLE_HOPS;
             for (int j = 1; j <= maxJ; j++) {
                 double progress = j / (double) (READABLE_HOPS + 1);
                 double px = source.x + dx * progress;
                 double py = source.y + dy * progress;
-                double minorPerturb = readableNoise(i, j, Math.sin(0.0D))
-                    * READABLE_FLOW_IRREGULAR;
+                double zSeed = time * speed;
+                double minorPerturb = readableNoise(i, j, Math.sin(zSeed))
+                    * flowIrregular;
                 double theta = 3.0D * readableNoise(
-                    i + progress + minorPerturb, 1337.0D, seed)
+                    i + progress + minorPerturb - zSeed, 1337.0D, seed)
                     * Math.PI * 2.0D;
                 double scaleVariance = Math.min(1.0D,
                     8.0D * (0.5D - Math.abs(0.5D - progress)));
                 double radius = readableNoise(
-                    i + progress, 69420.0D, seed)
+                    i + progress - zSeed, 69420.0D, seed)
                     * maxVariance * scaleVariance;
                 output.add(new Point(px + radius * Math.cos(theta),
                     py + radius * Math.sin(theta)));
