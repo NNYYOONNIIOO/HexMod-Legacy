@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
 
 /** Renders the translucent Altiora wings behind players with active grace. */
 @SideOnly(Side.CLIENT)
@@ -55,6 +56,10 @@ final class HexAltioraRenderer {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableBlend();
         GlStateManager.enableAlpha();
+        // ArmorCutoutNoCull, used by modern Hex, keeps both folded wing
+        // faces visible and discards the transparent border of the texture.
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+        GlStateManager.disableCull();
         GlStateManager.tryBlendFuncSeparate(
             GlStateManager.SourceFactor.ONE,
             GlStateManager.DestFactor.ZERO,

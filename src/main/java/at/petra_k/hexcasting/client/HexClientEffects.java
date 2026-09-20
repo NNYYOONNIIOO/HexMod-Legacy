@@ -593,7 +593,6 @@ public final class HexClientEffects {
         GlStateManager.pushMatrix();
         GlStateManager.pushAttrib();
         beginOrbitRender();
-        long worldTime = event.getEntityPlayer().world.getTotalWorldTime();
         for (int i = 0; i < patterns.size(); i++) {
             renderPattern(patterns.get(i), i, event.getEntityPlayer(),
                 event.getPartialRenderTick(), HexClientTickCounter.getTotal(),
