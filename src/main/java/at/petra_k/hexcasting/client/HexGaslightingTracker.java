@@ -28,8 +28,8 @@ public final class HexGaslightingTracker {
     }
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
+    public static void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (event == null || event.phase != TickEvent.Phase.END) {
             return;
         }
         Minecraft minecraft = Minecraft.getMinecraft();
@@ -38,10 +38,9 @@ public final class HexGaslightingTracker {
             cooldown = 40;
             return;
         }
-        // ClientTickCounter in modern Hex does not advance while a single
-        // player screen pauses the game.  In particular, opening a GUI must
-        // not silently age an unseen Quenched Allay stack while the world is
-        // paused.
+        // Modern Hex checks gaslighting once per rendered frame. In 1.12.2
+        // RenderTickEvent.END is the matching hook and keeps the four model
+        // variants independent of the client's simulation tick rate.
         if (minecraft.isGamePaused()) {
             return;
         }
