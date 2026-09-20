@@ -3027,6 +3027,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (data != null) {
                 data.setAltioraTicks(20);
                 data.setAltioraActive(true);
+                at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
             }
         }
 
@@ -3039,6 +3040,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (data.getAltioraTicks() <= 0
                 && (player.onGround || player.collidedHorizontally)) {
                 data.setAltioraActive(false);
+                at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
                 player.world.playSound(null, player.posX, player.posY, player.posZ,
                     HexSounds.FLIGHT_FINISH,
                     net.minecraft.util.SoundCategory.PLAYERS, 2.0F, 1.0F);

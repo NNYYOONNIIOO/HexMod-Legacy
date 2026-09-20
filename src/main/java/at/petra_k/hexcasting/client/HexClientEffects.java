@@ -601,6 +601,12 @@ public final class HexClientEffects {
         GlStateManager.popMatrix();
     }
 
+    /** Draw Altiora's player-render layer after the vanilla model. */
+    @SubscribeEvent
+    public static void onRenderPlayerPost(RenderPlayerEvent.Post event) {
+        HexAltioraRenderer.render(event);
+    }
+
     /** Render the queued cloud with Hex's SRC_ALPHA/ONE blend mode. */
     private static void renderConjureParticles(Minecraft minecraft,
                                                 Entity camera,
