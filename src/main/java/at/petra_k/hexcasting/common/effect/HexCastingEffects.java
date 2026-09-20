@@ -78,6 +78,17 @@ public final class HexCastingEffects {
         onPortableCast(player, EnumHand.MAIN_HAND, patterns, success, null);
     }
 
+    /** Emit Altiora's small downward media trail while its grace is active. */
+    public static void onAltioraTick(EntityPlayer player) {
+        if (player == null || player.world == null || player.world.isRemote) {
+            return;
+        }
+        HexPigmentSource source = playerPigment(player);
+        int color = sample(source, player);
+        sendSpray(player, player.posX, player.posY, player.posZ,
+            0.0D, -0.2D, 0.0D, 0.4D, Math.PI * 0.5D, 3, color, source);
+    }
+
     /** Feedback for a portable cast using the hand containing its source item. */
     public static void onPortableCast(EntityPlayer player, EnumHand hand,
                                       List<HexPattern> patterns, boolean success) {

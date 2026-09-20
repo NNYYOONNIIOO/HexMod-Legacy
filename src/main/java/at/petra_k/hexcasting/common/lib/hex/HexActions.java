@@ -3047,6 +3047,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 return;
             }
             player.fallDistance = 0.0F;
+            at.petra_k.hexcasting.common.effect.HexCastingEffects.onAltioraTick(player);
             data.setAltioraTicks(Math.max(0, data.getAltioraTicks() - 1));
             if (player.world.rand.nextFloat() < 0.02F) {
                 player.world.playSound(null, player.posX, player.posY, player.posZ,
