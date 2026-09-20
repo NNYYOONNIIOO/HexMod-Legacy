@@ -161,6 +161,7 @@ public final class HexPatternChatGeometry {
         }
 
         GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         if (depthTest) {
@@ -199,10 +200,7 @@ public final class HexPatternChatGeometry {
             }
         }
 
-        GlStateManager.enableTexture2D();
-        GlStateManager.enableCull();
-        GlStateManager.enableDepth();
-        GlStateManager.disableBlend();
+        GlStateManager.popAttrib();
         GlStateManager.popMatrix();
     }
 
@@ -214,6 +212,7 @@ public final class HexPatternChatGeometry {
         }
 
         GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
         // The chat overload applies the eight-pixel correction requested for
         // the lower-left chat glyph. Other GUI surfaces use their text origin
         // directly so tooltips and the stack preview stay aligned.
@@ -234,10 +233,7 @@ public final class HexPatternChatGeometry {
             red, green, blue);
         tessellator.draw();
 
-        GlStateManager.enableTexture2D();
-        GlStateManager.enableCull();
-        GlStateManager.enableDepth();
-        GlStateManager.disableBlend();
+        GlStateManager.popAttrib();
         GlStateManager.popMatrix();
     }
 
