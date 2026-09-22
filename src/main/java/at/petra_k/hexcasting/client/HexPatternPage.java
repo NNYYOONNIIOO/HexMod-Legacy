@@ -3,17 +3,24 @@ package at.petra_k.hexcasting.client;
 import at.petra_k.hexcasting.api.casting.math.HexCoord;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
@@ -30,8 +37,8 @@ import java.util.Collections;
  *
  * <p>Patchouli 1.0-23.6 does not ship the 1.20.1 {@code hexcasting:pattern}
  * page type, so the port has to provide it on the client.  The page resolves
- * the action id against the same Java registry used by the staff GUI; this
- * keeps the guide and the actual caster on one source of truth.</p>
+ * action ids through the same scroll code used by the actual item, including
+ * world-specific ancient-scroll patterns.</p>
  */
 @SideOnly(Side.CLIENT)
 public final class HexPatternPage extends BookPage {
@@ -46,6 +53,7 @@ public final class HexPatternPage extends BookPage {
     private transient HexPattern pattern;
     private transient List<HexPattern> manualPatterns = Collections.emptyList();
     private transient String actionName;
+    private transient ResourceLocation actionId;
 
     public static void register() {
         ClientBookRegistry.INSTANCE.pageTypes.put(
@@ -68,6 +76,7 @@ public final class HexPatternPage extends BookPage {
         if (!manualPatterns.isEmpty()) {
             pattern = manualPatterns.get(0);
         }
+        actionId = null;
         actionName = header == null ? (op_id == null ? "" : op_id) : header;
         if (header != null && !header.isEmpty()) {
             String translatedHeader = I18n.format(header);
@@ -80,8 +89,9 @@ public final class HexPatternPage extends BookPage {
             ResourceLocation id = op_id == null
                 ? null : new ResourceLocation(op_id);
             if (id != null) {
+                actionId = id;
                 if (pattern == null) {
-                    pattern = HexActionRegistry.getPattern(id);
+                    pattern = resolvePatternFromScroll(id);
                 }
                 String key = "hexcasting.action." + id.getResourcePath();
                 String translated = I18n.format(key);
@@ -101,6 +111,7 @@ public final class HexPatternPage extends BookPage {
         if (fontRenderer == null) {
             return;
         }
+        refreshActionPattern();
         int textColor = book == null ? 0x404040 : book.textColor;
         int headerColor = book == null ? 0x202020 : book.headerColor;
         FontRenderer font = fontRenderer;
@@ -134,6 +145,76 @@ public final class HexPatternPage extends BookPage {
             String translated = I18n.format(text);
             font.drawSplitString(translated, 5, textTop + 2,
                 118, textColor);
+        }
+    }
+
+    /**
+     * Patchouli builds pages before the server's per-world pattern snapshot
+     * necessarily arrives on a client. Re-read the scroll-backed pattern on
+     * every draw so an already-open guide changes from the prototype to the
+     * exact ancient-scroll drawing as soon as that snapshot is available.
+     */
+    private void refreshActionPattern() {
+        if (!manualPatterns.isEmpty() || actionId == null) {
+            return;
+        }
+        HexPattern resolved = resolvePatternFromScroll(actionId);
+        if (resolved != null) {
+            pattern = resolved;
+        }
+    }
+
+    /** Resolve an action exactly as a pattern scroll does. */
+    private static HexPattern resolvePatternFromScroll(ResourceLocation id) {
+        if (id == null) {
+            return null;
+        }
+
+        try {
+            HexActionRegistry.bootstrap();
+            Minecraft minecraft = Minecraft.getMinecraft();
+            World world = minecraft.world;
+
+            // If the player owns an actual scroll, prefer its serialized
+            // pattern. This preserves the exact NBT-backed drawing rather
+            // than reconstructing it from the action prototype.
+            EntityPlayer player = minecraft.player;
+            if (player != null && player.inventory != null) {
+                for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
+                    ItemStack stack = player.inventory.getStackInSlot(slot);
+                    if (stack == null || stack.isEmpty()
+                        || !(stack.getItem() instanceof ItemPatternScroll)) {
+                        continue;
+                    }
+                    ResourceLocation scrollAction = ItemPatternScroll.getActionId(stack);
+                    if (id.equals(scrollAction)) {
+                        HexPattern scrollPattern = ItemPatternScroll.getPattern(stack, world);
+                        if (scrollPattern != null) {
+                            return scrollPattern;
+                        }
+                    }
+                }
+            }
+
+            // A guide page may be opened without the corresponding scroll in
+            // the inventory. Construct the same ancient-scroll representation
+            // used by the creative tab so world-specific patterns still come
+            // from ItemPatternScroll rather than directly from the registry.
+            Item scrollItem = HexItems.EXTRA_ITEMS.get("scroll");
+            if (scrollItem instanceof ItemPatternScroll) {
+                ItemStack scroll = ItemPatternScroll.withPerWorldPattern(
+                    new ItemStack(scrollItem), id);
+                HexPattern scrollPattern = ItemPatternScroll.getPattern(scroll, world);
+                if (scrollPattern != null) {
+                    return scrollPattern;
+                }
+            }
+
+            return HexActionRegistry.getPattern(id, world);
+        } catch (RuntimeException ignored) {
+            // Keep the page usable if an optional action or client world is
+            // unavailable while Patchouli is rebuilding its book contents.
+            return HexActionRegistry.getPattern(id);
         }
     }
 
