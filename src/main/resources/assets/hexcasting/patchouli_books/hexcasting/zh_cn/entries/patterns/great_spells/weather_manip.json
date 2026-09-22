@@ -1,7 +1,7 @@
 {
   "name": "hexcasting.entry.weather_manip",
   "category": "hexcasting:patterns/great_spells",
-  "icon": "minecraft:textures/mob_effect/levitation.png",
+  "icon": "minecraft:feather",
   "sortnum": 1,
   "advancement": "hexcasting:root",
   "read_by_default": true,
