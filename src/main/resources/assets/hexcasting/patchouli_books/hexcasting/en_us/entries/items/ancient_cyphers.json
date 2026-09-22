@@ -12,7 +12,42 @@
     {
       "type": "spotlight",
       "text": "hexcasting.page.ancient_cyphers.2",
-      "item": "hexcasting:ancient_cypher{variant:0},hexcasting:ancient_cypher{variant:1},hexcasting:ancient_cypher{variant:2},hexcasting:ancient_cypher{variant:3},hexcasting:ancient_cypher{variant:4},hexcasting:ancient_cypher{variant:5},hexcasting:ancient_cypher{variant:6},hexcasting:ancient_cypher{variant:7}"
+      "item": "hexcasting:ancient_cypher{variant:0}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:1}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:2}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:3}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:4}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:5}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:6}"
+    },
+    {
+      "type": "spotlight",
+      "text": "hexcasting.page.ancient_cyphers.2",
+      "item": "hexcasting:ancient_cypher{variant:7}"
     },
     {
       "type": "crafting",

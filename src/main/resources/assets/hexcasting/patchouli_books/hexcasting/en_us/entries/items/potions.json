@@ -14,7 +14,37 @@
       "type": "spotlight",
       "title": "hexcasting.page.potions.effects.header",
       "text": "hexcasting.page.potions.2",
-      "item": "minecraft:potion{Potion:\"hexcasting:enlarge_grid\"},minecraft:potion{Potion:\"hexcasting:enlarge_grid_long\"},minecraft:potion{Potion:\"hexcasting:enlarge_grid_strong\"},minecraft:potion{Potion:\"hexcasting:shrink_grid\"},minecraft:potion{Potion:\"hexcasting:shrink_grid_long\"},minecraft:potion{Potion:\"hexcasting:shrink_grid_strong\"}"
+      "item": "minecraft:potion{Potion:\"hexcasting:enlarge_grid\"}"
+    },
+    {
+      "type": "spotlight",
+      "title": "hexcasting.page.potions.effects.header",
+      "text": "hexcasting.page.potions.2",
+      "item": "minecraft:potion{Potion:\"hexcasting:enlarge_grid_long\"}"
+    },
+    {
+      "type": "spotlight",
+      "title": "hexcasting.page.potions.effects.header",
+      "text": "hexcasting.page.potions.2",
+      "item": "minecraft:potion{Potion:\"hexcasting:enlarge_grid_strong\"}"
+    },
+    {
+      "type": "spotlight",
+      "title": "hexcasting.page.potions.effects.header",
+      "text": "hexcasting.page.potions.2",
+      "item": "minecraft:potion{Potion:\"hexcasting:shrink_grid\"}"
+    },
+    {
+      "type": "spotlight",
+      "title": "hexcasting.page.potions.effects.header",
+      "text": "hexcasting.page.potions.2",
+      "item": "minecraft:potion{Potion:\"hexcasting:shrink_grid_long\"}"
+    },
+    {
+      "type": "spotlight",
+      "title": "hexcasting.page.potions.effects.header",
+      "text": "hexcasting.page.potions.2",
+      "item": "minecraft:potion{Potion:\"hexcasting:shrink_grid_strong\"}"
     }
   ]
 }
