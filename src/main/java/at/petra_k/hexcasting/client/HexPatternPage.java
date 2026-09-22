@@ -105,31 +105,34 @@ public final class HexPatternPage extends BookPage {
         int headerColor = book == null ? 0x202020 : book.headerColor;
         FontRenderer font = fontRenderer;
 
+        // GuiBookEntry translates the matrix to this page's left/top before
+        // calling render. Page coordinates must therefore stay local; adding
+        // left/top here applies the page offset twice.
         font.drawString(actionName == null ? "" : actionName,
-            left + 5, top + 4, headerColor);
+            5, 4, headerColor);
         if (!manualPatterns.isEmpty()) {
             drawPatterns();
         } else if (pattern != null) {
-            drawPattern(pattern, left + 64, top + 54);
+            drawPattern(pattern, 64, 54);
         } else {
             font.drawString(I18n.format("hexcasting.gui.staff.unknown"),
-                left + 8, top + 48, 0xAA3333);
+                8, 48, 0xAA3333);
         }
 
-        int textTop = top + 96;
+        int textTop = 96;
         if (input != null && !input.isEmpty()) {
             font.drawString(I18n.format("hexcasting.patchouli.input", input),
-                left + 5, textTop, 0x666666);
+                5, textTop, 0x666666);
             textTop += 10;
         }
         if (output != null && !output.isEmpty()) {
             font.drawString(I18n.format("hexcasting.patchouli.output", output),
-                left + 5, textTop, 0x666666);
+                5, textTop, 0x666666);
             textTop += 10;
         }
         if (text != null && !text.isEmpty()) {
             String translated = I18n.format(text);
-            font.drawSplitString(translated, left + 5, textTop + 2,
+            font.drawSplitString(translated, 5, textTop + 2,
                 118, textColor);
         }
     }
@@ -141,8 +144,8 @@ public final class HexPatternPage extends BookPage {
         for (int i = 0; i < count; i++) {
             int column = i % columns;
             int row = i / columns;
-            int centerX = left + 24 + column * 40;
-            int centerY = top + 34 + row * 38;
+            int centerX = 24 + column * 40;
+            int centerY = 34 + row * 38;
             drawPattern(manualPatterns.get(i), centerX, centerY);
         }
     }
@@ -177,6 +180,12 @@ public final class HexPatternPage extends BookPage {
         GlStateManager.tryBlendFuncSeparate(
             GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
             GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        // Patchouli and FontRenderer leave GlStateManager's cached colour
+        // different from the fixed-function colour in some GUI passes. Force
+        // a fresh white multiplier so POSITION_COLOR vertices retain their
+        // blue/pink pattern colours instead of being rendered black.
+        GlStateManager.resetColor();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glLineWidth(2.5F);
 
         Tessellator tessellator = Tessellator.getInstance();
@@ -199,6 +208,9 @@ public final class HexPatternPage extends BookPage {
 
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
+        // Invalidate the colour cache after the page renderer so the next GUI
+        // component cannot reuse a stale colour after this draw call.
+        GlStateManager.resetColor();
         GlStateManager.popMatrix();
     }
 
