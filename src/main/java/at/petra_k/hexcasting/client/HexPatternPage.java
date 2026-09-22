@@ -27,6 +27,8 @@ import org.lwjgl.opengl.GL11;
 import vazkii.patchouli.client.book.BookPage;
 import vazkii.patchouli.client.book.ClientBookRegistry;
 import vazkii.patchouli.client.book.BookEntry;
+import vazkii.patchouli.client.book.gui.BookTextRenderer;
+import vazkii.patchouli.client.book.gui.GuiBookEntry;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -54,6 +56,7 @@ public final class HexPatternPage extends BookPage {
     private transient List<HexPattern> manualPatterns = Collections.emptyList();
     private transient String actionName;
     private transient ResourceLocation actionId;
+    private transient BookTextRenderer textRenderer;
 
     public static void register() {
         ClientBookRegistry.INSTANCE.pageTypes.put(
@@ -72,6 +75,7 @@ public final class HexPatternPage extends BookPage {
     public void build(BookEntry entry, int pageNum) {
         super.build(entry, pageNum);
         pattern = null;
+        textRenderer = null;
         manualPatterns = parsePatterns(patterns);
         if (!manualPatterns.isEmpty()) {
             pattern = manualPatterns.get(0);
@@ -107,12 +111,23 @@ public final class HexPatternPage extends BookPage {
     }
 
     @Override
+    public void onDisplayed(GuiBookEntry displayedIn, int left, int top) {
+        super.onDisplayed(displayedIn, left, top);
+        rebuildTextRenderer();
+    }
+
+    @Override
+    public void onHidden(GuiBookEntry displayedIn) {
+        textRenderer = null;
+        super.onHidden(displayedIn);
+    }
+
+    @Override
     public void render(int mouseX, int mouseY, float partialTicks) {
         if (fontRenderer == null) {
             return;
         }
         refreshActionPattern();
-        int textColor = book == null ? 0x404040 : book.textColor;
         int headerColor = book == null ? 0x202020 : book.headerColor;
         FontRenderer font = fontRenderer;
 
@@ -142,10 +157,50 @@ public final class HexPatternPage extends BookPage {
             textTop += 10;
         }
         if (text != null && !text.isEmpty()) {
-            String translated = I18n.format(text);
-            font.drawSplitString(translated, 5, textTop + 2,
-                118, textColor);
+            if (textRenderer == null) {
+                rebuildTextRenderer(textTop + 2);
+            }
+            if (textRenderer != null) {
+                // BookTextRenderer delegates to Patchouli's BookTextParser,
+                // which handles $(l:...), $(item), $(action), $(br2), and
+                // the other formatting commands used by Hex's guide.
+                textRenderer.render(mouseX, mouseY);
+            }
         }
+    }
+
+    @Override
+    public void mouseClicked(int mouseX, int mouseY, int button) {
+        if (textRenderer != null) {
+            textRenderer.click(mouseX, mouseY, button);
+        }
+    }
+
+    private void rebuildTextRenderer() {
+        rebuildTextRenderer(textTop() + 2);
+    }
+
+    private void rebuildTextRenderer(int textTop) {
+        if (parent == null || text == null || text.isEmpty()) {
+            textRenderer = null;
+            return;
+        }
+        // The JSON i18n compatibility mixin normally supplies the localized
+        // text already. Formatting it once more is harmless for a literal,
+        // and keeps pages readable when a book is rebuilt before that pass.
+        textRenderer = new BookTextRenderer(parent, I18n.format(text),
+            5, textTop);
+    }
+
+    private int textTop() {
+        int textTop = 96;
+        if (input != null && !input.isEmpty()) {
+            textTop += 10;
+        }
+        if (output != null && !output.isEmpty()) {
+            textTop += 10;
+        }
+        return textTop;
     }
 
     /**
