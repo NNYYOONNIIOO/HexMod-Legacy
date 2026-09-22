@@ -8,8 +8,10 @@ import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -150,7 +152,7 @@ public final class HexRecipeRegistry {
             externalItem("cavesnotcliffs", "azalea"),
             externalItem("cavesnotcliffs", "honeycomb"),
             externalItem("cavesnotcliffs", "moss_block"),
-            new ItemStack(Blocks.UNPOWERED_REPEATER), Items.EGG
+            Items.CARROT, new ItemStack(Blocks.UNPOWERED_REPEATER), Items.EGG
         };
         String[] prideNames = {
             "agender", "aroace", "aromantic", "asexual", "bisexual", "demiboy",
@@ -239,6 +241,10 @@ public final class HexRecipeRegistry {
             new String[] {"LPL", "123", "LPL"},
             '1', dust, '2', shard, '3', charged, 'L', edifiedLogs, 'P', edifiedPlanks);
         shaped(event, "impetus/empty", blockItem("impetus/empty"),
+            new String[] {"PSS", "BAB", "SSP"},
+            'A', charged, 'B', Blocks.IRON_BARS, 'P', Blocks.PURPUR_BLOCK,
+            'S', blockItem("slate_block"));
+        shaped(event, "great_impetus", blockItem("great_impetus"),
             new String[] {"PSS", "BAB", "SSP"},
             'A', charged, 'B', Blocks.IRON_BARS, 'P', Blocks.PURPUR_BLOCK,
             'S', blockItem("slate_block"));
@@ -353,8 +359,8 @@ public final class HexRecipeRegistry {
         return new ItemStack(Items.DYE, 1, color.getDyeDamage());
     }
 
-    private static List<ItemStack> musicDiscs() {
-        return Arrays.asList(
+    private static Ingredient musicDiscs() {
+        return Ingredient.fromStacks(
             new ItemStack(Items.RECORD_13), new ItemStack(Items.RECORD_CAT),
             new ItemStack(Items.RECORD_BLOCKS), new ItemStack(Items.RECORD_CHIRP),
             new ItemStack(Items.RECORD_FAR), new ItemStack(Items.RECORD_MALL),
@@ -425,11 +431,16 @@ public final class HexRecipeRegistry {
                 return;
             }
         }
+        Object[] normalizedKeyValues = keyValues.clone();
+        for (int i = 1; i < normalizedKeyValues.length; i += 2) {
+            normalizedKeyValues[i] = normalizeIngredient(normalizedKeyValues[i]);
+        }
         ItemStack result = output.copy();
         result.setCount(count);
-        Object[] recipe = new Object[pattern.length + keyValues.length];
+        Object[] recipe = new Object[pattern.length + normalizedKeyValues.length];
         System.arraycopy(pattern, 0, recipe, 0, pattern.length);
-        System.arraycopy(keyValues, 0, recipe, pattern.length, keyValues.length);
+        System.arraycopy(normalizedKeyValues, 0, recipe, pattern.length,
+            normalizedKeyValues.length);
         ShapedOreRecipe shaped = new ShapedOreRecipe(
             new ResourceLocation(HexAPI.MOD_ID, id), result, recipe);
         register(event, shaped, id);
@@ -450,10 +461,14 @@ public final class HexRecipeRegistry {
         if (output == null || output.isEmpty() || !validIngredients(ingredients)) {
             return;
         }
+        Object[] normalizedIngredients = ingredients.clone();
+        for (int i = 0; i < normalizedIngredients.length; i++) {
+            normalizedIngredients[i] = normalizeIngredient(normalizedIngredients[i]);
+        }
         ItemStack result = output.copy();
         result.setCount(count);
         ShapelessOreRecipe shapeless = new ShapelessOreRecipe(
-            new ResourceLocation(HexAPI.MOD_ID, id), result, ingredients);
+            new ResourceLocation(HexAPI.MOD_ID, id), result, normalizedIngredients);
         register(event, shapeless, id);
     }
 
@@ -473,9 +488,30 @@ public final class HexRecipeRegistry {
         return true;
     }
 
+    private static Object normalizeIngredient(Object ingredient) {
+        if (!(ingredient instanceof Collection)) {
+            return ingredient;
+        }
+        List<Ingredient> alternatives = new ArrayList<>();
+        for (Object value : (Collection<?>) ingredient) {
+            if (!validIngredient(value)) {
+                continue;
+            }
+            Object normalized = normalizeIngredient(value);
+            Ingredient converted = CraftingHelper.getIngredient(normalized);
+            if (converted != null && converted.getMatchingStacks().length > 0) {
+                alternatives.add(converted);
+            }
+        }
+        return Ingredient.merge(alternatives);
+    }
+
     private static boolean validIngredient(Object ingredient) {
         if (ingredient == null) {
             return false;
+        }
+        if (ingredient instanceof Ingredient) {
+            return ((Ingredient) ingredient).getMatchingStacks().length > 0;
         }
         if (ingredient instanceof ItemStack) {
             return !((ItemStack) ingredient).isEmpty();
