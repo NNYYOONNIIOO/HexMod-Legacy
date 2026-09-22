@@ -2753,3 +2753,5 @@ hexcasting.patchouli.input=输入：%s
 hexcasting.patchouli.output=输出：%s
 hexcasting.patchouli.recipe_unavailable=配方不可用
 hexcasting.patchouli.recipe_arrow=→
+hexcasting.patchouli.bookmark.add=添加书签
+hexcasting.patchouli.bookmark.remove=（按住潜行键右击以清除）

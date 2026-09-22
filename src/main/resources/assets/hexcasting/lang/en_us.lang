@@ -2710,3 +2710,5 @@ hexcasting.patchouli.input=Input: %s
 hexcasting.patchouli.output=Output: %s
 hexcasting.patchouli.recipe_unavailable=Recipe unavailable
 hexcasting.patchouli.recipe_arrow=->
+hexcasting.patchouli.bookmark.add=Add Bookmark
+hexcasting.patchouli.bookmark.remove=(Hold sneak and right-click to remove)
