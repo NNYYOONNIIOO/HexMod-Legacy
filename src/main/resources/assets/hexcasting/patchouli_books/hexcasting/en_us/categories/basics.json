@@ -1,6 +1,6 @@
 {
   "name": "hexcasting.category.basics",
-  "icon": "minecraft:amethyst_shard",
+  "icon": "hexcasting:amethyst_dust",
   "description": "hexcasting.category.basics.desc",
   "sortnum": 0
 }
