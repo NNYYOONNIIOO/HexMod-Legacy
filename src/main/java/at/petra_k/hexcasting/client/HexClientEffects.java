@@ -12,6 +12,7 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -28,6 +29,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -37,6 +39,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -570,6 +574,93 @@ public final class HexClientEffects {
         }
         HexSentinelRenderer.render(minecraft, camera, partialTicks, visualTime);
         renderConjureParticles(minecraft, camera, partialTicks);
+        // RenderWorldLast is immediately followed by EntityRenderer's first
+        // person hand pass.  pushAttrib/popAttrib restores OpenGL itself, but
+        // 1.12's GlStateManager also keeps Java-side state caches which are
+        // not restored by glPopAttrib.  Synchronize both the actual state and
+        // those caches with vanilla's post-world-render baseline so lighting,
+        // alpha and blending cannot leak into the hand.
+        restoreWorldRenderState();
+    }
+
+    /**
+     * Forge fires this immediately before EntityRenderer draws both first
+     * person hands.  It is the last safe boundary at which a world renderer
+     * can repair state before vanilla's arm model calls enableBlend() without
+     * changing the blend factors.
+     */
+    @SubscribeEvent
+    public static void onRenderHand(RenderHandEvent event) {
+        restoreWorldRenderState();
+    }
+
+    /**
+     * Restore the state EntityRenderer expects before rendering the hand.
+     *
+     * <p>Do the raw GL writes first.  Forge 1.12.2's GlStateManager caches
+     * most of these values in Java fields, while the legacy renderers in this
+     * mod (and some vanilla/OptiFine paths) can change the actual GL state
+     * through glPopAttrib.  Calling only the cached wrappers can therefore
+     * silently skip the write that vanilla needs.</p>
+     */
+    static void restoreWorldRenderState() {
+        // RenderWorldLast and RenderHandEvent are expected to leave the
+        // default texture unit active.  Force the driver and then update the
+        // GlStateManager cache below.
+        GL13.glActiveTexture(OpenGlHelper.defaultTexUnit);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GlStateManager.enableTexture2D();
+
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GlStateManager.enableAlpha();
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GlStateManager.enableDepth();
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
+        GlStateManager.depthFunc(GL11.GL_LEQUAL);
+        GL11.glDepthMask(true);
+        GlStateManager.depthMask(true);
+
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GlStateManager.enableCull();
+
+        // This is the important part for the first-person arm.  The conjure
+        // particle pass uses SRC_ALPHA/ONE, and vanilla's arm renderer only
+        // enables blending; it assumes the ordinary SRC_ALPHA/ONE_MINUS_SRC_ALPHA
+        // colour factors are still installed.
+        GL11.glDisable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE, GL11.GL_ZERO);
+        GlStateManager.disableBlend();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,
+            GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+
+        // Vanilla disables standard item lighting before dispatching
+        // RenderWorldLast; the hand renderer enables it again itself.
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GlStateManager.disableLighting();
+        GL11.glDisable(GL11.GL_LIGHT0);
+        GL11.glDisable(GL11.GL_LIGHT1);
+        GlStateManager.disableLight(0);
+        GlStateManager.disableLight(1);
+        GL11.glDisable(GL11.GL_COLOR_MATERIAL);
+        GlStateManager.disableColorMaterial();
+
+        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+        GlStateManager.disableRescaleNormal();
+
+        GL11.glShadeModel(GL11.GL_FLAT);
+        GlStateManager.shadeModel(GL11.GL_FLAT);
+
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.resetColor();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.glLineWidth(1.0F);
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
     }
 
     /**
