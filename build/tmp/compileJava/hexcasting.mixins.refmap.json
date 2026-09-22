@@ -1,7 +1,13 @@
 {
   "mappings": {
+    "at/petra_k/hexcasting/mixin/AccessorEntity": {
+      "setFlag": "func_70052_a(IZ)V"
+    },
     "at/petra_k/hexcasting/mixin/MixinHexItemDisplayName": {
       "getItemStackDisplayName": "Lnet/minecraft/item/Item;func_77653_i(Lnet/minecraft/item/ItemStack;)Ljava/lang/String;"
+    },
+    "at/petra_k/hexcasting/mixin/MixinEntityLivingBase": {
+      "updateElytra": "Lnet/minecraft/entity/EntityLivingBase;func_184616_r()V"
     },
     "at/petra_k/hexcasting/mixin/AccessorEntityLivingBase": {
       "getDeathSound": "func_184615_bR()Lnet/minecraft/util/SoundEvent;"
@@ -12,8 +18,14 @@
   },
   "data": {
     "searge": {
+      "at/petra_k/hexcasting/mixin/AccessorEntity": {
+        "setFlag": "func_70052_a(IZ)V"
+      },
       "at/petra_k/hexcasting/mixin/MixinHexItemDisplayName": {
         "getItemStackDisplayName": "Lnet/minecraft/item/Item;func_77653_i(Lnet/minecraft/item/ItemStack;)Ljava/lang/String;"
+      },
+      "at/petra_k/hexcasting/mixin/MixinEntityLivingBase": {
+        "updateElytra": "Lnet/minecraft/entity/EntityLivingBase;func_184616_r()V"
       },
       "at/petra_k/hexcasting/mixin/AccessorEntityLivingBase": {
         "getDeathSound": "func_184615_bR()Lnet/minecraft/util/SoundEvent;"

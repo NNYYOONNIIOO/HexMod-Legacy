@@ -8,8 +8,8 @@ import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityVillager;
@@ -100,8 +100,7 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             if (recipe.getProfession() != null) {
                 tooltip.add(localizeProfession(recipe.getProfession()));
             } else {
-                tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocal(
-                    "entity.minecraft.villager"));
+                tooltip.add(localizeEntity(entityType));
             }
         } else {
             tooltip.add(localizeEntity(entityType));
@@ -114,10 +113,29 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             return "";
         }
         ResourceLocation id = new ResourceLocation(entityType);
-        String key = "entity." + id.getResourceDomain() + "."
-            + id.getResourcePath();
-        String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
-        return key.equals(translated) ? entityType : translated;
+        String path = id.getResourcePath();
+        String modernKey = "entity." + id.getResourceDomain() + "." + path;
+        for (String key : new String[] {
+            modernKey,
+            "entity." + path,
+            "entity." + capitalize(path) + ".name",
+            "entity." + capitalize(path),
+            "hexcasting.entity." + id.getResourceDomain() + "." + path,
+            "hexcasting.entity." + path
+        }) {
+            String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
+            if (!key.equals(translated)) {
+                return translated;
+            }
+        }
+        return entityType;
+    }
+
+    private static String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     /**
@@ -132,6 +150,7 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             "entity.minecraft.villager." + path,
             "entity.villager." + path,
             "entity.Villager." + path,
+            "entity.Villager." + path + ".name",
             "hexcasting.jei.profession." + path
         }) {
             String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
@@ -154,19 +173,45 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             return;
         }
         RenderManager renderManager = minecraft.getRenderManager();
-        Render renderer = renderManager.getEntityRenderObject(entity);
-        if (renderer == null) {
-            return;
-        }
 
+        // Keep the same angle source and transform as Hex's modern
+        // RenderLib.renderEntity helper.  The client tick counter includes
+        // render partial ticks, so this is smooth and has the same constant
+        // one-degree-per-tick speed as the 1.20.1 preview.
+        float entityRotation = HexClientTickCounter.getTotal();
+
+        float previousViewYaw = renderManager.playerViewY;
+        GlStateManager.enableColorMaterial();
         GlStateManager.pushMatrix();
-        GlStateManager.translate(50.0F, 67.0F, 50.0F);
-        GlStateManager.scale(-20.0F, 20.0F, 20.0F);
-        GlStateManager.rotate(180.0F, 0.0F, 0.0F, 1.0F);
-        RenderHelper.enableStandardItemLighting();
-        renderer.doRender(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-        RenderHelper.disableStandardItemLighting();
-        GlStateManager.popMatrix();
+        try {
+            // The item renderer used by the left ingredient list can leave a
+            // multiplied vertex colour or the lightmap texture unit active.
+            // Follow Patchouli's 1.12.2 entity-GUI path so the preview is
+            // rendered with a clean white colour and a known render-manager
+            // camera orientation.
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.translate(50.0F, 67.0F, 50.0F);
+            GlStateManager.scale(-20.0F, 20.0F, 20.0F);
+            GlStateManager.rotate(180.0F, 0.0F, 0.0F, 1.0F);
+            GlStateManager.rotate(entityRotation, 0.0F, 1.0F, 0.0F);
+            RenderHelper.enableStandardItemLighting();
+            renderManager.playerViewY = 180.0F;
+            renderManager.renderEntity(entity, 0.0D, 0.0D, 0.0D,
+                0.0F, 1.0F, false);
+        } finally {
+            RenderHelper.disableStandardItemLighting();
+            GlStateManager.popMatrix();
+            renderManager.playerViewY = previousViewYaw;
+            GlStateManager.disableRescaleNormal();
+            GlStateManager.disableColorMaterial();
+            GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+            GlStateManager.disableTexture2D();
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GlStateManager.enableTexture2D();
+            GlStateManager.disableLighting();
+            GlStateManager.enableDepth();
+            GlStateManager.resetColor();
+        }
     }
 
     /**

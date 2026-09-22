@@ -33,6 +33,7 @@ public final class BlockQuenchedAllay extends Block {
         setHardness(1.5F);
         setResistance(6.0F);
         setSoundType(SoundType.STONE);
+        setHarvestLevel("pickaxe", 0);
         // The block emits a little light so its translucent model is not
         // self-occluded, matching Hex's quenched() properties.
         setLightLevel(4.0F / 15.0F);

@@ -3040,6 +3040,11 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (data.getAltioraTicks() <= 0
                 && (player.onGround || player.collidedHorizontally)) {
                 data.setAltioraActive(false);
+                if (player instanceof net.minecraft.entity.player.EntityPlayerMP
+                    && player.isElytraFlying()) {
+                    ((net.minecraft.entity.player.EntityPlayerMP) player)
+                        .clearElytraFlying();
+                }
                 at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
                 player.world.playSound(null, player.posX, player.posY, player.posZ,
                     HexSounds.FLIGHT_FINISH,
@@ -3056,6 +3061,27 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         }
 
+        private static boolean tryStartAltiora(
+            net.minecraft.entity.player.EntityPlayer player) {
+            if (!(player instanceof net.minecraft.entity.player.EntityPlayerMP)
+                || player.onGround || player.motionY >= 0.0D
+                || player.isElytraFlying() || player.isInWater()
+                || player.isRiding() || player.capabilities.isFlying) {
+                return false;
+            }
+            IHexCastingData data = data(player);
+            if (data == null || !data.isAltioraActive()) {
+                return false;
+            }
+
+            // The client only asks to deploy the wings; all checks and the
+            // authoritative fall-flying flag remain on the server.
+            ((net.minecraft.entity.player.EntityPlayerMP) player)
+                .setElytraFlying();
+            player.fallDistance = 0.0F;
+            return true;
+        }
+
         private static boolean hasAltiora(
             net.minecraft.entity.player.EntityPlayer player) {
             IHexCastingData data = data(player);
@@ -3069,6 +3095,13 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
             return player.getCapability(HexCapabilities.CASTING_DATA, null);
         }
+    }
+
+    /** Called by the Forge player tick bridge for the Altiora grace period. */
+    public static boolean tryStartAltiora(
+        net.minecraft.entity.player.EntityPlayer player) {
+        return player != null && !player.world.isRemote
+            && HexFlightState.tryStartAltiora(player);
     }
 
     /** Called by the Forge player tick bridge for the Altiora grace period. */

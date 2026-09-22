@@ -1,13 +1,18 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
+import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.math.HexCoord;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.block.BlockConjuredLight;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
+import at.petra_k.hexcasting.common.network.MsgAltioraStartC2S;
+import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -77,6 +82,8 @@ public final class HexClientEffects {
     private static World PARTICLE_WORLD;
     /** Number of client ticks for which a newly loaded world retries staff restoration. */
     private static int ORBIT_RESTORE_TICKS;
+    /** Prevent repeated jump packets from immediately cancelling the flight. */
+    private static boolean ALTIORA_REQUEST_SENT;
 
     private HexClientEffects() {
     }
@@ -463,6 +470,7 @@ public final class HexClientEffects {
             CONJURE_PARTICLES.clear();
             PARTICLE_WORLD = null;
             ORBIT_RESTORE_TICKS = 0;
+            ALTIORA_REQUEST_SENT = false;
             return;
         }
         if (PARTICLE_WORLD != minecraft.world) {
@@ -477,6 +485,7 @@ public final class HexClientEffects {
             // their persisted pigment.
             CONJURE_PARTICLES.clear();
             ORBIT_RESTORE_TICKS = 40;
+            ALTIORA_REQUEST_SENT = false;
             restoreOrbitPatterns(minecraft.player);
         }
         if (ORBIT_RESTORE_TICKS > 0) {
@@ -486,6 +495,7 @@ public final class HexClientEffects {
         if (minecraft.isGamePaused()) {
             return;
         }
+        requestAltioraFlight(minecraft);
         Iterator<HexConjureParticle> particles = CONJURE_PARTICLES.iterator();
         while (particles.hasNext()) {
             HexConjureParticle particle = particles.next();
@@ -512,6 +522,36 @@ public final class HexClientEffects {
                 owners.remove();
             }
         }
+    }
+
+    /** Ask the server to deploy Altiora's virtual elytra. */
+    private static void requestAltioraFlight(Minecraft minecraft) {
+        EntityPlayer player = minecraft.player;
+        if (!(player instanceof EntityPlayerSP) || !hasAltiora(player)) {
+            ALTIORA_REQUEST_SENT = false;
+            return;
+        }
+        EntityPlayerSP clientPlayer = (EntityPlayerSP) player;
+        if (clientPlayer.movementInput == null || !clientPlayer.movementInput.jump
+            || player.onGround || player.motionY >= 0.0D
+            || player.isInWater()
+            || player.isRiding() || player.capabilities.isFlying) {
+            ALTIORA_REQUEST_SENT = false;
+            return;
+        }
+        if (!ALTIORA_REQUEST_SENT) {
+            PaucalAPI.sendToServer(new MsgAltioraStartC2S());
+            ALTIORA_REQUEST_SENT = true;
+        }
+    }
+
+    private static boolean hasAltiora(EntityPlayer player) {
+        if (HexCapabilities.CASTING_DATA == null) {
+            return false;
+        }
+        IHexCastingData data = player.getCapability(
+            HexCapabilities.CASTING_DATA, null);
+        return data != null && data.isAltioraActive();
     }
 
     @SubscribeEvent

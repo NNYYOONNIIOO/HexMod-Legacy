@@ -160,6 +160,10 @@ final class HexSentinelRenderer {
         GL11.glLineWidth(1.0F);
         GlStateManager.popAttrib();
         GlStateManager.popMatrix();
+        // glPopAttrib does not update GlStateManager's cached BooleanState
+        // values.  Synchronize them before the next custom world pass (and
+        // ultimately before the first-person hand pass).
+        HexClientEffects.restoreWorldRenderState();
     }
 
     private static void edge(BufferBuilder buffer, float[] left, float[] right,

@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelElytra;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -74,6 +75,20 @@ final class HexAltioraRenderer {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popAttrib();
         GlStateManager.popMatrix();
+        // Keep GlStateManager's caches in step with the state restored by
+        // glPopAttrib.  Otherwise the next player/item render can skip an
+        // enable/disable call even though the driver state changed.
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableAlpha();
+        GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);
+        GlStateManager.enableDepth();
+        GlStateManager.depthMask(true);
+        GlStateManager.enableCull();
+        GlStateManager.disableBlend();
+        GlStateManager.enableLighting();
+        GlStateManager.resetColor();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private static boolean hasAltiora(EntityPlayer player) {

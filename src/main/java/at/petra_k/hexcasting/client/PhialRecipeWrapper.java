@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.item.ItemMediaBattery;
+import at.petra_k.hexcasting.common.lib.HexBlocks;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
@@ -42,6 +43,9 @@ public final class PhialRecipeWrapper implements IRecipeWrapper {
         addMaterial(mediaInputs, batteries,
             HexItems.EXTRA_ITEMS.get("quenched_allay_shard"),
             MediaConstants.QUENCHED_SHARD_UNIT);
+        addMaterial(mediaInputs, batteries,
+            HexBlocks.getBlockItem("quenched_allay"),
+            MediaConstants.QUENCHED_BLOCK_UNIT);
 
         if (mediaInputs.isEmpty()) {
             return Collections.emptyList();

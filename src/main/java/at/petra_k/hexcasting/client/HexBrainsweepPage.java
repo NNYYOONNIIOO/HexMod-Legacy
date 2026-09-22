@@ -140,6 +140,8 @@ public final class HexBrainsweepPage extends BookPage {
             for (String key : new String[] {
                 "entity.minecraft.villager." + path,
                 "entity.villager." + path,
+                "entity.Villager." + path,
+                "entity.Villager." + path + ".name",
                 "hexcasting.jei.profession." + path
             }) {
                 String translated = I18n.format(key);
@@ -151,10 +153,28 @@ public final class HexBrainsweepPage extends BookPage {
         }
         String id = recipe.getEntityTypeId();
         ResourceLocation location = new ResourceLocation(id);
-        String key = "entity." + location.getResourceDomain() + "."
-            + location.getResourcePath();
-        String translated = I18n.format(key);
-        return key.equals(translated) ? id : translated;
+        String path = location.getResourcePath();
+        for (String key : new String[] {
+            "entity." + location.getResourceDomain() + "." + path,
+            "entity." + path,
+            "entity." + capitalize(path) + ".name",
+            "entity." + capitalize(path),
+            "hexcasting.entity." + location.getResourceDomain() + "." + path,
+            "hexcasting.entity." + path
+        }) {
+            String translated = I18n.format(key);
+            if (!key.equals(translated)) {
+                return translated;
+            }
+        }
+        return id;
+    }
+
+    private static String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     private static String translate(String key) {

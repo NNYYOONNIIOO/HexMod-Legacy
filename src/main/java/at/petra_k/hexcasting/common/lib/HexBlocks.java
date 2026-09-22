@@ -32,6 +32,7 @@ import at.petra_k.hexcasting.common.block.BlockSlate;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import at.petra_k.hexcasting.common.item.ItemImpetus;
 import at.petra_k.hexcasting.common.item.ItemAkashicBookshelf;
+import at.petra_k.hexcasting.common.item.ItemQuenchedAllayBlock;
 import at.petra_k.hexcasting.common.item.ItemHexSlab;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -223,6 +224,8 @@ public final class HexBlocks {
                 item = new ItemImpetus(block);
             } else if ("akashic_bookshelf".equals(entry.getKey())) {
                 item = new ItemAkashicBookshelf(block);
+            } else if ("quenched_allay".equals(entry.getKey())) {
+                item = new ItemQuenchedAllayBlock(block);
             } else {
                 item = new ItemBlock(block);
             }

@@ -4,7 +4,7 @@ MixinConfigs: mixins.hexcasting.json
 Implementation-Version: 0.1.0-1.12.2
 Specification-Vendor: examplemodsareus
 Specification-Title: examplemod
-Implementation-Timestamp: 2026-09-22T12:27:05+0800
+Implementation-Timestamp: 2026-09-22T21:46:49+0800
 Specification-Version: 1
 Implementation-Vendor: examplemodsareus
 

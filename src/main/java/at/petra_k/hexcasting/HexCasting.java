@@ -24,13 +24,14 @@ import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
 import at.petra_k.hexcasting.common.network.MsgStaffCastResultS2C;
 import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import at.petra_k.hexcasting.common.network.MsgShiftScrollC2S;
+import at.petra_k.hexcasting.common.network.MsgAltioraStartC2S;
 import at.petra_k.hexcasting.common.network.MsgSentinelStatusS2C;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petrak.paucal.api.PaucalAPI;
 
 /** 1.12.2 Forge entry point for the Hex Casting port. */
 @Mod(modid = HexCasting.MOD_ID, name = HexCasting.NAME, version = HexCasting.VERSION,
-    dependencies = "required-after:patchouli;required-after:jei;required-after:baubles;required-after:raids")
+    dependencies = "required-after:patchouli;required-after:jei;required-after:baubles;required-after:raids;after:farmersdelight")
 public final class HexCasting {
     public static final String MOD_ID = "hexcasting";
     public static final String NAME = "Hex Casting";
@@ -75,6 +76,7 @@ public final class HexCasting {
         MsgStaffProgramS2C.register();
         MsgStaffCastResultS2C.register();
         MsgShiftScrollC2S.register();
+        MsgAltioraStartC2S.register();
         MsgSentinelStatusS2C.register();
         HexInline.init();
     }

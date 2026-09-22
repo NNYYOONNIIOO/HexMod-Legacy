@@ -4,7 +4,7 @@
   "package": "at.petra_k.hexcasting.mixin",
   "refmap": "hexcasting.mixins.refmap.json",
   "compatibilityLevel": "JAVA_8",
-  "mixins": ["AccessorEntityLivingBase"],
+  "mixins": ["AccessorEntity", "AccessorEntityLivingBase", "MixinEntityLivingBase"],
   "client": ["MixinRenderItem", "MixinHexItemDisplayName", "MixinPatchouliBookContents", "MixinPatchouliBookmarkTooltip", "MixinPatchouliBookmarkActions"],
   "server": []
 }

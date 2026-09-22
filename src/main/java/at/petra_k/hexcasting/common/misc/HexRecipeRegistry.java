@@ -149,10 +149,13 @@ public final class HexRecipeRegistry {
             Blocks.GLASS, Items.WHEAT_SEEDS, Items.ARROW, Items.BREAD,
             Items.WHEAT, rawIron, rawCopper, new ItemStack(Blocks.STONEBRICK),
             Items.WATER_BUCKET, Items.GLASS_BOTTLE,
-            externalItem("cavesnotcliffs", "azalea"),
-            externalItem("cavesnotcliffs", "honeycomb"),
-            externalItem("cavesnotcliffs", "moss_block"),
-            Items.CARROT, new ItemStack(Blocks.UNPOWERED_REPEATER), Items.EGG
+            externalItemOr("cavesnotcliffs", "azalea",
+                new ItemStack(Blocks.LEAVES, 1, OreDictionary.WILDCARD_VALUE)),
+            externalItemOr("cavesnotcliffs", "honeycomb",
+                new ItemStack(Items.SUGAR)),
+            externalItemOr("cavesnotcliffs", "moss_block",
+                new ItemStack(Blocks.MOSSY_COBBLESTONE)),
+            Items.CARROT, Items.REPEATER, Items.EGG
         };
         String[] prideNames = {
             "agender", "aroace", "aromantic", "asexual", "bisexual", "demiboy",
@@ -161,12 +164,12 @@ public final class HexRecipeRegistry {
         };
         for (int i = 0; i < prideNames.length; i++) {
             Object material = prideMaterials[i];
-            // Pansexual pigment's modern conditional ingredient defaults to a
-            // carrot when Farmers' Delight is absent.  That is the only part
-            // retained here; the optional Farmers' Delight cutting integration
-            // is intentionally not part of this porting pass.
+            // Match Hex's modern conditional ingredient: use the Farmers'
+            // Delight skillet when the optional legacy backport is present,
+            // otherwise keep the vanilla carrot recipe available.
             if ("pansexual".equals(prideNames[i])) {
-                material = Items.CARROT;
+                material = externalItemOr(
+                    "farmersdelight", "skillet", new ItemStack(Items.CARROT));
             }
             shaped(event, "pride_colorizer_" + prideNames[i],
                 hexItem("pride_colorizer_" + prideNames[i]),
@@ -371,6 +374,18 @@ public final class HexRecipeRegistry {
 
     private static Object externalItem(String modId, String path) {
         return item(new ResourceLocation(modId, path));
+    }
+
+    /**
+     * Use the 1.20 ingredient when its optional backport is installed, while
+     * keeping the recipe available in a plain 1.12.2 instance.  The pride
+     * pigment recipes are core Hex recipes, so an absent compatibility mod
+     * must not make their registry entries disappear entirely.
+     */
+    private static Object externalItemOr(String modId, String path,
+                                         ItemStack fallback) {
+        ItemStack external = (ItemStack) externalItem(modId, path);
+        return external.isEmpty() ? fallback : external;
     }
 
     private static List<ItemStack> hexBlocks(String... ids) {
