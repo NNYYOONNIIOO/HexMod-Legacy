@@ -422,7 +422,7 @@ public final class MediaInventoryHelper {
             if (available <= 0L || requested <= 0L) {
                 return 0L;
             }
-            long count = (requested + worth - 1L) / worth;
+            long count = ceilDivide(requested, worth);
             count = Math.min(count, Math.max(0, stack.getCount()));
             long extracted = multiply(worth, count);
             if (!simulate && count > 0L) {
@@ -437,6 +437,14 @@ public final class MediaInventoryHelper {
             return 0L;
         }
         return left > Long.MAX_VALUE / right ? Long.MAX_VALUE : left * right;
+    }
+
+    private static long ceilDivide(long numerator, long denominator) {
+        if (numerator <= 0L || denominator <= 0L) {
+            return 0L;
+        }
+        long quotient = numerator / denominator;
+        return numerator % denominator == 0L ? quotient : quotient + 1L;
     }
 
     private static long saturatingAdd(long left, long right) {
