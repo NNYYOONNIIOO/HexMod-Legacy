@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.api.casting.eval.vm;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.sideeffects.EvalSound;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
@@ -13,6 +14,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
+import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -99,6 +101,10 @@ public final class CastingVM {
     private CircleExecutionState circleExecutionState;
     /** Runtime-only media source; circles bind this to their Impetus. */
     private ADMediaHolder mediaHolder;
+    /** Shared source transaction for one complete evaluation. */
+    private MediaInventoryHelper.MediaTransaction mediaTransaction;
+    private int evaluationDepth;
+    private Mishap lastMishap;
     /** Highest-precedence sound produced by the current evaluation. */
     private EvalSound sound = HexEvalSounds.NOTHING;
 
@@ -236,6 +242,20 @@ public final class CastingVM {
 
     public void setMediaHolder(ADMediaHolder mediaHolder) {
         this.mediaHolder = mediaHolder;
+    }
+
+    /** Return the media still available to this VM's current cast. */
+    public long getAvailableMedia() {
+        if (mediaTransaction != null) {
+            return mediaTransaction.getAvailableMedia();
+        }
+        return MediaInventoryHelper.begin(player, castingData, mediaHolder)
+            .getAvailableMedia();
+    }
+
+    /** The structured Mishap produced by the latest failed operation. */
+    public Mishap getLastMishap() {
+        return lastMishap;
     }
 
     /** Return the sound selected by the actions evaluated so far. */
@@ -658,10 +678,15 @@ public final class CastingVM {
             pattern, player == null ? null : player.world);
         SpecialPatternResolver.Match special = action == null
             ? SpecialPatternResolver.match(pattern) : null;
+        ResourceLocation actionId = action == null
+            ? null : HexActionRegistry.idFor(action);
         if (pattern != null && action == null && special == null
             && parenCount == 0 && !escapeNext) {
             recordSound(HexEvalSounds.MISHAP);
-            throw new CastingException("No action is registered for pattern " + pattern);
+            Mishap mishap = Mishap.invalidPattern(pattern, player, parenCount,
+                operationsConsumed);
+            lastMishap = mishap;
+            throw mishap;
         }
         Iota value = pattern == null ? work.iota : new PatternIota(pattern);
 
@@ -686,15 +711,19 @@ public final class CastingVM {
             } else {
                 stack.push(value);
             }
-            ResourceLocation actionId = action == null
-                ? null : HexActionRegistry.idFor(action);
             recordSound(HexEvalSounds.forAction(action, actionId));
         } catch (CastingException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            throw exception;
+            Mishap mishap = Mishap.from(exception, pattern, actionId, player,
+                parenCount, operationsConsumed);
+            lastMishap = mishap;
+            throw mishap;
         } catch (RuntimeException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            throw exception;
+            Mishap mishap = Mishap.fromRuntime(exception, pattern, actionId, player,
+                parenCount, operationsConsumed);
+            lastMishap = mishap;
+            throw mishap;
         } finally {
             activeOperationLimit = previousLimit;
         }
@@ -707,18 +736,13 @@ public final class CastingVM {
         if (amount <= 0L) {
             return;
         }
-        ADMediaHolder source = mediaHolder != null ? mediaHolder : castingData;
-        if (source == null) {
+        if (mediaHolder == null && player == null && castingData == null) {
             throw new CastingException("hexcasting.error.no_media_context");
         }
-        long available = source.getMedia();
-        if (available < 0L) {
-            return;
+        if (mediaTransaction == null) {
+            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
         }
-        if (available < amount) {
-            throw new CastingException("hexcasting.error.not_enough_media");
-        }
-        source.setMedia(available - amount);
+        mediaTransaction.consume(amount);
     }
 
     public CastingStack run() throws CastingException {
@@ -728,16 +752,45 @@ public final class CastingVM {
     /** Drain all pending work, failing deterministically if the budget is hit. */
     public CastingStack run(int maxOperations) throws CastingException {
         validateBudget(maxOperations);
+        boolean outermost = evaluationDepth == 0;
+        CastingStack before = null;
+        int beforeOperations = operationsConsumed;
+        if (outermost) {
+            before = snapshotStack();
+            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
+            lastMishap = null;
+        }
+        evaluationDepth++;
         try {
             while (hasPendingWork()) {
                 step(maxOperations);
             }
+            if (outermost && mediaTransaction != null) {
+                mediaTransaction.commit();
+            }
+            return stack;
+        } catch (CastingException exception) {
+            if (outermost) {
+                rollbackEvaluation(before, beforeOperations);
+            }
+            throw exception;
+        } catch (RuntimeException exception) {
+            if (outermost) {
+                rollbackEvaluation(before, beforeOperations);
+            }
+            Mishap mishap = Mishap.fromRuntime(exception, null, null, player,
+                parenCount, operationsConsumed);
+            lastMishap = mishap;
+            throw mishap;
         } finally {
+            evaluationDepth--;
+            if (outermost) {
+                mediaTransaction = null;
+            }
             // Halt is scoped to this evaluation and must not permanently
             // disable a staff when its state is saved afterward.
             halted = false;
         }
-        return stack;
     }
 
     /**
@@ -819,6 +872,27 @@ public final class CastingVM {
             continuationInvoked = previousContinuationInvoked || invoked;
         }
         return stack;
+    }
+
+    private CastingStack snapshotStack() throws CastingException {
+        return CastingStack.deserializeState(stack.serializeState());
+    }
+
+    private void rollbackEvaluation(CastingStack before, int beforeOperations) {
+        if (mediaTransaction != null) {
+            mediaTransaction.rollback();
+        }
+        if (before != null) {
+            try {
+                stack.restore(before.snapshot());
+                stack.writeLocal(before.readLocal());
+            } catch (CastingException ignored) {
+                // The snapshot came from this stack, so this is only a
+                // defensive guard for malformed third-party Iotas.
+            }
+        }
+        operationsConsumed = beforeOperations;
+        continuation.clear();
     }
 
     private void capture(Iota value, boolean escaped) throws CastingException {
