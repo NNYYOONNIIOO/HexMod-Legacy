@@ -1069,23 +1069,47 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player == null) {
                     throw new CastingException("hexcasting.error.ignite_context");
                 }
-                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
-                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                Iota target = stack.pop();
+                if (target instanceof EntityIota) {
+                    net.minecraft.entity.Entity entity = resolveEntity(
+                        (EntityIota) target, vm);
+                    requireEntityInRange(player, entity,
+                        "hexcasting.error.ignite_range");
+                    vm.consumeMedia(MediaConstants.DUST_UNIT);
+                    if (!player.world.isRemote) {
+                        entity.setFire(8);
+                    }
+                    return;
+                }
+                if (!(target instanceof Vec3Iota)) {
+                    throw new CastingException("hexcasting.error.ignite_target");
+                }
+                net.minecraft.util.math.Vec3d position =
+                    ((Vec3Iota) target).getValue();
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                if (player.world.isAirBlock(blockPos)
-                    && player.world.isBlockModifiable(player, blockPos)
-                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
+                    blockPos.getZ() + 0.5D), "hexcasting.error.ignite_range");
+                if (!player.world.isBlockModifiable(player, blockPos)
+                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
-                    vm.consumeMedia(MediaConstants.DUST_UNIT);
-                    player.world.setBlockState(blockPos,
-                        net.minecraft.init.Blocks.FIRE.getDefaultState(), 3);
+                    throw new CastingException("hexcasting.error.ignite_forbidden");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                if (!player.world.isRemote) {
+                    tryIgnitionItem(player, blockPos, net.minecraft.init.Items.FIRE_CHARGE);
+                    if (!player.world.getBlockState(blockPos).getBlock()
+                        .equals(net.minecraft.init.Blocks.FIRE)) {
+                        tryIgnitionItem(player, blockPos,
+                            net.minecraft.init.Items.FLINT_AND_STEEL);
+                    }
                 }
             }
         });
 
-    /** Extinguish a fire block at a vector position. */
+    /** Extinguish fire and other lit blocks around a vector position. */
     public static final ResourceLocation EXTINGUISH_ID =
         new ResourceLocation(HexAPI.MOD_ID, "extinguish");
     public static final HexPattern EXTINGUISH_PATTERN =
@@ -1108,13 +1132,49 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                if (player.world.getBlockState(blockPos).getBlock()
-                    == net.minecraft.init.Blocks.FIRE
-                    && player.world.isBlockModifiable(player, blockPos)
-                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
+                    blockPos.getZ() + 0.5D), "hexcasting.error.extinguish_range");
+                if (!player.world.isBlockModifiable(player, blockPos)
+                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
-                    vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
-                    player.world.setBlockToAir(blockPos);
+                    throw new CastingException("hexcasting.error.extinguish_forbidden");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
+                if (player.world.isRemote) {
+                    return;
+                }
+                java.util.ArrayDeque<net.minecraft.util.math.BlockPos> todo =
+                    new java.util.ArrayDeque<>();
+                java.util.HashSet<net.minecraft.util.math.BlockPos> seen =
+                    new java.util.HashSet<>();
+                todo.add(blockPos);
+                int successes = 0;
+                while (!todo.isEmpty() && successes <= 1024) {
+                    net.minecraft.util.math.BlockPos current = todo.removeFirst();
+                    if (!seen.add(current)
+                        || blockPos.distanceSq(current) >= 100.0D
+                        || !player.world.isBlockModifiable(player, current)
+                        || !player.canPlayerEdit(current, net.minecraft.util.EnumFacing.UP,
+                            net.minecraft.item.ItemStack.EMPTY)) {
+                        continue;
+                    }
+                    if (extinguishBlock(player.world, current)) {
+                        player.world.spawnParticle(
+                            net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
+                            current.getX() + 0.5D, current.getY() + 0.5D,
+                            current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
+                        successes++;
+                    }
+                    for (net.minecraft.util.EnumFacing facing
+                        : net.minecraft.util.EnumFacing.values()) {
+                        todo.addLast(current.offset(facing));
+                    }
+                }
+                if (successes > 0) {
+                    player.world.playSound(null, blockPos,
+                        net.minecraft.init.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                        net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.95F);
                 }
             }
         });
@@ -3839,6 +3899,70 @@ throw new CastingException("hexcasting.error.get_media_context");
         net.minecraft.block.state.IBlockState state) {
         return state != null
             && state.getBlock() instanceof at.petra_k.hexcasting.common.block.BlockConjured;
+    }
+
+    private static void requireEntityInRange(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.entity.Entity entity,
+        String errorKey) throws CastingException {
+        if (entity == null || entity.world != player.world
+            || entity.isDead
+            || entity instanceof net.minecraft.entity.player.EntityPlayer
+                && ((net.minecraft.entity.player.EntityPlayer) entity).isSpectator()
+            || !isVecInRange(player, new net.minecraft.util.math.Vec3d(
+                entity.posX, entity.posY, entity.posZ))) {
+            throw new CastingException(errorKey);
+        }
+    }
+
+    private static boolean tryIgnitionItem(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position,
+        net.minecraft.item.Item item) {
+        net.minecraft.item.ItemStack previous = player.getHeldItemMainhand();
+        net.minecraft.item.ItemStack ignition = new net.minecraft.item.ItemStack(item);
+        player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, ignition);
+        try {
+            return item.onItemUse(player, player.world, position,
+                net.minecraft.util.EnumHand.MAIN_HAND,
+                net.minecraft.util.EnumFacing.UP, 0.5F, 0.5F, 0.5F)
+                == net.minecraft.util.EnumActionResult.SUCCESS;
+        } finally {
+            player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, previous);
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static boolean extinguishBlock(
+        net.minecraft.world.World world,
+        net.minecraft.util.math.BlockPos position) {
+        net.minecraft.block.state.IBlockState state = world.getBlockState(position);
+        net.minecraft.block.Block block = state.getBlock();
+        if (block == net.minecraft.init.Blocks.FIRE
+            || block instanceof net.minecraft.block.BlockFire
+            || block == net.minecraft.init.Blocks.PORTAL) {
+            world.setBlockToAir(position);
+            return true;
+        }
+
+        net.minecraft.util.ResourceLocation id = block.getRegistryName();
+        String path = id == null ? "" : id.getResourcePath();
+        if (!path.contains("campfire") && !path.contains("candle")) {
+            return false;
+        }
+        for (net.minecraft.block.properties.IProperty<?> property
+            : state.getPropertyKeys()) {
+            if (!"lit".equals(property.getName())
+                || property.getValueClass() != Boolean.class
+                || !Boolean.TRUE.equals(state.getValue(property))) {
+                continue;
+            }
+            world.setBlockState(position,
+                state.withProperty((net.minecraft.block.properties.IProperty) property,
+                    Boolean.FALSE), 3);
+            return true;
+        }
+        return false;
     }
 
     public static void touch() {
