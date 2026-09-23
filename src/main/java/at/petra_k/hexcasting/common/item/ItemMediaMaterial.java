@@ -72,6 +72,33 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
     }
 
     /**
+     * Static media is consumed in whole source items, just like the modern
+     * static-media capability.  The entity-specific extraction method below
+     * is deliberately separate because Craft Phial must preserve a partial
+     * remainder on a dropped stack instead of writing one total-media tag to
+     * every item in the stack.
+     */
+    @Override
+    public long withdrawMedia(ItemStack stack, long amount, boolean simulate) {
+        if (stack == null || stack.isEmpty() || mediaPerItem <= 0L) {
+            return 0L;
+        }
+        long available = Math.max(0L, getMedia(stack));
+        long requested = amount < 0L ? available : Math.max(0L, amount);
+        if (available <= 0L || requested <= 0L) {
+            return 0L;
+        }
+        long items = (requested + mediaPerItem - 1L) / mediaPerItem;
+        items = Math.min(items, Math.max(0L, (long) stack.getCount()));
+        long extracted = items > Long.MAX_VALUE / mediaPerItem
+            ? Long.MAX_VALUE : items * mediaPerItem;
+        if (!simulate && items > 0L) {
+            stack.shrink((int) Math.min(Integer.MAX_VALUE, items));
+        }
+        return extracted;
+    }
+
+    /**
      * Withdraw media from a dropped stack while keeping per-item media
      * semantics.  An ItemStack has one NBT compound for the whole stack, so a
      * partially consumed material must be split into a full stack and one
