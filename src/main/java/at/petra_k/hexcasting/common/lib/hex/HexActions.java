@@ -1113,7 +1113,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     && player.world.isBlockModifiable(player, blockPos)
                     && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
-                    vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+                    vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
                     player.world.setBlockToAir(blockPos);
                 }
             }
@@ -1374,6 +1374,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_zero");
                 }
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(vector.normalize().scale(64.0D));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
@@ -1412,6 +1413,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_axis_zero");
                 }
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
                     vector.normalize().scale(64.0D));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
@@ -1453,6 +1455,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (length == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_entity_zero");
                 }
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
                     vector.scale(64.0D / length));
                 net.minecraft.util.math.AxisAlignedBB search = new net.minecraft.util.math.AxisAlignedBB(
@@ -2577,6 +2580,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack useStack = source.copy();
                 useStack.setCount(1);
                 net.minecraft.util.EnumActionResult result;
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
                 player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, useStack);
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
@@ -2809,6 +2813,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.nbt.NBTTagCompound variantData =
                     held.getOrCreateSubCompound(HexAPI.MOD_ID);
                 int current = variantData.getInteger(key);
+                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
                 variantData.setInteger(key, current + 1);
             }
         });
