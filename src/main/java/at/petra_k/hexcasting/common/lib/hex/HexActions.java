@@ -3457,16 +3457,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.craft_battery_base");
                 }
                 net.minecraft.item.ItemStack source = itemEntity.getItem();
-                if (source == null || source.isEmpty()
-                    || !(source.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
+                if (!MediaInventoryHelper.isBatteryMediaItem(source)) {
                     throw new CastingException("hexcasting.error.craft_battery_media_item");
                 }
-                at.petra_k.hexcasting.api.item.MediaHolderItem holder =
-                    (at.petra_k.hexcasting.api.item.MediaHolderItem) source.getItem();
-                if (!holder.canProvide(source) || !holder.canConstructBattery(source)) {
-                    throw new CastingException("hexcasting.error.craft_battery_media");
-                }
-                long sourceMedia = holder.getMedia(source);
+                long sourceMedia = MediaInventoryHelper.extractMedia(
+                    source, -1L, true, true);
                 if (sourceMedia <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
@@ -3485,26 +3480,14 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 // Withdraw only what fits.  Media holders keep the remainder
                 // on the item stack, so an over-capacity entity is not lost.
-                boolean splitMaterial = source.getItem()
-                    instanceof at.petra_k.hexcasting.common.item.ItemMediaMaterial;
-                long drained = splitMaterial
-                    ? ((at.petra_k.hexcasting.common.item.ItemMediaMaterial)
-                        source.getItem()).withdrawMediaFromEntity(
-                            itemEntity, maxBatteryMedia, false)
-                    : holder.withdrawMedia(source, maxBatteryMedia, false);
+                long drained = MediaInventoryHelper.extractMedia(
+                    itemEntity, maxBatteryMedia, true, false);
                 if (drained <= 0L) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 battery.setMaxMedia(result, drained);
                 battery.setMedia(result, drained);
                 player.setHeldItem(hand, result);
-                if (!player.world.isRemote && !splitMaterial
-                    && holder.getMedia(source) <= 0L) {
-                    // Remove the entity only after its entire media payload
-                    // was transferred.  A capped survival extraction leaves
-                    // the source entity alive with its remaining media.
-                    itemEntity.setDead();
-                }
             }
         });
 

@@ -5,7 +5,9 @@ import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.capability.HexItemMediaHolder;
+import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -98,6 +100,37 @@ public final class MediaInventoryHelper {
         return source.withdraw(amount, simulate);
     }
 
+    /**
+     * Extract from a dropped item entity without losing the entity's remainder.
+     * ItemMediaMaterial has per-item media semantics, so it uses its precise
+     * split implementation; all other holders are copied back to the entity
+     * after extraction so a failed or capped phial never destroys the excess.
+     */
+    public static long extractMedia(EntityItem entity, long amount,
+                                    boolean drainForBatteries, boolean simulate) {
+        if (entity == null || entity.getItem() == null || entity.getItem().isEmpty()) {
+            return 0L;
+        }
+        ItemStack stack = entity.getItem();
+        if (stack.getItem() instanceof ItemMediaMaterial) {
+            ItemMediaMaterial material = (ItemMediaMaterial) stack.getItem();
+            if (drainForBatteries && !material.canConstructBattery(stack)) {
+                return 0L;
+            }
+            return material.withdrawMediaFromEntity(entity, amount, simulate);
+        }
+        if (simulate) {
+            return extractMedia(stack, amount, drainForBatteries, true);
+        }
+        ItemStack working = stack.copy();
+        long extracted = extractMedia(working, amount, drainForBatteries, false);
+        entity.setItem(working);
+        if (working.isEmpty()) {
+            entity.setDead();
+        }
+        return extracted;
+    }
+
     /** Whether this stack can provide media for a normal spell. */
     public static boolean isMediaItem(ItemStack stack) {
         MediaSource source = sourceForStack(stack, false);
@@ -108,6 +141,10 @@ public final class MediaInventoryHelper {
     public static boolean isBatteryMediaItem(ItemStack stack) {
         MediaSource source = sourceForStack(stack, true);
         return source != null && source.getAvailable() > 0L;
+    }
+
+    public static boolean isBatteryMediaEntity(EntityItem entity) {
+        return entity != null && isBatteryMediaItem(entity.getItem());
     }
 
     private static void addStackSource(List<MediaSource> sources, ItemStack stack) {
