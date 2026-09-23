@@ -2629,14 +2629,51 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (vm == null || vm.getPlayer() == null) {
                 throw new CastingException("hexcasting.error.blink_context");
             }
-            net.minecraft.util.math.Vec3d target = stack.pop(Vec3Iota.class).getValue();
-            if (Double.isNaN(target.x) || Double.isNaN(target.y) || Double.isNaN(target.z)
-                || Double.isInfinite(target.x) || Double.isInfinite(target.y)
-                || Double.isInfinite(target.z)) {
+            Iota first = stack.pop();
+            Iota second = stack.pop();
+            EntityIota entityIota;
+            DoubleIota deltaIota;
+            if (first instanceof EntityIota && second instanceof DoubleIota) {
+                entityIota = (EntityIota) first;
+                deltaIota = (DoubleIota) second;
+            } else if (first instanceof DoubleIota && second instanceof EntityIota) {
+                entityIota = (EntityIota) second;
+                deltaIota = (DoubleIota) first;
+            } else {
+                throw new CastingException("hexcasting.error.blink_args");
+            }
+            net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
+            net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
+            requireEntityInRange(caster, target, "hexcasting.error.blink_range");
+            double delta = deltaIota.getValue();
+            if (Double.isNaN(delta) || Double.isInfinite(delta)) {
                 throw new CastingException("hexcasting.error.blink_position");
             }
-            if (!vm.getPlayer().world.isRemote) {
-                vm.getPlayer().setPositionAndUpdate(target.x, target.y, target.z);
+            net.minecraft.util.math.Vec3d displacement = target.getLookVec().scale(delta);
+            net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
+                target.posX + displacement.x, target.posY + displacement.y,
+                target.posZ + displacement.z);
+            if (!isVecInWorld(destination)
+                || !isVecInWorld(new net.minecraft.util.math.Vec3d(
+                    destination.x, destination.y - 1.0D, destination.z))) {
+                throw new CastingException("hexcasting.error.blink_position");
+            }
+            double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
+            if (Double.isInfinite(mediaCost) || mediaCost > Long.MAX_VALUE) {
+                throw new CastingException("hexcasting.error.blink_cost");
+            }
+            vm.consumeMedia(Math.round(mediaCost));
+            if (!caster.world.isRemote) {
+                target.dismountRidingEntity();
+                target.setPosition(destination.x, destination.y, destination.z);
+                target.motionX = 0.0D;
+                target.motionY = 0.0D;
+                target.motionZ = 0.0D;
+                target.velocityChanged = true;
+                if (target instanceof net.minecraft.entity.player.EntityPlayer) {
+                    ((net.minecraft.entity.player.EntityPlayer) target)
+                        .setPositionAndUpdate(destination.x, destination.y, destination.z);
+                }
             }
         }
     });
@@ -2661,6 +2698,14 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     stack.pop(Vec3Iota.class));
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    position.getX() + 0.5D, position.getY() + 0.5D,
+                    position.getZ() + 0.5D), "hexcasting.error.place_block_range");
+                if (!player.world.isBlockModifiable(player, position)
+                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
+                    throw new CastingException("hexcasting.error.place_block_forbidden");
+                }
                 if (player.world.isRemote) {
                     return;
                 }
