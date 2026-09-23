@@ -45,7 +45,13 @@ public final class MediaInventoryHelper {
                                          ADMediaHolder preferred) {
         List<MediaSource> sources = new ArrayList<>();
         if (preferred != null) {
-            addSource(sources, preferred, null);
+            // An explicitly bound holder (for example a packaged spell) is
+            // allowed to provide media even when it deliberately opts out of
+            // the ordinary inventory scan.  canProvide() answers the latter
+            // question; explicit ownership is already established by the VM.
+            if (preferred.getMedia() > 0L) {
+                sources.add(new MediaSource(preferred, null, true));
+            }
             return new MediaTransaction(sources);
         }
 
@@ -227,19 +233,25 @@ public final class MediaInventoryHelper {
     public static final class MediaSource {
         private final ADMediaHolder holder;
         private final ItemStack stack;
+        private final boolean explicit;
 
         private MediaSource(ADMediaHolder holder, ItemStack stack) {
+            this(holder, stack, false);
+        }
+
+        private MediaSource(ADMediaHolder holder, ItemStack stack, boolean explicit) {
             this.holder = holder;
             this.stack = stack;
+            this.explicit = explicit;
         }
 
         public long getAvailable() {
-            return holder.canProvide()
+            return (explicit || holder.canProvide())
                 ? Math.max(0L, holder.withdrawMedia(-1L, true)) : 0L;
         }
 
         public long withdraw(long amount, boolean simulate) {
-            if (!holder.canProvide()) {
+            if (!explicit && !holder.canProvide()) {
                 return 0L;
             }
             return Math.max(0L, holder.withdrawMedia(amount, simulate));

@@ -2256,18 +2256,15 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                if (vm != null && vm.getMediaHolder() != null) {
-                    long circleMedia = vm.getMediaHolder().getMedia();
-                    stack.push(new DoubleIota(((double) (circleMedia < 0L
-                        ? Long.MAX_VALUE : Math.max(0L, circleMedia)))
-                        / (double) MediaConstants.DUST_UNIT));
-                    return;
+                if (vm == null || (vm.getPlayer() == null
+                    && vm.getCastingData() == null && vm.getMediaHolder() == null)) {
+                    throw new CastingException("hexcasting.error.get_media_context");
                 }
-                IHexCastingData data = vm.getCastingData();
-                if (data == null) {
-throw new CastingException("hexcasting.error.get_media_context");
-                }
-                long available = MediaInventoryHelper.getAvailableMedia(vm.getPlayer(), data);
+                // Ask the same transaction/source resolver used by consumeMedia
+                // instead of reading one holder directly.  This keeps the
+                // result correct for explicit package/circle sources, normal
+                // inventory sources, and media already consumed in this cast.
+                long available = vm.getAvailableMedia();
                 stack.push(new DoubleIota(
                     ((double) available) / (double) MediaConstants.DUST_UNIT
                 ));
