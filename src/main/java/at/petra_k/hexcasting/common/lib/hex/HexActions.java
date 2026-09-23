@@ -1342,10 +1342,22 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                if (player.world.isBlockModifiable(player, blockPos)
-                    && player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
+                    blockPos.getZ() + 0.5D), "hexcasting.error.break_block_range");
+                if (!player.world.isBlockModifiable(player, blockPos)
+                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
-                    vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
+                    throw new CastingException("hexcasting.error.break_block_forbidden");
+                }
+                net.minecraft.block.state.IBlockState state =
+                    player.world.getBlockState(blockPos);
+                boolean cheap = isCheapBreakable(state);
+                vm.consumeMedia(cheap ? MediaConstants.DUST_UNIT / 100L
+                    : MediaConstants.DUST_UNIT / 8L);
+                if (!state.getBlock().isAir(state, player.world, blockPos)
+                    && state.getBlock().getBlockHardness(state, player.world, blockPos) >= 0.0F
+                    && state.getBlock().getHarvestLevel(state) <= 3) {
                     player.world.destroyBlock(blockPos, true);
                 }
             }
@@ -1371,6 +1383,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
+                requireVecInRange(vm.getPlayer(), start, "hexcasting.error.raycast_range");
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_zero");
                 }
@@ -1379,7 +1392,10 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
-                    || hit.getBlockPos() == null) {
+                    || hit.getBlockPos() == null
+                    || !isVecInRange(vm.getPlayer(), new net.minecraft.util.math.Vec3d(
+                        hit.getBlockPos().getX() + 0.5D, hit.getBlockPos().getY() + 0.5D,
+                        hit.getBlockPos().getZ() + 0.5D))) {
                     stack.push(new NullIota());
                 } else {
                     net.minecraft.util.math.BlockPos pos = hit.getBlockPos();
@@ -1410,6 +1426,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
+                requireVecInRange(vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_axis_zero");
                 }
@@ -1419,7 +1436,10 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
-                    || hit.sideHit == null) {
+                    || hit.sideHit == null || hit.getBlockPos() == null
+                    || !isVecInRange(vm.getPlayer(), new net.minecraft.util.math.Vec3d(
+                        hit.getBlockPos().getX() + 0.5D, hit.getBlockPos().getY() + 0.5D,
+                        hit.getBlockPos().getZ() + 0.5D))) {
                     stack.push(new NullIota());
                 } else {
                     net.minecraft.util.EnumFacing face = hit.sideHit;
@@ -1451,6 +1471,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
+                requireVecInRange(caster, start, "hexcasting.error.raycast_entity_range");
                 double length = vector.lengthVector();
                 if (length == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_entity_zero");
@@ -1471,7 +1492,9 @@ public static final HexPattern BOOL_IF_PATTERN =
                     // false in 1.12.2, but modern Hex still lets the entity
                     // raycast select them by their pick box. Filtering on
                     // collision here made dropped items impossible to target.
-                    if (candidate == null || candidate.isDead) {
+                    if (!isReasonablySelectable(caster, candidate)
+                        || candidate == caster
+                        || candidate.getLowestRidingEntity() == caster.getLowestRidingEntity()) {
                         continue;
                     }
                     net.minecraft.util.math.AxisAlignedBB box = candidate.getEntityBoundingBox();
@@ -1511,7 +1534,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawa");
     public static final HexAction GET_ENTITY_ANIMAL = register(
         GET_ENTITY_ANIMAL_ID, GET_ENTITY_ANIMAL_PATTERN,
-        entityAtAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal));
+        entityAtAction(HexActions::isAnimalEntity));
 
     /** Select the nearest monster centered on a position Iota. */
     public static final ResourceLocation GET_ENTITY_MONSTER_ID =
@@ -1547,7 +1570,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqdaqaawd");
     public static final HexAction GET_ENTITY_LIVING = register(
         GET_ENTITY_LIVING_ID, GET_ENTITY_LIVING_PATTERN,
-        entityAtAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase));
+        entityAtAction(HexActions::isLivingEntity));
 
     private static HexAction entityAtAction(
         final java.util.function.Predicate<net.minecraft.entity.Entity> predicate) {
@@ -1565,6 +1588,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                requireVecInRange(player, position, "hexcasting.error.get_entity_range");
                 net.minecraft.util.math.AxisAlignedBB area =
                     new net.minecraft.util.math.AxisAlignedBB(
                         position.x - 0.5D, position.y - 0.5D, position.z - 0.5D,
@@ -1573,7 +1597,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 double nearestDistance = Double.MAX_VALUE;
                 for (net.minecraft.entity.Entity candidate : player.world.getEntitiesWithinAABB(
                     net.minecraft.entity.Entity.class, area)) {
-                    if (candidate == null || candidate.isDead || !predicate.test(candidate)) {
+                    if (!isReasonablySelectable(player, candidate)
+                        || !predicate.test(candidate)) {
                         continue;
                     }
                     double dx = candidate.posX - position.x;
@@ -1604,7 +1629,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwa");
     public static final HexAction ZONE_ENTITY_ANIMAL = register(
         ZONE_ENTITY_ANIMAL_ID, ZONE_ENTITY_ANIMAL_PATTERN,
-        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal, false));
+        zoneEntitiesAction(HexActions::isAnimalEntity, false));
 
     public static final ResourceLocation ZONE_ENTITY_NOT_ANIMAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_animal");
@@ -1612,7 +1637,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_EAST, "eeeeewaqaawa");
     public static final HexAction ZONE_ENTITY_NOT_ANIMAL = register(
         ZONE_ENTITY_NOT_ANIMAL_ID, ZONE_ENTITY_NOT_ANIMAL_PATTERN,
-        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.passive.EntityAnimal, true));
+        zoneEntitiesAction(HexActions::isAnimalEntity, true));
 
     public static final ResourceLocation ZONE_ENTITY_MONSTER_ID =
         new ResourceLocation(HexAPI.MOD_ID, "zone_entity/monster");
@@ -1668,7 +1693,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "qqqqqwdeddwd");
     public static final HexAction ZONE_ENTITY_LIVING = register(
         ZONE_ENTITY_LIVING_ID, ZONE_ENTITY_LIVING_PATTERN,
-        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase, false));
+        zoneEntitiesAction(HexActions::isLivingEntity, false));
 
     public static final ResourceLocation ZONE_ENTITY_NOT_LIVING_ID =
         new ResourceLocation(HexAPI.MOD_ID, "zone_entity/not_living");
@@ -1676,7 +1701,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_EAST, "eeeeewaqaawd");
     public static final HexAction ZONE_ENTITY_NOT_LIVING = register(
         ZONE_ENTITY_NOT_LIVING_ID, ZONE_ENTITY_NOT_LIVING_PATTERN,
-        zoneEntitiesAction(entity -> entity instanceof net.minecraft.entity.EntityLivingBase, true));
+        zoneEntitiesAction(HexActions::isLivingEntity, true));
 
     private static HexAction zoneEntitiesAction(
         final java.util.function.Predicate<net.minecraft.entity.Entity> predicate,
@@ -1699,6 +1724,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.zone_entity_radius");
                 }
                 net.minecraft.util.math.Vec3d position = stack.pop(Vec3Iota.class).getValue();
+                requireVecInRange(player, position, "hexcasting.error.zone_entity_range");
                 net.minecraft.util.math.AxisAlignedBB area = new net.minecraft.util.math.AxisAlignedBB(
                     position.x - radius, position.y - radius, position.z - radius,
                     position.x + radius, position.y + radius, position.z + radius);
@@ -1706,13 +1732,28 @@ public static final HexPattern BOOL_IF_PATTERN =
                     player.world.getEntitiesWithinAABB(net.minecraft.entity.Entity.class, area);
                 java.util.ArrayList<Iota> matches = new java.util.ArrayList<>();
                 for (net.minecraft.entity.Entity candidate : candidates) {
-                    if (candidate == null || candidate.isDead) {
+                    if (!isReasonablySelectable(player, candidate)
+                        || predicate.test(candidate) == invert) {
                         continue;
                     }
-                    if (predicate.test(candidate) != invert) {
+                    double dx = candidate.posX - position.x;
+                    double dy = candidate.posY - position.y;
+                    double dz = candidate.posZ - position.z;
+                    if (dx * dx + dy * dy + dz * dz <= radius * radius) {
                         matches.add(new EntityIota(candidate));
                     }
                 }
+                java.util.Collections.sort(matches, (left, right) -> {
+                    net.minecraft.entity.Entity leftEntity =
+                        ((EntityIota) left).getEntity();
+                    net.minecraft.entity.Entity rightEntity =
+                        ((EntityIota) right).getEntity();
+                    double leftDistance = leftEntity == null ? Double.MAX_VALUE
+                        : leftEntity.getDistanceSq(position.x, position.y, position.z);
+                    double rightDistance = rightEntity == null ? Double.MAX_VALUE
+                        : rightEntity.getDistanceSq(position.x, position.y, position.z);
+                    return Double.compare(leftDistance, rightDistance);
+                });
                 stack.push(new ListIota(matches));
             }
         };
@@ -3741,6 +3782,63 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         }
         return -1;
+    }
+
+    private static boolean isAnimalEntity(net.minecraft.entity.Entity entity) {
+        return entity instanceof net.minecraft.entity.passive.EntityAnimal
+            || entity instanceof net.minecraft.entity.passive.EntityWaterMob;
+    }
+
+    private static boolean isLivingEntity(net.minecraft.entity.Entity entity) {
+        return !(entity instanceof net.minecraft.entity.item.EntityArmorStand)
+            && (entity instanceof net.minecraft.entity.EntityLivingBase
+                || entity instanceof net.minecraft.entity.boss.EntityDragonPart);
+    }
+
+    private static boolean isReasonablySelectable(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.entity.Entity entity) {
+        if (player == null || entity == null || entity.isDead
+            || entity.world != player.world) {
+            return false;
+        }
+        return !(entity instanceof net.minecraft.entity.player.EntityPlayer
+            && ((net.minecraft.entity.player.EntityPlayer) entity).isSpectator())
+            && isVecInRange(player, new net.minecraft.util.math.Vec3d(
+                entity.posX, entity.posY, entity.posZ));
+    }
+
+    private static boolean isVecInRange(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position) {
+        if (player == null || position == null
+            || Double.isNaN(position.x) || Double.isInfinite(position.x)
+            || Double.isNaN(position.y) || Double.isInfinite(position.y)
+            || Double.isNaN(position.z) || Double.isInfinite(position.z)) {
+            return false;
+        }
+        double dx = position.x - player.posX;
+        double dy = position.y - player.posY;
+        double dz = position.z - player.posZ;
+        return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D
+            && position.y >= 0.0D && position.y < 256.0D
+            && Math.abs(position.x) <= 30000000.0D
+            && Math.abs(position.z) <= 30000000.0D;
+    }
+
+    private static void requireVecInRange(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position,
+        String errorKey) throws CastingException {
+        if (!isVecInRange(player, position)) {
+            throw new CastingException(errorKey);
+        }
+    }
+
+    private static boolean isCheapBreakable(
+        net.minecraft.block.state.IBlockState state) {
+        return state != null
+            && state.getBlock() instanceof at.petra_k.hexcasting.common.block.BlockConjured;
     }
 
     public static void touch() {
