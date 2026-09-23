@@ -2465,7 +2465,7 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
     });
 
-    /** Remove the block at a vector position without dropping items. */
+    /** Erase the first matching held spell or data container. */
     public static final ResourceLocation ERASE_ID =
         new ResourceLocation(HexAPI.MOD_ID, "erase");
     public static final HexPattern ERASE_PATTERN =
@@ -2476,15 +2476,22 @@ throw new CastingException("hexcasting.error.get_media_context");
             throw new CastingException("hexcasting.error.erase_context");
         }
 
-        @Override
-        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-            if (player == null) {
-                throw new CastingException("hexcasting.error.erase_context");
-            }
-            net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-            if (!player.world.isRemote && !player.world.isAirBlock(position)) {
-                player.world.setBlockToAir(position);
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.erase_context");
+                }
+                net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
+                    IotaDataHolder::canClear);
+                if (target == null || target.isEmpty()) {
+                    throw new CastingException("hexcasting.error.erase_holder");
+                }
+                long count = Math.max(1L, (long) target.getCount());
+                if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
+                    throw new CastingException("hexcasting.error.erase_cost");
+                }
+                vm.consumeMedia(count * MediaConstants.DUST_UNIT);
+                IotaDataHolder.clear(target);
             }
         }
     });
