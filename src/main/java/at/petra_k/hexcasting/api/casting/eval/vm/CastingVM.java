@@ -82,6 +82,35 @@ public final class CastingVM {
         }
     }
 
+    /** Immutable-in-practice snapshot used to abandon one failed cast. */
+    private static final class VmSnapshot {
+        private final CastingStack stack;
+        private final ArrayDeque<WorkItem> continuation;
+        private final ArrayDeque<ParenFrame> parentheses;
+        private final int parenCount;
+        private final boolean escapeNext;
+        private final boolean halted;
+        private final boolean continuationInvoked;
+        private final boolean lastNestedRunHalted;
+        private final int operationsConsumed;
+
+        private VmSnapshot(CastingStack stack, ArrayDeque<WorkItem> continuation,
+                           ArrayDeque<ParenFrame> parentheses, int parenCount,
+                           boolean escapeNext, boolean halted,
+                           boolean continuationInvoked, boolean lastNestedRunHalted,
+                           int operationsConsumed) {
+            this.stack = stack;
+            this.continuation = continuation;
+            this.parentheses = parentheses;
+            this.parenCount = parenCount;
+            this.escapeNext = escapeNext;
+            this.halted = halted;
+            this.continuationInvoked = continuationInvoked;
+            this.lastNestedRunHalted = lastNestedRunHalted;
+            this.operationsConsumed = operationsConsumed;
+        }
+    }
+
     private final CastingStack stack;
     private final ArrayDeque<WorkItem> continuation = new ArrayDeque<>();
     private final ArrayDeque<ParenFrame> parentheses = new ArrayDeque<>();
@@ -753,10 +782,9 @@ public final class CastingVM {
     public CastingStack run(int maxOperations) throws CastingException {
         validateBudget(maxOperations);
         boolean outermost = evaluationDepth == 0;
-        CastingStack before = null;
-        int beforeOperations = operationsConsumed;
+        VmSnapshot before = null;
         if (outermost) {
-            before = snapshotStack();
+            before = snapshotState();
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
             lastMishap = null;
         }
@@ -771,12 +799,12 @@ public final class CastingVM {
             return stack;
         } catch (CastingException exception) {
             if (outermost) {
-                rollbackEvaluation(before, beforeOperations);
+                rollbackEvaluation(before);
             }
             throw exception;
         } catch (RuntimeException exception) {
             if (outermost) {
-                rollbackEvaluation(before, beforeOperations);
+                rollbackEvaluation(before);
             }
             Mishap mishap = Mishap.fromRuntime(exception, null, null, player,
                 parenCount, operationsConsumed);
@@ -874,25 +902,45 @@ public final class CastingVM {
         return stack;
     }
 
-    private CastingStack snapshotStack() throws CastingException {
-        return CastingStack.deserializeState(stack.serializeState());
+    private VmSnapshot snapshotState() throws CastingException {
+        ArrayDeque<ParenFrame> parenthesisCopy = new ArrayDeque<>();
+        for (ParenFrame frame : parentheses) {
+            ParenFrame frameCopy = new ParenFrame();
+            for (ParenEntry entry : frame.values) {
+                frameCopy.values.add(new ParenEntry(entry.value, entry.escaped));
+            }
+            parenthesisCopy.addLast(frameCopy);
+        }
+        return new VmSnapshot(
+            CastingStack.deserializeState(stack.serializeState()),
+            new ArrayDeque<>(continuation), parenthesisCopy, parenCount,
+            escapeNext, halted, continuationInvoked, lastNestedRunHalted,
+            operationsConsumed);
     }
 
-    private void rollbackEvaluation(CastingStack before, int beforeOperations) {
+    private void rollbackEvaluation(VmSnapshot before) {
         if (mediaTransaction != null) {
             mediaTransaction.rollback();
         }
         if (before != null) {
             try {
-                stack.restore(before.snapshot());
-                stack.writeLocal(before.readLocal());
+                stack.restore(before.stack.snapshot());
+                stack.writeLocal(before.stack.readLocal());
             } catch (CastingException ignored) {
                 // The snapshot came from this stack, so this is only a
                 // defensive guard for malformed third-party Iotas.
             }
+            continuation.clear();
+            continuation.addAll(before.continuation);
+            parentheses.clear();
+            parentheses.addAll(before.parentheses);
+            parenCount = before.parenCount;
+            escapeNext = before.escapeNext;
+            halted = before.halted;
+            continuationInvoked = before.continuationInvoked;
+            lastNestedRunHalted = before.lastNestedRunHalted;
+            operationsConsumed = before.operationsConsumed;
         }
-        operationsConsumed = beforeOperations;
-        continuation.clear();
     }
 
     private void capture(Iota value, boolean escaped) throws CastingException {
