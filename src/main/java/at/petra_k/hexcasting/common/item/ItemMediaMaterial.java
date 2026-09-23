@@ -88,7 +88,7 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
         if (available <= 0L || requested <= 0L) {
             return 0L;
         }
-        long items = (requested + mediaPerItem - 1L) / mediaPerItem;
+        long items = ceilDivide(requested, mediaPerItem);
         items = Math.min(items, Math.max(0L, (long) stack.getCount()));
         long extracted = items > Long.MAX_VALUE / mediaPerItem
             ? Long.MAX_VALUE : items * mediaPerItem;
@@ -159,7 +159,7 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
         setMedia(partialStack, partialMedia);
 
         stack.setCount((int) Math.min(Integer.MAX_VALUE, fullCount));
-        setMedia(stack, fullCount * mediaPerItem);
+        setMedia(stack, saturatingMultiply(fullCount, mediaPerItem));
         entity.setItem(stack);
 
         EntityItem partialEntity = new EntityItem(entity.world,
@@ -168,6 +168,21 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
         partialEntity.motionY = entity.motionY;
         partialEntity.motionZ = entity.motionZ;
         entity.world.spawnEntity(partialEntity);
+    }
+
+    private static long ceilDivide(long numerator, long denominator) {
+        if (numerator <= 0L || denominator <= 0L) {
+            return 0L;
+        }
+        long quotient = numerator / denominator;
+        return numerator % denominator == 0L ? quotient : quotient + 1L;
+    }
+
+    private static long saturatingMultiply(long left, long right) {
+        if (left <= 0L || right <= 0L) {
+            return 0L;
+        }
+        return left > Long.MAX_VALUE / right ? Long.MAX_VALUE : left * right;
     }
 
     @Override
