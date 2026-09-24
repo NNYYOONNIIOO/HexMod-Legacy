@@ -3038,18 +3038,26 @@ throw new CastingException("hexcasting.error.get_media_context");
                     target.getZ() + 0.5D), "hexcasting.error.conjure_block_range");
                 requireEditPermission(vm, player, target,
                     "hexcasting.error.conjure_block_forbidden");
-                net.minecraft.block.state.IBlockState current =
-                    player.world.getBlockState(target);
-                if (!current.getBlock().isReplaceable(player.world, target)) {
-                    throw new CastingException("hexcasting.error.conjure_block_target");
-                }
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_block");
                 if (conjured == null) {
                     throw new CastingException("hexcasting.error.conjure_block_missing");
                 }
+                net.minecraft.block.state.IBlockState current =
+                    player.world.getBlockState(target);
+                if (!current.getBlock().isReplaceable(player.world, target)
+                    || !conjured.canPlaceBlockAt(player.world, target)) {
+                    throw new CastingException("hexcasting.error.conjure_block_target");
+                }
+                net.minecraft.block.state.IBlockState placement =
+                    conjured.getStateForPlacement(player.world, target,
+                        net.minecraft.util.EnumFacing.DOWN, 0.5F, 0.5F, 0.5F,
+                        0, player);
+                if (placement == null) {
+                    throw new CastingException("hexcasting.error.conjure_block_missing");
+                }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
-                    player.world.setBlockState(target, conjured.getDefaultState(), 3);
+                    player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
                         ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setPigment(
@@ -3085,18 +3093,26 @@ throw new CastingException("hexcasting.error.get_media_context");
                     target.getZ() + 0.5D), "hexcasting.error.conjure_light_range");
                 requireEditPermission(vm, player, target,
                     "hexcasting.error.conjure_light_forbidden");
-                net.minecraft.block.state.IBlockState current =
-                    player.world.getBlockState(target);
-                if (!current.getBlock().isReplaceable(player.world, target)) {
-                    throw new CastingException("hexcasting.error.conjure_light_target");
-                }
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_light");
                 if (conjured == null) {
                     throw new CastingException("hexcasting.error.conjure_light_missing");
                 }
+                net.minecraft.block.state.IBlockState current =
+                    player.world.getBlockState(target);
+                if (!current.getBlock().isReplaceable(player.world, target)
+                    || !conjured.canPlaceBlockAt(player.world, target)) {
+                    throw new CastingException("hexcasting.error.conjure_light_target");
+                }
+                net.minecraft.block.state.IBlockState placement =
+                    conjured.getStateForPlacement(player.world, target,
+                        net.minecraft.util.EnumFacing.DOWN, 0.5F, 0.5F, 0.5F,
+                        0, player);
+                if (placement == null) {
+                    throw new CastingException("hexcasting.error.conjure_light_missing");
+                }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
-                    player.world.setBlockState(target, conjured.getDefaultState(), 3);
+                    player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
                         ((at.petra_k.hexcasting.common.block.TileEntityConjured) tile).setPigment(
