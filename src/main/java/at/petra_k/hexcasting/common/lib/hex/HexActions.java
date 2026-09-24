@@ -2135,26 +2135,85 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
 
     public static final ResourceLocation READ_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "read/entity");
     public static final HexPattern READ_ENTITY_PATTERN = pattern(HexDir.EAST, "wawqwqwqwqwqw");
-    public static final HexAction READ_ENTITY = register(READ_ENTITY_ID, READ_ENTITY_PATTERN, stack ->
-        stack.push(readIota(entityItem(stack.pop()))));
+    public static final HexAction READ_ENTITY = register(
+        READ_ENTITY_ID, READ_ENTITY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.entity_data_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.entity_data_context");
+                }
+                stack.push(readIota(entityItem(stack.pop(), vm)));
+            }
+        });
 
     public static final ResourceLocation WRITE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "write/entity");
     public static final HexPattern WRITE_ENTITY_PATTERN = pattern(HexDir.EAST, "wdwewewewewew");
-    public static final HexAction WRITE_ENTITY = register(WRITE_ENTITY_ID, WRITE_ENTITY_PATTERN, stack -> {
-        Iota value = stack.pop();
-        Iota entity = stack.pop();
-        IotaDataHolder.write(entityItem(entity), value);
-    });
+    public static final HexAction WRITE_ENTITY = register(
+        WRITE_ENTITY_ID, WRITE_ENTITY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.entity_data_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.entity_data_context");
+                }
+                Iota value = stack.pop();
+                Iota entity = stack.pop();
+                IotaDataHolder.write(entityItem(entity, vm), value);
+            }
+        });
 
     public static final ResourceLocation READABLE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "readable/entity");
     public static final HexPattern READABLE_ENTITY_PATTERN = pattern(HexDir.EAST, "wawqwqwqwqwqwew");
-    public static final HexAction READABLE_ENTITY = register(READABLE_ENTITY_ID, READABLE_ENTITY_PATTERN, stack ->
-        stack.push(new BooleanIota(IotaDataHolder.canRead(entityItem(stack.pop())))));
+    public static final HexAction READABLE_ENTITY = register(
+        READABLE_ENTITY_ID, READABLE_ENTITY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.entity_data_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.entity_data_context");
+                }
+                net.minecraft.item.ItemStack target = entityItemIfPresent(stack.pop(), vm);
+                stack.push(new BooleanIota(
+                    target != null && IotaDataHolder.canRead(target)));
+            }
+        });
 
     public static final ResourceLocation WRITABLE_ENTITY_ID = new ResourceLocation(HexAPI.MOD_ID, "writable/entity");
     public static final HexPattern WRITABLE_ENTITY_PATTERN = pattern(HexDir.EAST, "wdwewewewewewqw");
-    public static final HexAction WRITABLE_ENTITY = register(WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, stack ->
-        stack.push(new BooleanIota(IotaDataHolder.canWrite(entityItem(stack.pop())))));
+    public static final HexAction WRITABLE_ENTITY = register(
+        WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.entity_data_context");
+            }
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.entity_data_context");
+                }
+                net.minecraft.item.ItemStack target = entityItemIfPresent(stack.pop(), vm);
+                stack.push(new BooleanIota(
+                    target != null && IotaDataHolder.canWrite(target)));
+            }
+        });
 
     private static net.minecraft.item.ItemStack dataHolder(CastingVM vm, boolean readable)
         throws CastingException {
@@ -2235,20 +2294,44 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         return IotaDataHolder.read(stack);
     }
 
-    private static net.minecraft.item.ItemStack entityItem(Iota value) throws CastingException {
-        net.minecraft.entity.Entity entity = getRechargeEntity(value);
+    private static net.minecraft.item.ItemStack entityItem(Iota value,
+                                                           CastingVM vm)
+        throws CastingException {
+        net.minecraft.item.ItemStack result = entityItemIfPresent(value, vm);
+        if (result == null || result.isEmpty()) {
+            throw new CastingException("hexcasting.error.entity_data_target");
+        }
+        return result;
+    }
+
+    /** Resolve an entity's item container without turning an unsupported entity into a mishap. */
+    private static net.minecraft.item.ItemStack entityItemIfPresent(Iota value,
+                                                                    CastingVM vm)
+        throws CastingException {
+        if (!(value instanceof EntityIota)) {
+            throw new CastingException("hexcasting.error.entity_data_expected");
+        }
+        if (vm == null || vm.getPlayer() == null) {
+            throw new CastingException("hexcasting.error.entity_data_context");
+        }
+        net.minecraft.entity.Entity entity = resolveEntity((EntityIota) value, vm);
+        requireEntityInRange(vm, vm.getPlayer(), entity,
+            "hexcasting.error.entity_data_range");
+
+        net.minecraft.item.ItemStack result = null;
         if (entity instanceof net.minecraft.entity.item.EntityItem) {
-            return ((net.minecraft.entity.item.EntityItem) entity).getItem();
-        }
-        if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
-            net.minecraft.entity.player.EntityPlayer player = (net.minecraft.entity.player.EntityPlayer) entity;
+            result = ((net.minecraft.entity.item.EntityItem) entity).getItem();
+        } else if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
+            net.minecraft.entity.player.EntityPlayer player =
+                (net.minecraft.entity.player.EntityPlayer) entity;
             net.minecraft.item.ItemStack main = player.getHeldItemMainhand();
-            return main == null || main.isEmpty() ? player.getHeldItemOffhand() : main;
+            result = main == null || main.isEmpty()
+                ? player.getHeldItemOffhand() : main;
+        } else if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
+            result = ((net.minecraft.entity.item.EntityItemFrame) entity)
+                .getDisplayedItem();
         }
-        if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
-            return ((net.minecraft.entity.item.EntityItemFrame) entity).getDisplayedItem();
-        }
-        throw new CastingException("hexcasting.error.data_holder_missing");
+        return result;
     }
 
     /** Resolve an EntityIota without requiring a live VM context. */
@@ -4119,21 +4202,7 @@ throw new CastingException("hexcasting.error.get_media_context");
         if (!(value instanceof EntityIota)) {
             throw new CastingException("hexcasting.error.compare_item_expected");
         }
-        net.minecraft.entity.Entity entity = resolveEntity((EntityIota) value, vm);
-        if (entity instanceof net.minecraft.entity.item.EntityItem) {
-            return ((net.minecraft.entity.item.EntityItem) entity).getItem().copy();
-        }
-        if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
-            return ((net.minecraft.entity.item.EntityItemFrame) entity).getDisplayedItem().copy();
-        }
-        if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
-            net.minecraft.entity.player.EntityPlayer player =
-                (net.minecraft.entity.player.EntityPlayer) entity;
-            net.minecraft.item.ItemStack main = player.getHeldItemMainhand();
-            return (main == null || main.isEmpty())
-                ? player.getHeldItemOffhand().copy() : main.copy();
-        }
-        throw new CastingException("hexcasting.error.compare_item_expected");
+        return entityItem(value, vm).copy();
     }
 
     private static net.minecraft.item.ItemStack findPlaceableBlockStack(
@@ -4593,6 +4662,9 @@ throw new CastingException("hexcasting.error.get_media_context");
 
     private static net.minecraft.entity.Entity resolveEntity(EntityIota entityIota, CastingVM vm)
         throws CastingException {
+        if (entityIota == null) {
+            throw new CastingException("hexcasting.error.entity_data_expected");
+        }
         net.minecraft.entity.Entity entity = entityIota.getEntity();
         if (entity == null && vm != null && vm.getPlayer() != null) {
             for (net.minecraft.entity.Entity candidate : vm.getPlayer().world.loadedEntityList) {
