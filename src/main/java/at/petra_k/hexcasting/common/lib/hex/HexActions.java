@@ -4323,13 +4323,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                     continue;
                 }
                 net.minecraftforge.fluids.FluidStack drained =
-                    handler.drain(contents, false);
+                    handler.drain(contents, true);
                 drainedAny |= drained != null && drained.amount > 0;
             }
         }
         if (!drainedAny) {
             net.minecraftforge.fluids.FluidStack drained =
-                handler.drain(Integer.MAX_VALUE, false);
+                handler.drain(Integer.MAX_VALUE, true);
             drainedAny = drained != null && drained.amount > 0;
         }
         return drainedAny;
@@ -4351,10 +4351,10 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
         net.minecraftforge.fluids.FluidStack requested =
             new net.minecraftforge.fluids.FluidStack(fluid, 1000);
-        if (handler.fill(requested, true) <= 0) {
+        if (handler.fill(requested, false) <= 0) {
             return false;
         }
-        return handler.fill(requested, false) > 0;
+        return handler.fill(requested, true) > 0;
     }
 
     private static boolean isFluidBlock(net.minecraft.block.Block block) {
