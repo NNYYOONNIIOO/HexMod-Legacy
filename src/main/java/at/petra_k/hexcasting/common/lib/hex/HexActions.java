@@ -1255,12 +1255,19 @@ public static final HexPattern BOOL_IF_PATTERN =
                 DoubleIota noteIota = stack.pop(DoubleIota.class);
                 DoubleIota instrumentIota = stack.pop(DoubleIota.class);
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
-                int note = (int) Math.rint(noteIota.getValue());
-                int instrument = (int) Math.rint(instrumentIota.getValue());
-                if (note < 0 || note > 24 || instrument < 0 || instrument > 9
-                    || Double.isNaN(noteIota.getValue()) || Double.isNaN(instrumentIota.getValue())) {
+                double rawNote = noteIota.getValue();
+                double rawInstrument = instrumentIota.getValue();
+                int note = (int) rawNote;
+                int instrument = (int) rawInstrument;
+                if (Double.isNaN(rawNote) || Double.isInfinite(rawNote)
+                    || Double.isNaN(rawInstrument) || Double.isInfinite(rawInstrument)
+                    || rawNote != Math.rint(rawNote)
+                    || rawInstrument != Math.rint(rawInstrument)
+                    || note < 0 || note > 24 || instrument < 0 || instrument >= 10) {
                     throw new CastingException("hexcasting.error.beep_args");
                 }
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                requireVecInRange(player, position, "hexcasting.error.beep_range");
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
                 net.minecraft.util.SoundEvent sound;
                 switch (instrument) {
@@ -1275,7 +1282,6 @@ public static final HexPattern BOOL_IF_PATTERN =
                     case 9: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_XYLOPHONE; break;
                     default: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HARP; break;
                 }
-                net.minecraft.util.math.Vec3d position = positionIota.getValue();
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -2308,6 +2314,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    position.getX() + 0.5D, position.getY() + 0.5D,
+                    position.getZ() + 0.5D), "hexcasting.error.fluid_range");
                 if (!player.world.isBlockModifiable(player, position)
                     || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
                         net.minecraft.item.ItemStack.EMPTY)) {
@@ -2379,8 +2388,12 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-                if (!player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                    net.minecraft.item.ItemStack.EMPTY)) {
+                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                    position.getX() + 0.5D, position.getY() + 0.5D,
+                    position.getZ() + 0.5D), "hexcasting.error.fluid_range");
+                if (!player.world.isBlockModifiable(player, position)
+                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
                     throw new CastingException("hexcasting.error.fluid_forbidden");
                 }
                 // Match OpCreateFluid: the action pays before applying the
@@ -3761,15 +3774,19 @@ throw new CastingException("hexcasting.error.get_media_context");
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
-                vm.consumeMedia(MediaConstants.DUST_UNIT);
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
                     throw new CastingException("hexcasting.error.no_akashic_record");
                 }
+                at.petra_k.hexcasting.common.block.BlockAkashicRecord record =
+                    (at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock;
+                if (record.lookupPattern(vm.getPlayer().world, target, key.getPattern()) != null) {
+                    throw new CastingException("hexcasting.error.akashic_duplicate");
+                }
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
                 boolean written =
-                    ((at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock)
-                        .addNewDatum(vm.getPlayer().world, target, key.getPattern(), value);
+                    record.addNewDatum(vm.getPlayer().world, target, key.getPattern(), value);
                 if (!written) {
                     throw new CastingException("hexcasting.error.akashic_duplicate");
                 }

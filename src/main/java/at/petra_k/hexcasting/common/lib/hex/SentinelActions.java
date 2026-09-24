@@ -83,11 +83,11 @@ public final class SentinelActions {
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
-                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
                 if (state != null && state.dimension != player.world.provider.getDimension()) {
                     throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
                 }
+                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.get(player.world).clear(player.getUniqueID());
                 sync(player);
             }
@@ -104,15 +104,16 @@ public final class SentinelActions {
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
-                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
                 if (state == null) {
+                    vm.consumeMedia(NEGLIGIBLE_MEDIA);
                     stack.push(new NullIota());
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
                     throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
                 }
+                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 stack.push(vectorIota(new Vec3d(state.x, state.y, state.z)));
             }
         };
@@ -129,15 +130,16 @@ public final class SentinelActions {
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
                 Vec3d from = vectorOf(stack.pop(Vec3Iota.class));
-                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
                 if (state == null) {
+                    vm.consumeMedia(NEGLIGIBLE_MEDIA);
                     stack.push(new NullIota());
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
                     throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
                 }
+                vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 double dx = state.x - from.x;
                 double dy = state.y - from.y;
                 double dz = state.z - from.z;
