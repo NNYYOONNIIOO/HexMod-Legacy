@@ -94,6 +94,12 @@ public final class MishapFeedback {
                         mishap.getLocationZ(), 0.25F, false, false);
                 }
                 return;
+            case NO_AKASHIC_RECORD:
+                // Modern Hex charges a small experience penalty for trying to
+                // use the Akashic interface where no record exists.  Keep it
+                // separate from the harmless bad-block explosion effect.
+                removeExperience(caster, 100);
+                return;
             case BAD_BRAINSWEEP:
                 if (target instanceof EntityLiving) {
                     BrainsweepRecipes.hurtForFailedBrainsweep(
@@ -151,6 +157,35 @@ public final class MishapFeedback {
             dropped.motionZ = delta.z + (caster.world.rand.nextDouble() - 0.5D) * 0.1D;
             caster.world.spawnEntity(dropped);
         }
+    }
+
+    /** Remove raw XP while keeping the vanilla level bar internally coherent. */
+    private static void removeExperience(EntityPlayer player, int amount) {
+        if (player == null || amount <= 0 || player.experienceTotal <= 0) {
+            return;
+        }
+        int total = Math.max(0, player.experienceTotal - amount);
+        player.experienceTotal = total;
+
+        int level = 0;
+        while (level < 32767 && experienceForLevel(level + 1) <= total) {
+            level++;
+        }
+        player.experienceLevel = level;
+        int base = experienceForLevel(level);
+        int cap = Math.max(1, player.xpBarCap());
+        player.experience = Math.max(0.0F,
+            Math.min(0.999999F, (total - base) / (float) cap));
+    }
+
+    private static int experienceForLevel(int level) {
+        if (level <= 15) {
+            return level * level + 6 * level;
+        }
+        if (level <= 30) {
+            return (int) (2.5D * level * level - 40.5D * level + 360.0D);
+        }
+        return (int) (4.5D * level * level - 162.5D * level + 2220.0D);
     }
 
     /** Convert an exception at an item/effect boundary and retain its context. */

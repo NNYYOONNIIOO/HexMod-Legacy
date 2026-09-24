@@ -26,6 +26,7 @@ public class Mishap extends CastingException {
         BAD_BLOCK,
         BAD_BRAINSWEEP,
         ALREADY_BRAINSWEPT,
+        NO_AKASHIC_RECORD,
         BAD_LOCATION,
         PERMISSION_DENIED,
         INVALID_VALUE,
@@ -335,6 +336,8 @@ public class Mishap extends CastingException {
             case BAD_BRAINSWEEP:
             case ALREADY_BRAINSWEPT:
                 return 0x62B64A;
+            case NO_AKASHIC_RECORD:
+                return 0x8B5CC7;
             case BAD_LOCATION:
                 return 0xE97AC1;
             case PERMISSION_DENIED:
@@ -452,6 +455,9 @@ public class Mishap extends CastingException {
         }
         if (message.contains("brainsweep_recipe")) {
             return Kind.BAD_BRAINSWEEP;
+        }
+        if (message.contains("no_akashic_record")) {
+            return Kind.NO_AKASHIC_RECORD;
         }
         if (message.contains("stack_underflow") || message.contains("not_enough_args")
             || message.contains("no_args")) {

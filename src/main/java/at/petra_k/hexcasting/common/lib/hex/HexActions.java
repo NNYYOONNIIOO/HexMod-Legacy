@@ -3489,11 +3489,12 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 requireEntityInRange(vm, player, living, "hexcasting.error.brainsweep_range");
                 net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
-                if (!player.world.isBlockModifiable(player, target)
-                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.brainsweep_location");
-                }
+                vm.recordMishapLocation(target.getX() + 0.5D, target.getY() + 0.5D,
+                    target.getZ() + 0.5D,
+                    player.world.provider == null
+                        ? Integer.MIN_VALUE : player.world.provider.getDimension());
+                requireEditPermission(vm, player, target,
+                    "hexcasting.error.brainsweep_location");
                 if (BrainsweepRecipes.isBrainswept(living)) {
                     throw new CastingException("hexcasting.error.brainsweep_already");
                 }
@@ -3761,6 +3762,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
+                net.minecraft.util.math.Vec3d rawPosition = position.getValue();
+                vm.recordMishapLocation(rawPosition.x, rawPosition.y, rawPosition.z,
+                    vm.getPlayer().world.provider == null
+                        ? Integer.MIN_VALUE : vm.getPlayer().world.provider.getDimension());
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
@@ -3800,24 +3805,29 @@ throw new CastingException("hexcasting.error.get_media_context");
                 Iota value = stack.pop();
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                requireVecInRange(vm, player, position.getValue(),
+                    "hexcasting.error.akashic_write_range");
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
                 net.minecraft.block.Block targetBlock =
-                    vm.getPlayer().world.getBlockState(target).getBlock();
+                    player.world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
                     throw new CastingException("hexcasting.error.no_akashic_record");
                 }
+                requireEditPermission(vm, player, target,
+                    "hexcasting.error.permission_denied");
                 at.petra_k.hexcasting.common.block.BlockAkashicRecord record =
                     (at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock;
-                if (record.lookupPattern(vm.getPlayer().world, target, key.getPattern()) != null) {
+                if (record.lookupPattern(player.world, target, key.getPattern()) != null) {
                     throw new CastingException("hexcasting.error.akashic_duplicate");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 boolean written =
-                    record.addNewDatum(vm.getPlayer().world, target, key.getPattern(), value);
+                    record.addNewDatum(player.world, target, key.getPattern(), value);
                 if (!written) {
                     throw new CastingException("hexcasting.error.akashic_duplicate");
                 }
-                vm.getPlayer().world.playSound(null, target,
+                player.world.playSound(null, target,
                     HexSounds.SCROLL_SCRIBBLE,
                     net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.8F);
             }
