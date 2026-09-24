@@ -1992,11 +1992,13 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_context");
                 }
 
-                Object entityIota = stack.pop();
-                net.minecraft.entity.Entity entity = getRechargeEntity(entityIota);
+                EntityIota entityIota = stack.pop(EntityIota.class);
+                net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 if (!(entity instanceof net.minecraft.entity.item.EntityItem)) {
                     throw new CastingException("hexcasting.error.recharge_entity");
                 }
+                requireEntityInRange(vm.getPlayer(), entity,
+                    "hexcasting.error.recharge_range");
 
                 net.minecraft.entity.item.EntityItem droppedEntity =
                     (net.minecraft.entity.item.EntityItem) entity;
@@ -2005,9 +2007,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_item");
                 }
 
-                ResourceLocation itemId = dropped.getItem().getRegistryName();
-                if (itemId == null || !HexAPI.MOD_ID.equals(itemId.getResourceDomain())
-                    || !itemId.getResourcePath().contains("amethyst")) {
+                if (!MediaInventoryHelper.isMediaItem(dropped)) {
                     throw new CastingException("hexcasting.error.recharge_item");
                 }
 
@@ -2027,50 +2027,29 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_holder");
                 }
 
-                long requested = Math.max(0L, (long) dropped.getCount() * MediaConstants.SHARD_UNIT);
-                long inserted = holder.insertMedia(offHand, requested, false);
+                long emptySpace = holder.insertMedia(offHand, -1L, true);
+                long sourceMedia = MediaInventoryHelper.extractMedia(
+                    dropped, -1L, false, true);
+                if (emptySpace <= 0L || sourceMedia <= 0L) {
+                    throw new CastingException("hexcasting.error.recharge_full");
+                }
+                long extracted = MediaInventoryHelper.extractMedia(
+                    dropped, emptySpace, false, true);
+                if (extracted <= 0L) {
+                    throw new CastingException("hexcasting.error.recharge_item");
+                }
+                // Recharge itself has the fixed one-shard spell cost.  All
+                // item/entity mutation happens after this validation so a
+                // failed cast cannot leave a partially transferred source.
+                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+                long drained = MediaInventoryHelper.extractMedia(
+                    droppedEntity, emptySpace, false, false);
+                long inserted = holder.insertMedia(offHand, drained, false);
                 if (inserted <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_full");
                 }
-
-                long units = (inserted + MediaConstants.SHARD_UNIT - 1L) / MediaConstants.SHARD_UNIT;
-                int consumed = (int) Math.min((long) dropped.getCount(), Math.max(1L, units));
-                dropped.shrink(consumed);
-                if (dropped.isEmpty()) {
-                    droppedEntity.setDead();
-                }
             }
         });
-
-    private static net.minecraft.entity.Entity getRechargeEntity(Object value) {
-        if (value == null || !"EntityIota".equals(value.getClass().getSimpleName())) {
-            return null;
-        }
-
-        try {
-            java.lang.reflect.Method method = value.getClass().getMethod("getEntity");
-            Object entity = method.invoke(value);
-            if (entity instanceof net.minecraft.entity.Entity) {
-                return (net.minecraft.entity.Entity) entity;
-            }
-        } catch (Exception ignored) {
-            // Fall through to the field-based compatibility path below.
-        }
-
-        Class<?> type = value.getClass();
-        while (type != null) {
-            try {
-                java.lang.reflect.Field field = type.getDeclaredField("entity");
-                field.setAccessible(true);
-                Object entity = field.get(value);
-                return entity instanceof net.minecraft.entity.Entity
-                    ? (net.minecraft.entity.Entity) entity : null;
-            } catch (Exception ignored) {
-                type = type.getSuperclass();
-            }
-        }
-        return null;
-    }
 
 
     /** Read and write versioned Iotas through the off-hand item data holder. */

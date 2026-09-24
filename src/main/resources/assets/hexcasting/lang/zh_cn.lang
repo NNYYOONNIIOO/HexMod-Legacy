@@ -1000,6 +1000,7 @@ hexcasting.error.potion_range=药水目标超出范围。
 hexcasting.error.potion_cost=药水消耗超出支持的媒质范围。
 hexcasting.error.recharge_context=此动作需要有效的施法者。
 hexcasting.error.recharge_entity=重新充能需要一个实体目标。
+hexcasting.error.recharge_range=掉落的媒质物品超出范围或已不可用。
 hexcasting.error.recharge_item=重新充能需要一个物品实体。
 hexcasting.error.recharge_holder=目标物品无法储存媒质。
 hexcasting.error.recharge_full=目标物品的媒质储库已满。

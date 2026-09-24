@@ -297,6 +297,7 @@ hexcasting.error.potion_range=The potion target is out of range.
 hexcasting.error.potion_cost=The potion cost is outside the supported media range.
 hexcasting.error.recharge_context=This action requires an active caster.
 hexcasting.error.recharge_entity=Recharge requires an entity target.
+hexcasting.error.recharge_range=The dropped media item is out of range or unavailable.
 hexcasting.error.recharge_item=Recharge requires an item entity.
 hexcasting.error.recharge_holder=The target item cannot hold media.
 hexcasting.error.recharge_full=The target media reservoir is full.

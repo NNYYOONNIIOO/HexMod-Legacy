@@ -21,10 +21,11 @@ public interface MediaHolderItem {
     }
 
     default long insertMedia(ItemStack stack, long amount, boolean simulate) {
-        if (amount <= 0L) return 0L;
         long current = Math.max(0L, getMedia(stack));
         long capacity = Math.max(0L, getMaxMedia(stack));
-        long inserted = Math.min(amount, Math.max(0L, capacity - current));
+        long empty = Math.max(0L, capacity - current);
+        if (empty <= 0L || amount == 0L) return 0L;
+        long inserted = Math.min(amount < 0L ? empty : amount, empty);
         if (!simulate && inserted > 0L) setMedia(stack, current + inserted);
         return inserted;
     }
