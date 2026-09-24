@@ -2457,6 +2457,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (player.world.isRemote) {
                     return;
                 }
+                if (!isPlacingAllowed(player, position,
+                    new net.minecraft.item.ItemStack(bucket))) {
+                    return;
+                }
                 if (player.world.getBlockState(position).getBlock()
                     == net.minecraft.init.Blocks.CAULDRON) {
                     player.world.setBlockState(position, cauldronState, 3);
@@ -2521,6 +2525,9 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
             vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
             if (player.world.isRemote) {
+                return;
+            }
+            if (!canBreakBlock(player, position, sapling)) {
                 return;
             }
 
@@ -2795,6 +2802,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                 useStack.setCount(1);
                 net.minecraft.util.EnumActionResult result;
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
+                if (!isPlacingAllowed(player, position, useStack)) {
+                    return;
+                }
                 player.setHeldItem(blockHand, useStack);
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
@@ -3085,6 +3095,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
+                    if (!isPlacingAllowed(player, target,
+                        new net.minecraft.item.ItemStack(conjured))) {
+                        return;
+                    }
                     player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
@@ -3140,6 +3154,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
+                    if (!isPlacingAllowed(player, target,
+                        new net.minecraft.item.ItemStack(conjured))) {
+                        return;
+                    }
                     player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
@@ -4388,8 +4406,37 @@ throw new CastingException("hexcasting.error.get_media_context");
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.util.math.BlockPos position,
         net.minecraft.block.state.IBlockState state) {
-        return state != null && state.getBlock().canEntityDestroy(
-            state, player.world, position, player);
+        return state != null && player != null && player.world != null
+            && state.getBlock().canEntityDestroy(
+                state, player.world, position, player)
+            && !net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(
+                new net.minecraftforge.event.world.BlockEvent.BreakEvent(
+                    player.world, position, state, player));
+    }
+
+    /** Forge equivalent of Hex's platform placement permission hook. */
+    private static boolean isPlacingAllowed(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position,
+        net.minecraft.item.ItemStack stack) {
+        if (player == null || player.world == null || position == null
+            || stack == null || stack.isEmpty()) {
+            return false;
+        }
+        net.minecraft.item.ItemStack previous = player.getHeldItemMainhand();
+        player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, stack.copy());
+        try {
+            net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event =
+                net.minecraftforge.common.ForgeHooks.onRightClickBlock(
+                    player, net.minecraft.util.EnumHand.MAIN_HAND, position,
+                    net.minecraft.util.EnumFacing.DOWN,
+                    new net.minecraft.util.math.Vec3d(
+                        position.getX() + 0.5D, position.getY() + 0.5D,
+                        position.getZ() + 0.5D));
+            return event == null || !event.isCanceled();
+        } finally {
+            player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, previous);
+        }
     }
 
     private static void emitFluidRemovalFeedback(
@@ -4478,6 +4525,10 @@ throw new CastingException("hexcasting.error.get_media_context");
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.util.math.BlockPos position,
         net.minecraft.item.Item item) {
+        if (!isPlacingAllowed(player, position,
+            new net.minecraft.item.ItemStack(item))) {
+            return false;
+        }
         net.minecraft.item.ItemStack previous = player.getHeldItemMainhand();
         net.minecraft.item.ItemStack ignition = new net.minecraft.item.ItemStack(item);
         player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, ignition);
