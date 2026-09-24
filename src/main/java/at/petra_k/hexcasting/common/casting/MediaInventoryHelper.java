@@ -49,7 +49,11 @@ public final class MediaInventoryHelper {
             // allowed to provide media even when it deliberately opts out of
             // the ordinary inventory scan.  canProvide() answers the latter
             // question; explicit ownership is already established by the VM.
-            if (preferred.getMedia() > 0L) {
+            // A negative media value is the legacy representation of an
+            // infinite source (used by the Impetus).  Do not confuse it
+            // with an empty holder; its withdrawMedia implementation turns
+            // it into Long.MAX_VALUE for a simulated read.
+            if (preferred.getMedia() != 0L) {
                 sources.add(new MediaSource(preferred, null, true));
             }
             return new MediaTransaction(sources);
@@ -162,7 +166,7 @@ public final class MediaInventoryHelper {
 
     private static void addSource(List<MediaSource> sources, ADMediaHolder holder,
                                   ItemStack stack) {
-        if (holder != null && holder.canProvide() && holder.getMedia() > 0L) {
+        if (holder != null && holder.canProvide() && holder.getMedia() != 0L) {
             sources.add(new MediaSource(holder, stack));
         }
     }

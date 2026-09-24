@@ -217,6 +217,22 @@ public final class TileEntityImpetus extends TileEntity
         return false;
     }
 
+    /**
+     * The creative unlocker marks an Impetus with {@code -1} to mean that it
+     * has infinite media.  The default ADMediaHolder implementation clamps a
+     * negative amount through {@code getMedia()}, which would make that
+     * sentinel appear empty to the casting transaction.  Keep the sentinel
+     * local to this holder and expose the normal finite withdrawal contract
+     * to the shared media resolver.
+     */
+    @Override
+    public long withdrawMedia(long amount, boolean simulate) {
+        if (media < 0L) {
+            return amount < 0L ? Long.MAX_VALUE : Math.max(0L, amount);
+        }
+        return ADMediaHolder.super.withdrawMedia(amount, simulate);
+    }
+
     public void bindProgram(NBTTagList incoming) {
         endExecution();
         patterns = copyPatterns(incoming);
