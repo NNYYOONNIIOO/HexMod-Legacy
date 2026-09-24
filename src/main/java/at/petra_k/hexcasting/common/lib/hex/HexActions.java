@@ -1989,15 +1989,27 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
     public static final HexPattern COMPARE_ENTITY_PATTERN =
         pattern(HexDir.NORTH_WEST, "aqaeqded");
     public static final HexAction COMPARE_ENTITY = register(
-        COMPARE_ENTITY_ID, COMPARE_ENTITY_PATTERN, stack -> {
-            EntityIota right = stack.pop(EntityIota.class);
-            EntityIota left = stack.pop(EntityIota.class);
-            net.minecraft.entity.Entity rightEntity = right.getEntity();
-            net.minecraft.entity.Entity leftEntity = left.getEntity();
-            if (rightEntity == null || leftEntity == null) {
-                throw new CastingException("hexcasting.error.entity_unavailable");
+        COMPARE_ENTITY_ID, COMPARE_ENTITY_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.compare_entity_context");
             }
-            stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
+
+            @Override
+            public void execute(CastingStack stack, CastingVM vm) throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.compare_entity_context");
+                }
+                EntityIota right = stack.pop(EntityIota.class);
+                EntityIota left = stack.pop(EntityIota.class);
+                net.minecraft.entity.Entity rightEntity = resolveEntity(right, vm);
+                net.minecraft.entity.Entity leftEntity = resolveEntity(left, vm);
+                requireEntityInRange(vm, vm.getPlayer(), rightEntity,
+                    "hexcasting.error.compare_entity_range");
+                requireEntityInRange(vm, vm.getPlayer(), leftEntity,
+                    "hexcasting.error.compare_entity_range");
+                stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
+            }
         });
 
     /** Recharge a media-bearing item in the caster's other hand from a dropped media stack. */
