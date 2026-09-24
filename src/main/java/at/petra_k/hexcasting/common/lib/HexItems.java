@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.lib;
 
 import at.petra_k.hexcasting.api.HexAPI;
+import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
@@ -157,7 +158,8 @@ public final class HexItems {
             } else if (id.equals("charged_amethyst")) {
                 item = new ItemMediaMaterial(MediaConstants.CRYSTAL_UNIT, "charged_amethyst", 1000);
             } else if (id.equals("quenched_allay_shard")) {
-                item = new ItemMediaMaterial(MediaConstants.SHARD_UNIT * 3L, "quenched_allay_shard", 800);
+                item = new ItemMediaMaterial(MediaConstants.SHARD_UNIT * 3L,
+                    "quenched_allay_shard", (int) ADMediaHolder.QUENCHED_SHARD_PRIORITY);
             } else if (id.equals("lore_fragment")) {
                 item = new ItemKnowledgeFragment(id);
             } else if (id.equals("creative_unlocker")) {
