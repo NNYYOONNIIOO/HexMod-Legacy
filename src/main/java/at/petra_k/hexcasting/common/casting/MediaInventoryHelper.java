@@ -135,6 +135,52 @@ public final class MediaInventoryHelper {
     }
 
     /**
+     * Extract the largest amount that fits in {@code amount} without
+     * over-consuming a discrete material.  Ordinary spell extraction keeps
+     * using {@link #extractMedia(ItemStack, long, boolean, boolean)} so a
+     * one-item amethyst source may still cover a sub-item spell cost.  This
+     * bounded form is for finite receivers such as batteries and Impetuses.
+     */
+    public static long extractMediaAtMost(ItemStack stack, long amount,
+                                          boolean drainForBatteries,
+                                          boolean simulate) {
+        if (stack == null || stack.isEmpty() || amount <= 0L) {
+            return 0L;
+        }
+
+        long worth = staticMediaWorth(stack);
+        if (worth > 0L) {
+            long items = Math.min((long) stack.getCount(), amount / worth);
+            if (items <= 0L) {
+                return 0L;
+            }
+            return extractMedia(stack, multiply(worth, items),
+                drainForBatteries, simulate);
+        }
+
+        if (stack.getItem() instanceof ItemMediaMaterial) {
+            ItemMediaMaterial material = (ItemMediaMaterial) stack.getItem();
+            if (material.hasStoredMedia(stack)) {
+                return extractMedia(stack,
+                    Math.min(amount, material.getMedia(stack)),
+                    drainForBatteries, simulate);
+            }
+            long perItem = material.getMediaPerItem();
+            long items = perItem <= 0L ? 0L
+                : Math.min((long) stack.getCount(), amount / perItem);
+            if (items <= 0L) {
+                return 0L;
+            }
+            return extractMedia(stack, multiply(perItem, items),
+                drainForBatteries, simulate);
+        }
+
+        // Capability-backed reservoirs can normally represent an exact
+        // amount, so no rounding is needed for them.
+        return extractMedia(stack, amount, drainForBatteries, simulate);
+    }
+
+    /**
      * Extract from a dropped item entity without losing the entity's remainder.
      * ItemMediaMaterial has per-item media semantics, so it uses its precise
      * split implementation; all other holders are copied back to the entity
@@ -195,7 +241,7 @@ public final class MediaInventoryHelper {
         }
 
         ItemStack working = stack.copy();
-        long extracted = extractMedia(working, boundedAmount,
+        long extracted = extractMediaAtMost(working, boundedAmount,
             drainForBatteries, false);
         entity.setItem(working);
         if (working.isEmpty()) {

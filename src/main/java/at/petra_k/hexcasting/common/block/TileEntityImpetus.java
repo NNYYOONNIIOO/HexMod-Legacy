@@ -92,7 +92,7 @@ public final class TileEntityImpetus extends TileEntity
             }
             ItemStack remainder = stack.copy();
             if (!simulate) {
-                long extracted = MediaInventoryHelper.extractMedia(
+                long extracted = MediaInventoryHelper.extractMediaAtMost(
                     remainder, accepted, true, false);
                 // Static media cannot be partially withdrawn.  Do not consume
                 // a whole source item when less than one item fits.

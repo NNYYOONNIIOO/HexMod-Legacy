@@ -12,7 +12,7 @@ import java.util.List;
 
 /** A stackable material whose total media can be consumed by Hex actions. */
 public final class ItemMediaMaterial extends Item implements MediaHolderItem {
-    private static final String KEY_MEDIA = "media";
+    public static final String KEY_MEDIA = "media";
 
     private final long mediaPerItem;
     private final String variant;
@@ -221,5 +221,16 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
 
     public String getVariant() {
         return variant;
+    }
+
+    /** Media represented by one untagged item in this material stack. */
+    public long getMediaPerItem() {
+        return mediaPerItem;
+    }
+
+    /** Whether this stack carries a partial aggregate-media tag. */
+    public boolean hasStoredMedia(ItemStack stack) {
+        return stack != null && stack.getTagCompound() != null
+            && stack.getTagCompound().hasKey(KEY_MEDIA, 4);
     }
 }
