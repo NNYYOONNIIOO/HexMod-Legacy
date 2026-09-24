@@ -2076,11 +2076,20 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                 // item/entity mutation happens after this validation so a
                 // failed cast cannot leave a partially transferred source.
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
+                final MediaInventoryHelper.EntityItemSnapshot sourceBefore =
+                    MediaInventoryHelper.snapshotEntity(droppedEntity);
+                final net.minecraft.item.ItemStack holderBefore = offHand.copy();
+                final long holderMediaBefore = holder.getMedia();
                 long inserted = MediaInventoryHelper.transferMedia(
                     droppedEntity, offHand, holder, simulated);
                 if (inserted <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_full");
                 }
+                vm.addRollbackAction(() -> {
+                    sourceBefore.restore();
+                    MediaInventoryHelper.restoreStack(offHand, holderBefore);
+                    holder.setMedia(holderMediaBefore);
+                });
             }
         });
 
@@ -3961,6 +3970,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 at.petra_k.hexcasting.common.item.ItemMediaBattery battery =
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY;
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+                final MediaInventoryHelper.EntityItemSnapshot sourceBefore =
+                    MediaInventoryHelper.snapshotEntity(itemEntity);
+                final net.minecraft.item.ItemStack bottleBefore = bottle.copy();
+                vm.addRollbackAction(() -> {
+                    sourceBefore.restore();
+                    player.setHeldItem(hand, bottleBefore.copy());
+                });
                 // Withdraw only what fits.  Media holders keep the remainder
                 // on the item stack, so an over-capacity entity is not lost.
                 // ItemMediaMaterial performs the exact per-item split used by
@@ -4040,6 +4056,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 // media item itself supplies the package's stored capacity,
                 // just as OpMakePackagedSpell does in 1.20.1.
                 vm.consumeMedia(mediaCost);
+                final MediaInventoryHelper.EntityItemSnapshot sourceBefore =
+                    MediaInventoryHelper.snapshotEntity(sourceEntity);
+                final net.minecraft.item.ItemStack targetBefore = target.copy();
+                vm.addRollbackAction(() -> {
+                    sourceBefore.restore();
+                    MediaInventoryHelper.restoreStack(target, targetBefore);
+                });
                 long captured = MediaInventoryHelper.extractMedia(
                     sourceEntity, -1L, true, false);
                 if (captured <= 0L) {
