@@ -2725,27 +2725,26 @@ throw new CastingException("hexcasting.error.get_media_context");
                     .isReplaceable(player.world, position)) {
                     throw new CastingException("hexcasting.error.place_block_target");
                 }
-                int slot = findPlaceableBlockSlot(player);
-                if (slot < 0) {
+                net.minecraft.item.ItemStack source = findPlaceableBlockStack(player, vm);
+                if (source == null || source.isEmpty()) {
                     throw new CastingException("hexcasting.error.place_block_item");
                 }
-                net.minecraft.item.ItemStack source = player.inventory.getStackInSlot(slot);
-                if (source == null || source.isEmpty()
-                    || !(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
+                if (!(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
                     throw new CastingException("hexcasting.error.place_block_item");
                 }
-                net.minecraft.item.ItemStack previousMain = player.getHeldItemMainhand();
+                net.minecraft.util.EnumHand blockHand = vm.getOtherHand();
+                net.minecraft.item.ItemStack previousBlock = player.getHeldItem(blockHand);
                 net.minecraft.item.ItemStack useStack = source.copy();
                 useStack.setCount(1);
                 net.minecraft.util.EnumActionResult result;
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
-                player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, useStack);
+                player.setHeldItem(blockHand, useStack);
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
-                        player, player.world, position, net.minecraft.util.EnumHand.MAIN_HAND,
+                        player, player.world, position, blockHand,
                         net.minecraft.util.EnumFacing.UP, 0.5F, 0.5F, 0.5F);
                 } finally {
-                    player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND, previousMain);
+                    player.setHeldItem(blockHand, previousBlock);
                 }
                 if (result != net.minecraft.util.EnumActionResult.SUCCESS) {
                     throw new CastingException("hexcasting.error.place_block_failed");
@@ -2881,7 +2880,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.potion_target");
                 }
                 if (Double.isNaN(duration) || Double.isInfinite(duration)
-                    || duration <= 0.0D
+                    || duration < 0.0D
                     || duration > (Integer.MAX_VALUE / 20.0D)) {
                     throw new CastingException("hexcasting.error.potion_duration");
                 }
@@ -2891,9 +2890,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                     || potency < 1.0D || potency > 127.0D) {
                     throw new CastingException("hexcasting.error.potion_potency");
                 }
-                if (vm.getPlayer().getDistanceSq(target) > 32.0D * 32.0D) {
-                    throw new CastingException("hexcasting.error.potion_range");
-                }
+                requireEntityInRange(vm.getPlayer(), target,
+                    "hexcasting.error.potion_range");
                 double potencyCost = potencyCubic
                     ? potency * potency * potency : potency * potency;
                 double mediaCost = baseCost * duration * potencyCost;
@@ -2901,7 +2899,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                     || mediaCost > Long.MAX_VALUE) {
                     throw new CastingException("hexcasting.error.potion_cost");
                 }
-                vm.consumeMedia(Math.max(1L, (long) Math.ceil(mediaCost)));
+                // SpellAction.Result stores the Kotlin Double as a Long,
+                // which truncates fractional media rather than rounding it
+                // up.  Keep that behavior so sub-unit potion casts do not
+                // unexpectedly overcharge the caster.
+                vm.consumeMedia((long) mediaCost);
                 net.minecraft.entity.EntityLivingBase living =
                     (net.minecraft.entity.EntityLivingBase) target;
                 int ticks = (int) Math.floor(duration * 20.0D);
@@ -3449,23 +3451,23 @@ throw new CastingException("hexcasting.error.get_media_context");
                 } else {
                     throw new CastingException("hexcasting.error.brainsweep_expected");
                 }
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.Vec3d rawPosition = positionIota.getValue();
+                requireVecInRange(player, rawPosition, "hexcasting.error.brainsweep_range");
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 if (!(entity instanceof net.minecraft.entity.EntityLiving)) {
                     throw new CastingException("hexcasting.error.brainsweep_mob");
                 }
-                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                if (entity.world != player.world) {
-                    throw new CastingException("hexcasting.error.brainsweep_range");
-                }
                 net.minecraft.entity.EntityLiving living =
                     (net.minecraft.entity.EntityLiving) entity;
-                net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
-                if (player.getDistanceSq(entity) > 32.0D * 32.0D
-                    || player.getDistanceSq(target.getX() + 0.5D, target.getY() + 0.5D,
-                        target.getZ() + 0.5D) > 32.0D * 32.0D) {
-                    throw new CastingException("hexcasting.error.brainsweep_range");
+                if (living.isDead) {
+                    throw new CastingException("hexcasting.error.brainsweep_mob");
                 }
-                if (!player.world.isBlockModifiable(player, target)) {
+                requireEntityInRange(player, living, "hexcasting.error.brainsweep_range");
+                net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
+                if (!player.world.isBlockModifiable(player, target)
+                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
+                        net.minecraft.item.ItemStack.EMPTY)) {
                     throw new CastingException("hexcasting.error.brainsweep_location");
                 }
                 if (BrainsweepRecipes.isBrainswept(living)) {
@@ -3607,9 +3609,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.item.EntityItem itemEntity =
                     (net.minecraft.entity.item.EntityItem) sourceEntity;
-                if (player.getDistanceSq(itemEntity) > 32.0D * 32.0D) {
-                    throw new CastingException("hexcasting.error.craft_battery_range");
-                }
+                requireEntityInRange(player, itemEntity,
+                    "hexcasting.error.craft_battery_range");
                 net.minecraft.item.ItemStack bottle = vm.getHeldItemToOperateOn(
                     candidate -> candidate != null && !candidate.isEmpty()
                         && candidate.getItem() == net.minecraft.init.Items.GLASS_BOTTLE);
@@ -3893,16 +3894,31 @@ throw new CastingException("hexcasting.error.get_media_context");
         throw new CastingException("hexcasting.error.compare_item_expected");
     }
 
-    private static int findPlaceableBlockSlot(
-        net.minecraft.entity.player.EntityPlayer player) {
-        for (int slot = 0; slot < player.inventory.getSizeInventory(); slot++) {
-            net.minecraft.item.ItemStack candidate = player.inventory.getStackInSlot(slot);
+    private static net.minecraft.item.ItemStack findPlaceableBlockStack(
+        net.minecraft.entity.player.EntityPlayer player, CastingVM vm) {
+        net.minecraft.util.EnumHand otherHand = vm.getOtherHand();
+        net.minecraft.item.ItemStack other = player.getHeldItem(otherHand);
+        if (other != null && !other.isEmpty()
+            && other.getItem() instanceof net.minecraft.item.ItemBlock) {
+            return other;
+        }
+
+        // Match Hex's QUERY stack discovery: the hand opposite the focus is
+        // considered first, followed by the hotbar.  The selected slot is
+        // skipped when the focus is in the main hand so a staff is never
+        // accidentally used as the block source.
+        int anchor = vm.getCastingHand() != net.minecraft.util.EnumHand.OFF_HAND
+            ? (player.inventory.currentItem + 1) % 9 : 0;
+        for (int delta = 0; delta < 9; delta++) {
+            int slot = (anchor + delta) % 9;
+            net.minecraft.item.ItemStack candidate =
+                player.inventory.getStackInSlot(slot);
             if (candidate != null && !candidate.isEmpty()
                 && candidate.getItem() instanceof net.minecraft.item.ItemBlock) {
-                return slot;
+                return candidate;
             }
         }
-        return -1;
+        return null;
     }
 
     private static boolean isAnimalEntity(net.minecraft.entity.Entity entity) {
