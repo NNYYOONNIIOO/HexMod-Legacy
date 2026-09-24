@@ -1085,6 +1085,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 net.minecraft.util.math.Vec3d position =
                     ((Vec3Iota) target).getValue();
+                requireFiniteWorldVector(position, "hexcasting.error.ignite_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -1125,6 +1126,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                requireFiniteWorldVector(position, "hexcasting.error.extinguish_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -1415,6 +1417,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                requireFiniteWorldVector(position, "hexcasting.error.break_block_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -2306,7 +2309,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (player == null) {
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
-                net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+                net.minecraft.util.math.BlockPos position = blockPosition(
+                    stack.pop(Vec3Iota.class), "hexcasting.error.fluid_range");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
@@ -2404,7 +2408,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (player == null) {
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
-                net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+                net.minecraft.util.math.BlockPos position = blockPosition(
+                    stack.pop(Vec3Iota.class), "hexcasting.error.fluid_range");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
@@ -2430,13 +2435,18 @@ throw new CastingException("hexcasting.error.get_media_context");
 
     private static net.minecraft.util.math.BlockPos blockPosition(Vec3Iota vector)
         throws CastingException {
+        return blockPosition(vector, "hexcasting.error.fluid_position");
+    }
+
+    private static net.minecraft.util.math.BlockPos blockPosition(
+        Vec3Iota vector, String errorKey) throws CastingException {
         net.minecraft.util.math.Vec3d value = vector.getValue();
-        if (Double.isNaN(value.x) || Double.isNaN(value.y) || Double.isNaN(value.z)
-            || Double.isInfinite(value.x) || Double.isInfinite(value.y)
-            || Double.isInfinite(value.z)) {
-            throw new CastingException("hexcasting.error.fluid_position");
+        if (!isVecInWorld(value)) {
+            throw new CastingException(errorKey);
         }
-        return new net.minecraft.util.math.BlockPos(value.x, value.y, value.z);
+        return new net.minecraft.util.math.BlockPos(
+            (int) Math.floor(value.x), (int) Math.floor(value.y),
+            (int) Math.floor(value.z));
     }
 
     /** Grow a sapling into Hex's Akashic/edified tree. */
@@ -2456,7 +2466,8 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (player == null) {
                 throw new CastingException("hexcasting.error.edify_context");
             }
-            net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+            net.minecraft.util.math.BlockPos position = blockPosition(
+                stack.pop(Vec3Iota.class), "hexcasting.error.edify_range");
             requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                 position.getX() + 0.5D, position.getY() + 0.5D,
                 position.getZ() + 0.5D), "hexcasting.error.edify_range");
@@ -2566,7 +2577,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.bonemeal_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(
-                    stack.pop(Vec3Iota.class));
+                    stack.pop(Vec3Iota.class), "hexcasting.error.bonemeal_range");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
@@ -2713,7 +2724,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos position = blockPosition(
-                    stack.pop(Vec3Iota.class));
+                    stack.pop(Vec3Iota.class), "hexcasting.error.place_block_range");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.place_block_range");
@@ -2998,7 +3009,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos target = blockPosition(
-                    stack.pop(Vec3Iota.class));
+                    stack.pop(Vec3Iota.class), "hexcasting.error.conjure_block_range");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     target.getX() + 0.5D, target.getY() + 0.5D,
                     target.getZ() + 0.5D), "hexcasting.error.conjure_block_range");
@@ -3044,7 +3055,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.conjure_light_context");
                 }
                 net.minecraft.util.math.BlockPos target = blockPosition(
-                    stack.pop(Vec3Iota.class));
+                    stack.pop(Vec3Iota.class), "hexcasting.error.conjure_light_range");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     target.getX() + 0.5D, target.getY() + 0.5D,
@@ -3468,7 +3479,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.brainsweep_mob");
                 }
                 requireEntityInRange(vm, player, living, "hexcasting.error.brainsweep_range");
-                net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    positionIota, "hexcasting.error.brainsweep_range");
                 vm.recordMishapLocation(target.getX() + 0.5D, target.getY() + 0.5D,
                     target.getZ() + 0.5D,
                     player.world.provider == null
@@ -3752,7 +3764,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.recordMishapLocation(rawPosition.x, rawPosition.y, rawPosition.z,
                     vm.getPlayer().world.provider == null
                         ? Integer.MIN_VALUE : vm.getPlayer().world.provider.getDimension());
-                net.minecraft.util.math.BlockPos target = blockPosition(position);
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    position, "hexcasting.error.akashic_read_range");
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
@@ -3794,7 +3807,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 requireVecInRange(vm, player, position.getValue(),
                     "hexcasting.error.akashic_write_range");
-                net.minecraft.util.math.BlockPos target = blockPosition(position);
+                net.minecraft.util.math.BlockPos target = blockPosition(
+                    position, "hexcasting.error.akashic_write_range");
                 net.minecraft.block.Block targetBlock =
                     player.world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
@@ -3846,8 +3860,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 Vec3Iota first = stack.pop(Vec3Iota.class);
                 Vec3Iota second = stack.pop(Vec3Iota.class);
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                net.minecraft.util.math.BlockPos firstPos = blockPosition(first);
-                net.minecraft.util.math.BlockPos secondPos = blockPosition(second);
+                net.minecraft.util.math.BlockPos firstPos = blockPosition(
+                    first, "hexcasting.error.compare_block_range");
+                net.minecraft.util.math.BlockPos secondPos = blockPosition(
+                    second, "hexcasting.error.compare_block_range");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     firstPos.getX() + 0.5D, firstPos.getY() + 0.5D,
                     firstPos.getZ() + 0.5D), "hexcasting.error.compare_block_range");
@@ -3995,6 +4011,15 @@ throw new CastingException("hexcasting.error.get_media_context");
         return position.y >= 0.0D && position.y < 256.0D
             && Math.abs(position.x) <= 30000000.0D
             && Math.abs(position.z) <= 30000000.0D;
+    }
+
+    /** Validate a raw vector before converting it to a legacy BlockPos. */
+    private static void requireFiniteWorldVector(
+        net.minecraft.util.math.Vec3d position, String errorKey)
+        throws CastingException {
+        if (!isVecInWorld(position)) {
+            throw new CastingException(errorKey);
+        }
     }
 
     private static void requireVecInRange(
