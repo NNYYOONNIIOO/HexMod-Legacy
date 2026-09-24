@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.api.casting.action;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 
 import java.util.ArrayList;
@@ -39,11 +40,13 @@ public final class StackOperationAction implements HexAction {
             }
             List<Iota> results = operation.apply(Collections.unmodifiableList(arguments));
             if (results == null) {
-                throw new CastingException("A stack operation returned null results");
+                throw Mishap.invalidValue("hexcasting.error.invalid_action_result",
+                    "A stack operation returned null results");
             }
             for (Iota result : results) {
                 if (result == null) {
-                    throw new CastingException("A stack operation returned a null Iota");
+                    throw Mishap.invalidValue("hexcasting.error.invalid_action_result",
+                        "A stack operation returned a null Iota");
                 }
                 stack.push(result);
             }

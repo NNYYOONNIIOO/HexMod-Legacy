@@ -590,8 +590,8 @@ public class Mishap extends CastingException {
         if (key.endsWith("_context") || "hexcasting.error.no_media_context".equals(key)) {
             return Kind.INVALID_CONTEXT;
         }
-        if (key.contains("operation_limit") || key.contains("too_many_patterns")
-            || key.contains("evaluated_too_many")) {
+        if (key.contains("operation_limit") || key.contains("evaluation_limit")
+            || key.contains("too_many_patterns") || key.contains("evaluated_too_many")) {
             return Kind.EVALUATION_LIMIT;
         }
         if (key.endsWith("_range") || key.endsWith("_out_of_range")
@@ -622,6 +622,7 @@ public class Mishap extends CastingException {
             || key.endsWith("_zero") || key.endsWith("_radius")
             || key.endsWith("_vector")
             || key.endsWith("_out_of_bounds") || key.contains("bounded_integer")
+            || key.contains("state_limit")
             || key.contains("finite") || key.contains("invalid")) {
             return Kind.INVALID_VALUE;
         }

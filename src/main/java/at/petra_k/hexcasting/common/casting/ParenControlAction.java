@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
@@ -91,7 +92,8 @@ public final class ParenControlAction implements HexAction {
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < 0.0D || raw > Iota.MAX_SERIALIZATION_TOTAL) {
             stack.push(value);
-            throw new CastingException("Expected a non-negative integer parenthesis count but found " + raw);
+            throw Mishap.invalidValue("hexcasting.error.non_negative_integer",
+                "Expected a non-negative integer parenthesis count but found " + raw);
         }
         return (int) raw;
     }

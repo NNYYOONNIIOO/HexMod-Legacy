@@ -536,12 +536,14 @@ public final class CastingVM {
     /** Replace the active work queue with a previously captured continuation. */
     public void invokeContinuation(ContinuationIota value) throws CastingException {
         if (value == null) {
-            throw new CastingException("Cannot invoke a null continuation");
+            throw Mishap.invalidValue("hexcasting.error.continuation_invalid",
+                "Cannot invoke a null continuation");
         }
         continuation.clear();
         for (Iota pending : value.getContinuation()) {
             if (pending == null) {
-                throw new CastingException("Continuation contains a null Iota");
+                throw Mishap.invalidValue("hexcasting.error.continuation_invalid",
+                    "Continuation contains a null Iota");
             }
             continuation.addLast(WorkItem.iota(pending));
         }
@@ -550,6 +552,10 @@ public final class CastingVM {
 
     /** Evaluate one supported meta-evaluation target in the active VM. */
     public CastingStack runNestedIota(Iota target) throws CastingException {
+        if (target == null) {
+            throw Mishap.invalidValue("hexcasting.error.invalid_iota",
+                "Cannot evaluate a null Iota");
+        }
         if (target instanceof ListIota) {
             return runNestedIotas(((ListIota) target).getItems());
         }
@@ -560,7 +566,8 @@ public final class CastingVM {
             invokeContinuation((ContinuationIota) target);
             return stack;
         }
-        throw new CastingException("Cannot evaluate Iota of type " + target.getType().getId());
+        throw Mishap.invalidValue("hexcasting.error.invalid_iota",
+            "Cannot evaluate Iota of type " + target.getType().getId());
     }
 
     public boolean isHalted() {
@@ -640,7 +647,8 @@ public final class CastingVM {
 
     public void closeParen() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw new CastingException("Cannot close a parenthesis when none is open");
+            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+                "Cannot close a parenthesis when none is open");
         }
         parenCount--;
         if (parenCount == 0) {
@@ -660,7 +668,8 @@ public final class CastingVM {
 
     public void closeAllParens() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw new CastingException("Cannot close parentheses when none is open");
+            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+                "Cannot close parentheses when none is open");
         }
         ParenFrame frame = parentheses.peek();
         ArrayList<Iota> values = new ArrayList<>(frame.values.size());
@@ -676,7 +685,8 @@ public final class CastingVM {
     /** Read the off-hand data holder into the currently captured list. */
     public void readIntoParen() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw new CastingException("Cannot read into parentheses when none is open");
+            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+                "Cannot read into parentheses when none is open");
         }
         if (player == null) {
             throw new CastingException("hexcasting.error.read_context");
@@ -692,7 +702,8 @@ public final class CastingVM {
     /** Undo the latest captured value, or the current empty parenthesis frame. */
     public void undo() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw new CastingException("Undo requires an open parenthesis");
+            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+                "Undo requires an open parenthesis");
         }
         ParenFrame frame = parentheses.peek();
         if (frame.values.isEmpty()) {
@@ -759,7 +770,8 @@ public final class CastingVM {
     /** Restore a VM snapshot produced by {@link #serializeState()}. */
     public static CastingVM deserializeState(NBTTagCompound serialized) throws CastingException {
         if (serialized == null || !serialized.hasKey("stack", 10)) {
-            throw new CastingException("Missing casting VM stack state");
+            throw Mishap.invalidValue("hexcasting.error.vm_state_invalid",
+                "Missing casting VM stack state");
         }
         CastingVM vm = new CastingVM(
             CastingStack.deserializeState(serialized.getCompoundTag("stack")));
@@ -773,7 +785,8 @@ public final class CastingVM {
         if (serialized.hasKey("parentheses", 9)) {
             NBTTagList parenthesisTags = serialized.getTagList("parentheses", 10);
             if (parenthesisTags.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
-                throw new CastingException("Serialized parenthesis state exceeded its size limit");
+                throw Mishap.invalidValue("hexcasting.error.vm_state_limit",
+                    "Serialized parenthesis state exceeded its size limit");
             }
             ParenFrame frame = new ParenFrame();
             // Older snapshots stored one frame per nesting level. Flatten
@@ -806,17 +819,20 @@ public final class CastingVM {
         }
         NBTTagList pending = serialized.getTagList("continuation", 10);
         if (pending.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
-            throw new CastingException("Serialized casting continuation exceeded its size limit");
+            throw Mishap.invalidValue("hexcasting.error.vm_state_limit",
+                "Serialized casting continuation exceeded its size limit");
         }
         for (int i = 0; i < pending.tagCount(); i++) {
             NBTTagCompound entry = pending.getCompoundTagAt(i);
             if (!entry.hasKey("iota", 10)) {
-                throw new CastingException("Serialized casting continuation entry is missing its Iota");
+                throw Mishap.invalidValue("hexcasting.error.vm_state_invalid",
+                    "Serialized casting continuation entry is missing its Iota");
             }
             Iota value = HexIotaTypes.deserialize(entry.getCompoundTag("iota"));
             if ("pattern".equals(entry.getString("kind"))) {
                 if (!(value instanceof PatternIota)) {
-                    throw new CastingException("Serialized pattern continuation entry is not a PatternIota");
+                    throw Mishap.invalidValue("hexcasting.error.vm_state_invalid",
+                        "Serialized pattern continuation entry is not a PatternIota");
                 }
                 vm.continuation.addLast(WorkItem.iota(value));
             } else {
@@ -860,8 +876,8 @@ public final class CastingVM {
             return false;
         }
         if (operationsConsumed >= maxOperations) {
-            throw new CastingException("Casting evaluation exceeded its operation limit of "
-                + maxOperations);
+            throw Mishap.invalidValue("hexcasting.error.evaluation_limit",
+                "Casting evaluation exceeded its operation limit of " + maxOperations);
         }
 
         WorkItem work = continuation.removeFirst();

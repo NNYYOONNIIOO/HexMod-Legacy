@@ -98,7 +98,8 @@ public final class CastingStack {
 
     public void restore(List<? extends Iota> snapshot) throws CastingException {
         if (snapshot.size() > Iota.MAX_SERIALIZATION_TOTAL) {
-            throw new CastingException("Casting stack snapshot exceeded its size limit");
+            throw Mishap.invalidValue("hexcasting.error.stack_state_limit",
+                "Casting stack snapshot exceeded its size limit");
         }
         values.clear();
         for (Iota value : snapshot) {
@@ -133,7 +134,8 @@ public final class CastingStack {
     }
     public static CastingStack deserialize(NBTTagList serialized) throws CastingException {
         if (serialized.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
-            throw new CastingException("Serialized casting stack exceeded its size limit");
+            throw Mishap.invalidValue("hexcasting.error.stack_state_limit",
+                "Serialized casting stack exceeded its size limit");
         }
         CastingStack out = new CastingStack();
         for (int i = 0; i < serialized.tagCount(); i++) {

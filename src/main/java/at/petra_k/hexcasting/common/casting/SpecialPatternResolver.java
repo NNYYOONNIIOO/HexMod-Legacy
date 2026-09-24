@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
@@ -172,7 +173,8 @@ public final class SpecialPatternResolver {
         /** Execute the dynamically resolved action transactionally. */
         public void execute(CastingStack stack) throws CastingException {
             if (stack == null) {
-                throw new CastingException("Casting stack cannot be null");
+                throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                    "Casting stack cannot be null");
             }
             if (kind == Kind.NUMBER) {
                 stack.push(new DoubleIota(number));
@@ -182,7 +184,7 @@ public final class SpecialPatternResolver {
             List<Iota> before = stack.snapshot();
             try {
                 if (stack.size() < mask.length) {
-                    throw new CastingException("Not enough Iotas on the casting stack");
+                    throw Mishap.notEnoughArguments(mask.length, stack.size());
                 }
                 ArrayList<Iota> arguments = new ArrayList<>(mask.length);
                 for (int i = 0; i < mask.length; i++) {
