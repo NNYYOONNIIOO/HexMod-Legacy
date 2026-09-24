@@ -1165,10 +1165,15 @@ public static final HexPattern BOOL_IF_PATTERN =
                             current.getX() + 0.5D, current.getY() + 0.5D,
                             current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
                         successes++;
-                    }
-                    for (net.minecraft.util.EnumFacing facing
-                        : net.minecraft.util.EnumFacing.values()) {
-                        todo.addLast(current.offset(facing));
+                        // Match the sponge-style traversal used by modern
+                        // Hex: only a successfully extinguished block opens
+                        // the flood fill to its neighbours.  Expanding from
+                        // every visited block lets disconnected fires inside
+                        // the radius be extinguished as a side effect.
+                        for (net.minecraft.util.EnumFacing facing
+                            : net.minecraft.util.EnumFacing.values()) {
+                            todo.addLast(current.offset(facing));
+                        }
                     }
                 }
                 if (successes > 0) {
