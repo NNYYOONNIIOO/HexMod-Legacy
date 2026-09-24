@@ -54,7 +54,7 @@ public final class MediaInventoryHelper {
             // infinite source (used by the Impetus).  Do not confuse it
             // with an empty holder; its withdrawMedia implementation turns
             // it into Long.MAX_VALUE for a simulated read.
-            if (preferred.getMedia() != 0L) {
+            if (preferred.withdrawMedia(-1L, true) > 0L) {
                 sources.add(new MediaSource(preferred, null, true));
             }
             return new MediaTransaction(sources);
@@ -376,14 +376,7 @@ public final class MediaInventoryHelper {
             }
 
             private void restore() {
-                if (stack != null && beforeStack != null && !stack.isEmpty()) {
-                    stack.setCount(beforeStack.getCount());
-                    stack.setItemDamage(beforeStack.getItemDamage());
-                    stack.setTagCompound(beforeStack.getTagCompound() == null
-                        ? null : beforeStack.getTagCompound().copy());
-                } else if (stack == null) {
-                    source.getHolder().setMedia(beforeMedia);
-                } else if (beforeStack != null) {
+                if (stack != null && beforeStack != null) {
                     // A stack may have reached EMPTY after extraction.  The
                     // original object is still the inventory slot object in
                     // 1.12.2, so restore its count and NBT in place.
@@ -392,6 +385,10 @@ public final class MediaInventoryHelper {
                     stack.setTagCompound(beforeStack.getTagCompound() == null
                         ? null : beforeStack.getTagCompound().copy());
                 }
+                // Capability-backed holders may keep their value outside the
+                // ItemStack NBT.  Restore the holder as well as the visible
+                // stack, while static holders simply ignore setMedia.
+                source.getHolder().setMedia(beforeMedia);
             }
         }
     }
