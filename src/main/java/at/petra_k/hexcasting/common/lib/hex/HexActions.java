@@ -1091,11 +1091,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.ignite_range");
-                if (!player.world.isBlockModifiable(player, blockPos)
-                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.ignite_forbidden");
-                }
+                requireEditPermission(vm, player, blockPos,
+                    "hexcasting.error.ignite_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
                     tryIgnitionItem(player, blockPos, net.minecraft.init.Items.FIRE_CHARGE);
@@ -1134,11 +1131,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.extinguish_range");
-                if (!player.world.isBlockModifiable(player, blockPos)
-                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.extinguish_forbidden");
-                }
+                requireEditPermission(vm, player, blockPos,
+                    "hexcasting.error.extinguish_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
                 if (player.world.isRemote) {
                     return;
@@ -1153,9 +1147,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     net.minecraft.util.math.BlockPos current = todo.removeFirst();
                     if (!seen.add(current)
                         || blockPos.distanceSq(current) >= 100.0D
-                        || !player.world.isBlockModifiable(player, current)
-                        || !player.canPlayerEdit(current, net.minecraft.util.EnumFacing.UP,
-                            net.minecraft.item.ItemStack.EMPTY)) {
+                        || !hasEditPermission(vm, player, current)) {
                         continue;
                     }
                     if (extinguishBlock(player.world, current)) {
@@ -1429,11 +1421,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.break_block_range");
-                if (!player.world.isBlockModifiable(player, blockPos)
-                    || !player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.break_block_forbidden");
-                }
+                requireEditPermission(vm, player, blockPos,
+                    "hexcasting.error.break_block_forbidden");
                 net.minecraft.block.state.IBlockState state =
                     player.world.getBlockState(blockPos);
                 boolean cheap = isCheapBreakable(state);
@@ -2419,11 +2408,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
-                if (!player.world.isBlockModifiable(player, position)
-                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.fluid_forbidden");
-                }
+                requireEditPermission(vm, player, position,
+                    "hexcasting.error.fluid_forbidden");
                 // Match OpCreateFluid: the action pays before applying the
                 // world-side effect, fills a cauldron to its maximum level,
                 // and otherwise delegates placement to the matching bucket.
@@ -2731,11 +2717,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.place_block_range");
-                if (!player.world.isBlockModifiable(player, position)
-                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.place_block_forbidden");
-                }
+                requireEditPermission(vm, player, position,
+                    "hexcasting.error.place_block_forbidden");
                 if (player.world.isRemote) {
                     return;
                 }
