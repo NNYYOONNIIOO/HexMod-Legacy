@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemCreativeUnlocker;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
@@ -79,23 +80,26 @@ public final class TileEntityImpetus extends TileEntity
                 }
                 return remainder;
             }
-            if (!(stack.getItem() instanceof MediaHolderItem)) {
-                return stack.copy();
-            }
-            MediaHolderItem holder = (MediaHolderItem) stack.getItem();
-            if (!holder.canProvide(stack)) {
+            if (!MediaInventoryHelper.isBatteryMediaItem(stack)) {
                 return stack.copy();
             }
             long capacity = MAX_MEDIA - Math.max(0L, media);
-            long available = holder.withdrawMedia(stack, -1L, true);
+            long available = MediaInventoryHelper.extractMedia(
+                stack, -1L, true, true);
             long accepted = Math.min(Math.max(0L, capacity), available);
             if (accepted <= 0L) {
                 return stack.copy();
             }
             ItemStack remainder = stack.copy();
             if (!simulate) {
-                holder.withdrawMedia(remainder, accepted, false);
-                media += accepted;
+                long extracted = MediaInventoryHelper.extractMedia(
+                    remainder, accepted, true, false);
+                // Static media cannot be partially withdrawn.  Do not consume
+                // a whole source item when less than one item fits.
+                if (extracted <= 0L || extracted > capacity) {
+                    return stack.copy();
+                }
+                media += extracted;
                 markDirty();
             }
             return remainder;
@@ -114,7 +118,7 @@ public final class TileEntityImpetus extends TileEntity
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             return slot == 0 && stack != null && !stack.isEmpty()
-                && (stack.getItem() instanceof MediaHolderItem
+                && (MediaInventoryHelper.isBatteryMediaItem(stack)
                     || stack.getItem() instanceof ItemCreativeUnlocker);
         }
     };

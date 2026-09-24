@@ -4,6 +4,7 @@ import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.capability.HexItemMediaHolder;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
 import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
@@ -183,6 +184,17 @@ public final class MediaInventoryHelper {
                 return null;
             }
             return new MediaSource(new HexItemMediaHolder(item, stack), stack);
+        }
+
+        // Allow integrations to expose the same ADMediaHolder capability as
+        // native items.  The item implementation above remains authoritative
+        // for our own holders, preserving their stack/NBT semantics.
+        if (HexCapabilities.MEDIA != null) {
+            ADMediaHolder capability = stack.getCapability(HexCapabilities.MEDIA, null);
+            if (capability != null && capability.canProvide()
+                && (!drainForBatteries || capability.canConstructBattery())) {
+                return new MediaSource(capability, stack);
+            }
         }
 
         long worth = staticMediaWorth(stack);
