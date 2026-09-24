@@ -14,7 +14,6 @@ import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.lib.HexSounds;
-import at.petra_k.hexcasting.api.casting.iota.BlockIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
@@ -2453,16 +2452,15 @@ throw new CastingException("hexcasting.error.get_media_context");
                 throw new CastingException("hexcasting.error.edify_context");
             }
             net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
+            requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                position.getX() + 0.5D, position.getY() + 0.5D,
+                position.getZ() + 0.5D), "hexcasting.error.edify_range");
+            requireEditPermission(vm, player, position,
+                "hexcasting.error.edify_forbidden");
             net.minecraft.block.state.IBlockState sapling = player.world.getBlockState(position);
             if (!(sapling.getBlock() instanceof net.minecraft.block.BlockSapling)) {
                 throw new CastingException("hexcasting.error.edify_sapling");
             }
-            if (!player.world.isBlockModifiable(player, position)
-                || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                    net.minecraft.item.ItemStack.EMPTY)) {
-                throw new CastingException("hexcasting.error.edify_forbidden");
-            }
-
             vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
             if (player.world.isRemote) {
                 return;
@@ -2565,17 +2563,17 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     stack.pop(Vec3Iota.class));
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                    position.getX() + 0.5D, position.getY() + 0.5D,
+                    position.getZ() + 0.5D), "hexcasting.error.bonemeal_range");
+                requireEditPermission(vm, player, position,
+                    "hexcasting.error.bonemeal_forbidden");
                 net.minecraft.block.state.IBlockState state =
                     player.world.getBlockState(position);
                 if (!(state.getBlock() instanceof net.minecraft.block.IGrowable)
                     || !((net.minecraft.block.IGrowable) state.getBlock()).canGrow(
                         player.world, position, state, player.world.isRemote)) {
                     throw new CastingException("hexcasting.error.bonemeal_target");
-                }
-                if (!player.world.isBlockModifiable(player, position)
-                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.bonemeal_forbidden");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT
                     + MediaConstants.DUST_UNIT / 8L);
@@ -2605,28 +2603,17 @@ throw new CastingException("hexcasting.error.get_media_context");
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null
-                    || vm.getPlayer().world == null || vm.getPlayer().world.isRemote) {
+                    || vm.getPlayer().world == null) {
                     throw new CastingException("hexcasting.error.lightning_context");
                 }
                 net.minecraft.util.math.Vec3d target = stack.pop(Vec3Iota.class).getValue();
-                if (Double.isNaN(target.x) || Double.isInfinite(target.x)
-                    || Double.isNaN(target.y) || Double.isInfinite(target.y)
-                    || Double.isNaN(target.z) || Double.isInfinite(target.z)) {
-                    throw new CastingException("hexcasting.error.lightning_out_of_range");
-                }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
-                double dx = target.x - player.posX;
-                double dy = target.y - player.posY;
-                double dz = target.z - player.posZ;
-                if (dx * dx + dy * dy + dz * dz > 64.0D * 64.0D) {
-                    throw new CastingException("hexcasting.error.lightning_out_of_range");
-                }
+                requireVecInRange(vm, player, target,
+                    "hexcasting.error.lightning_out_of_range");
                 net.minecraft.util.math.BlockPos blockPos =
                     new net.minecraft.util.math.BlockPos(target.x, target.y, target.z);
-                if (!player.canPlayerEdit(blockPos, net.minecraft.util.EnumFacing.UP,
-                    net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.lightning_forbidden");
-                }
+                requireEditPermission(vm, player, blockPos,
+                    "hexcasting.error.lightning_forbidden");
                 vm.consumeMedia(3L * MediaConstants.SHARD_UNIT);
                 net.minecraft.entity.effect.EntityLightningBolt bolt =
                     new net.minecraft.entity.effect.EntityLightningBolt(
@@ -2675,6 +2662,8 @@ throw new CastingException("hexcasting.error.get_media_context");
             net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                 target.posX + displacement.x, target.posY + displacement.y,
                 target.posZ + displacement.z);
+            requireVecInRange(vm, caster, destination,
+                "hexcasting.error.blink_range");
             if (!isVecInWorld(destination)
                 || !isVecInWorld(new net.minecraft.util.math.Vec3d(
                     destination.x, destination.y - 1.0D, destination.z))) {
@@ -3008,15 +2997,15 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos target = blockPosition(
                     stack.pop(Vec3Iota.class));
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                    target.getX() + 0.5D, target.getY() + 0.5D,
+                    target.getZ() + 0.5D), "hexcasting.error.conjure_block_range");
+                requireEditPermission(vm, player, target,
+                    "hexcasting.error.conjure_block_forbidden");
                 net.minecraft.block.state.IBlockState current =
                     player.world.getBlockState(target);
                 if (!current.getBlock().isReplaceable(player.world, target)) {
                     throw new CastingException("hexcasting.error.conjure_block_target");
-                }
-                if (!player.world.isBlockModifiable(player, target)
-                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.conjure_block_forbidden");
                 }
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_block");
                 if (conjured == null) {
@@ -3055,15 +3044,15 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.util.math.BlockPos target = blockPosition(
                     stack.pop(Vec3Iota.class));
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                    target.getX() + 0.5D, target.getY() + 0.5D,
+                    target.getZ() + 0.5D), "hexcasting.error.conjure_light_range");
+                requireEditPermission(vm, player, target,
+                    "hexcasting.error.conjure_light_forbidden");
                 net.minecraft.block.state.IBlockState current =
                     player.world.getBlockState(target);
                 if (!current.getBlock().isReplaceable(player.world, target)) {
                     throw new CastingException("hexcasting.error.conjure_light_target");
-                }
-                if (!player.world.isBlockModifiable(player, target)
-                    || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.conjure_light_forbidden");
                 }
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_light");
                 if (conjured == null) {
@@ -3746,6 +3735,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
+                requireVecInRange(vm, vm.getPlayer(), new net.minecraft.util.math.Vec3d(
+                    target.getX() + 0.5D, target.getY() + 0.5D,
+                    target.getZ() + 0.5D), "hexcasting.error.akashic_write_range");
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
@@ -3828,27 +3820,27 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                Iota first = stack.pop();
-                Iota second = stack.pop();
-                Vec3Iota position;
-                BlockIota expected;
-                if (first instanceof Vec3Iota && second instanceof BlockIota) {
-                    position = (Vec3Iota) first;
-                    expected = (BlockIota) second;
-                } else if (second instanceof Vec3Iota && first instanceof BlockIota) {
-                    position = (Vec3Iota) second;
-                    expected = (BlockIota) first;
-                } else {
-                    throw new CastingException("hexcasting.error.compare_block_expected");
-                }
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.compare_block_context");
                 }
-                net.minecraft.block.state.IBlockState actual = vm.getPlayer().world
-                    .getBlockState(blockPosition(position));
+                Vec3Iota first = stack.pop(Vec3Iota.class);
+                Vec3Iota second = stack.pop(Vec3Iota.class);
+                net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
+                net.minecraft.util.math.BlockPos firstPos = blockPosition(first);
+                net.minecraft.util.math.BlockPos secondPos = blockPosition(second);
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                    firstPos.getX() + 0.5D, firstPos.getY() + 0.5D,
+                    firstPos.getZ() + 0.5D), "hexcasting.error.compare_block_range");
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
+                    secondPos.getX() + 0.5D, secondPos.getY() + 0.5D,
+                    secondPos.getZ() + 0.5D), "hexcasting.error.compare_block_range");
+                net.minecraft.block.state.IBlockState firstState = player.world
+                    .getBlockState(firstPos);
+                net.minecraft.block.state.IBlockState secondState = player.world
+                    .getBlockState(secondPos);
                 boolean matches = strict
-                    ? actual.equals(expected.getState())
-                    : actual.getBlock() == expected.getBlock();
+                    ? firstState.equals(secondState)
+                    : firstState.getBlock() == secondState.getBlock();
                 stack.push(new BooleanIota(matches));
             }
         };
