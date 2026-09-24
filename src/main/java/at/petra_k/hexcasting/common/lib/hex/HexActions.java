@@ -1989,7 +1989,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
             stack.push(new BooleanIota(leftEntity.getClass() == rightEntity.getClass()));
         });
 
-    /** Recharge a media-bearing item in the caster's off hand from a dropped amethyst stack. */
+    /** Recharge a media-bearing item in the caster's other hand from a dropped media stack. */
     public static final ResourceLocation RECHARGE_ID =
         new ResourceLocation(HexAPI.MOD_ID, "recharge");
     public static final HexPattern RECHARGE_PATTERN =
@@ -2013,20 +2013,15 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_entity");
                 }
                 net.minecraft.item.ItemStack offHand = vm.getHeldItemToOperateOn(
-                    stackInHand -> stackInHand != null && !stackInHand.isEmpty()
-                        && stackInHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem
-                        && ((at.petra_k.hexcasting.api.item.MediaHolderItem) stackInHand.getItem())
-                            .canRecharge(stackInHand)
-                        && ((at.petra_k.hexcasting.api.item.MediaHolderItem) stackInHand.getItem())
-                            .insertMedia(stackInHand, -1L, true) > 0L);
-                if (offHand == null || offHand.isEmpty()
-                    || !(offHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
+                    MediaInventoryHelper::canRechargeItem);
+                at.petra_k.hexcasting.api.addldata.ADMediaHolder holder =
+                    MediaInventoryHelper.findMediaHolder(offHand);
+                if (offHand == null || offHand.isEmpty() || holder == null) {
                     throw new CastingException("hexcasting.error.recharge_holder");
                 }
 
-                at.petra_k.hexcasting.api.item.MediaHolderItem holder =
-                    (at.petra_k.hexcasting.api.item.MediaHolderItem) offHand.getItem();
-                if (!holder.canRecharge(offHand)) {
+                if (!holder.canRecharge()
+                    || holder.insertMedia(-1L, true) <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_holder");
                 }
 
@@ -2040,24 +2035,26 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_item");
                 }
 
-                long emptySpace = holder.insertMedia(offHand, -1L, true);
+                long emptySpace = holder.insertMedia(-1L, true);
                 long sourceMedia = MediaInventoryHelper.extractMedia(
                     dropped, -1L, false, true);
                 if (emptySpace <= 0L || sourceMedia <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_full");
                 }
-                long simulated = MediaInventoryHelper.extractMedia(
+                long simulated = MediaInventoryHelper.extractMediaAtMost(
                     droppedEntity, emptySpace, false, true);
                 if (simulated <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_item");
+                }
+                if (holder.insertMedia(simulated, true) != simulated) {
+                    throw new CastingException("hexcasting.error.recharge_full");
                 }
                 // Recharge itself has the fixed one-shard spell cost.  All
                 // item/entity mutation happens after this validation so a
                 // failed cast cannot leave a partially transferred source.
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
-                long drained = MediaInventoryHelper.extractMedia(
-                    droppedEntity, emptySpace, false, false);
-                long inserted = holder.insertMedia(offHand, drained, false);
+                long inserted = MediaInventoryHelper.transferMedia(
+                    droppedEntity, offHand, holder, simulated);
                 if (inserted <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_full");
                 }
@@ -3660,6 +3657,11 @@ throw new CastingException("hexcasting.error.get_media_context");
                     ? sourceMedia
                     : Math.min(sourceMedia,
                         at.petra_k.hexcasting.common.item.ItemMediaBattery.DEFAULT_MAX_MEDIA);
+                long plannedDrain = MediaInventoryHelper.extractMediaAtMost(
+                    itemEntity, maxBatteryMedia, true, true);
+                if (plannedDrain <= 0L) {
+                    throw new CastingException("hexcasting.error.craft_battery_media");
+                }
                 net.minecraft.item.ItemStack result = new net.minecraft.item.ItemStack(
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY, 1);
                 at.petra_k.hexcasting.common.item.ItemMediaBattery battery =
@@ -3671,9 +3673,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 // the modern static-media adapter: a stack of n items with b
                 // media each loses floor(c / b) complete items and stores the
                 // fractional remainder on one separate item.
-                long drained = MediaInventoryHelper.extractMedia(
+                long drained = MediaInventoryHelper.extractMediaAtMost(
                     itemEntity, maxBatteryMedia, true, false);
-                if (drained <= 0L) {
+                if (drained <= 0L || !player.capabilities.isCreativeMode
+                    && drained > at.petra_k.hexcasting.common.item.ItemMediaBattery.DEFAULT_MAX_MEDIA) {
                     throw new CastingException("hexcasting.error.craft_battery_media");
                 }
                 battery.setMaxMedia(result, drained);

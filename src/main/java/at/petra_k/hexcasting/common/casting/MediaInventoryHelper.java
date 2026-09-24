@@ -165,6 +165,127 @@ public final class MediaInventoryHelper {
         return extracted;
     }
 
+    /**
+     * Extract no more than {@code amount}.  Normal media extraction is
+     * allowed to overcast when a discrete item is worth more than the spell
+     * cost, but transfers into a finite battery must not destroy a complete
+     * source item merely because the target had less room than that item is
+     * worth.
+     */
+    public static long extractMediaAtMost(EntityItem entity, long amount,
+                                          boolean drainForBatteries,
+                                          boolean simulate) {
+        if (entity == null || entity.getItem() == null || entity.getItem().isEmpty()
+            || amount <= 0L) {
+            return 0L;
+        }
+        ItemStack stack = entity.getItem();
+        long worth = staticMediaWorth(stack);
+        if (worth <= 0L) {
+            return extractMedia(entity, amount, drainForBatteries, simulate);
+        }
+
+        long fittingItems = Math.min((long) stack.getCount(), amount / worth);
+        if (fittingItems <= 0L) {
+            return 0L;
+        }
+        long boundedAmount = multiply(worth, fittingItems);
+        if (simulate) {
+            return extractMedia(stack, boundedAmount, drainForBatteries, true);
+        }
+
+        ItemStack working = stack.copy();
+        long extracted = extractMedia(working, boundedAmount,
+            drainForBatteries, false);
+        entity.setItem(working);
+        if (working.isEmpty()) {
+            entity.setDead();
+        }
+        return extracted <= boundedAmount ? extracted : boundedAmount;
+    }
+
+    /**
+     * Move media from a dropped item into a target holder atomically from the
+     * action's point of view.  Simulation is performed against both sides so
+     * a discrete source item is never consumed when the target cannot accept
+     * the exact transfer.
+     */
+    public static long transferMedia(EntityItem source, ItemStack targetStack,
+                                     ADMediaHolder target, long requested) {
+        if (source == null || targetStack == null || targetStack.isEmpty()
+            || target == null || !target.canRecharge() || requested <= 0L) {
+            return 0L;
+        }
+        long targetSpace = Math.max(0L, target.insertMedia(-1L, true));
+        if (targetSpace <= 0L) {
+            return 0L;
+        }
+        long limit = Math.min(requested, targetSpace);
+        long planned = extractMediaAtMost(source, limit, false, true);
+        if (planned <= 0L || target.insertMedia(planned, true) != planned) {
+            return 0L;
+        }
+
+        ItemStack sourceBefore = source.getItem() == null
+            ? ItemStack.EMPTY : source.getItem().copy();
+        ItemStack targetBefore = targetStack.copy();
+        long targetMediaBefore = target.getMedia();
+        boolean sourceWasDead = source.isDead;
+        java.util.HashSet<java.util.UUID> existingEntities = new java.util.HashSet<>();
+        if (source.world != null) {
+            for (net.minecraft.entity.Entity entity : source.world.loadedEntityList) {
+                if (entity != null && entity.getUniqueID() != null) {
+                    existingEntities.add(entity.getUniqueID());
+                }
+            }
+        }
+
+        long extracted = extractMediaAtMost(source, planned, false, false);
+        if (extracted != planned) {
+            restoreTransfer(source, targetStack, target, sourceBefore,
+                targetBefore, targetMediaBefore, sourceWasDead, existingEntities);
+            return 0L;
+        }
+        long inserted = target.insertMedia(extracted, false);
+        if (inserted != extracted) {
+            restoreTransfer(source, targetStack, target, sourceBefore,
+                targetBefore, targetMediaBefore, sourceWasDead, existingEntities);
+            return 0L;
+        }
+        return inserted;
+    }
+
+    private static void restoreTransfer(EntityItem source, ItemStack targetStack,
+                                        ADMediaHolder target, ItemStack sourceBefore,
+                                        ItemStack targetBefore, long targetMediaBefore,
+                                        boolean sourceWasDead,
+                                        java.util.Set<java.util.UUID> existingEntities) {
+        source.setItem(sourceBefore);
+        source.isDead = sourceWasDead;
+        restoreStack(targetStack, targetBefore);
+        target.setMedia(targetMediaBefore);
+        if (source.world != null) {
+            for (net.minecraft.entity.Entity entity
+                : new ArrayList<>(source.world.loadedEntityList)) {
+                if (entity instanceof EntityItem && entity != source
+                    && entity.getUniqueID() != null
+                    && !existingEntities.contains(entity.getUniqueID())) {
+                    entity.setDead();
+                }
+            }
+        }
+    }
+
+    private static void restoreStack(ItemStack target, ItemStack before) {
+        if (target == null || before == null || before.isEmpty()) {
+            return;
+        }
+        target.setCount(before.getCount());
+        target.setItemDamage(before.getItemDamage());
+        target.setTagCompound(before.getTagCompound() == null
+            ? null : before.getTagCompound().copy());
+    }
+
     /** Whether this stack can provide media for a normal spell. */
     public static boolean isMediaItem(ItemStack stack) {
         MediaSource source = sourceForStack(stack, false);
