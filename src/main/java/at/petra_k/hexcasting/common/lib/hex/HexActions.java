@@ -48,6 +48,8 @@ import at.petra_k.hexcasting.common.effect.HexPigmentSource;
  * migrated into this table without changing the evaluator or stack API.</p>
  */
 public final class HexActions {
+    private static final double RAYCAST_DISTANCE = 32.0D;
+
     public static final ResourceLocation PUSH_ZERO_ID = new ResourceLocation(HexAPI.MOD_ID, "push_zero");
     public static final HexPattern PUSH_ZERO_PATTERN = pattern(HexDir.EAST);
     public static final HexAction PUSH_ZERO = register(PUSH_ZERO_ID, PUSH_ZERO_PATTERN, stack ->
@@ -1460,11 +1462,12 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
-                if (vector.lengthVector() == 0.0D) {
+                if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = start.add(vector.normalize().scale(64.0D));
+                net.minecraft.util.math.Vec3d end = start.add(
+                    vector.normalize().scale(RAYCAST_DISTANCE));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1503,12 +1506,12 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
-                if (vector.lengthVector() == 0.0D) {
+                if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_axis_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
-                    vector.normalize().scale(64.0D));
+                    vector.normalize().scale(RAYCAST_DISTANCE));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1549,12 +1552,13 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, caster, start, "hexcasting.error.raycast_entity_range");
                 double length = vector.lengthVector();
-                if (length == 0.0D) {
+                if (!isFiniteVector(vector) || length == 0.0D
+                    || Double.isNaN(length) || Double.isInfinite(length)) {
                     throw new CastingException("hexcasting.error.raycast_entity_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
-                    vector.scale(64.0D / length));
+                    vector.scale(RAYCAST_DISTANCE / length));
                 net.minecraft.util.math.AxisAlignedBB search = new net.minecraft.util.math.AxisAlignedBB(
                     Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z),
                     Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z))
@@ -3981,6 +3985,13 @@ throw new CastingException("hexcasting.error.get_media_context");
             && ((net.minecraft.entity.player.EntityPlayer) entity).isSpectator())
             && isVecInRange(player, new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ));
+    }
+
+    private static boolean isFiniteVector(net.minecraft.util.math.Vec3d vector) {
+        return vector != null
+            && !Double.isNaN(vector.x) && !Double.isInfinite(vector.x)
+            && !Double.isNaN(vector.y) && !Double.isInfinite(vector.y)
+            && !Double.isNaN(vector.z) && !Double.isInfinite(vector.z);
     }
 
     private static boolean isVecInRange(
