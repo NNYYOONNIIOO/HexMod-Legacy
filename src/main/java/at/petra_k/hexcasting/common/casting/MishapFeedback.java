@@ -65,6 +65,13 @@ public final class MishapFeedback {
                     item.motionY += 0.75D;
                     item.motionZ += (caster.world.rand.nextDouble() - 0.5D) * 0.05D;
                     item.velocityChanged = true;
+                } else {
+                    // Bad offhand/hotbar items use the same drop effect as
+                    // modern MishapBadOffhandItem and MishapLackingHotbarItem:
+                    // both held stacks leave the caster, rather than being
+                    // silently restored after the VM rolls back.
+                    yeetHeldItemsTowards(caster,
+                        caster.getPositionVector().add(caster.getLookVec()));
                 }
                 return;
             case BAD_ENTITY:
