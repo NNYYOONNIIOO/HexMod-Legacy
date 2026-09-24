@@ -2372,7 +2372,6 @@ throw new CastingException("hexcasting.error.get_media_context");
                 while (!todo.isEmpty() && removed < 1024) {
                     net.minecraft.util.math.BlockPos current = todo.removeFirst();
                     if (!seen.add(current)
-                        || position.distanceSq(current) > 100.0D
                         || !hasEditPermission(vm, player, current)) {
                         continue;
                     }
@@ -4276,6 +4275,9 @@ throw new CastingException("hexcasting.error.get_media_context");
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.util.math.BlockPos position) {
         boolean allowed = player != null && player.world != null && position != null
+            && isVecInRange(player, new net.minecraft.util.math.Vec3d(
+                position.getX() + 0.5D, position.getY() + 0.5D,
+                position.getZ() + 0.5D))
             && player.world.isBlockModifiable(player, position)
             && player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
                 net.minecraft.item.ItemStack.EMPTY);
