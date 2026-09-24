@@ -1201,19 +1201,14 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.add_motion_context");
                 }
-                Iota first = stack.pop();
-                Iota second = stack.pop();
-                Vec3Iota motionIota;
-                EntityIota entityIota;
-                if (first instanceof Vec3Iota && second instanceof EntityIota) {
-                    motionIota = (Vec3Iota) first;
-                    entityIota = (EntityIota) second;
-                } else if (first instanceof EntityIota && second instanceof Vec3Iota) {
-                    entityIota = (EntityIota) first;
-                    motionIota = (Vec3Iota) second;
-                } else {
+                Iota motionValue = stack.pop();
+                Iota entityValue = stack.pop();
+                if (!(motionValue instanceof Vec3Iota)
+                    || !(entityValue instanceof EntityIota)) {
                     throw new CastingException("hexcasting.error.add_motion_args");
                 }
+                Vec3Iota motionIota = (Vec3Iota) motionValue;
+                EntityIota entityIota = (EntityIota) entityValue;
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 requireEntityInRange(vm, vm.getPlayer(), entity,
                     "hexcasting.error.add_motion_range");
