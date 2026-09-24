@@ -24,6 +24,8 @@ public class Mishap extends CastingException {
         BAD_ENTITY,
         BAD_ITEM,
         BAD_BLOCK,
+        BAD_BRAINSWEEP,
+        ALREADY_BRAINSWEPT,
         BAD_LOCATION,
         PERMISSION_DENIED,
         INVALID_VALUE,
@@ -50,6 +52,8 @@ public class Mishap extends CastingException {
     private double targetDistance = Double.NaN;
     private int targetDimension = Integer.MIN_VALUE;
     private String targetUuid;
+    /** Runtime target retained for the mishap side-effect phase. */
+    private Entity targetEntity;
     private boolean locationRecorded;
     private double locationX = Double.NaN;
     private double locationY = Double.NaN;
@@ -59,6 +63,7 @@ public class Mishap extends CastingException {
     private boolean permissionAllowed = true;
     private long mediaRequired = -1L;
     private long mediaAvailable = -1L;
+    private boolean sideEffectsApplied;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
@@ -175,6 +180,11 @@ public class Mishap extends CastingException {
         return targetUuid;
     }
 
+    /** The live target, when the action resolved one before failing. */
+    public Entity getTargetEntity() {
+        return targetEntity;
+    }
+
     public boolean hasLocationContext() {
         return locationRecorded;
     }
@@ -235,6 +245,9 @@ public class Mishap extends CastingException {
             this.casterY = caster.posY;
             this.casterZ = caster.posZ;
         }
+        if (targetEntity != null && caster != null) {
+            targetDistance = caster.getDistance(targetEntity);
+        }
         this.parenthesisDepth = Math.max(0, parenthesisDepth);
         this.operation = Math.max(0, operation);
         return this;
@@ -255,6 +268,7 @@ public class Mishap extends CastingException {
         targetDistance = caster == null ? Double.NaN : caster.getDistance(target);
         targetDimension = target.dimension;
         targetUuid = target.getUniqueID() == null ? null : target.getUniqueID().toString();
+        targetEntity = target;
         return this;
     }
 
@@ -278,6 +292,20 @@ public class Mishap extends CastingException {
         return this;
     }
 
+    /**
+     * Mark the gameplay side-effect phase as complete.  Mishaps can cross
+     * several legacy entry points (VM, item, and feedback), so this small
+     * guard prevents a bad-entity throw or brainsweep damage from happening
+     * twice while still allowing each entry point to call the common helper.
+     */
+    public boolean beginSideEffects() {
+        if (sideEffectsApplied) {
+            return false;
+        }
+        sideEffectsApplied = true;
+        return true;
+    }
+
     /** Stable accent color used by common mishap feedback. */
     public int getAccentColor() {
         switch (kind) {
@@ -291,6 +319,9 @@ public class Mishap extends CastingException {
                 return 0x86D65A;
             case BAD_ENTITY:
                 return 0x78A8E8;
+            case BAD_BRAINSWEEP:
+            case ALREADY_BRAINSWEPT:
+                return 0x62B64A;
             case BAD_LOCATION:
                 return 0xE97AC1;
             case PERMISSION_DENIED:
@@ -380,6 +411,12 @@ public class Mishap extends CastingException {
             || message.contains("no action is registered")) {
             return Kind.INVALID_PATTERN;
         }
+        if (message.contains("brainsweep_already")) {
+            return Kind.ALREADY_BRAINSWEPT;
+        }
+        if (message.contains("brainsweep_recipe")) {
+            return Kind.BAD_BRAINSWEEP;
+        }
         if (message.contains("stack_underflow") || message.contains("not_enough_args")
             || message.contains("no_args")) {
             return Kind.NOT_ENOUGH_ARGUMENTS;
@@ -390,6 +427,10 @@ public class Mishap extends CastingException {
         }
         if (message.contains("_context") || message.contains("no_media_context")) {
             return Kind.INVALID_CONTEXT;
+        }
+        if (message.contains("operation limit") || message.contains("too many patterns")
+            || message.contains("evaluated too many") || message.contains("size limit")) {
+            return Kind.EVALUATION_LIMIT;
         }
         if (message.contains("_range") || message.contains("out_of_range")
             || message.contains("wrong_dimension") || message.contains("_position")

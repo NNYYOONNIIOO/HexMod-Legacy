@@ -15,6 +15,7 @@ import at.petra_k.hexcasting.api.casting.circles.CircleExecutionState;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -877,6 +878,7 @@ public final class CastingVM {
                     parenCount, operationsConsumed);
             mishap = attachMishapContext(mishap);
             lastMishap = mishap;
+            MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } catch (RuntimeException exception) {
             recordSound(HexEvalSounds.MISHAP);
@@ -886,6 +888,7 @@ public final class CastingVM {
                     parenCount, operationsConsumed);
             mishap = attachMishapContext(mishap);
             lastMishap = mishap;
+            MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } finally {
             activeOperationLimit = previousLimit;

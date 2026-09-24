@@ -3,9 +3,16 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
 import at.petra_k.hexcasting.interop.inline.HexInline;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 
@@ -25,8 +32,124 @@ public final class MishapFeedback {
     }
 
     public static void send(EntityPlayer player, CastingException exception) {
+        if (exception instanceof Mishap) {
+            applySideEffects((Mishap) exception);
+        }
         if (player != null) {
             player.sendMessage(new TextComponentString(localize(exception)));
+        }
+    }
+
+    /**
+     * Execute the small, deterministic gameplay effect associated with a
+     * failed action.  The evaluator deliberately rolls back media and the
+     * Iota stack first; this method is the single post-failure boundary for
+     * the effects that modern Hex applies immediately (bad targets, bad
+     * blocks, and brainsweep mishaps).
+     */
+    public static void applySideEffects(Mishap mishap) {
+        if (mishap == null || !mishap.beginSideEffects()) {
+            return;
+        }
+        EntityPlayer caster = mishap.getCaster();
+        if (caster == null || caster.world == null || caster.world.isRemote) {
+            return;
+        }
+
+        Entity target = mishap.getTargetEntity();
+        switch (mishap.getKind()) {
+            case BAD_ITEM:
+                if (target instanceof EntityItem) {
+                    EntityItem item = (EntityItem) target;
+                    item.motionX += (caster.world.rand.nextDouble() - 0.5D) * 0.05D;
+                    item.motionY += 0.75D;
+                    item.motionZ += (caster.world.rand.nextDouble() - 0.5D) * 0.05D;
+                    item.velocityChanged = true;
+                }
+                return;
+            case BAD_ENTITY:
+            case BAD_LOCATION:
+                Vec3d destination = target == null
+                    ? location(mishap, caster) : target.getPositionVector();
+                if (destination != null) {
+                    yeetHeldItemsTowards(caster, destination);
+                }
+                return;
+            case PERMISSION_DENIED:
+                // Permission failures are location failures in modern Hex:
+                // throw the held focus toward the refused target, but do not
+                // damage a protected block or entity.
+                Vec3d denied = target == null
+                    ? location(mishap, caster) : target.getPositionVector();
+                if (denied != null) {
+                    yeetHeldItemsTowards(caster, denied);
+                }
+                return;
+            case BAD_BLOCK:
+                if (mishap.hasLocationContext()
+                    && (mishap.getLocationDimension() == Integer.MIN_VALUE
+                        || mishap.getLocationDimension() == caster.dimension)) {
+                    caster.world.newExplosion(null,
+                        mishap.getLocationX(), mishap.getLocationY(),
+                        mishap.getLocationZ(), 0.25F, false, false);
+                }
+                return;
+            case BAD_BRAINSWEEP:
+                if (target instanceof EntityLiving) {
+                    BrainsweepRecipes.hurtForFailedBrainsweep(
+                        (EntityLiving) target, caster);
+                }
+                return;
+            case ALREADY_BRAINSWEPT:
+                if (target instanceof EntityLiving) {
+                    BrainsweepRecipes.killForRepeatedBrainsweep(
+                        (EntityLiving) target, caster);
+                }
+                return;
+            default:
+                // Media shortages, invalid values and context failures do
+                // not have a world-side mishap effect.
+        }
+    }
+
+    private static Vec3d location(Mishap mishap, EntityPlayer caster) {
+        if (!mishap.hasLocationContext()
+            || mishap.getLocationDimension() != Integer.MIN_VALUE
+                && mishap.getLocationDimension() != caster.dimension) {
+            return null;
+        }
+        return new Vec3d(mishap.getLocationX(), mishap.getLocationY(),
+            mishap.getLocationZ());
+    }
+
+    private static void yeetHeldItemsTowards(EntityPlayer caster, Vec3d destination) {
+        Vec3d source = caster.getPositionVector();
+        Vec3d delta = destination.subtract(source);
+        double length = delta.lengthVector();
+        if (length < 1.0E-6D) {
+            delta = caster.getLookVec();
+            length = delta.lengthVector();
+        }
+        if (length < 1.0E-6D) {
+            delta = new Vec3d(0.0D, 1.0D, 0.0D);
+            length = 1.0D;
+        }
+        delta = delta.scale(0.5D / length);
+
+        for (EnumHand hand : EnumHand.values()) {
+            ItemStack stack = caster.getHeldItem(hand);
+            if (stack == null || stack.isEmpty()) {
+                continue;
+            }
+            caster.setHeldItem(hand, ItemStack.EMPTY);
+            EntityItem dropped = new EntityItem(caster.world,
+                caster.posX, caster.posY + caster.getEyeHeight() * 0.5D,
+                caster.posZ, stack);
+            dropped.setPickupDelay(40);
+            dropped.motionX = delta.x + (caster.world.rand.nextDouble() - 0.5D) * 0.1D;
+            dropped.motionY = delta.y + (caster.world.rand.nextDouble() - 0.5D) * 0.1D;
+            dropped.motionZ = delta.z + (caster.world.rand.nextDouble() - 0.5D) * 0.1D;
+            caster.world.spawnEntity(dropped);
         }
     }
 
