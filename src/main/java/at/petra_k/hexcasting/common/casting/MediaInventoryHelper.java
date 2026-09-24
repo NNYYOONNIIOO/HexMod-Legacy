@@ -181,6 +181,44 @@ public final class MediaInventoryHelper {
         return entity != null && isBatteryMediaItem(entity.getItem());
     }
 
+    /**
+     * Resolve the media capability for an item without requiring it to be a
+     * source.  Recharge targets are allowed to be write-only holders, so this
+     * deliberately does not call {@link ADMediaHolder#canProvide()}.
+     *
+     * <p>Native 1.12 items are adapted first.  Forge can attach a capability
+     * to the same stack as well, but the item contract remains authoritative
+     * for native holders so their custom NBT and stack rules are preserved.</p>
+     */
+    public static ADMediaHolder findMediaHolder(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return null;
+        }
+        if (stack.getItem() instanceof MediaHolderItem) {
+            return new HexItemMediaHolder((MediaHolderItem) stack.getItem(), stack);
+        }
+        if (HexCapabilities.MEDIA != null) {
+            return stack.getCapability(HexCapabilities.MEDIA, null);
+        }
+        return null;
+    }
+
+    /** Whether an item has a rechargeable reservoir with non-zero capacity. */
+    public static boolean canRechargeItem(ItemStack stack) {
+        ADMediaHolder holder = findMediaHolder(stack);
+        return holder != null && holder.canRecharge()
+            && holder.insertMedia(-1L, true) > 0L;
+    }
+
+    /** Query or insert media through the same adapter used by spell actions. */
+    public static long insertMedia(ItemStack stack, long amount, boolean simulate) {
+        ADMediaHolder holder = findMediaHolder(stack);
+        if (holder == null || !holder.canRecharge()) {
+            return 0L;
+        }
+        return Math.max(0L, holder.insertMedia(amount, simulate));
+    }
+
     private static void addStackSource(List<MediaSource> sources, ItemStack stack) {
         MediaSource source = sourceForStack(stack, false);
         if (source != null && source.getAvailable() > 0L) {
@@ -201,24 +239,10 @@ public final class MediaInventoryHelper {
             return null;
         }
 
-        if (stack.getItem() instanceof MediaHolderItem) {
-            MediaHolderItem item = (MediaHolderItem) stack.getItem();
-            if (!item.canProvide(stack)
-                || drainForBatteries && !item.canConstructBattery(stack)) {
-                return null;
-            }
-            return new MediaSource(new HexItemMediaHolder(item, stack), stack);
-        }
-
-        // Allow integrations to expose the same ADMediaHolder capability as
-        // native items.  The item implementation above remains authoritative
-        // for our own holders, preserving their stack/NBT semantics.
-        if (HexCapabilities.MEDIA != null) {
-            ADMediaHolder capability = stack.getCapability(HexCapabilities.MEDIA, null);
-            if (capability != null && capability.canProvide()
-                && (!drainForBatteries || capability.canConstructBattery())) {
-                return new MediaSource(capability, stack);
-            }
+        ADMediaHolder holder = findMediaHolder(stack);
+        if (holder != null && holder.canProvide()
+            && (!drainForBatteries || holder.canConstructBattery())) {
+            return new MediaSource(holder, stack);
         }
 
         long worth = staticMediaWorth(stack);
