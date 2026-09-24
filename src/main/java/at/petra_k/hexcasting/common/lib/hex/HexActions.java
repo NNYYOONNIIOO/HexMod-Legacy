@@ -3187,17 +3187,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.flight_context");
                 }
-                net.minecraft.entity.Entity target = resolveEntity(
-                    stack.pop(EntityIota.class), vm);
-                if (!(target instanceof net.minecraft.entity.player.EntityPlayer)) {
-                    throw new CastingException("hexcasting.error.flight_target");
-                }
                 net.minecraft.entity.player.EntityPlayer player =
-                    (net.minecraft.entity.player.EntityPlayer) target;
-                if (player.world != vm.getPlayer().world
-                    || vm.getPlayer().getDistanceSq(player) > 32.0D * 32.0D) {
-                    throw new CastingException("hexcasting.error.flight_range");
-                }
+                    requireFlightTarget(stack.pop(EntityIota.class), vm);
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 if (!player.world.isRemote) {
                     player.addVelocity(0.0D, 1.5D, 0.0D);
@@ -3223,13 +3214,8 @@ throw new CastingException("hexcasting.error.get_media_context");
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
-                net.minecraft.entity.Entity target = resolveEntity(
-                    stack.pop(EntityIota.class), vm);
-                if (!(target instanceof net.minecraft.entity.player.EntityPlayer)) {
-                    throw new CastingException("hexcasting.error.flight_can_fly_context");
-                }
                 net.minecraft.entity.player.EntityPlayer player =
-                    (net.minecraft.entity.player.EntityPlayer) target;
+                    requireFlightTarget(stack.pop(EntityIota.class), vm);
                 stack.push(new BooleanIota(HexFlightState.hasFlight(player)));
             }
         });
@@ -4625,7 +4611,7 @@ throw new CastingException("hexcasting.error.bounded_integer");
     private static double requirePositiveFlightArgument(DoubleIota value)
         throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw < 0.0D) {
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw <= 0.0D) {
             throw new CastingException("hexcasting.error.flight_duration");
         }
         return raw;
