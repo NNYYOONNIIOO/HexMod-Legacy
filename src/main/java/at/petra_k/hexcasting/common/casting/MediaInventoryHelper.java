@@ -301,6 +301,11 @@ public final class MediaInventoryHelper {
         return inserted;
     }
 
+    /** Capture a dropped media entity before an action mutates or splits it. */
+    public static EntityItemSnapshot snapshotEntity(EntityItem entity) {
+        return new EntityItemSnapshot(entity);
+    }
+
     private static java.util.Set<java.util.UUID> snapshotEntityIds(EntityItem source) {
         java.util.Set<java.util.UUID> existing = new java.util.HashSet<>();
         if (source == null || source.world == null) {
@@ -353,7 +358,8 @@ public final class MediaInventoryHelper {
         }
     }
 
-    private static void restoreStack(ItemStack target, ItemStack before) {
+    /** Restore the mutable fields of an ItemStack without replacing its slot object. */
+    public static void restoreStack(ItemStack target, ItemStack before) {
         if (target == null || before == null || before.isEmpty()) {
             return;
         }
@@ -361,6 +367,48 @@ public final class MediaInventoryHelper {
         target.setItemDamage(before.getItemDamage());
         target.setTagCompound(before.getTagCompound() == null
             ? null : before.getTagCompound().copy());
+    }
+
+    /**
+     * Snapshot for the entity-side media operations used by crafting spells.
+     * ItemMediaMaterial can split a partially charged stack into a second
+     * EntityItem, so the snapshot also remembers the entities already present
+     * in the world and removes only entities created by the mutation.
+     */
+    public static final class EntityItemSnapshot {
+        private final EntityItem entity;
+        private final ItemStack beforeStack;
+        private final boolean beforeDead;
+        private final java.util.Set<java.util.UUID> existingEntities;
+
+        private EntityItemSnapshot(EntityItem entity) {
+            this.entity = entity;
+            this.beforeStack = entity == null || entity.getItem() == null
+                ? ItemStack.EMPTY : entity.getItem().copy();
+            this.beforeDead = entity != null && entity.isDead;
+            this.existingEntities = snapshotEntityIds(entity);
+        }
+
+        /** Restore the source stack and remove only split entities from it. */
+        public void restore() {
+            if (entity == null) {
+                return;
+            }
+            entity.setItem(beforeStack.copy());
+            entity.isDead = beforeDead;
+            if (entity.world == null) {
+                return;
+            }
+            for (net.minecraft.entity.Entity candidate
+                : new ArrayList<>(entity.world.loadedEntityList)) {
+                if (!(candidate instanceof EntityItem) || candidate == entity
+                    || candidate.getUniqueID() == null
+                    || existingEntities.contains(candidate.getUniqueID())) {
+                    continue;
+                }
+                candidate.setDead();
+            }
+        }
     }
 
     /** Whether this stack can provide media for a normal spell. */
