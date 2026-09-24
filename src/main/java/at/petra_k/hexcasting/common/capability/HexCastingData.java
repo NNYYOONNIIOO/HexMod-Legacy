@@ -15,6 +15,12 @@ public final class HexCastingData implements IHexCastingData {
     private static final String KEY_PIGMENT = "pigment";
     private static final String KEY_PIGMENT_INTERNALIZED = "pigment_internalized";
     private static final String KEY_FLIGHT_TICKS = "flight_ticks";
+    private static final String KEY_FLIGHT_ACTIVE = "flight_active";
+    private static final String KEY_FLIGHT_DIMENSION = "flight_dimension";
+    private static final String KEY_FLIGHT_ORIGIN_X = "flight_origin_x";
+    private static final String KEY_FLIGHT_ORIGIN_Y = "flight_origin_y";
+    private static final String KEY_FLIGHT_ORIGIN_Z = "flight_origin_z";
+    private static final String KEY_FLIGHT_RADIUS = "flight_radius";
     private static final String KEY_ALTIORA_TICKS = "altiora_ticks";
     private static final int DEFAULT_PIGMENT = 0xAA66FF;
     private static final String DEFAULT_PIGMENT_VARIANT = "default_colorizer";
@@ -26,6 +32,12 @@ public final class HexCastingData implements IHexCastingData {
     private UUID pigmentOwner = new UUID(0L, 0L);
     private boolean pigmentInternalized;
     private int flightTicks;
+    private boolean flightActive;
+    private int flightDimension;
+    private double flightOriginX;
+    private double flightOriginY;
+    private double flightOriginZ;
+    private double flightRadius = -1.0D;
     private int altioraTicks;
     private boolean altioraActive;
 
@@ -98,7 +110,64 @@ public final class HexCastingData implements IHexCastingData {
 
     @Override
     public void setFlightTicks(int ticks) {
-        flightTicks = Math.max(0, ticks);
+        // -1 is the modern sentinel for a flight with no time limit.
+        flightTicks = Math.max(-1, ticks);
+    }
+
+    @Override
+    public boolean isFlightActive() {
+        return flightActive;
+    }
+
+    @Override
+    public void setFlightActive(boolean active) {
+        flightActive = active;
+        if (!active) {
+            flightTicks = 0;
+            flightRadius = -1.0D;
+        }
+    }
+
+    @Override
+    public int getFlightDimension() {
+        return flightDimension;
+    }
+
+    @Override
+    public void setFlightDimension(int dimension) {
+        flightDimension = dimension;
+    }
+
+    @Override
+    public double getFlightOriginX() {
+        return flightOriginX;
+    }
+
+    @Override
+    public double getFlightOriginY() {
+        return flightOriginY;
+    }
+
+    @Override
+    public double getFlightOriginZ() {
+        return flightOriginZ;
+    }
+
+    @Override
+    public void setFlightOrigin(double x, double y, double z) {
+        flightOriginX = x;
+        flightOriginY = y;
+        flightOriginZ = z;
+    }
+
+    @Override
+    public double getFlightRadius() {
+        return flightRadius;
+    }
+
+    @Override
+    public void setFlightRadius(double radius) {
+        flightRadius = radius;
     }
 
     @Override
@@ -154,6 +223,12 @@ public final class HexCastingData implements IHexCastingData {
         result.setString("pigment_owner", pigmentOwner.toString());
         result.setBoolean(KEY_PIGMENT_INTERNALIZED, pigmentInternalized);
         result.setInteger(KEY_FLIGHT_TICKS, flightTicks);
+        result.setBoolean(KEY_FLIGHT_ACTIVE, flightActive);
+        result.setInteger(KEY_FLIGHT_DIMENSION, flightDimension);
+        result.setDouble(KEY_FLIGHT_ORIGIN_X, flightOriginX);
+        result.setDouble(KEY_FLIGHT_ORIGIN_Y, flightOriginY);
+        result.setDouble(KEY_FLIGHT_ORIGIN_Z, flightOriginZ);
+        result.setDouble(KEY_FLIGHT_RADIUS, flightRadius);
         result.setInteger(KEY_ALTIORA_TICKS, altioraTicks);
         result.setBoolean("altiora_active", altioraActive);
         result.setTag("casting_state", castingStack.serializeState());
@@ -168,6 +243,13 @@ public final class HexCastingData implements IHexCastingData {
         pigmentVariant = DEFAULT_PIGMENT_VARIANT;
         pigmentOwner = new UUID(0L, 0L);
         pigmentInternalized = false;
+        flightTicks = 0;
+        flightActive = false;
+        flightDimension = 0;
+        flightOriginX = 0.0D;
+        flightOriginY = 0.0D;
+        flightOriginZ = 0.0D;
+        flightRadius = -1.0D;
         if (nbt == null) return;
         media = clampMedia(nbt.getLong(KEY_MEDIA));
         if (nbt.hasKey(KEY_PIGMENT, 3)) {
@@ -196,7 +278,26 @@ public final class HexCastingData implements IHexCastingData {
                 || !DEFAULT_PIGMENT_VARIANT.equals(pigmentVariant)
                 || !new UUID(0L, 0L).equals(pigmentOwner);
         }
-        flightTicks = Math.max(0, nbt.getInteger(KEY_FLIGHT_TICKS));
+        flightTicks = Math.max(-1, nbt.getInteger(KEY_FLIGHT_TICKS));
+        flightActive = nbt.getBoolean(KEY_FLIGHT_ACTIVE)
+            || flightTicks != 0;
+        flightDimension = nbt.hasKey(KEY_FLIGHT_DIMENSION, 3)
+            ? nbt.getInteger(KEY_FLIGHT_DIMENSION) : 0;
+        flightOriginX = nbt.hasKey(KEY_FLIGHT_ORIGIN_X, 6)
+            ? nbt.getDouble(KEY_FLIGHT_ORIGIN_X) : 0.0D;
+        flightOriginY = nbt.hasKey(KEY_FLIGHT_ORIGIN_Y, 6)
+            ? nbt.getDouble(KEY_FLIGHT_ORIGIN_Y) : 0.0D;
+        flightOriginZ = nbt.hasKey(KEY_FLIGHT_ORIGIN_Z, 6)
+            ? nbt.getDouble(KEY_FLIGHT_ORIGIN_Z) : 0.0D;
+        flightRadius = nbt.hasKey(KEY_FLIGHT_RADIUS, 6)
+            ? nbt.getDouble(KEY_FLIGHT_RADIUS) : -1.0D;
+        if (!Double.isFinite(flightOriginX) || !Double.isFinite(flightOriginY)
+            || !Double.isFinite(flightOriginZ)
+            || !Double.isFinite(flightRadius)) {
+            flightActive = false;
+            flightTicks = 0;
+            flightRadius = -1.0D;
+        }
         altioraTicks = Math.max(0, nbt.getInteger(KEY_ALTIORA_TICKS));
         altioraActive = nbt.getBoolean("altiora_active")
             || nbt.hasKey(KEY_ALTIORA_TICKS, 3) && altioraTicks > 0;

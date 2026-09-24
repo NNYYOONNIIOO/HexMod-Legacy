@@ -3131,7 +3131,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         });
 
-    /** Return whether the caster currently has Hex flight permission. */
+    /** Return whether the target currently has a range- or time-limited Hex flight. */
     public static final ResourceLocation FLIGHT_CAN_FLY_ID =
         new ResourceLocation(HexAPI.MOD_ID, "flight/can_fly");
     public static final HexPattern FLIGHT_CAN_FLY_PATTERN =
@@ -3153,22 +3153,43 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player =
                     (net.minecraft.entity.player.EntityPlayer) target;
-                stack.push(new BooleanIota(
-                    HexFlightState.hasAltiora(player)
-                        || player.capabilities.allowFlying));
+                stack.push(new BooleanIota(HexFlightState.hasFlight(player)));
             }
         });
 
-    /** Return the configured Hex flight range in blocks. */
+    /** Grant the target a flight anchored to its current horizontal position. */
     public static final ResourceLocation FLIGHT_RANGE_ID =
         new ResourceLocation(HexAPI.MOD_ID, "flight/range");
     public static final HexPattern FLIGHT_RANGE_PATTERN =
         pattern(HexDir.SOUTH_WEST, "awawaawq");
     public static final HexAction FLIGHT_RANGE = register(
-        FLIGHT_RANGE_ID, FLIGHT_RANGE_PATTERN, stack ->
-            stack.push(new DoubleIota(64.0D)));
+        FLIGHT_RANGE_ID, FLIGHT_RANGE_PATTERN, new HexAction() {
+            @Override
+            public void execute(CastingStack stack) throws CastingException {
+                throw new CastingException("hexcasting.error.flight_context");
+            }
 
-    /** Return remaining Hex flight time in seconds for the caster. */
+            @Override
+            public void execute(CastingStack stack, CastingVM vm)
+                throws CastingException {
+                if (vm == null || vm.getPlayer() == null) {
+                    throw new CastingException("hexcasting.error.flight_context");
+                }
+                double radius = requirePositiveFlightArgument(
+                    stack.pop(DoubleIota.class));
+                net.minecraft.entity.player.EntityPlayer target =
+                    requireFlightTarget(stack.pop(EntityIota.class), vm);
+                long cost = flightCost(radius, true);
+                vm.consumeMedia(cost);
+                if (!target.capabilities.allowFlying
+                    && !HexFlightState.hasFlight(target)
+                    && !target.capabilities.isCreativeMode) {
+                    HexFlightState.start(target, -1, radius);
+                }
+            }
+        });
+
+    /** Grant the target a flight that ends after the requested duration. */
     public static final ResourceLocation FLIGHT_TIME_ID =
         new ResourceLocation(HexAPI.MOD_ID, "flight/time");
     public static final HexPattern FLIGHT_TIME_PATTERN =
@@ -3185,21 +3206,46 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.flight_context");
                 }
-                stack.push(new DoubleIota(HexFlightState.remainingSeconds(vm.getPlayer())));
+                double seconds = requirePositiveFlightArgument(
+                    stack.pop(DoubleIota.class));
+                net.minecraft.entity.player.EntityPlayer target =
+                    requireFlightTarget(stack.pop(EntityIota.class), vm);
+                long cost = flightCost(seconds, false);
+                long ticks = Math.round(seconds * 20.0D);
+                if (ticks <= 0L || ticks > Integer.MAX_VALUE) {
+                    throw new CastingException("hexcasting.error.flight_duration");
+                }
+                vm.consumeMedia(cost);
+                if (!target.capabilities.allowFlying
+                    && !HexFlightState.hasFlight(target)
+                    && !target.capabilities.isCreativeMode) {
+                    HexFlightState.start(target, (int) ticks, -1.0D);
+                }
             }
         });
 
     private static final class HexFlightState {
-        private static void grant(net.minecraft.entity.player.EntityPlayer player, int ticks) {
-            IHexCastingData data = data(player);
-            if (data != null) {
-                data.setFlightTicks(Math.max(ticks, data.getFlightTicks()));
-            }
-        }
+        private static final double DANGER_THRESHOLD_BLOCKS = 4.0D;
+        private static final int DANGER_THRESHOLD_TICKS = 7 * 20;
 
-        private static double remainingSeconds(net.minecraft.entity.player.EntityPlayer player) {
+        private static void start(
+            net.minecraft.entity.player.EntityPlayer player, int ticks,
+            double radius) {
             IHexCastingData data = data(player);
-            return data == null ? 0.0D : data.getFlightTicks() / 20.0D;
+            if (data == null) {
+                return;
+            }
+            data.setFlightTicks(ticks);
+            data.setFlightActive(true);
+            data.setFlightDimension(player.dimension);
+            data.setFlightOrigin(player.posX, player.posY, player.posZ);
+            data.setFlightRadius(radius);
+            player.capabilities.allowFlying = true;
+            if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                ((net.minecraft.entity.player.EntityPlayerMP) player)
+                    .sendPlayerAbilities();
+            }
+            at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
         }
 
         private static void grantAltiora(
@@ -3245,6 +3291,85 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
         }
 
+        private static void tickFlight(
+            net.minecraft.entity.player.EntityPlayer player) {
+            IHexCastingData data = data(player);
+            if (data == null || !data.isFlightActive()) {
+                return;
+            }
+            double danger = danger(player, data);
+            if (danger >= 1.0D
+                || data.getFlightTicks() == 0) {
+                finish(player, data);
+                return;
+            }
+            if (!player.capabilities.allowFlying) {
+                player.capabilities.allowFlying = true;
+                if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                    ((net.minecraft.entity.player.EntityPlayerMP) player)
+                        .sendPlayerAbilities();
+                }
+            }
+            if (data.getFlightTicks() > 0) {
+                data.setFlightTicks(data.getFlightTicks() - 1);
+            }
+            player.fallDistance = 0.0F;
+            at.petra_k.hexcasting.common.effect.HexCastingEffects
+                .onFlightTick(player, danger);
+        }
+
+        private static double danger(
+            net.minecraft.entity.player.EntityPlayer player,
+            IHexCastingData data) {
+            double radiusDanger = 0.0D;
+            double radius = data.getFlightRadius();
+            if (radius >= 0.0D) {
+                if (player.dimension != data.getFlightDimension()) {
+                    radiusDanger = 1.0D;
+                } else {
+                    double dx = player.posX - data.getFlightOriginX();
+                    double dz = player.posZ - data.getFlightOriginZ();
+                    double distance = Math.sqrt(dx * dx + dz * dz);
+                    double distanceFromEdge = radius - distance;
+                    if (distanceFromEdge >= DANGER_THRESHOLD_BLOCKS) {
+                        radiusDanger = 0.0D;
+                    } else if (distance > radius) {
+                        radiusDanger = 1.0D;
+                    } else {
+                        radiusDanger = 1.0D
+                            - distanceFromEdge / DANGER_THRESHOLD_BLOCKS;
+                    }
+                }
+            }
+
+            double timeDanger = 0.0D;
+            int ticks = data.getFlightTicks();
+            if (ticks >= 0) {
+                if (ticks < DANGER_THRESHOLD_TICKS) {
+                    timeDanger = 1.0D - ticks / (double) DANGER_THRESHOLD_TICKS;
+                }
+            }
+            return Math.max(radiusDanger, timeDanger);
+        }
+
+        private static void finish(
+            net.minecraft.entity.player.EntityPlayer player,
+            IHexCastingData data) {
+            data.setFlightActive(false);
+            if (!player.capabilities.isCreativeMode
+                && !player.isSpectator()) {
+                player.capabilities.isFlying = false;
+                player.capabilities.allowFlying = false;
+                if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                    ((net.minecraft.entity.player.EntityPlayerMP) player)
+                        .sendPlayerAbilities();
+                }
+            }
+            at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
+            at.petra_k.hexcasting.common.effect.HexCastingEffects
+                .onFlightFinish(player);
+        }
+
         private static boolean tryStartAltiora(
             net.minecraft.entity.player.EntityPlayer player) {
             if (!(player instanceof net.minecraft.entity.player.EntityPlayerMP)
@@ -3272,6 +3397,12 @@ throw new CastingException("hexcasting.error.get_media_context");
             return data != null && data.isAltioraActive();
         }
 
+        private static boolean hasFlight(
+            net.minecraft.entity.player.EntityPlayer player) {
+            IHexCastingData data = data(player);
+            return data != null && data.isFlightActive();
+        }
+
         private static IHexCastingData data(
             net.minecraft.entity.player.EntityPlayer player) {
             if (player == null || HexCapabilities.CASTING_DATA == null) {
@@ -3292,6 +3423,14 @@ throw new CastingException("hexcasting.error.get_media_context");
     public static void tickAltiora(net.minecraft.entity.player.EntityPlayer player) {
         if (player != null && !player.world.isRemote) {
             HexFlightState.tickAltiora(player);
+        }
+    }
+
+    /** Called by the Forge player tick bridge for ordinary Hex flight. */
+    public static void tickFlight(
+        net.minecraft.entity.player.EntityPlayer player) {
+        if (player != null && !player.world.isRemote) {
+            HexFlightState.tickFlight(player);
         }
     }
 
@@ -4285,6 +4424,40 @@ throw new CastingException("hexcasting.error.get_media_context");
 throw new CastingException("hexcasting.error.bounded_integer");
         }
         return (int) raw;
+    }
+
+    private static double requirePositiveFlightArgument(DoubleIota value)
+        throws CastingException {
+        double raw = value.getValue();
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw <= 0.0D) {
+            throw new CastingException("hexcasting.error.flight_duration");
+        }
+        return raw;
+    }
+
+    private static long flightCost(double amount, boolean minimumOneUnit)
+        throws CastingException {
+        double rawCost = amount * 2.0D * MediaConstants.DUST_UNIT;
+        if (Double.isNaN(rawCost) || Double.isInfinite(rawCost)
+            || rawCost > Long.MAX_VALUE) {
+            throw new CastingException("hexcasting.error.flight_duration");
+        }
+        long rounded = Math.round(rawCost);
+        return minimumOneUnit
+            ? Math.max(2L * MediaConstants.DUST_UNIT, rounded) : rounded;
+    }
+
+    private static net.minecraft.entity.player.EntityPlayer requireFlightTarget(
+        EntityIota entityIota, CastingVM vm) throws CastingException {
+        net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+        if (!(entity instanceof net.minecraft.entity.player.EntityPlayer)) {
+            throw new CastingException("hexcasting.error.flight_target");
+        }
+        net.minecraft.entity.player.EntityPlayer target =
+            (net.minecraft.entity.player.EntityPlayer) entity;
+        requireEntityInRange(vm, vm.getPlayer(), target,
+            "hexcasting.error.flight_range");
+        return target;
     }
 
     private static HexPattern pattern(HexDir start, HexAngle... angles) {

@@ -97,6 +97,46 @@ public final class HexCastingEffects {
             0.0D, -0.2D, 0.0D, 0.4D, Math.PI * 0.5D, 3, color, source);
     }
 
+    /** Emit the danger-weighted trail used by range/time-limited flight. */
+    public static void onFlightTick(EntityPlayer player, double danger) {
+        if (player == null || player.world == null || player.world.isRemote) {
+            return;
+        }
+        HexPigmentSource source = playerPigment(player);
+        int color = sample(source, player);
+        int dangerCount = (int) Math.ceil(5.0D * Math.max(0.0D,
+            Math.min(1.0D, danger)));
+        int normalCount = Math.max(0, 5 - dangerCount);
+        if (normalCount > 0) {
+            sendSpray(player, player.posX, player.posY, player.posZ,
+                0.0D, -0.6D, 0.0D, 0.6D, Math.PI * 0.3D,
+                normalCount, color, source);
+        }
+        if (dangerCount > 0) {
+            sendSpray(player, player.posX, player.posY, player.posZ,
+                0.0D, 0.8D, 0.0D, 0.3D, Math.PI * 0.75D,
+                dangerCount, 0x202020, null);
+            sendSpray(player, player.posX, player.posY, player.posZ,
+                0.0D, 0.8D, 0.0D, 0.3D, Math.PI * 0.75D,
+                dangerCount, 0xE05252, null);
+        }
+    }
+
+    /** Emit the end burst when ordinary Hex flight becomes unstable. */
+    public static void onFlightFinish(EntityPlayer player) {
+        if (player == null || player.world == null || player.world.isRemote) {
+            return;
+        }
+        HexPigmentSource source = playerPigment(player);
+        int color = sample(source, player);
+        sendSpray(player, player.posX, player.posY, player.posZ,
+            0.0D, 1.0D, 0.0D, 3.141592653589793D, 0.4D,
+            20, color, source);
+        sendSpray(player, player.posX, player.posY, player.posZ,
+            0.0D, 1.0D, 0.0D, 3.141592653589793D, 0.4D,
+            20, 0x202020, null);
+    }
+
     /** Feedback for a portable cast using the hand containing its source item. */
     public static void onPortableCast(EntityPlayer player, EnumHand hand,
                                       List<HexPattern> patterns, boolean success) {

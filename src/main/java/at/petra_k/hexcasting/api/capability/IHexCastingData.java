@@ -36,6 +36,29 @@ public interface IHexCastingData extends ADMediaHolder {
 
     void setFlightTicks(int ticks);
 
+    /** Whether a range- or time-limited Hex flight is currently active. */
+    boolean isFlightActive();
+
+    void setFlightActive(boolean active);
+
+    /** Dimension containing the origin of the active flight, if any. */
+    int getFlightDimension();
+
+    void setFlightDimension(int dimension);
+
+    double getFlightOriginX();
+
+    double getFlightOriginY();
+
+    double getFlightOriginZ();
+
+    void setFlightOrigin(double x, double y, double z);
+
+    /** Horizontal radius; a negative value denotes time-limited flight. */
+    double getFlightRadius();
+
+    void setFlightRadius(double radius);
+
     /** Remaining Altiora collision grace, in server ticks. */
     int getAltioraTicks();
 

@@ -68,6 +68,11 @@ public final class HexCapabilityHandler {
                 original.getPigmentOwner());
             replacement.setInternalizedPigment(original.hasInternalizedPigment());
             replacement.setFlightTicks(original.getFlightTicks());
+            replacement.setFlightActive(original.isFlightActive());
+            replacement.setFlightDimension(original.getFlightDimension());
+            replacement.setFlightOrigin(original.getFlightOriginX(),
+                original.getFlightOriginY(), original.getFlightOriginZ());
+            replacement.setFlightRadius(original.getFlightRadius());
             replacement.setAltioraTicks(original.getAltioraTicks());
             replacement.setAltioraActive(original.isAltioraActive());
             replacement.getCastingStack().restore(original.getCastingStack().snapshot());
