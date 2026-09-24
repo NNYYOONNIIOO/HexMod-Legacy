@@ -2751,16 +2751,18 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (player.world.isRemote) {
                     return;
                 }
+                // Query the source before validating the target, matching
+                // CastingEnvironment's action order: a missing block item is
+                // reported as an item mishap even when the destination is not
+                // replaceable.
+                net.minecraft.item.ItemStack source = findPlaceableBlockStack(player, vm);
+                if (source == null || source.isEmpty()
+                    || !(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
+                    throw new CastingException("hexcasting.error.place_block_item");
+                }
                 if (!player.world.getBlockState(position).getBlock()
                     .isReplaceable(player.world, position)) {
                     throw new CastingException("hexcasting.error.place_block_target");
-                }
-                net.minecraft.item.ItemStack source = findPlaceableBlockStack(player, vm);
-                if (source == null || source.isEmpty()) {
-                    throw new CastingException("hexcasting.error.place_block_item");
-                }
-                if (!(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
-                    throw new CastingException("hexcasting.error.place_block_item");
                 }
                 net.minecraft.util.EnumHand blockHand = vm.getOtherHand();
                 net.minecraft.item.ItemStack previousBlock = player.getHeldItem(blockHand);
@@ -2772,11 +2774,14 @@ throw new CastingException("hexcasting.error.get_media_context");
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
                         player, player.world, position, blockHand,
-                        net.minecraft.util.EnumFacing.UP, 0.5F, 0.5F, 0.5F);
+                        player.getHorizontalFacing(), 0.5F, 0.5F, 0.5F);
                 } finally {
                     player.setHeldItem(blockHand, previousBlock);
                 }
-                if (result != net.minecraft.util.EnumActionResult.SUCCESS) {
+                // Custom ItemBlocks can perform their placement as a side
+                // effect while returning PASS; modern Hex accepts every
+                // non-FAIL result here.
+                if (result == net.minecraft.util.EnumActionResult.FAIL) {
                     throw new CastingException("hexcasting.error.place_block_failed");
                 }
                 if (!player.capabilities.isCreativeMode) {
