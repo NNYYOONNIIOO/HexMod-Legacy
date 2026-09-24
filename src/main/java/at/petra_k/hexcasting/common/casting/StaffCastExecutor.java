@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
@@ -127,7 +128,7 @@ public final class StaffCastExecutor {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
-            sendError(player, exception.getMessage());
+            sendError(player, exception);
             return CastOutcome.failure(Resolution.ERRORED,
                 preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
                 soundFor(vm, false));
@@ -136,7 +137,7 @@ public final class StaffCastExecutor {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
-            sendError(player, "hexcasting.message.staff_error");
+            sendError(player, new CastingException("hexcasting.message.staff_error", exception));
             return CastOutcome.failure(Resolution.ERRORED,
                 preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
                 soundFor(vm, false));
@@ -254,6 +255,26 @@ public final class StaffCastExecutor {
 
     private static void sendError(EntityPlayer player, String message) {
         player.sendMessage(new TextComponentString(localizeError(message)));
+    }
+
+    private static void sendError(EntityPlayer player, CastingException exception) {
+        if (exception instanceof Mishap) {
+            Mishap mishap = (Mishap) exception;
+            if (mishap.getKind() == Mishap.Kind.INVALID_PATTERN) {
+                String pattern = mishap.getPattern() == null ? "?"
+                    : HexInline.formatPattern(mishap.getPattern());
+                player.sendMessage(new TextComponentString(I18n.translateToLocalFormatted(
+                    "hexcasting.message.pattern_unregistered", pattern)));
+                return;
+            }
+            String key = mishap.getDisplayKey();
+            String translated = I18n.translateToLocal(key);
+            if (!key.equals(translated)) {
+                player.sendMessage(new TextComponentString(translated));
+                return;
+            }
+        }
+        sendError(player, exception == null ? null : exception.getMessage());
     }
 
     private static String localizeError(String message) {

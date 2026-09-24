@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.api.casting.eval;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Locale;
@@ -24,7 +25,9 @@ public class Mishap extends CastingException {
         BAD_ITEM,
         BAD_BLOCK,
         BAD_LOCATION,
+        PERMISSION_DENIED,
         INVALID_VALUE,
+        EVALUATION_LIMIT,
         INVALID_CONTEXT,
         INTERNAL,
         UNKNOWN
@@ -37,10 +40,29 @@ public class Mishap extends CastingException {
     private final EntityPlayer caster;
     private final int parenthesisDepth;
     private final int operation;
+    private final String detail;
+    private final String casterUuid;
+    private final String casterName;
+    private final int casterDimension;
+    private final double casterX;
+    private final double casterY;
+    private final double casterZ;
+    private double targetDistance = Double.NaN;
+    private int targetDimension = Integer.MIN_VALUE;
+    private String targetUuid;
+    private boolean permissionChecked;
+    private boolean permissionAllowed = true;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
                   int parenthesisDepth, int operation) {
+        this(kind, errorKey, cause, pattern, actionId, caster,
+            parenthesisDepth, operation, null);
+    }
+
+    private Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
+                   ResourceLocation actionId, EntityPlayer caster,
+                   int parenthesisDepth, int operation, String detail) {
         super(errorKey == null || errorKey.isEmpty() ? "hexcasting.error.unknown" : errorKey,
             cause);
         this.kind = kind == null ? Kind.UNKNOWN : kind;
@@ -51,6 +73,14 @@ public class Mishap extends CastingException {
         this.caster = caster;
         this.parenthesisDepth = Math.max(0, parenthesisDepth);
         this.operation = Math.max(0, operation);
+        this.detail = detail;
+        this.casterUuid = caster == null || caster.getUniqueID() == null
+            ? null : caster.getUniqueID().toString();
+        this.casterName = caster == null ? null : caster.getName();
+        this.casterDimension = caster == null ? Integer.MIN_VALUE : caster.dimension;
+        this.casterX = caster == null ? Double.NaN : caster.posX;
+        this.casterY = caster == null ? Double.NaN : caster.posY;
+        this.casterZ = caster == null ? Double.NaN : caster.posZ;
     }
 
     public Kind getKind() {
@@ -82,6 +112,106 @@ public class Mishap extends CastingException {
         return operation;
     }
 
+    /** Human-readable detail retained separately from the stable error key. */
+    public String getDetail() {
+        return detail;
+    }
+
+    /** The registered action path, without the mod namespace. */
+    public String getActionName() {
+        return actionId == null ? null : actionId.toString();
+    }
+
+    public String getCasterUuid() {
+        return casterUuid;
+    }
+
+    public String getCasterName() {
+        return casterName;
+    }
+
+    public int getCasterDimension() {
+        return casterDimension;
+    }
+
+    public double getCasterX() {
+        return casterX;
+    }
+
+    public double getCasterY() {
+        return casterY;
+    }
+
+    public double getCasterZ() {
+        return casterZ;
+    }
+
+    public boolean hasTargetContext() {
+        return !Double.isNaN(targetDistance);
+    }
+
+    public double getTargetDistance() {
+        return targetDistance;
+    }
+
+    public int getTargetDimension() {
+        return targetDimension;
+    }
+
+    public String getTargetUuid() {
+        return targetUuid;
+    }
+
+    public boolean isPermissionChecked() {
+        return permissionChecked;
+    }
+
+    public boolean isPermissionAllowed() {
+        return permissionAllowed;
+    }
+
+    /** Attach target data without losing the original exception context. */
+    public Mishap withTarget(Entity target) {
+        if (target == null) {
+            return this;
+        }
+        targetDistance = caster == null ? Double.NaN : caster.getDistance(target);
+        targetDimension = target.dimension;
+        targetUuid = target.getUniqueID() == null ? null : target.getUniqueID().toString();
+        return this;
+    }
+
+    /** Record whether a world/permission check was performed for this mishap. */
+    public Mishap withPermission(boolean checked, boolean allowed) {
+        permissionChecked = checked;
+        permissionAllowed = allowed;
+        return this;
+    }
+
+    /** Stable accent color used by common mishap feedback. */
+    public int getAccentColor() {
+        switch (kind) {
+            case INVALID_PATTERN:
+                return 0xE5C84B;
+            case NOT_ENOUGH_ARGUMENTS:
+                return 0xD8D8D8;
+            case BAD_ITEM:
+                return 0xA06B3C;
+            case BAD_BLOCK:
+                return 0x86D65A;
+            case BAD_ENTITY:
+                return 0x78A8E8;
+            case BAD_LOCATION:
+                return 0xE97AC1;
+            case PERMISSION_DENIED:
+                return 0x303030;
+            case NOT_ENOUGH_MEDIA:
+                return 0xE05252;
+            default:
+                return 0xB04040;
+        }
+    }
+
     /** Return a stable translation key for UI and logs. */
     public String getDisplayKey() {
         if (errorKey.startsWith("hexcasting.")) {
@@ -94,6 +224,8 @@ public class Mishap extends CastingException {
                 return "hexcasting.error.not_enough_media";
             case NOT_ENOUGH_ARGUMENTS:
                 return "hexcasting.error.stack_underflow";
+            case PERMISSION_DENIED:
+                return "hexcasting.error.permission_denied";
             default:
                 return "hexcasting.error.unknown";
         }
@@ -127,8 +259,9 @@ public class Mishap extends CastingException {
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,
                                         int parenthesisDepth, int operation) {
         return new Mishap(Kind.INVALID_PATTERN,
-            "No action is registered for pattern " + String.valueOf(pattern), null,
-            pattern, null, caster, parenthesisDepth, operation);
+            "hexcasting.error.invalid_pattern", null,
+            pattern, null, caster, parenthesisDepth, operation,
+            "No action is registered for pattern " + String.valueOf(pattern));
     }
 
     private static Kind classify(String raw) {
@@ -140,8 +273,16 @@ public class Mishap extends CastingException {
             || message.contains("invalid pattern")) {
             return Kind.INVALID_PATTERN;
         }
+        if (message.contains("operation limit") || message.contains("too many patterns")
+            || message.contains("evaluated too many")) {
+            return Kind.EVALUATION_LIMIT;
+        }
         if (message.contains("not_enough_media") || message.contains("not enough media")) {
             return Kind.NOT_ENOUGH_MEDIA;
+        }
+        if (message.contains("forbidden") || message.contains("permission")
+            || message.contains("disallowed")) {
+            return Kind.PERMISSION_DENIED;
         }
         if (message.contains("stack") || message.contains("argument")
             || message.contains("args") || message.contains("expects")) {
