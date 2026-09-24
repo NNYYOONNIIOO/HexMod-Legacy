@@ -2658,22 +2658,29 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (vm == null || vm.getPlayer() == null) {
                 throw new CastingException("hexcasting.error.blink_context");
             }
-            Iota first = stack.pop();
-            Iota second = stack.pop();
-            EntityIota entityIota;
-            DoubleIota deltaIota;
-            if (first instanceof EntityIota && second instanceof DoubleIota) {
-                entityIota = (EntityIota) first;
-                deltaIota = (DoubleIota) second;
-            } else if (first instanceof DoubleIota && second instanceof EntityIota) {
-                entityIota = (EntityIota) second;
-                deltaIota = (DoubleIota) first;
-            } else {
+            Iota deltaValue = stack.pop();
+            Iota entityValue = stack.pop();
+            if (!(entityValue instanceof EntityIota)
+                || !(deltaValue instanceof DoubleIota)) {
                 throw new CastingException("hexcasting.error.blink_args");
             }
+            EntityIota entityIota = (EntityIota) entityValue;
+            DoubleIota deltaIota = (DoubleIota) deltaValue;
             net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
             net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
             requireEntityInRange(vm, caster, target, "hexcasting.error.blink_range");
+            if (isTeleportImmune(target)) {
+                throw new CastingException("hexcasting.error.blink_immune");
+            }
+            if (isStickyTeleporter(target)) {
+                for (net.minecraft.entity.Entity passenger
+                    : new java.util.ArrayList<>(target.getPassengers())) {
+                    if (isTeleportImmune(passenger)) {
+                        vm.recordMishapTarget(passenger);
+                        throw new CastingException("hexcasting.error.blink_immune");
+                    }
+                }
+            }
             double delta = deltaIota.getValue();
             if (Double.isNaN(delta) || Double.isInfinite(delta)) {
                 throw new CastingException("hexcasting.error.blink_position");
@@ -2690,12 +2697,13 @@ throw new CastingException("hexcasting.error.get_media_context");
                 throw new CastingException("hexcasting.error.blink_position");
             }
             double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
-            if (Double.isInfinite(mediaCost) || mediaCost > Long.MAX_VALUE) {
+            if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
+                || mediaCost >= Long.MAX_VALUE) {
                 throw new CastingException("hexcasting.error.blink_cost");
             }
             vm.consumeMedia(Math.round(mediaCost));
             if (!caster.world.isRemote) {
-                target.dismountRidingEntity();
+                prepareTeleport(target);
                 target.setPosition(destination.x, destination.y, destination.z);
                 target.motionX = 0.0D;
                 target.motionY = 0.0D;
@@ -4283,6 +4291,62 @@ throw new CastingException("hexcasting.error.get_media_context");
         world.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
             position.getX() + 0.5D, position.getY() + 0.5D,
             position.getZ() + 0.5D, 0.0D, 0.05D, 0.0D, 2);
+    }
+
+    /** Compatibility equivalent of Hex's cannot_teleport entity tag. */
+    private static boolean isTeleportImmune(net.minecraft.entity.Entity entity) {
+        if (entity == null) {
+            return true;
+        }
+        net.minecraft.util.ResourceLocation id =
+            net.minecraft.entity.EntityList.getKey(entity);
+        if (id == null) {
+            return false;
+        }
+        String namespace = id.getResourceDomain();
+        String path = id.getResourcePath();
+        if ("minecraft".equals(namespace)) {
+            return "ender_crystal".equals(path)
+                || "item_frame".equals(path)
+                || "painting".equals(path)
+                || "leash_knot".equals(path)
+                || "marker".equals(path)
+                || "fishing_bobber".equals(path)
+                || "fishing_hook".equals(path)
+                || "ender_dragon".equals(path)
+                || "wither".equals(path);
+        }
+        // Forge's optional boss tags cannot be queried by the 1.12 runtime;
+        // accept the conventional boss entity id suffix used by backports
+        // while leaving ordinary mod entities teleportable.
+        return path.endsWith("_boss") || path.endsWith("_boss_entity");
+    }
+
+    /** Compatibility equivalent of Hex's sticky_teleporters entity tag. */
+    private static boolean isStickyTeleporter(net.minecraft.entity.Entity entity) {
+        net.minecraft.util.ResourceLocation id = entity == null
+            ? null : net.minecraft.entity.EntityList.getKey(entity);
+        if (id == null || !"minecraft".equals(id.getResourceDomain())) {
+            return false;
+        }
+        String path = id.getResourcePath();
+        return "pig".equals(path) || "horse".equals(path)
+            || "skeleton_horse".equals(path) || "zombie_horse".equals(path)
+            || "mule".equals(path) || "donkey".equals(path)
+            || "llama".equals(path) || "trader_llama".equals(path)
+            || "strider".equals(path);
+    }
+
+    /** Detach riders only when the target is not a sticky teleporter. */
+    private static void prepareTeleport(net.minecraft.entity.Entity target) {
+        target.dismountRidingEntity();
+        if (isStickyTeleporter(target)) {
+            return;
+        }
+        for (net.minecraft.entity.Entity passenger
+            : new java.util.ArrayList<>(target.getPassengers())) {
+            passenger.dismountRidingEntity();
+        }
     }
 
     private static void requireEntityInRange(

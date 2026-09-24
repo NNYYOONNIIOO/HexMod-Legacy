@@ -535,6 +535,7 @@ public class Mishap extends CastingException {
             return Kind.BAD_LOCATION;
         }
         if ("hexcasting.error.entity_unavailable".equals(key)
+            || "hexcasting.error.blink_immune".equals(key)
             || "hexcasting.error.flight_target".equals(key)
             || "hexcasting.error.potion_target".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)

@@ -1051,6 +1051,7 @@ hexcasting.error.flight_can_fly_context=此动作需要可检测飞行状态的�
 hexcasting.error.blink_args=闪现需要一个实体和一个位移量。
 hexcasting.error.blink_cost=闪现位移过大，无法计算媒质消耗。
 hexcasting.error.blink_range=闪现目标或目的地超出范围。
+hexcasting.error.blink_immune=目标实体无法被传送。
 hexcasting.error.break_block_forbidden=目标方块无法被编辑。
 hexcasting.error.circle_context=此动作需要有效的圆环上下文。
 hexcasting.error.erase_cost=清除该容器的媒质消耗过高。
