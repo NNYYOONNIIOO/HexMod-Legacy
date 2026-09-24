@@ -1434,10 +1434,16 @@ public static final HexPattern BOOL_IF_PATTERN =
                 vm.consumeMedia(cheap ? MediaConstants.DUST_UNIT / 100L
                     : MediaConstants.DUST_UNIT / 8L);
                 if (!state.getBlock().isAir(state, player.world, blockPos)
-                    && state.getBlock().getBlockHardness(state, player.world, blockPos) >= 0.0F
-                    && state.getBlock().getHarvestLevel(state) <= 3) {
-                    player.world.destroyBlock(blockPos, true);
-                }
+                     && state.getBlock().getBlockHardness(state, player.world, blockPos) >= 0.0F
+                     && state.getBlock().getHarvestLevel(state) <= 3
+                     // Forge mods may veto destruction through
+                     // Block#canEntityDestroy.  The modern action checks the
+                     // platform breaking hook after its tier/harvest checks;
+                     // do the same before invoking destroyBlock so protected
+                     // blocks are left untouched.
+                     && canBreakBlock(player, blockPos, state)) {
+                     player.world.destroyBlock(blockPos, true);
+                 }
             }
         });
 
