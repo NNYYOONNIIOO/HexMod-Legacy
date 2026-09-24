@@ -50,6 +50,11 @@ public class Mishap extends CastingException {
     private double targetDistance = Double.NaN;
     private int targetDimension = Integer.MIN_VALUE;
     private String targetUuid;
+    private boolean locationRecorded;
+    private double locationX = Double.NaN;
+    private double locationY = Double.NaN;
+    private double locationZ = Double.NaN;
+    private int locationDimension = Integer.MIN_VALUE;
     private boolean permissionChecked;
     private boolean permissionAllowed = true;
 
@@ -162,6 +167,26 @@ public class Mishap extends CastingException {
         return targetUuid;
     }
 
+    public boolean hasLocationContext() {
+        return locationRecorded;
+    }
+
+    public double getLocationX() {
+        return locationX;
+    }
+
+    public double getLocationY() {
+        return locationY;
+    }
+
+    public double getLocationZ() {
+        return locationZ;
+    }
+
+    public int getLocationDimension() {
+        return locationDimension;
+    }
+
     public boolean isPermissionChecked() {
         return permissionChecked;
     }
@@ -178,6 +203,19 @@ public class Mishap extends CastingException {
         targetDistance = caster == null ? Double.NaN : caster.getDistance(target);
         targetDimension = target.dimension;
         targetUuid = target.getUniqueID() == null ? null : target.getUniqueID().toString();
+        return this;
+    }
+
+    /** Attach the world position that an action was validating or editing. */
+    public Mishap withLocation(double x, double y, double z, int dimension) {
+        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
+            return this;
+        }
+        locationRecorded = true;
+        locationX = x;
+        locationY = y;
+        locationZ = z;
+        locationDimension = dimension;
         return this;
     }
 
@@ -240,9 +278,11 @@ public class Mishap extends CastingException {
             return (Mishap) exception;
         }
         String message = exception == null ? null : exception.getMessage();
-        return new Mishap(classify(message), message, exception, pattern,
+        Mishap mishap = new Mishap(classify(message), message, exception, pattern,
             actionId, caster,
             parenthesisDepth, operation);
+        mishap.inferPermissionFailure(message);
+        return mishap;
     }
 
     /** Convert an unexpected action exception into an internal Mishap. */
@@ -269,6 +309,55 @@ public class Mishap extends CastingException {
             return Kind.UNKNOWN;
         }
         String message = raw.toLowerCase(Locale.ROOT);
+        // The legacy action table reports stable translation keys. Prefer
+        // those keys over broad English substring matching so a future
+        // translation or an item named "entity" cannot change the category.
+        if (message.contains("not_enough_media")) {
+            return Kind.NOT_ENOUGH_MEDIA;
+        }
+        if (message.contains("invalid_pattern")
+            || message.contains("no action is registered")) {
+            return Kind.INVALID_PATTERN;
+        }
+        if (message.contains("stack_underflow") || message.contains("not_enough_args")
+            || message.contains("no_args")) {
+            return Kind.NOT_ENOUGH_ARGUMENTS;
+        }
+        if (message.contains("permission_denied") || message.contains("_forbidden")
+            || message.contains("disallowed")) {
+            return Kind.PERMISSION_DENIED;
+        }
+        if (message.contains("_context") || message.contains("no_media_context")) {
+            return Kind.INVALID_CONTEXT;
+        }
+        if (message.contains("_range") || message.contains("out_of_range")
+            || message.contains("wrong_dimension") || message.contains("_position")
+            || message.contains("location")) {
+            return Kind.BAD_LOCATION;
+        }
+        if (message.contains("entity_unavailable") || message.contains("_entity")
+            || message.contains("_mob") || message.contains("_living")
+            || message.contains("potion_target") || message.contains("brainsweep_mob")) {
+            return Kind.BAD_ENTITY;
+        }
+        if (message.contains("_item") || message.contains("_holder")
+            || message.contains("_bottle") || message.contains("_dye")
+            || message.contains("place_block_item") || message.contains("media_item")) {
+            return Kind.BAD_ITEM;
+        }
+        if (message.contains("_block") || message.contains("_sapling")
+            || message.contains("_recipe") || message.contains("akashic")) {
+            return Kind.BAD_BLOCK;
+        }
+        if (message.contains("_args") || message.contains("_duration")
+            || message.contains("_potency") || message.contains("_cost")
+            || message.contains("finite") || message.contains("bounded")
+            || message.contains("_zero") || message.contains("invalid")) {
+            return Kind.INVALID_VALUE;
+        }
+        if (message.contains("_context") || message.contains("no_media_context")) {
+            return Kind.INVALID_CONTEXT;
+        }
         if (message.contains("no action is registered")
             || message.contains("invalid pattern")) {
             return Kind.INVALID_PATTERN;
@@ -311,5 +400,17 @@ public class Mishap extends CastingException {
             return Kind.INVALID_VALUE;
         }
         return Kind.UNKNOWN;
+    }
+
+    private void inferPermissionFailure(String raw) {
+        if (raw == null) {
+            return;
+        }
+        String message = raw.toLowerCase(Locale.ROOT);
+        if (message.contains("_forbidden") || message.contains("permission_denied")
+            || message.contains("disallowed")) {
+            permissionChecked = true;
+            permissionAllowed = false;
+        }
     }
 }

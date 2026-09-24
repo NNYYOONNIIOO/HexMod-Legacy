@@ -139,6 +139,15 @@ public final class CastingVM {
     private MediaInventoryHelper.MediaTransaction mediaTransaction;
     private int evaluationDepth;
     private Mishap lastMishap;
+    /** Transient context collected while the currently executing action runs. */
+    private Entity mishapTarget;
+    private boolean mishapLocationRecorded;
+    private double mishapLocationX;
+    private double mishapLocationY;
+    private double mishapLocationZ;
+    private int mishapLocationDimension = Integer.MIN_VALUE;
+    private boolean mishapPermissionChecked;
+    private boolean mishapPermissionAllowed = true;
     /** Highest-precedence sound produced by the current evaluation. */
     private EvalSound sound = HexEvalSounds.NOTHING;
 
@@ -290,6 +299,59 @@ public final class CastingVM {
     /** The structured Mishap produced by the latest failed operation. */
     public Mishap getLastMishap() {
         return lastMishap;
+    }
+
+    /** Record an entity an action is resolving or validating for a Mishap. */
+    public void recordMishapTarget(Entity target) {
+        if (target != null) {
+            mishapTarget = target;
+        }
+    }
+
+    /** Record the position an action is validating or editing for a Mishap. */
+    public void recordMishapLocation(double x, double y, double z, int dimension) {
+        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
+            return;
+        }
+        mishapLocationRecorded = true;
+        mishapLocationX = x;
+        mishapLocationY = y;
+        mishapLocationZ = z;
+        mishapLocationDimension = dimension;
+    }
+
+    /** Record the result of a permission check for a Mishap. */
+    public void recordMishapPermission(boolean allowed) {
+        mishapPermissionChecked = true;
+        mishapPermissionAllowed = allowed;
+    }
+
+    private void clearMishapContext() {
+        mishapTarget = null;
+        mishapLocationRecorded = false;
+        mishapLocationX = 0.0D;
+        mishapLocationY = 0.0D;
+        mishapLocationZ = 0.0D;
+        mishapLocationDimension = Integer.MIN_VALUE;
+        mishapPermissionChecked = false;
+        mishapPermissionAllowed = true;
+    }
+
+    private Mishap attachMishapContext(Mishap mishap) {
+        if (mishap == null) {
+            return null;
+        }
+        if (mishapTarget != null) {
+            mishap.withTarget(mishapTarget);
+        }
+        if (mishapLocationRecorded) {
+            mishap.withLocation(mishapLocationX, mishapLocationY,
+                mishapLocationZ, mishapLocationDimension);
+        }
+        if (mishapPermissionChecked) {
+            mishap.withPermission(true, mishapPermissionAllowed);
+        }
+        return mishap;
     }
 
     /** Return the sound selected by the actions evaluated so far. */
@@ -768,6 +830,7 @@ public final class CastingVM {
         operationsConsumed++;
         int previousLimit = activeOperationLimit;
         activeOperationLimit = maxOperations;
+        clearMishapContext();
         try {
             if (escapeNext) {
                 escapeNext = false;
@@ -786,14 +849,14 @@ public final class CastingVM {
             recordSound(HexEvalSounds.forAction(action, actionId));
         } catch (CastingException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            Mishap mishap = Mishap.from(exception, pattern, actionId, player,
-                parenCount, operationsConsumed);
+            Mishap mishap = attachMishapContext(Mishap.from(exception, pattern,
+                actionId, player, parenCount, operationsConsumed));
             lastMishap = mishap;
             throw mishap;
         } catch (RuntimeException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            Mishap mishap = Mishap.fromRuntime(exception, pattern, actionId, player,
-                parenCount, operationsConsumed);
+            Mishap mishap = attachMishapContext(Mishap.fromRuntime(exception,
+                pattern, actionId, player, parenCount, operationsConsumed));
             lastMishap = mishap;
             throw mishap;
         } finally {

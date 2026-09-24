@@ -1073,7 +1073,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (target instanceof EntityIota) {
                     net.minecraft.entity.Entity entity = resolveEntity(
                         (EntityIota) target, vm);
-                    requireEntityInRange(player, entity,
+                    requireEntityInRange(vm, player, entity,
                         "hexcasting.error.ignite_range");
                     vm.consumeMedia(MediaConstants.DUST_UNIT);
                     if (!player.world.isRemote) {
@@ -1089,7 +1089,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.ignite_range");
                 if (!player.world.isBlockModifiable(player, blockPos)
@@ -1132,7 +1132,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.extinguish_range");
                 if (!player.world.isBlockModifiable(player, blockPos)
@@ -1210,7 +1210,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.add_motion_args");
                 }
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
-                requireEntityInRange(vm.getPlayer(), entity,
+                requireEntityInRange(vm, vm.getPlayer(), entity,
                     "hexcasting.error.add_motion_range");
                 net.minecraft.util.math.Vec3d motion = motionIota.getValue();
                 double motionLengthSquared = motion.x * motion.x
@@ -1267,7 +1267,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.beep_args");
                 }
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
-                requireVecInRange(player, position, "hexcasting.error.beep_range");
+                requireVecInRange(vm, player, position, "hexcasting.error.beep_range");
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
                 net.minecraft.util.SoundEvent sound;
                 switch (instrument) {
@@ -1417,7 +1417,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.break_block_range");
                 if (!player.world.isBlockModifiable(player, blockPos)
@@ -1458,7 +1458,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
-                requireVecInRange(vm.getPlayer(), start, "hexcasting.error.raycast_range");
+                requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_zero");
                 }
@@ -1501,7 +1501,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
-                requireVecInRange(vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
+                requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
                 if (vector.lengthVector() == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_axis_zero");
                 }
@@ -1546,7 +1546,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
-                requireVecInRange(caster, start, "hexcasting.error.raycast_entity_range");
+                requireVecInRange(vm, caster, start, "hexcasting.error.raycast_entity_range");
                 double length = vector.lengthVector();
                 if (length == 0.0D) {
                     throw new CastingException("hexcasting.error.raycast_entity_zero");
@@ -1663,7 +1663,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
-                requireVecInRange(player, position, "hexcasting.error.get_entity_range");
+                requireVecInRange(vm, player, position, "hexcasting.error.get_entity_range");
                 net.minecraft.util.math.AxisAlignedBB area =
                     new net.minecraft.util.math.AxisAlignedBB(
                         position.x - 0.5D, position.y - 0.5D, position.z - 0.5D,
@@ -1799,7 +1799,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.zone_entity_radius");
                 }
                 net.minecraft.util.math.Vec3d position = stack.pop(Vec3Iota.class).getValue();
-                requireVecInRange(player, position, "hexcasting.error.zone_entity_range");
+                requireVecInRange(vm, player, position, "hexcasting.error.zone_entity_range");
                 net.minecraft.util.math.AxisAlignedBB area = new net.minecraft.util.math.AxisAlignedBB(
                     position.x - radius, position.y - radius, position.z - radius,
                     position.x + radius, position.y + radius, position.z + radius);
@@ -2003,7 +2003,7 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                 if (!(entity instanceof net.minecraft.entity.item.EntityItem)) {
                     throw new CastingException("hexcasting.error.recharge_entity");
                 }
-                requireEntityInRange(vm.getPlayer(), entity,
+                requireEntityInRange(vm, vm.getPlayer(), entity,
                     "hexcasting.error.recharge_range");
 
                 net.minecraft.entity.item.EntityItem droppedEntity =
@@ -2314,7 +2314,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
                 if (!player.world.isBlockModifiable(player, position)
@@ -2388,7 +2388,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(stack.pop(Vec3Iota.class));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
                 if (!player.world.isBlockModifiable(player, position)
@@ -2656,7 +2656,7 @@ throw new CastingException("hexcasting.error.get_media_context");
             }
             net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
             net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
-            requireEntityInRange(caster, target, "hexcasting.error.blink_range");
+            requireEntityInRange(vm, caster, target, "hexcasting.error.blink_range");
             double delta = deltaIota.getValue();
             if (Double.isNaN(delta) || Double.isInfinite(delta)) {
                 throw new CastingException("hexcasting.error.blink_position");
@@ -2710,7 +2710,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     stack.pop(Vec3Iota.class));
-                requireVecInRange(player, new net.minecraft.util.math.Vec3d(
+                requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.place_block_range");
                 if (!player.world.isBlockModifiable(player, position)
@@ -2890,7 +2890,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     || potency < 1.0D || potency > 127.0D) {
                     throw new CastingException("hexcasting.error.potion_potency");
                 }
-                requireEntityInRange(vm.getPlayer(), target,
+                requireEntityInRange(vm, vm.getPlayer(), target,
                     "hexcasting.error.potion_range");
                 double potencyCost = potencyCubic
                     ? potency * potency * potency : potency * potency;
@@ -3453,7 +3453,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.Vec3d rawPosition = positionIota.getValue();
-                requireVecInRange(player, rawPosition, "hexcasting.error.brainsweep_range");
+                requireVecInRange(vm, player, rawPosition, "hexcasting.error.brainsweep_range");
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 if (!(entity instanceof net.minecraft.entity.EntityLiving)) {
                     throw new CastingException("hexcasting.error.brainsweep_mob");
@@ -3463,7 +3463,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (living.isDead) {
                     throw new CastingException("hexcasting.error.brainsweep_mob");
                 }
-                requireEntityInRange(player, living, "hexcasting.error.brainsweep_range");
+                requireEntityInRange(vm, player, living, "hexcasting.error.brainsweep_range");
                 net.minecraft.util.math.BlockPos target = blockPosition(positionIota);
                 if (!player.world.isBlockModifiable(player, target)
                     || !player.canPlayerEdit(target, net.minecraft.util.EnumFacing.UP,
@@ -3609,7 +3609,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.item.EntityItem itemEntity =
                     (net.minecraft.entity.item.EntityItem) sourceEntity;
-                requireEntityInRange(player, itemEntity,
+                requireEntityInRange(vm, player, itemEntity,
                     "hexcasting.error.craft_battery_range");
                 net.minecraft.item.ItemStack bottle = vm.getHeldItemToOperateOn(
                     candidate -> candidate != null && !candidate.isEmpty()
@@ -3976,9 +3976,15 @@ throw new CastingException("hexcasting.error.get_media_context");
     }
 
     private static void requireVecInRange(
+        CastingVM vm,
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.util.math.Vec3d position,
         String errorKey) throws CastingException {
+        if (vm != null && position != null && player != null) {
+            vm.recordMishapLocation(position.x, position.y, position.z,
+                player.world == null || player.world.provider == null
+                    ? Integer.MIN_VALUE : player.world.provider.getDimension());
+        }
         if (!isVecInRange(player, position)) {
             throw new CastingException(errorKey);
         }
@@ -3991,9 +3997,13 @@ throw new CastingException("hexcasting.error.get_media_context");
     }
 
     private static void requireEntityInRange(
+        CastingVM vm,
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.entity.Entity entity,
         String errorKey) throws CastingException {
+        if (vm != null) {
+            vm.recordMishapTarget(entity);
+        }
         if (entity == null || entity.world != player.world
             || entity.isDead
             || entity instanceof net.minecraft.entity.player.EntityPlayer
@@ -4083,6 +4093,9 @@ throw new CastingException("hexcasting.error.get_media_context");
         }
         if (entity == null) {
             throw new CastingException("hexcasting.error.entity_unavailable");
+        }
+        if (vm != null) {
+            vm.recordMishapTarget(entity);
         }
         return entity;
     }
