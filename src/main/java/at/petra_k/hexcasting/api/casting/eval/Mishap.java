@@ -35,18 +35,18 @@ public class Mishap extends CastingException {
 
     private final Kind kind;
     private final String errorKey;
-    private final HexPattern pattern;
-    private final ResourceLocation actionId;
-    private final EntityPlayer caster;
-    private final int parenthesisDepth;
-    private final int operation;
+    private HexPattern pattern;
+    private ResourceLocation actionId;
+    private EntityPlayer caster;
+    private int parenthesisDepth;
+    private int operation;
     private final String detail;
-    private final String casterUuid;
-    private final String casterName;
-    private final int casterDimension;
-    private final double casterX;
-    private final double casterY;
-    private final double casterZ;
+    private String casterUuid;
+    private String casterName;
+    private int casterDimension;
+    private double casterX;
+    private double casterY;
+    private double casterZ;
     private double targetDistance = Double.NaN;
     private int targetDimension = Integer.MIN_VALUE;
     private String targetUuid;
@@ -57,6 +57,8 @@ public class Mishap extends CastingException {
     private int locationDimension = Integer.MIN_VALUE;
     private boolean permissionChecked;
     private boolean permissionAllowed = true;
+    private long mediaRequired = -1L;
+    private long mediaAvailable = -1L;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
@@ -127,6 +129,12 @@ public class Mishap extends CastingException {
         return actionId == null ? null : actionId.toString();
     }
 
+    /** Translation key for the action name shown before the mishap text. */
+    public String getActionDisplayKey() {
+        return actionId == null ? null
+            : "hexcasting.action." + actionId.getResourcePath();
+    }
+
     public String getCasterUuid() {
         return casterUuid;
     }
@@ -193,6 +201,50 @@ public class Mishap extends CastingException {
 
     public boolean isPermissionAllowed() {
         return permissionAllowed;
+    }
+
+    public boolean hasMediaContext() {
+        return mediaRequired >= 0L || mediaAvailable >= 0L;
+    }
+
+    public long getMediaRequired() {
+        return mediaRequired;
+    }
+
+    public long getMediaAvailable() {
+        return mediaAvailable;
+    }
+
+    /** Attach execution data to a Mishap created before the VM knew the action. */
+    public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
+                                      EntityPlayer caster, int parenthesisDepth,
+                                      int operation) {
+        if (pattern != null) {
+            this.pattern = pattern;
+        }
+        if (actionId != null) {
+            this.actionId = actionId;
+        }
+        if (caster != null) {
+            this.caster = caster;
+            this.casterUuid = caster.getUniqueID() == null
+                ? null : caster.getUniqueID().toString();
+            this.casterName = caster.getName();
+            this.casterDimension = caster.dimension;
+            this.casterX = caster.posX;
+            this.casterY = caster.posY;
+            this.casterZ = caster.posZ;
+        }
+        this.parenthesisDepth = Math.max(0, parenthesisDepth);
+        this.operation = Math.max(0, operation);
+        return this;
+    }
+
+    /** Record the amount involved in a media-shortage Mishap. */
+    public Mishap withMedia(long required, long available) {
+        mediaRequired = Math.max(0L, required);
+        mediaAvailable = Math.max(0L, available);
+        return this;
     }
 
     /** Attach target data without losing the original exception context. */
@@ -293,7 +345,16 @@ public class Mishap extends CastingException {
         String detail = exception == null ? "unknown" : exception.getClass().getSimpleName();
         return new Mishap(Kind.INTERNAL, "hexcasting.error.unknown", exception, pattern,
             actionId, caster,
-            parenthesisDepth, operation);
+            parenthesisDepth, operation, detail);
+    }
+
+    /** Construct the common media-shortage Mishap with quantitative context. */
+    public static Mishap notEnoughMedia(long required, long available) {
+        return new Mishap(Kind.NOT_ENOUGH_MEDIA,
+            "hexcasting.error.not_enough_media", null, null, null, null,
+            0, 0, "required=" + Math.max(0L, required)
+                + ", available=" + Math.max(0L, available))
+            .withMedia(required, available);
     }
 
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,

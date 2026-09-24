@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.interop.inline.HexInline;
@@ -233,9 +234,7 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
             player.sendMessage(new TextComponentString(
                 I18n.translateToLocalFormatted("hexcasting.message.thought_knot_result", value)));
         } catch (CastingException exception) {
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocalFormatted("hexcasting.message.thought_knot_error",
-                    exception.getMessage())));
+            MishapFeedback.send(player, exception);
         }
     }
 

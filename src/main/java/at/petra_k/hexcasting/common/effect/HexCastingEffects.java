@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.effect;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.lib.HexSounds;
@@ -44,7 +45,9 @@ public final class HexCastingEffects {
         }
         boolean success = outcome != null && outcome.isSuccess();
         HexPigmentSource source = playerPigment(player);
-        int color = success ? sample(source, player) : ERROR_COLOR;
+        Mishap mishap = outcome == null ? null : outcome.getMishap();
+        int color = success ? sample(source, player)
+            : mishap == null ? ERROR_COLOR : mishap.getAccentColor();
         if (pattern != null) {
             sendOrbitPattern(player, pattern, success ? ORBIT_LIFETIME : 36,
                 color, source, true);
@@ -68,6 +71,11 @@ public final class HexCastingEffects {
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
+            if (color != ERROR_COLOR) {
+                sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
+                    0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26,
+                    ERROR_COLOR, null);
+            }
             playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }
@@ -99,11 +107,19 @@ public final class HexCastingEffects {
     public static void onPortableCast(EntityPlayer player, EnumHand hand,
                                       List<HexPattern> patterns, boolean success,
                                       SoundEvent castSound) {
+        onPortableCast(player, hand, patterns, success, castSound, null);
+    }
+
+    /** Feedback with a structured Mishap accent for failed portable casts. */
+    public static void onPortableCast(EntityPlayer player, EnumHand hand,
+                                      List<HexPattern> patterns, boolean success,
+                                      SoundEvent castSound, Mishap mishap) {
         if (player == null || player.world == null || player.world.isRemote) {
             return;
         }
         HexPigmentSource source = HexPigmentSource.resolve(player, hand);
-        int color = success ? sample(source, player) : ERROR_COLOR;
+        int color = success ? sample(source, player)
+            : mishap == null ? ERROR_COLOR : mishap.getAccentColor();
         List<HexPattern> safePatterns = patterns == null
             ? Collections.<HexPattern>emptyList() : patterns;
         for (HexPattern pattern : safePatterns) {
@@ -123,6 +139,11 @@ public final class HexCastingEffects {
         } else {
             sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
                 0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26, color, null);
+            if (color != ERROR_COLOR) {
+                sendSpray(player, player.posX, player.posY + 0.8D, player.posZ,
+                    0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26,
+                    ERROR_COLOR, null);
+            }
             playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }

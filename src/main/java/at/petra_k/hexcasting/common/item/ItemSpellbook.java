@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.interop.inline.HexInline;
@@ -118,9 +119,7 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
                 I18n.translateToLocalFormatted("hexcasting.message.scroll_result",
                     displayPattern(pattern), resultText)));
         } catch (CastingException exception) {
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocalFormatted("hexcasting.message.scroll_error",
-                    exception.getMessage())));
+            MishapFeedback.send(player, exception);
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
     }

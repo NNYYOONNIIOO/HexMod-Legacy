@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.effect.HexCastingEffects;
@@ -59,10 +60,18 @@ public final class HexEvaluator {
             HexCastingEffects.onPortableCast(player, castingHand, patterns, true,
                 vm.getSound() == null ? null : vm.getSound().getSound());
         } catch (CastingException exception) {
-            HexCastingEffects.onPortableCast(player, castingHand, patterns, false);
+            Mishap mishap = MishapFeedback.asMishap(exception, null, null, player,
+                vm.getParenDepth(), vm.getOperationsConsumed());
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, false,
+                null, mishap);
             throw exception;
         } catch (RuntimeException exception) {
-            HexCastingEffects.onPortableCast(player, castingHand, patterns, false);
+            Mishap mishap = Mishap.fromRuntime(exception, null, null, player,
+                vm.getParenDepth(), vm.getOperationsConsumed())
+                .withExecutionContext(null, null, player,
+                    vm.getParenDepth(), vm.getOperationsConsumed());
+            HexCastingEffects.onPortableCast(player, castingHand, patterns, false,
+                null, mishap);
             throw exception;
         }
     }

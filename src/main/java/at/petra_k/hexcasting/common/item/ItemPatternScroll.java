@@ -8,6 +8,7 @@ import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.entity.EntityWallScroll;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -198,12 +199,7 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
                     )
                 ));
             } catch (CastingException exception) {
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocalFormatted(
-                        "hexcasting.message.scroll_error",
-                        exception.getMessage()
-                    )
-                ));
+                MishapFeedback.send(player, exception);
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);

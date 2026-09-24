@@ -7,7 +7,6 @@ import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
-import at.petra_k.hexcasting.interop.inline.HexInline;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,13 +14,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.translation.I18n;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Executes one newly drawn staff pattern with a resumable per-staff VM.
@@ -92,17 +88,19 @@ public final class StaffCastExecutor {
                                               ItemStack staff, HexPattern pattern) {
         if (player == null || staff == null || staff.isEmpty() || pattern == null) {
             return CastOutcome.failure(Resolution.ERRORED,
-                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE);
+                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE, null);
         }
         IHexCastingData castingData =
             player.getCapability(HexCapabilities.CASTING_DATA, null);
         if (castingData == null) {
-            sendError(player, "hexcasting.message.staff_error");
+            MishapFeedback.send(player,
+                new CastingException("hexcasting.message.staff_error"));
             return CastOutcome.failure(Resolution.ERRORED,
-                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE);
+                Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE, null);
         }
 
         CastingVM vm = null;
+        at.petra_k.hexcasting.api.casting.action.HexAction action = null;
         try {
             HexActionRegistry.bootstrap();
             vm = load(staff);
@@ -111,8 +109,7 @@ public final class StaffCastExecutor {
             vm.setCastingHand(hand);
             boolean wasEscaped = vm.isEscapeNext();
             boolean wasInParens = vm.getParenDepth() > 0;
-            at.petra_k.hexcasting.api.casting.action.HexAction action =
-                HexActionRegistry.get(pattern, player.world);
+            action = HexActionRegistry.get(pattern, player.world);
             boolean isCaptured = wasEscaped || (wasInParens
                 && (action == null || !action.executesInParentheses()));
             vm.enqueue(pattern);
@@ -122,25 +119,35 @@ public final class StaffCastExecutor {
                 wasInParens, vm);
             return CastOutcome.success(resolution, preview(vm),
                 vm.getStack().size(), vm.getParenDepth(), vm.isEscapeNext(),
-                isStackClear(vm), soundFor(vm, true));
+                isStackClear(vm), soundFor(vm, true), null);
         } catch (CastingException exception) {
+            Mishap mishap = exception instanceof Mishap
+                ? (Mishap) exception
+                : Mishap.from(exception, pattern,
+                    vm == null ? null : HexActionRegistry.idFor(action),
+                    player, vm == null ? 0 : vm.getParenDepth(),
+                    vm == null ? 0 : vm.getOperationsConsumed());
             if (vm != null) {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
-            sendError(player, exception);
+            MishapFeedback.send(player, mishap);
             return CastOutcome.failure(Resolution.ERRORED,
                 preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
-                soundFor(vm, false));
+                soundFor(vm, false), mishap);
         } catch (RuntimeException exception) {
+            Mishap mishap = Mishap.fromRuntime(exception, pattern,
+                HexActionRegistry.idFor(action), player,
+                vm == null ? 0 : vm.getParenDepth(),
+                vm == null ? 0 : vm.getOperationsConsumed());
             if (vm != null) {
                 vm.clearPendingWork();
                 save(staff, vm);
             }
-            sendError(player, new CastingException("hexcasting.message.staff_error", exception));
+            MishapFeedback.send(player, mishap);
             return CastOutcome.failure(Resolution.ERRORED,
                 preview(vm), stackSize(vm), parenDepth(vm), escapeNext(vm),
-                soundFor(vm, false));
+                soundFor(vm, false), mishap);
         }
     }
 
@@ -204,16 +211,16 @@ public final class StaffCastExecutor {
     public static CastOutcome getCurrentState(ItemStack staff) {
         if (staff == null || staff.isEmpty()) {
             return CastOutcome.success(Resolution.UNRESOLVED,
-                Collections.<String>emptyList(), 0, 0, false, true, null);
+                Collections.<String>emptyList(), 0, 0, false, true, null, null);
         }
         try {
             CastingVM vm = load(staff);
             return CastOutcome.success(Resolution.UNRESOLVED, preview(vm),
                 stackSize(vm), parenDepth(vm), escapeNext(vm),
-                isStackClear(vm), null);
+                isStackClear(vm), null, null);
         } catch (RuntimeException ignored) {
             return CastOutcome.success(Resolution.UNRESOLVED,
-                Collections.<String>emptyList(), 0, 0, false, false, null);
+                Collections.<String>emptyList(), 0, 0, false, false, null, null);
         }
     }
 
@@ -253,53 +260,6 @@ public final class StaffCastExecutor {
         tag.setTag(KEY_CASTING_STATE, vm.serializeState());
     }
 
-    private static void sendError(EntityPlayer player, String message) {
-        player.sendMessage(new TextComponentString(localizeError(message)));
-    }
-
-    private static void sendError(EntityPlayer player, CastingException exception) {
-        if (exception instanceof Mishap) {
-            Mishap mishap = (Mishap) exception;
-            if (mishap.getKind() == Mishap.Kind.INVALID_PATTERN) {
-                String pattern = mishap.getPattern() == null ? "?"
-                    : HexInline.formatPattern(mishap.getPattern());
-                player.sendMessage(new TextComponentString(I18n.translateToLocalFormatted(
-                    "hexcasting.message.pattern_unregistered", pattern)));
-                return;
-            }
-            String key = mishap.getDisplayKey();
-            String translated = I18n.translateToLocal(key);
-            if (!key.equals(translated)) {
-                player.sendMessage(new TextComponentString(translated));
-                return;
-            }
-        }
-        sendError(player, exception == null ? null : exception.getMessage());
-    }
-
-    private static String localizeError(String message) {
-        if (message == null || message.isEmpty()) {
-            return I18n.translateToLocal("hexcasting.message.staff_error");
-        }
-        String lower = message.toLowerCase(Locale.ROOT);
-        String marker = "no action is registered for pattern";
-        int markerIndex = lower.indexOf(marker);
-        if (markerIndex >= 0) {
-            String signature = message.substring(markerIndex + marker.length()).trim();
-            try {
-                signature = HexInline.formatPattern(HexPattern.fromSignature(signature));
-            } catch (IllegalArgumentException ignored) {
-                // Keep compatibility with older saved/error messages.
-            }
-            return I18n.translateToLocalFormatted(
-                "hexcasting.message.pattern_unregistered", signature);
-        }
-        String translated = I18n.translateToLocal(message);
-        return message.equals(translated)
-            ? I18n.translateToLocal("hexcasting.message.staff_error")
-            : translated;
-    }
-
     /** The solid outer-stroke colour used by the 1.20.1 staff GUI. */
     public enum Resolution {
         UNRESOLVED(0xFF7F7F7F),
@@ -328,10 +288,11 @@ public final class StaffCastExecutor {
         private final boolean escapeNext;
         private final boolean stackClear;
         private final SoundEvent sound;
+        private final Mishap mishap;
 
         private CastOutcome(Resolution resolution, List<String> stackPreview,
                             int stackSize, int parenDepth, boolean escapeNext,
-                            boolean stackClear, SoundEvent sound) {
+                            boolean stackClear, SoundEvent sound, Mishap mishap) {
             this.resolution = resolution == null ? Resolution.ERRORED : resolution;
             this.stackPreview = Collections.unmodifiableList(new ArrayList<>(
                 stackPreview == null ? Collections.<String>emptyList() : stackPreview));
@@ -340,22 +301,25 @@ public final class StaffCastExecutor {
             this.escapeNext = escapeNext;
             this.stackClear = stackClear;
             this.sound = sound;
+            this.mishap = mishap;
         }
 
         private static CastOutcome success(Resolution resolution,
                                            List<String> stackPreview,
                                            int stackSize, int parenDepth, boolean escapeNext,
-                                           boolean stackClear, SoundEvent sound) {
+                                           boolean stackClear, SoundEvent sound,
+                                           Mishap mishap) {
             return new CastOutcome(resolution, stackPreview, stackSize,
-                parenDepth, escapeNext, stackClear, sound);
+                parenDepth, escapeNext, stackClear, sound, mishap);
         }
 
         private static CastOutcome failure(Resolution resolution,
                                            List<String> stackPreview,
                                            int stackSize, int parenDepth,
-                                           boolean escapeNext, SoundEvent sound) {
+                                            boolean escapeNext, SoundEvent sound,
+                                            Mishap mishap) {
             return new CastOutcome(resolution, stackPreview, stackSize,
-                parenDepth, escapeNext, false, sound);
+                parenDepth, escapeNext, false, sound, mishap);
         }
 
         public boolean isSuccess() {
@@ -389,6 +353,10 @@ public final class StaffCastExecutor {
 
         public SoundEvent getSound() {
             return sound;
+        }
+
+        public Mishap getMishap() {
+            return mishap;
         }
     }
 }

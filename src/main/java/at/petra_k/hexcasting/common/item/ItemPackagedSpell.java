@@ -10,8 +10,10 @@ import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import at.petra_k.hexcasting.common.effect.HexCastingEffects;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -349,9 +351,12 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
                 player.renderBrokenItemStack(stack);
             }
         } catch (CastingException exception) {
-            player.sendMessage(new TextComponentString(
-                I18n.translateToLocalFormatted("hexcasting.message.staff_error", exception.getMessage())));
-            HexCastingEffects.onPortableCast(player, hand, visualPatterns, false);
+            Mishap mishap = MishapFeedback.asMishap(exception,
+                visualPatterns.isEmpty() ? null : visualPatterns.get(visualPatterns.size() - 1),
+                null, player, vm.getParenDepth(), vm.getOperationsConsumed());
+            MishapFeedback.send(player, mishap);
+            HexCastingEffects.onPortableCast(player, hand, visualPatterns, false,
+                null, mishap);
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);
     }

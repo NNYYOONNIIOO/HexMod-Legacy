@@ -849,14 +849,20 @@ public final class CastingVM {
             recordSound(HexEvalSounds.forAction(action, actionId));
         } catch (CastingException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            Mishap mishap = attachMishapContext(Mishap.from(exception, pattern,
-                actionId, player, parenCount, operationsConsumed));
+            Mishap mishap = Mishap.from(exception, pattern, actionId, player,
+                parenCount, operationsConsumed)
+                .withExecutionContext(pattern, actionId, player,
+                    parenCount, operationsConsumed);
+            mishap = attachMishapContext(mishap);
             lastMishap = mishap;
             throw mishap;
         } catch (RuntimeException exception) {
             recordSound(HexEvalSounds.MISHAP);
-            Mishap mishap = attachMishapContext(Mishap.fromRuntime(exception,
-                pattern, actionId, player, parenCount, operationsConsumed));
+            Mishap mishap = Mishap.fromRuntime(exception, pattern, actionId,
+                player, parenCount, operationsConsumed)
+                .withExecutionContext(pattern, actionId, player,
+                    parenCount, operationsConsumed);
+            mishap = attachMishapContext(mishap);
             lastMishap = mishap;
             throw mishap;
         } finally {
@@ -876,6 +882,10 @@ public final class CastingVM {
         }
         if (mediaTransaction == null) {
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
+        }
+        long available = mediaTransaction.getAvailableMedia();
+        if (available < amount) {
+            throw Mishap.notEnoughMedia(amount, available);
         }
         mediaTransaction.consume(amount);
     }
@@ -913,7 +923,9 @@ public final class CastingVM {
                 rollbackEvaluation(before);
             }
             Mishap mishap = Mishap.fromRuntime(exception, null, null, player,
-                parenCount, operationsConsumed);
+                parenCount, operationsConsumed)
+                .withExecutionContext(null, null, player,
+                    parenCount, operationsConsumed);
             lastMishap = mishap;
             throw mishap;
         } finally {
