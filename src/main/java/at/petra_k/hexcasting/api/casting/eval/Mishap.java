@@ -529,6 +529,9 @@ public class Mishap extends CastingException {
             || "hexcasting.error.brainsweep_mob".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
+            || "hexcasting.error.entity_data_expected".equals(key)
+            || "hexcasting.error.entity_data_range".equals(key)
+            || "hexcasting.error.entity_data_target".equals(key)
             || "hexcasting.error.blink_immune".equals(key)) {
             return Kind.BAD_ENTITY;
         }
