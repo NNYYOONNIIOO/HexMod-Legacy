@@ -1385,12 +1385,22 @@ public static final HexPattern BOOL_IF_PATTERN =
                     || strength < 0.0D || strength > 10.0D) {
                     throw new CastingException("hexcasting.error.explode_args");
                 }
+                net.minecraft.util.math.Vec3d position = positionIota.getValue();
+                requireVecInRange(vm, player, position,
+                    "hexcasting.error.explode_range");
+                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
+                    position.x, position.y, position.z);
+                boolean canEdit = hasEditPermission(vm, player, blockPos);
                 long mediaCost = (long) Math.ceil(MediaConstants.DUST_UNIT
                     * (3.0D * strength + (fire ? 1.0D : 0.125D)));
                 vm.consumeMedia(mediaCost);
-                net.minecraft.util.math.Vec3d position = positionIota.getValue();
-                player.world.newExplosion(player, position.x, position.y, position.z,
-                    (float) strength, fire, true);
+                // Modern Hex charges the spell before its rendered spell
+                // checks edit permissions.  Preserve that no-op-on-forbidden
+                // behavior while retaining the check in Mishap context.
+                if (canEdit) {
+                    player.world.newExplosion(player, position.x, position.y, position.z,
+                        (float) strength, fire, true);
+                }
             }
         };
     }
@@ -3986,6 +3996,35 @@ throw new CastingException("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInRange(player, position)) {
+            throw new CastingException(errorKey);
+        }
+    }
+
+    /**
+     * Check the same edit permission used by world-mutating actions and keep
+     * the result in the VM so a resulting Mishap can explain the denial.
+     */
+    private static boolean hasEditPermission(
+        CastingVM vm,
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position) {
+        boolean allowed = player != null && player.world != null && position != null
+            && player.world.isBlockModifiable(player, position)
+            && player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
+                net.minecraft.item.ItemStack.EMPTY);
+        if (vm != null) {
+            vm.recordMishapPermission(allowed);
+        }
+        return allowed;
+    }
+
+    /** Require an editable position, preserving the permission result for Mishap. */
+    private static void requireEditPermission(
+        CastingVM vm,
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position,
+        String errorKey) throws CastingException {
+        if (!hasEditPermission(vm, player, position)) {
             throw new CastingException(errorKey);
         }
     }
