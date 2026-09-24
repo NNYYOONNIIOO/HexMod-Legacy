@@ -1095,6 +1095,7 @@ hexcasting.error.teleport_great_context=此动作需要有效的玩家施法上�
 hexcasting.error.teleport_great_expected=大传送需要一个实体和一个位移向量。
 hexcasting.error.teleport_great_position=位移必须导向有限的位置。
 hexcasting.error.teleport_great_dimension=目标不在施法者所在的维度。
+hexcasting.error.teleport_great_range=目标实体超出施法范围。
 hexcasting.action.brainsweep=剥离意识
 hexcasting.error.brainsweep_context=此动作需要有效的玩家施法上下文。
 hexcasting.error.brainsweep_expected=剥离意识需要一个生物和一个位置。

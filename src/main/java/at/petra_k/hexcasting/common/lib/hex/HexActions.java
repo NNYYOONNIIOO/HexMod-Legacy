@@ -3696,54 +3696,48 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException("hexcasting.error.teleport_great_context");
                 }
-                Iota first = stack.pop();
-                Iota second = stack.pop();
-                EntityIota entityIota;
-                Vec3Iota deltaIota;
-                if (first instanceof EntityIota && second instanceof Vec3Iota) {
-                    entityIota = (EntityIota) first;
-                    deltaIota = (Vec3Iota) second;
-                } else if (second instanceof EntityIota && first instanceof Vec3Iota) {
-                    entityIota = (EntityIota) second;
-                    deltaIota = (Vec3Iota) first;
-                } else {
+                Vec3Iota deltaIota = stack.pop(Vec3Iota.class);
+                EntityIota entityIota = stack.pop(EntityIota.class);
+                net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
+                requireEntityInRange(vm, vm.getPlayer(), target,
+                    "hexcasting.error.teleport_great_range");
+                if (isTeleportImmune(target)) {
+                    throw new CastingException("hexcasting.error.blink_immune");
+                }
+                if (isStickyTeleporter(target)) {
+                    for (net.minecraft.entity.Entity passenger
+                        : new java.util.ArrayList<>(target.getPassengers())) {
+                        if (isTeleportImmune(passenger)) {
+                            vm.recordMishapTarget(passenger);
+                            throw new CastingException("hexcasting.error.blink_immune");
+                        }
+                    }
+                }
+                if (deltaIota == null) {
                     throw new CastingException("hexcasting.error.teleport_great_expected");
                 }
-                net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
                 net.minecraft.util.math.Vec3d delta = deltaIota.getValue();
-                if (Double.isNaN(delta.x) || Double.isNaN(delta.y)
-                    || Double.isNaN(delta.z) || Double.isInfinite(delta.x)
-                    || Double.isInfinite(delta.y) || Double.isInfinite(delta.z)) {
+                if (!isFiniteVector(delta)) {
                     throw new CastingException("hexcasting.error.teleport_great_position");
                 }
-                if (target.world != vm.getPlayer().world) {
-                    throw new CastingException("hexcasting.error.teleport_great_dimension");
-                }
-                double x = target.posX + delta.x;
-                double y = target.posY + delta.y;
-                double z = target.posZ + delta.z;
-                if (Double.isInfinite(x) || Double.isInfinite(y) || Double.isInfinite(z)
-                    || Math.abs(x) > 30000000.0D || Math.abs(y) > 30000000.0D
-                    || Math.abs(z) > 30000000.0D) {
+                net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
+                    target.posX + delta.x, target.posY + delta.y,
+                    target.posZ + delta.z);
+                if (!isVecInWorld(destination)
+                    || !isVecInWorld(new net.minecraft.util.math.Vec3d(
+                        destination.x, destination.y - 1.0D, destination.z))) {
                     throw new CastingException("hexcasting.error.teleport_great_position");
                 }
                 vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
                 if (!vm.getPlayer().world.isRemote) {
-                    // Greater Teleport forcibly detaches the target from
-                    // non-sticky vehicles/passengers, matching the upstream
-                    // action's ordinary-entity behavior.
-                    target.dismountRidingEntity();
-                    for (net.minecraft.entity.Entity passenger
-                        : new java.util.ArrayList<>(target.getPassengers())) {
-                        passenger.dismountRidingEntity();
-                    }
-                    target.setPosition(x, y, z);
+                    prepareTeleport(target);
+                    target.setPosition(destination.x, destination.y, destination.z);
                     target.motionX = 0.0D;
                     target.motionY = 0.0D;
                     target.motionZ = 0.0D;
                     if (target instanceof net.minecraft.entity.player.EntityPlayer) {
                         ((net.minecraft.entity.player.EntityPlayer) target).setPositionAndUpdate(
-                            x, y, z);
+                            destination.x, destination.y, destination.z);
                     }
                 }
             }

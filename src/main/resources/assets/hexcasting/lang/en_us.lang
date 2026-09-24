@@ -395,6 +395,7 @@ hexcasting.error.teleport_great_context=This action requires an active player.
 hexcasting.error.teleport_great_expected=Great Teleport expects an entity and a displacement vector.
 hexcasting.error.teleport_great_position=The displacement must lead to a finite position.
 hexcasting.error.teleport_great_dimension=The target is not in the caster's dimension.
+hexcasting.error.teleport_great_range=The target entity is out of range.
 hexcasting.action.brainsweep=Flay Mind
 hexcasting.error.brainsweep_context=This action requires an active player.
 hexcasting.error.brainsweep_expected=Flay Mind expects a mob and a position.
