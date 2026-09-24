@@ -440,85 +440,32 @@ public class Mishap extends CastingException {
             return Kind.UNKNOWN;
         }
         String message = raw.toLowerCase(Locale.ROOT);
-        // The legacy action table reports stable translation keys. Prefer
-        // those keys over broad English substring matching so a future
-        // translation or an item named "entity" cannot change the category.
-        if (message.contains("not_enough_media")) {
+        // Actions emit stable translation keys. Classify those keys first so
+        // a future translation, or a word such as "entity" in an item name,
+        // cannot change the gameplay category or its side effects.
+        if (message.startsWith("hexcasting.")) {
+            return classifyTranslationKey(message);
+        }
+
+        // Keep compatibility with old callers that still throw prose rather
+        // than a translation key. This branch is intentionally conservative;
+        // new actions should use a stable key above.
+        if (message.contains("not enough media") || message.contains("not_enough_media")) {
             return Kind.NOT_ENOUGH_MEDIA;
         }
-        if (message.contains("invalid_pattern")
-            || message.contains("no action is registered")) {
-            return Kind.INVALID_PATTERN;
-        }
-        if (message.contains("brainsweep_already")) {
-            return Kind.ALREADY_BRAINSWEPT;
-        }
-        if (message.contains("brainsweep_recipe")) {
-            return Kind.BAD_BRAINSWEEP;
-        }
-        if (message.contains("no_akashic_record")) {
-            return Kind.NO_AKASHIC_RECORD;
-        }
-        if (message.contains("stack_underflow") || message.contains("not_enough_args")
-            || message.contains("no_args")) {
-            return Kind.NOT_ENOUGH_ARGUMENTS;
-        }
-        if (message.contains("permission_denied") || message.contains("_forbidden")
-            || message.contains("disallowed")) {
-            return Kind.PERMISSION_DENIED;
-        }
-        if (message.contains("_context") || message.contains("no_media_context")) {
-            return Kind.INVALID_CONTEXT;
-        }
-        if (message.contains("operation limit") || message.contains("too many patterns")
-            || message.contains("evaluated too many") || message.contains("size limit")) {
-            if (message.contains("stack") && message.contains("size")) {
-                return Kind.STACK_SIZE;
-            }
-            return Kind.EVALUATION_LIMIT;
-        }
-        if (message.contains("_range") || message.contains("out_of_range")
-            || message.contains("wrong_dimension") || message.contains("_position")
-            || message.contains("location")) {
-            return Kind.BAD_LOCATION;
-        }
-        if (message.contains("entity_unavailable") || message.contains("_entity")
-            || message.contains("_mob") || message.contains("_living")
-            || message.contains("potion_target") || message.contains("brainsweep_mob")) {
-            return Kind.BAD_ENTITY;
-        }
-        if (message.contains("_item") || message.contains("_holder")
-            || message.contains("_bottle") || message.contains("_dye")
-            || message.contains("place_block_item") || message.contains("media_item")) {
-            return Kind.BAD_ITEM;
-        }
-        if (message.contains("_block") || message.contains("_sapling")
-            || message.contains("_recipe") || message.contains("akashic")) {
-            return Kind.BAD_BLOCK;
-        }
-        if (message.contains("_args") || message.contains("_duration")
-            || message.contains("_potency") || message.contains("_cost")
-            || message.contains("finite") || message.contains("bounded")
-            || message.contains("_zero") || message.contains("invalid")) {
-            return Kind.INVALID_VALUE;
-        }
-        if (message.contains("_context") || message.contains("no_media_context")) {
-            return Kind.INVALID_CONTEXT;
-        }
-        if (message.contains("no action is registered")
-            || message.contains("invalid pattern")) {
+        if (message.contains("no action is registered") || message.contains("invalid pattern")) {
             return Kind.INVALID_PATTERN;
         }
         if (message.contains("operation limit") || message.contains("too many patterns")
             || message.contains("evaluated too many")) {
             return Kind.EVALUATION_LIMIT;
         }
-        if (message.contains("not_enough_media") || message.contains("not enough media")) {
-            return Kind.NOT_ENOUGH_MEDIA;
-        }
-        if (message.contains("forbidden") || message.contains("permission")
+        if (message.contains("permission") || message.contains("forbidden")
             || message.contains("disallowed")) {
             return Kind.PERMISSION_DENIED;
+        }
+        if (message.contains("context") || message.contains("requires")) {
+            return Kind.INVALID_CONTEXT;
         }
         if (message.contains("stack") || message.contains("argument")
             || message.contains("args") || message.contains("expects")) {
@@ -539,11 +486,79 @@ public class Mishap extends CastingException {
             || message.contains("dimension") || message.contains("position")) {
             return Kind.BAD_LOCATION;
         }
-        if (message.contains("context") || message.contains("requires")) {
-            return Kind.INVALID_CONTEXT;
-        }
         if (message.contains("expected") || message.contains("finite")
             || message.contains("invalid")) {
+            return Kind.INVALID_VALUE;
+        }
+        return Kind.UNKNOWN;
+    }
+
+    private static Kind classifyTranslationKey(String key) {
+        if ("hexcasting.error.not_enough_media".equals(key)) {
+            return Kind.NOT_ENOUGH_MEDIA;
+        }
+        if ("hexcasting.error.invalid_pattern".equals(key)
+            || "hexcasting.mishap.invalid_pattern_generic".equals(key)) {
+            return Kind.INVALID_PATTERN;
+        }
+        if ("hexcasting.error.brainsweep_already".equals(key)) {
+            return Kind.ALREADY_BRAINSWEPT;
+        }
+        if ("hexcasting.error.brainsweep_recipe".equals(key)) {
+            return Kind.BAD_BRAINSWEEP;
+        }
+        if ("hexcasting.error.no_akashic_record".equals(key)) {
+            return Kind.NO_AKASHIC_RECORD;
+        }
+        if ("hexcasting.mishap.no_args".equals(key)
+            || "hexcasting.mishap.not_enough_args".equals(key)
+            || "hexcasting.error.stack_underflow".equals(key)) {
+            return Kind.NOT_ENOUGH_ARGUMENTS;
+        }
+        if ("hexcasting.mishap.stack_size".equals(key)) {
+            return Kind.STACK_SIZE;
+        }
+        if ("hexcasting.error.permission_denied".equals(key)
+            || key.endsWith("_forbidden") || key.endsWith("_disallowed")) {
+            return Kind.PERMISSION_DENIED;
+        }
+        if (key.endsWith("_context") || "hexcasting.error.no_media_context".equals(key)) {
+            return Kind.INVALID_CONTEXT;
+        }
+        if (key.contains("operation_limit") || key.contains("too_many_patterns")
+            || key.contains("evaluated_too_many")) {
+            return Kind.EVALUATION_LIMIT;
+        }
+        if (key.endsWith("_range") || key.endsWith("_out_of_range")
+            || key.endsWith("_wrong_dimension") || key.endsWith("_location")
+            || key.endsWith("_dimension")) {
+            return Kind.BAD_LOCATION;
+        }
+        if ("hexcasting.error.entity_unavailable".equals(key)
+            || "hexcasting.error.flight_target".equals(key)
+            || "hexcasting.error.potion_target".equals(key)
+            || "hexcasting.error.recharge_entity".equals(key)
+            || "hexcasting.error.brainsweep_mob".equals(key)) {
+            return Kind.BAD_ENTITY;
+        }
+        if ("hexcasting.error.compare_item_expected".equals(key)
+            || key.endsWith("_item") || key.endsWith("_holder")
+            || key.endsWith("_bottle") || key.endsWith("_dye")
+            || key.contains("media_item") || key.startsWith("hexcasting.error.data_holder")) {
+            return Kind.BAD_ITEM;
+        }
+        if ("hexcasting.error.compare_block_expected".equals(key)
+            || key.endsWith("_block") || key.endsWith("_sapling")
+            || key.endsWith("_recipe") || key.endsWith("_target")
+            || key.endsWith("_missing") || key.endsWith("_failed")) {
+            return Kind.BAD_BLOCK;
+        }
+        if (key.endsWith("_args") || key.endsWith("_expected")
+            || key.endsWith("_duration") || key.endsWith("_potency")
+            || key.endsWith("_cost") || key.endsWith("_position")
+            || key.endsWith("_zero") || key.endsWith("_radius")
+            || key.endsWith("_out_of_bounds") || key.contains("bounded_integer")
+            || key.contains("finite") || key.contains("invalid")) {
             return Kind.INVALID_VALUE;
         }
         return Kind.UNKNOWN;
