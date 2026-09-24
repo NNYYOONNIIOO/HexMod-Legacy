@@ -2230,6 +2230,14 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
         throw new CastingException("hexcasting.error.data_holder_missing");
     }
 
+    /** Resolve an EntityIota without requiring a live VM context. */
+    private static net.minecraft.entity.Entity getRechargeEntity(Object value) {
+        if (!(value instanceof EntityIota)) {
+            return null;
+        }
+        return ((EntityIota) value).getEntity();
+    }
+
    /** Return available player media in dust units without consuming it. */
     public static final ResourceLocation GET_MEDIA_ID =
         new ResourceLocation(HexAPI.MOD_ID, "get_media");
@@ -3888,7 +3896,7 @@ throw new CastingException("hexcasting.error.get_media_context");
     private static boolean isLivingEntity(net.minecraft.entity.Entity entity) {
         return !(entity instanceof net.minecraft.entity.item.EntityArmorStand)
             && (entity instanceof net.minecraft.entity.EntityLivingBase
-                || entity instanceof net.minecraft.entity.boss.EntityDragonPart);
+                || entity instanceof net.minecraft.entity.MultiPartEntityPart);
     }
 
     private static boolean isReasonablySelectable(
@@ -3918,6 +3926,18 @@ throw new CastingException("hexcasting.error.get_media_context");
         double dz = position.z - player.posZ;
         return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D
             && position.y >= 0.0D && position.y < 256.0D
+            && Math.abs(position.x) <= 30000000.0D
+            && Math.abs(position.z) <= 30000000.0D;
+    }
+
+    private static boolean isVecInWorld(net.minecraft.util.math.Vec3d position) {
+        if (position == null
+            || Double.isNaN(position.x) || Double.isInfinite(position.x)
+            || Double.isNaN(position.y) || Double.isInfinite(position.y)
+            || Double.isNaN(position.z) || Double.isInfinite(position.z)) {
+            return false;
+        }
+        return position.y >= 0.0D && position.y < 256.0D
             && Math.abs(position.x) <= 30000000.0D
             && Math.abs(position.z) <= 30000000.0D;
     }
