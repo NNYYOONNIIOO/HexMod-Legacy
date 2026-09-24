@@ -2012,25 +2012,13 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                 if (!(entity instanceof net.minecraft.entity.item.EntityItem)) {
                     throw new CastingException("hexcasting.error.recharge_entity");
                 }
-                requireEntityInRange(vm, vm.getPlayer(), entity,
-                    "hexcasting.error.recharge_range");
-
-                net.minecraft.entity.item.EntityItem droppedEntity =
-                    (net.minecraft.entity.item.EntityItem) entity;
-                net.minecraft.item.ItemStack dropped = droppedEntity.getItem();
-                if (dropped == null || dropped.isEmpty()) {
-                    throw new CastingException("hexcasting.error.recharge_item");
-                }
-
-                if (!MediaInventoryHelper.isMediaItem(dropped)) {
-                    throw new CastingException("hexcasting.error.recharge_item");
-                }
-
                 net.minecraft.item.ItemStack offHand = vm.getHeldItemToOperateOn(
                     stackInHand -> stackInHand != null && !stackInHand.isEmpty()
                         && stackInHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem
                         && ((at.petra_k.hexcasting.api.item.MediaHolderItem) stackInHand.getItem())
-                            .canRecharge(stackInHand));
+                            .canRecharge(stackInHand)
+                        && ((at.petra_k.hexcasting.api.item.MediaHolderItem) stackInHand.getItem())
+                            .insertMedia(stackInHand, -1L, true) > 0L);
                 if (offHand == null || offHand.isEmpty()
                     || !(offHand.getItem() instanceof at.petra_k.hexcasting.api.item.MediaHolderItem)) {
                     throw new CastingException("hexcasting.error.recharge_holder");
@@ -2042,15 +2030,25 @@ throw new CastingException("hexcasting.error.entity_velocity_context");
                     throw new CastingException("hexcasting.error.recharge_holder");
                 }
 
+                requireEntityInRange(vm, vm.getPlayer(), entity,
+                    "hexcasting.error.recharge_range");
+                net.minecraft.entity.item.EntityItem droppedEntity =
+                    (net.minecraft.entity.item.EntityItem) entity;
+                net.minecraft.item.ItemStack dropped = droppedEntity.getItem();
+                if (dropped == null || dropped.isEmpty()
+                    || !MediaInventoryHelper.isMediaItem(dropped)) {
+                    throw new CastingException("hexcasting.error.recharge_item");
+                }
+
                 long emptySpace = holder.insertMedia(offHand, -1L, true);
                 long sourceMedia = MediaInventoryHelper.extractMedia(
                     dropped, -1L, false, true);
                 if (emptySpace <= 0L || sourceMedia <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_full");
                 }
-                long extracted = MediaInventoryHelper.extractMedia(
-                    dropped, emptySpace, false, true);
-                if (extracted <= 0L) {
+                long simulated = MediaInventoryHelper.extractMedia(
+                    droppedEntity, emptySpace, false, true);
+                if (simulated <= 0L) {
                     throw new CastingException("hexcasting.error.recharge_item");
                 }
                 // Recharge itself has the fixed one-shard spell cost.  All
@@ -2326,13 +2324,25 @@ throw new CastingException("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
-                if (!player.world.isBlockModifiable(player, position)
-                    || !player.canPlayerEdit(position, net.minecraft.util.EnumFacing.UP,
-                        net.minecraft.item.ItemStack.EMPTY)) {
-                    throw new CastingException("hexcasting.error.fluid_forbidden");
-                }
+                requireEditPermission(vm, player, position,
+                    "hexcasting.error.fluid_forbidden");
                 vm.consumeMedia(2L * MediaConstants.CRYSTAL_UNIT);
                 if (player.world.isRemote) {
+                    return;
+                }
+
+                // Forge fluid handlers cover modded tanks and fluid blocks
+                // that do not inherit from vanilla BlockLiquid.  The modern
+                // action drains such a handler before starting the sponge
+                // style flood fill.
+                if (tryDrainFluidHandler(player.world, position)) {
+                    return;
+                }
+                net.minecraft.block.state.IBlockState baseState =
+                    player.world.getBlockState(position);
+                if (isFilledCauldron(baseState)) {
+                    player.world.setBlockState(position,
+                        net.minecraft.init.Blocks.CAULDRON.getDefaultState(), 3);
                     return;
                 }
 
@@ -2352,29 +2362,41 @@ throw new CastingException("hexcasting.error.get_media_context");
                     net.minecraft.util.math.BlockPos current = todo.removeFirst();
                     if (!seen.add(current)
                         || position.distanceSq(current) > 100.0D
-                        || !player.world.isBlockModifiable(player, current)
-                        || !player.canPlayerEdit(current, net.minecraft.util.EnumFacing.UP,
-                            net.minecraft.item.ItemStack.EMPTY)) {
+                        || !hasEditPermission(vm, player, current)) {
                         continue;
                     }
-                    net.minecraft.block.Block block =
-                        player.world.getBlockState(current).getBlock();
-                    boolean fluid = block == net.minecraft.init.Blocks.WATER
-                        || block == net.minecraft.init.Blocks.FLOWING_WATER
-                        || block == net.minecraft.init.Blocks.LAVA
-                        || block == net.minecraft.init.Blocks.FLOWING_LAVA;
+                    net.minecraft.block.state.IBlockState state =
+                        player.world.getBlockState(current);
+                    net.minecraft.block.Block block = state.getBlock();
+                    boolean fluid = isFluidBlock(block);
                     if (fluid) {
-                        player.world.setBlockToAir(current);
-                        removed++;
-                        for (net.minecraft.util.EnumFacing facing
-                            : net.minecraft.util.EnumFacing.values()) {
-                            todo.add(current.offset(facing));
+                        if (canBreakBlock(player, current, state)) {
+                            player.world.setBlockToAir(current);
+                            removed++;
+                            emitFluidRemovalFeedback(player.world, current);
+                            for (net.minecraft.util.EnumFacing facing
+                                : net.minecraft.util.EnumFacing.values()) {
+                                todo.add(current.offset(facing));
+                            }
                         }
-                    } else if (block == net.minecraft.init.Blocks.CAULDRON) {
+                    } else if (isFilledCauldron(state)
+                        && canBreakBlock(player, current, state)) {
                         player.world.setBlockState(current,
                             net.minecraft.init.Blocks.CAULDRON.getDefaultState(), 3);
                         removed++;
+                        emitFluidRemovalFeedback(player.world, current);
+                    } else if (isWaterPlant(state)
+                        && canBreakBlock(player, current, state)) {
+                        block.dropBlockAsItem(player.world, current, state, 0);
+                        player.world.setBlockToAir(current);
+                        removed++;
+                        emitFluidRemovalFeedback(player.world, current);
                     }
+                }
+                if (removed > 0) {
+                    player.world.playSound(null, position,
+                        net.minecraft.init.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                        net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.95F);
                 }
             }
         });
@@ -3201,11 +3223,14 @@ throw new CastingException("hexcasting.error.get_media_context");
             if (data == null || !data.isAltioraActive()) {
                 return;
             }
-            if (data.getAltioraTicks() <= 0
-                && (player.onGround || player.collidedHorizontally)) {
+            boolean collision = player.onGround || player.collided;
+            boolean deployed = player.isElytraFlying();
+            boolean creativeFlight = player.capabilities.isFlying;
+            if (creativeFlight
+                || collision && (data.getAltioraTicks() <= 0 || deployed)) {
                 data.setAltioraActive(false);
                 if (player instanceof net.minecraft.entity.player.EntityPlayerMP
-                    && player.isElytraFlying()) {
+                    && deployed) {
                     ((net.minecraft.entity.player.EntityPlayerMP) player)
                         .clearElytraFlying();
                 }
@@ -3608,8 +3633,6 @@ throw new CastingException("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.item.EntityItem itemEntity =
                     (net.minecraft.entity.item.EntityItem) sourceEntity;
-                requireEntityInRange(vm, player, itemEntity,
-                    "hexcasting.error.craft_battery_range");
                 net.minecraft.item.ItemStack bottle = vm.getHeldItemToOperateOn(
                     candidate -> candidate != null && !candidate.isEmpty()
                         && candidate.getItem() == net.minecraft.init.Items.GLASS_BOTTLE);
@@ -3619,6 +3642,8 @@ throw new CastingException("hexcasting.error.get_media_context");
                     || bottle.getCount() != 1 || hand == null) {
                     throw new CastingException("hexcasting.error.craft_battery_base");
                 }
+                requireEntityInRange(vm, player, itemEntity,
+                    "hexcasting.error.craft_battery_range");
                 net.minecraft.item.ItemStack source = itemEntity.getItem();
                 if (!MediaInventoryHelper.isBatteryMediaItem(source)) {
                     throw new CastingException("hexcasting.error.craft_battery_media_item");
@@ -3643,6 +3668,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 // Withdraw only what fits.  Media holders keep the remainder
                 // on the item stack, so an over-capacity entity is not lost.
+                // ItemMediaMaterial performs the exact per-item split used by
+                // the modern static-media adapter: a stack of n items with b
+                // media each loses floor(c / b) complete items and stores the
+                // fractional remainder on one separate item.
                 long drained = MediaInventoryHelper.extractMedia(
                     itemEntity, maxBatteryMedia, true, false);
                 if (drained <= 0L) {
@@ -3735,9 +3764,6 @@ throw new CastingException("hexcasting.error.get_media_context");
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.BlockPos target = blockPosition(position);
-                requireVecInRange(vm, vm.getPlayer(), new net.minecraft.util.math.Vec3d(
-                    target.getX() + 0.5D, target.getY() + 0.5D,
-                    target.getZ() + 0.5D), "hexcasting.error.akashic_write_range");
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
@@ -4025,6 +4051,69 @@ throw new CastingException("hexcasting.error.get_media_context");
         net.minecraft.block.state.IBlockState state) {
         return state != null
             && state.getBlock() instanceof at.petra_k.hexcasting.common.block.BlockConjured;
+    }
+
+    /** Drain a Forge fluid capability at the target before flood filling. */
+    private static boolean tryDrainFluidHandler(
+        net.minecraft.world.World world,
+        net.minecraft.util.math.BlockPos position) {
+        net.minecraftforge.fluids.capability.IFluidHandler handler =
+            net.minecraftforge.fluids.FluidUtil.getFluidHandler(
+                world, position, net.minecraft.util.EnumFacing.UP);
+        if (handler == null) {
+            return false;
+        }
+        net.minecraftforge.fluids.FluidStack drained =
+            handler.drain(Integer.MAX_VALUE, false);
+        return drained != null && drained.amount > 0;
+    }
+
+    private static boolean isFluidBlock(net.minecraft.block.Block block) {
+        return block instanceof net.minecraft.block.BlockLiquid
+            || block instanceof net.minecraftforge.fluids.BlockFluidBase;
+    }
+
+    private static boolean isFilledCauldron(
+        net.minecraft.block.state.IBlockState state) {
+        if (state == null || !(state.getBlock() instanceof net.minecraft.block.BlockCauldron)) {
+            return false;
+        }
+        return state.getValue(net.minecraft.block.BlockCauldron.LEVEL) > 0;
+    }
+
+    /** Approximation of the modern WATER_PLANTS tag for 1.12 registries. */
+    private static boolean isWaterPlant(
+        net.minecraft.block.state.IBlockState state) {
+        if (state == null) {
+            return false;
+        }
+        net.minecraft.block.Block block = state.getBlock();
+        if (block instanceof net.minecraft.block.BlockLilyPad) {
+            return true;
+        }
+        net.minecraft.util.ResourceLocation id = block.getRegistryName();
+        if (id == null) {
+            return false;
+        }
+        String path = id.getResourcePath().toLowerCase(java.util.Locale.ROOT);
+        return path.contains("kelp") || path.contains("seagrass")
+            || path.contains("water_plant") || path.contains("waterplant");
+    }
+
+    private static boolean canBreakBlock(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position,
+        net.minecraft.block.state.IBlockState state) {
+        return state != null && state.getBlock().canEntityDestroy(
+            state, player.world, position, player);
+    }
+
+    private static void emitFluidRemovalFeedback(
+        net.minecraft.world.World world,
+        net.minecraft.util.math.BlockPos position) {
+        world.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
+            position.getX() + 0.5D, position.getY() + 0.5D,
+            position.getZ() + 0.5D, 0.0D, 0.05D, 0.0D, 2);
     }
 
     private static void requireEntityInRange(
