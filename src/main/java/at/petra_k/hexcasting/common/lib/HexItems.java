@@ -60,6 +60,9 @@ public final class HexItems {
         .setUnlocalizedName(HexAPI.MOD_ID + ".cypher")
         .setCreativeTab(HexCreativeTab.HEX);
 
+    /** The loot-only packaged spell is also a valid empty Craft Cypher target. */
+    public static final ItemAncientCypher ANCIENT_CYPHER;
+
     public static final ItemTrinket TRINKET = (ItemTrinket) new ItemTrinket()
         .setRegistryName(HexAPI.MOD_ID, "trinket")
         .setUnlocalizedName(HexAPI.MOD_ID + ".trinket")
@@ -172,12 +175,13 @@ public final class HexItems {
                 item = new ItemHexStaff(id.substring("staff/".length()));
             } else {
                 item = new ItemHexKnowledge(id);
-            }
-            EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
+        }
+        EXTRA_ITEMS.put(id, item.setRegistryName(HexAPI.MOD_ID, id)
                 .setUnlocalizedName(HexAPI.MOD_ID + "." + id)
                 .setCreativeTab(id.equals("scroll_small") || id.equals("scroll_medium")
                     || id.equals("scroll") ? HexCreativeTab.SCROLLS : HexCreativeTab.HEX));
         }
+        ANCIENT_CYPHER = (ItemAncientCypher) EXTRA_ITEMS.get("ancient_cypher");
         STAFF = (ItemHexStaff) EXTRA_ITEMS.get("staff/oak");
     }
 

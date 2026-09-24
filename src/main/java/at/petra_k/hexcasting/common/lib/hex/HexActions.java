@@ -3984,6 +3984,16 @@ throw new CastingException("hexcasting.error.get_media_context");
         final net.minecraft.item.Item output,
         final long mediaCost,
         final String errorKey) {
+        return packagedSpellAction(
+            candidate -> candidate != null && !candidate.isEmpty()
+                && candidate.getItem() == output,
+            mediaCost, errorKey);
+    }
+
+    private static HexAction packagedSpellAction(
+        final java.util.function.Predicate<net.minecraft.item.ItemStack> outputPredicate,
+        final long mediaCost,
+        final String errorKey) {
         final String itemErrorKey = errorKey.replace("_context", "_item");
         final String mediaErrorKey = errorKey.replace("_context", "_media");
         return new HexAction() {
@@ -4008,10 +4018,9 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException(mediaErrorKey);
                 }
                 net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
-                    candidate -> candidate != null && !candidate.isEmpty()
-                        && candidate.getItem() == output
+                    candidate -> outputPredicate.test(candidate)
                         && ItemPackagedSpell.getPackagedIotas(candidate).isEmpty());
-                if (target == null || target.isEmpty() || target.getItem() != output
+                if (target == null || target.isEmpty() || !outputPredicate.test(target)
                     || !ItemPackagedSpell.getPackagedIotas(target).isEmpty()) {
                     throw new CastingException(itemErrorKey);
                 }
@@ -4052,7 +4061,11 @@ throw new CastingException("hexcasting.error.get_media_context");
         pattern(HexDir.EAST, "waqqqqq");
     public static final HexAction CRAFT_CYPHER = register(
         CRAFT_CYPHER_ID, CRAFT_CYPHER_PATTERN,
-        packagedSpellAction(HexItems.CYPHER, MediaConstants.CRYSTAL_UNIT,
+        packagedSpellAction(
+            candidate -> candidate != null && !candidate.isEmpty()
+                && (candidate.getItem() == HexItems.CYPHER
+                    || candidate.getItem() == HexItems.ANCIENT_CYPHER),
+            MediaConstants.CRYSTAL_UNIT,
             "hexcasting.error.craft_cypher_context"));
 
     public static final ResourceLocation CRAFT_TRINKET_ID =
