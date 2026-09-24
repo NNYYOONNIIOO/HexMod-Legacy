@@ -30,6 +30,16 @@ public final class HexItemMediaHolder implements ADMediaHolder {
     }
 
     @Override
+    public long withdrawMedia(long amount, boolean simulate) {
+        return item.withdrawMedia(stack, amount, simulate);
+    }
+
+    @Override
+    public long insertMedia(long amount, boolean simulate) {
+        return item.insertMedia(stack, amount, simulate);
+    }
+
+    @Override
     public boolean canRecharge() {
         return item.canRecharge(stack);
     }
