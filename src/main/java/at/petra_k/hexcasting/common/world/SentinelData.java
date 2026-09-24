@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.world;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
 
@@ -27,6 +28,18 @@ public final class SentinelData extends WorldSavedData {
 
     public static SentinelData get(World world) {
         MapStorage storage = world.getMapStorage();
+        if (world instanceof WorldServer) {
+            net.minecraft.server.MinecraftServer server =
+                ((WorldServer) world).getMinecraftServer();
+            if (server != null && server.getWorld(0) != null) {
+                // Sentinel state is attached to the player, not to the
+                // dimension in which the player happens to be standing.
+                // Store it in the overworld's shared MapStorage so a
+                // dimension change can report the proper wrong-dimension
+                // Mishap instead of silently losing the sentinel.
+                storage = server.getWorld(0).getMapStorage();
+            }
+        }
         SentinelData data = (SentinelData) storage.getOrLoadData(SentinelData.class, DATA_NAME);
         if (data == null) {
             data = new SentinelData();
@@ -59,11 +72,15 @@ public final class SentinelData extends WorldSavedData {
             NBTTagCompound entry = list.getCompoundTagAt(i);
             try {
                 UUID player = UUID.fromString(entry.getString("player"));
+                double x = entry.getDouble("x");
+                double y = entry.getDouble("y");
+                double z = entry.getDouble("z");
+                if (!isFiniteWorldPosition(x, y, z)) {
+                    continue;
+                }
                 states.put(player, new State(
                     entry.getBoolean("extended"),
-                    entry.getDouble("x"),
-                    entry.getDouble("y"),
-                    entry.getDouble("z"),
+                    x, y, z,
                     entry.getInteger("dimension")
                 ));
             } catch (IllegalArgumentException ignored) {
@@ -104,5 +121,14 @@ public final class SentinelData extends WorldSavedData {
             this.z = z;
             this.dimension = dimension;
         }
+    }
+
+    private static boolean isFiniteWorldPosition(double x, double y, double z) {
+        return !Double.isNaN(x) && !Double.isInfinite(x)
+            && !Double.isNaN(y) && !Double.isInfinite(y)
+            && !Double.isNaN(z) && !Double.isInfinite(z)
+            && y >= 0.0D && y < 256.0D
+            && Math.abs(x) <= 30000000.0D
+            && Math.abs(z) <= 30000000.0D;
     }
 }

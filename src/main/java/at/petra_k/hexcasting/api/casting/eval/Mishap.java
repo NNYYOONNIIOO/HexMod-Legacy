@@ -558,6 +558,7 @@ public class Mishap extends CastingException {
             || key.endsWith("_duration") || key.endsWith("_potency")
             || key.endsWith("_cost") || key.endsWith("_position")
             || key.endsWith("_zero") || key.endsWith("_radius")
+            || key.endsWith("_vector")
             || key.endsWith("_out_of_bounds") || key.contains("bounded_integer")
             || key.contains("finite") || key.contains("invalid")) {
             return Kind.INVALID_VALUE;

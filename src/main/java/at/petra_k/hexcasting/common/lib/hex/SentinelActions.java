@@ -63,7 +63,7 @@ public final class SentinelActions {
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
                 Vec3d target = vectorOf(stack.pop(Vec3Iota.class));
-                assertTargetInRange(player, target, extendedRange);
+                assertTargetInRange(player, target);
                 vm.consumeMedia(MediaConstants.DUST_UNIT * (extendedRange ? 2L : 1L));
                 SentinelData.get(player.world).set(
                     player.getUniqueID(), extendedRange, target.x, target.y, target.z,
@@ -140,16 +140,7 @@ public final class SentinelActions {
                     throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
-                double dx = state.x - from.x;
-                double dy = state.y - from.y;
-                double dz = state.z - from.z;
-                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                if (length > 0.0D) {
-                    dx /= length;
-                    dy /= length;
-                    dz /= length;
-                }
-                stack.push(vectorIota(new Vec3d(dx, dy, dz)));
+                stack.push(vectorIota(normalizedDifference(state, from)));
             }
         };
     }
@@ -168,18 +159,23 @@ public final class SentinelActions {
         }
     }
 
-    private static void assertTargetInRange(EntityPlayer player, Vec3d target,
-                                             boolean extendedRange) throws CastingException {
+    private static void assertTargetInRange(EntityPlayer player, Vec3d target)
+        throws CastingException {
         if (target == null || Double.isNaN(target.x) || Double.isNaN(target.y)
             || Double.isNaN(target.z) || Double.isInfinite(target.x)
             || Double.isInfinite(target.y) || Double.isInfinite(target.z)) {
             throw new CastingException("hexcasting.error.sentinel_out_of_range");
         }
+        if (target.y < 0.0D || target.y >= 256.0D
+            || Math.abs(target.x) > 30000000.0D
+            || Math.abs(target.z) > 30000000.0D) {
+            throw new CastingException("hexcasting.error.sentinel_out_of_range");
+        }
         double dx = target.x - player.posX;
         double dy = target.y - player.posY;
         double dz = target.z - player.posZ;
-        double range = extendedRange ? 128.0D : 64.0D;
-        if (dx * dx + dy * dy + dz * dz > range * range) {
+        double range = 32.0D;
+        if (dx * dx + dy * dy + dz * dz > range * range + 1.0E-8D) {
             throw new CastingException("hexcasting.error.sentinel_out_of_range");
         }
     }
@@ -200,11 +196,41 @@ public final class SentinelActions {
         return new HexPattern(start, Arrays.asList(angles));
     }
 
-    private static Vec3d vectorOf(Vec3Iota iota) {
-        return iota.getValue();
+    private static Vec3d vectorOf(Vec3Iota iota) throws CastingException {
+        Vec3d value = iota == null ? null : iota.getValue();
+        if (value == null || !isFinite(value)) {
+            throw new CastingException("hexcasting.error.sentinel_vector");
+        }
+        return value;
     }
 
     private static Iota vectorIota(Vec3d value) {
         return new Vec3Iota(value);
+    }
+
+    private static boolean isFinite(Vec3d value) {
+        return value != null
+            && !Double.isNaN(value.x) && !Double.isInfinite(value.x)
+            && !Double.isNaN(value.y) && !Double.isInfinite(value.y)
+            && !Double.isNaN(value.z) && !Double.isInfinite(value.z);
+    }
+
+    private static Vec3d normalizedDifference(SentinelData.State state,
+                                               Vec3d from) {
+        double dx = state.x - from.x;
+        double dy = state.y - from.y;
+        double dz = state.z - from.z;
+        double scale = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
+        if (!Double.isFinite(scale) || scale < 1.0E-4D) {
+            return new Vec3d(0.0D, 0.0D, 0.0D);
+        }
+        dx /= scale;
+        dy /= scale;
+        dz /= scale;
+        double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (!Double.isFinite(length) || length < 1.0E-4D) {
+            return new Vec3d(0.0D, 0.0D, 0.0D);
+        }
+        return new Vec3d(dx / length, dy / length, dz / length);
     }
 }
