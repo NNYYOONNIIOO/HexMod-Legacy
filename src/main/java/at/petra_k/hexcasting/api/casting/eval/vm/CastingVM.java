@@ -142,6 +142,14 @@ public final class CastingVM {
     private boolean mediaConsumptionBypassed;
     /** Shared source transaction for one complete evaluation. */
     private MediaInventoryHelper.MediaTransaction mediaTransaction;
+    /**
+     * Mutations performed by legacy actions which are not represented by the
+     * player's media transaction.  Modern Hex applies rendered-spell changes
+     * only after evaluation succeeds; keeping these callbacks on the VM gives
+     * the 1.12.2 actions the same failure boundary without making every action
+     * invent its own evaluator transaction.
+     */
+    private final ArrayList<Runnable> rollbackActions = new ArrayList<>();
     private int evaluationDepth;
     private Mishap lastMishap;
     /** Transient context collected while the currently executing action runs. */
@@ -314,6 +322,18 @@ public final class CastingVM {
 
     public boolean isMediaConsumptionBypassed() {
         return mediaConsumptionBypassed;
+    }
+
+    /**
+     * Register an item/entity mutation to undo if the outer evaluation fails.
+     * Callbacks run in reverse order, matching the order of ordinary
+     * transactional writes.  They are intentionally runtime-only and are not
+     * serialized with a resumable casting image.
+     */
+    public void addRollbackAction(Runnable rollback) {
+        if (rollback != null) {
+            rollbackActions.add(rollback);
+        }
     }
 
     /** Return the media still available to this VM's current cast. */
@@ -948,6 +968,7 @@ public final class CastingVM {
         VmSnapshot before = null;
         if (outermost) {
             before = snapshotState();
+            rollbackActions.clear();
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
                 allowMediaInventoryFallback);
             lastMishap = null;
@@ -959,6 +980,7 @@ public final class CastingVM {
             }
             if (outermost && mediaTransaction != null) {
                 mediaTransaction.commit();
+                rollbackActions.clear();
             }
             return stack;
         } catch (CastingException exception) {
@@ -1085,6 +1107,14 @@ public final class CastingVM {
     }
 
     private void rollbackEvaluation(VmSnapshot before) {
+        for (int i = rollbackActions.size() - 1; i >= 0; i--) {
+            try {
+                rollbackActions.get(i).run();
+            } catch (RuntimeException ignored) {
+                // A failed cleanup must never hide the original Mishap.
+            }
+        }
+        rollbackActions.clear();
         if (mediaTransaction != null) {
             mediaTransaction.rollback();
         }
