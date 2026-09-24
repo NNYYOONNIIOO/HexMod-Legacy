@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.capability.HexItemMediaHolder;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
+import at.petra_k.hexcasting.common.misc.AmethystCompat;
 import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -185,7 +186,8 @@ public final class MediaInventoryHelper {
 
     private static void addSource(List<MediaSource> sources, ADMediaHolder holder,
                                   ItemStack stack) {
-        if (holder != null && holder.canProvide() && holder.getMedia() != 0L) {
+        if (holder != null && holder.canProvide()
+            && holder.withdrawMedia(-1L, true) > 0L) {
             sources.add(new MediaSource(holder, stack));
         }
     }
@@ -239,9 +241,14 @@ public final class MediaInventoryHelper {
         if ("minecraft".equals(domain) && "amethyst_shard".equals(path)) {
             return MediaConstants.SHARD_UNIT;
         }
-        if ("amethyst_shard".equals(path)
-            && ("farmers_future_delight".equals(domain)
-                || "cavesnotcliffs".equals(domain))) {
+        ResourceLocation selectedShard = AmethystCompat.shardId();
+        if (selectedShard != null && selectedShard.equals(id)) {
+            return MediaConstants.SHARD_UNIT;
+        }
+        // Keep the older optional provider readable when it is present, but
+        // never let it compete with the selected Caves/Farmer provider.
+        if (AmethystCompat.legacyShardId().equals(id)
+            && selectedShard == null) {
             return MediaConstants.SHARD_UNIT;
         }
         if ("hexcasting".equals(domain) && "quenched_allay".equals(path)) {
@@ -329,9 +336,10 @@ public final class MediaInventoryHelper {
             if (finished || amount <= 0L) {
                 return;
             }
-            if (getAvailableMedia() < amount) {
-                throw new at.petra_k.hexcasting.api.casting.eval.CastingException(
-                    "hexcasting.error.not_enough_media");
+            long available = getAvailableMedia();
+            if (available < amount) {
+                throw at.petra_k.hexcasting.api.casting.eval.Mishap.notEnoughMedia(
+                    amount, available);
             }
 
             long remaining = amount;
@@ -348,8 +356,8 @@ public final class MediaInventoryHelper {
             }
             if (remaining > 0L) {
                 rollback();
-                throw new at.petra_k.hexcasting.api.casting.eval.CastingException(
-                    "hexcasting.error.not_enough_media");
+                throw at.petra_k.hexcasting.api.casting.eval.Mishap.notEnoughMedia(
+                    amount, available);
             }
         }
 

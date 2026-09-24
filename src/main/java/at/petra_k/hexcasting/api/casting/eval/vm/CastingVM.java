@@ -924,7 +924,8 @@ public final class CastingVM {
         VmSnapshot before = null;
         if (outermost) {
             before = snapshotState();
-            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
+            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
+                allowMediaInventoryFallback);
             lastMishap = null;
         }
         evaluationDepth++;
