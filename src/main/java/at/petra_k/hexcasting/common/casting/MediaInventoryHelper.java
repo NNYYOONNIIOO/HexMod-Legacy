@@ -606,16 +606,15 @@ public final class MediaInventoryHelper {
             return total;
         }
 
-        public void consume(long amount) throws at.petra_k.hexcasting.api.casting.eval.CastingException {
+        /**
+         * Consume as much as possible without failing the transaction.
+         * Discrete sources may consume slightly more than the requested
+         * amount, matching the ordinary Hex media extraction contract.
+         */
+        public long consumeUpTo(long amount) {
             if (finished || amount <= 0L) {
-                return;
+                return 0L;
             }
-            long available = getAvailableMedia();
-            if (available < amount) {
-                throw at.petra_k.hexcasting.api.casting.eval.Mishap.notEnoughMedia(
-                    amount, available);
-            }
-
             long remaining = amount;
             for (MediaSource source : sources) {
                 if (remaining <= 0L) {
@@ -626,12 +625,22 @@ public final class MediaInventoryHelper {
                 }
                 snapshot(source);
                 long extracted = source.withdraw(remaining, false);
-                remaining -= extracted;
+                if (extracted > 0L) {
+                    remaining = extracted >= remaining ? 0L : remaining - extracted;
+                }
             }
-            if (remaining > 0L) {
+            return amount - Math.max(0L, remaining);
+        }
+
+        public void consume(long amount) throws at.petra_k.hexcasting.api.casting.eval.CastingException {
+            if (finished || amount <= 0L) {
+                return;
+            }
+            long extracted = consumeUpTo(amount);
+            if (extracted < amount) {
                 rollback();
                 throw at.petra_k.hexcasting.api.casting.eval.Mishap.notEnoughMedia(
-                    amount, available);
+                    amount, extracted);
             }
         }
 

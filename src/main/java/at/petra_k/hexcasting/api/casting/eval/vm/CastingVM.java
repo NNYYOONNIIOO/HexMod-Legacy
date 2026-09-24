@@ -16,11 +16,13 @@ import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
+import at.petra_k.hexcasting.common.casting.OvercastHelper;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexEvalSounds;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
+import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagByte;
 import net.minecraft.nbt.NBTBase;
@@ -341,12 +343,16 @@ public final class CastingVM {
         if (mediaConsumptionBypassed) {
             return Long.MAX_VALUE;
         }
+        long available;
         if (mediaTransaction != null) {
-            return mediaTransaction.getAvailableMedia();
+            available = mediaTransaction.getAvailableMedia();
+        } else {
+            available = MediaInventoryHelper.begin(player, castingData, mediaHolder,
+                    allowMediaInventoryFallback)
+                .getAvailableMedia();
         }
-        return MediaInventoryHelper.begin(player, castingData, mediaHolder,
-                allowMediaInventoryFallback)
-            .getAvailableMedia();
+        return saturatingAdd(available, canOvercast()
+            ? OvercastHelper.availableMedia(player) : 0L);
     }
 
     /** The structured Mishap produced by the latest failed operation. */
@@ -934,6 +940,7 @@ public final class CastingVM {
             }
             recordSound(HexEvalSounds.forAction(action, actionId));
         } catch (CastingException exception) {
+            unlockOvercastForFailedGreatSpell(actionId);
             recordSound(HexEvalSounds.MISHAP);
             Mishap mishap = Mishap.from(exception, pattern, actionId, player,
                 parenCount, operationsConsumed)
@@ -944,6 +951,7 @@ public final class CastingVM {
             MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } catch (RuntimeException exception) {
+            unlockOvercastForFailedGreatSpell(actionId);
             recordSound(HexEvalSounds.MISHAP);
             Mishap mishap = Mishap.fromRuntime(exception, pattern, actionId,
                 player, parenCount, operationsConsumed)
@@ -975,11 +983,13 @@ public final class CastingVM {
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
                 allowMediaInventoryFallback);
         }
-        long available = mediaTransaction.getAvailableMedia();
-        if (available < amount) {
-            throw Mishap.notEnoughMedia(amount, available);
+        long extracted = mediaTransaction.consumeUpTo(amount);
+        long generated = extracted < amount && canOvercast()
+            ? OvercastHelper.consume(player, amount - extracted) : 0L;
+        if (extracted + generated < amount) {
+            mediaTransaction.rollback();
+            throw Mishap.notEnoughMedia(amount, extracted + generated);
         }
-        mediaTransaction.consume(amount);
     }
 
     public CastingStack run() throws CastingException {
@@ -1180,5 +1190,24 @@ public final class CastingVM {
         if (maxOperations <= 0) {
             throw new IllegalArgumentException("Operation limit must be positive");
         }
+    }
+
+    private boolean canOvercast() {
+        return player != null && !mediaConsumptionBypassed
+            && (mediaHolder == null || allowMediaInventoryFallback)
+            && OvercastHelper.canOvercast(player);
+    }
+
+    private void unlockOvercastForFailedGreatSpell(ResourceLocation actionId) {
+        if (player != null && PerWorldPatternData.isPerWorldAction(actionId)) {
+            OvercastHelper.unlock(player);
+        }
+    }
+
+    private static long saturatingAdd(long left, long right) {
+        if (right <= 0L) {
+            return Math.max(0L, left);
+        }
+        return Long.MAX_VALUE - left < right ? Long.MAX_VALUE : left + right;
     }
 }
