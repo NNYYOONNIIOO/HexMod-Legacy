@@ -541,8 +541,9 @@ public class Mishap extends CastingException {
             || "hexcasting.error.recharge_full".equals(key)
             || "hexcasting.error.craft_battery_base".equals(key)
             || "hexcasting.error.craft_battery_media".equals(key)
-            || "hexcasting.error.place_block_item".equals(key)
-            || "hexcasting.error.erase_holder".equals(key)
+             || "hexcasting.error.place_block_item".equals(key)
+             || key.endsWith("_media")
+             || "hexcasting.error.erase_holder".equals(key)
             || "hexcasting.error.data_holder_missing".equals(key)
             || "hexcasting.error.colorize_dye".equals(key)) {
             return Kind.BAD_ITEM;

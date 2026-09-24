@@ -3984,6 +3984,8 @@ throw new CastingException("hexcasting.error.get_media_context");
         final net.minecraft.item.Item output,
         final long mediaCost,
         final String errorKey) {
+        final String itemErrorKey = errorKey.replace("_context", "_item");
+        final String mediaErrorKey = errorKey.replace("_context", "_media");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
@@ -3996,17 +3998,50 @@ throw new CastingException("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw new CastingException(errorKey);
                 }
+                // The arguments are [media item entity, program list].  The
+                // list is on top of the casting stack, so pop it before the
+                // entity, matching the argument order used by modern Hex.
                 ListIota spell = stack.pop(ListIota.class);
+                EntityIota entityIota = stack.pop(EntityIota.class);
+                net.minecraft.entity.Entity source = resolveEntity(entityIota, vm);
+                if (!(source instanceof net.minecraft.entity.item.EntityItem)) {
+                    throw new CastingException(mediaErrorKey);
+                }
+                net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
+                    candidate -> candidate != null && !candidate.isEmpty()
+                        && candidate.getItem() == output
+                        && ItemPackagedSpell.getPackagedIotas(candidate).isEmpty());
+                if (target == null || target.isEmpty() || target.getItem() != output
+                    || !ItemPackagedSpell.getPackagedIotas(target).isEmpty()) {
+                    throw new CastingException(itemErrorKey);
+                }
+                net.minecraft.entity.item.EntityItem sourceEntity =
+                    (net.minecraft.entity.item.EntityItem) source;
+                requireEntityInRange(vm, vm.getPlayer(), sourceEntity, mediaErrorKey);
+                if (!MediaInventoryHelper.isBatteryMediaEntity(sourceEntity)) {
+                    throw new CastingException(mediaErrorKey);
+                }
+                long available = MediaInventoryHelper.extractMedia(
+                    sourceEntity, -1L, true, true);
+                if (available <= 0L) {
+                    throw new CastingException(mediaErrorKey);
+                }
+
+                // The fixed cost is paid by the casting environment.  The
+                // media item itself supplies the package's stored capacity,
+                // just as OpMakePackagedSpell does in 1.20.1.
                 vm.consumeMedia(mediaCost);
-                net.minecraft.item.ItemStack result =
-                    new net.minecraft.item.ItemStack(output, 1);
-                ItemPackagedSpell.writePackagedProgram(result, spell.getItems(), mediaCost);
+                long captured = MediaInventoryHelper.extractMedia(
+                    sourceEntity, -1L, true, false);
+                if (captured <= 0L) {
+                    throw new CastingException(mediaErrorKey);
+                }
+                ItemPackagedSpell.writePackagedProgram(target, spell.getItems(), captured);
                 HexPigmentSource pigment = castingPigmentSource(vm);
                 if (pigment != null) {
-                    ItemPackagedSpell.setPigment(result, pigment.getColor(),
+                    ItemPackagedSpell.setPigment(target, pigment.getColor(),
                         pigment.getVariant(), pigment.getOwner());
                 }
-                stack.push(new ItemIota(result));
             }
         };
     }
