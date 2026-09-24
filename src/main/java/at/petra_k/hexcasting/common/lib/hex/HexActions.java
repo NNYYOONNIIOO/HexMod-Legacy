@@ -1393,7 +1393,9 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     position.x, position.y, position.z);
                 boolean canEdit = hasEditPermission(vm, player, blockPos);
-                long mediaCost = (long) Math.ceil(MediaConstants.DUST_UNIT
+                // Kotlin's Double.toLong in the upstream action truncates
+                // toward zero; do not round a fractional explosion cost up.
+                long mediaCost = (long) (MediaConstants.DUST_UNIT
                     * (3.0D * strength + (fire ? 1.0D : 0.125D)));
                 vm.consumeMedia(mediaCost);
                 // Modern Hex charges the spell before its rendered spell
