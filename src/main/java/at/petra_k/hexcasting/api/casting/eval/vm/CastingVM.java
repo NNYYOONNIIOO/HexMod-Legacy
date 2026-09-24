@@ -886,8 +886,7 @@ public final class CastingVM {
             return false;
         }
         if (operationsConsumed >= maxOperations) {
-            throw Mishap.invalidValue("hexcasting.error.evaluation_limit",
-                "Casting evaluation exceeded its operation limit of " + maxOperations);
+            throw Mishap.evaluationLimit(maxOperations);
         }
 
         WorkItem work = continuation.removeFirst();
@@ -1012,6 +1011,9 @@ public final class CastingVM {
         } catch (CastingException exception) {
             if (outermost) {
                 rollbackEvaluation(before);
+            }
+            if (exception instanceof Mishap) {
+                MishapFeedback.applySideEffects((Mishap) exception);
             }
             throw exception;
         } catch (RuntimeException exception) {

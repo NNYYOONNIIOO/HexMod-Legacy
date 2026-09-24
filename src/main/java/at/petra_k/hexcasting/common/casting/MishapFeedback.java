@@ -119,6 +119,12 @@ public final class MishapFeedback {
                         (EntityLiving) target, caster);
                 }
                 return;
+            case EVALUATION_LIMIT:
+                if (caster.getAir() < 200) {
+                    caster.attackEntityFrom(net.minecraft.util.DamageSource.DROWN, 2.0F);
+                }
+                caster.setAir(0);
+                return;
             default:
                 // Media shortages, invalid values and context failures do
                 // not have a world-side mishap effect.

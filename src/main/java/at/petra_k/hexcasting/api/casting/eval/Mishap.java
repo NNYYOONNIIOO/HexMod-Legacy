@@ -344,6 +344,8 @@ public class Mishap extends CastingException {
                 return 0x303030;
             case NOT_ENOUGH_MEDIA:
                 return 0xE05252;
+            case EVALUATION_LIMIT:
+                return 0x5C86D6;
             case STACK_SIZE:
                 return 0x202020;
             default:
@@ -425,6 +427,13 @@ public class Mishap extends CastingException {
     public static Mishap stackSize() {
         return new Mishap(Kind.STACK_SIZE, "hexcasting.mishap.stack_size",
             null, null, null, null, 0, 0, null);
+    }
+
+    /** Construct the operation-limit Mishap used by the evaluator boundary. */
+    public static Mishap evaluationLimit(int maxOperations) {
+        return new Mishap(Kind.EVALUATION_LIMIT,
+            "hexcasting.error.evaluation_limit", null, null, null, null,
+            0, 0, "limit=" + Math.max(0, maxOperations));
     }
 
     /** Create a localized value/type failure while retaining diagnostic detail. */
