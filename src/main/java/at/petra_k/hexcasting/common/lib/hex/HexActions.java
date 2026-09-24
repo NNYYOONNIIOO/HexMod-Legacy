@@ -1271,22 +1271,19 @@ public static final HexPattern BOOL_IF_PATTERN =
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
                 net.minecraft.util.SoundEvent sound;
                 switch (instrument) {
-                    case 1: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASS; break;
-                    case 2: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASEDRUM; break;
-                    case 3: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_SNARE; break;
-                    case 4: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HAT; break;
-                    case 5: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_GUITAR; break;
-                    case 6: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_FLUTE; break;
-                    case 7: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BELL; break;
+                    case 1: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASEDRUM; break;
+                    case 2: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_SNARE; break;
+                    case 3: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HAT; break;
+                    case 4: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BASS; break;
+                    case 5: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_FLUTE; break;
+                    case 6: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_BELL; break;
+                    case 7: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_GUITAR; break;
                     case 8: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_CHIME; break;
                     case 9: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_XYLOPHONE; break;
                     default: sound = net.minecraft.init.SoundEvents.BLOCK_NOTE_HARP; break;
                 }
-                net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
-                    (int) Math.floor(position.x), (int) Math.floor(position.y),
-                    (int) Math.floor(position.z));
                 float pitch = (float) Math.pow(2.0D, (note - 12) / 12.0D);
-                player.world.playSound(null, blockPos, sound,
+                player.world.playSound(null, position.x, position.y, position.z, sound,
                     net.minecraft.util.SoundCategory.RECORDS, 3.0F, pitch);
             }
         });
