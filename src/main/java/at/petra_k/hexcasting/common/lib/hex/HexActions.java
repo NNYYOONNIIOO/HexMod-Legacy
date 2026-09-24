@@ -2481,7 +2481,6 @@ throw new CastingException("hexcasting.error.get_media_context");
                 vm.consumeMedia(count * MediaConstants.DUST_UNIT);
                 IotaDataHolder.clear(target);
             }
-        }
     });
 
     /** Compare the block at a vector position with a block Iota. */
