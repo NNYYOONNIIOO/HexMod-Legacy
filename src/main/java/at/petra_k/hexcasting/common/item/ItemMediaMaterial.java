@@ -88,6 +88,29 @@ public final class ItemMediaMaterial extends Item implements MediaHolderItem {
         if (available <= 0L || requested <= 0L) {
             return 0L;
         }
+
+        // A tagged stack may contain a partially charged final item.  Treat
+        // the tag as the aggregate amount for this stack and preserve the
+        // exact remainder instead of rounding the whole stack to one item.
+        // Untagged stacks retain the modern static-material behavior: media
+        // is extracted in whole source items and may therefore exceed a
+        // non-multiple request.
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag != null && tag.hasKey(KEY_MEDIA, 4)) {
+            long extracted = Math.min(available, requested);
+            long remainder = available - extracted;
+            if (!simulate) {
+                if (remainder <= 0L) {
+                    stack.setCount(0);
+                    tag.removeTag(KEY_MEDIA);
+                } else {
+                    long remainingItems = ceilDivide(remainder, mediaPerItem);
+                    stack.setCount((int) Math.min(Integer.MAX_VALUE, remainingItems));
+                    setMedia(stack, remainder);
+                }
+            }
+            return extracted;
+        }
         long items = ceilDivide(requested, mediaPerItem);
         items = Math.min(items, Math.max(0L, (long) stack.getCount()));
         long extracted = items > Long.MAX_VALUE / mediaPerItem
