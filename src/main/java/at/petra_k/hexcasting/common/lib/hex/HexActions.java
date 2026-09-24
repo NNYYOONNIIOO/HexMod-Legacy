@@ -2298,7 +2298,8 @@ throw new CastingException("hexcasting.error.get_media_context");
         fluidAction(net.minecraft.init.Blocks.WATER.getDefaultState(),
             net.minecraft.init.Blocks.CAULDRON.getDefaultState()
                 .withProperty(net.minecraft.block.BlockCauldron.LEVEL, 3),
-            MediaConstants.DUST_UNIT, net.minecraft.init.Items.WATER_BUCKET));
+            MediaConstants.DUST_UNIT, net.minecraft.init.Items.WATER_BUCKET,
+            net.minecraftforge.fluids.FluidRegistry.WATER));
 
     /** Place a source lava block at a position. */
     public static final ResourceLocation CREATE_LAVA_ID =
@@ -2309,7 +2310,8 @@ throw new CastingException("hexcasting.error.get_media_context");
         fluidAction(net.minecraft.init.Blocks.LAVA.getDefaultState(),
             net.minecraft.init.Blocks.CAULDRON.getDefaultState()
                 .withProperty(net.minecraft.block.BlockCauldron.LEVEL, 3),
-            MediaConstants.CRYSTAL_UNIT, net.minecraft.init.Items.LAVA_BUCKET));
+            MediaConstants.CRYSTAL_UNIT, net.minecraft.init.Items.LAVA_BUCKET,
+            net.minecraftforge.fluids.FluidRegistry.LAVA));
 
     /** Remove fluids in and around a position, matching OpDestroyFluid. */
     public static final ResourceLocation DESTROY_WATER_ID =
@@ -2380,8 +2382,22 @@ throw new CastingException("hexcasting.error.get_media_context");
                     net.minecraft.block.Block block = state.getBlock();
                     boolean fluid = isFluidBlock(block);
                     if (fluid) {
+                        boolean success = false;
                         if (canBreakBlock(player, current, state)) {
-                            player.world.setBlockToAir(current);
+                            if (block instanceof net.minecraftforge.fluids.IFluidBlock) {
+                                net.minecraftforge.fluids.IFluidBlock fluidBlock =
+                                    (net.minecraftforge.fluids.IFluidBlock) block;
+                                if (fluidBlock.canDrain(player.world, current)) {
+                                    net.minecraftforge.fluids.FluidStack drained =
+                                        fluidBlock.drain(player.world, current, false);
+                                    success = drained != null && drained.amount > 0;
+                                }
+                            } else if (block instanceof net.minecraft.block.BlockLiquid) {
+                                player.world.setBlockToAir(current);
+                                success = true;
+                            }
+                        }
+                        if (success) {
                             removed++;
                             emitFluidRemovalFeedback(player.world, current);
                             for (net.minecraft.util.EnumFacing facing
@@ -2415,7 +2431,8 @@ throw new CastingException("hexcasting.error.get_media_context");
         final net.minecraft.block.state.IBlockState liquidState,
         final net.minecraft.block.state.IBlockState cauldronState,
         final long mediaCost,
-        final net.minecraft.item.Item bucket) {
+        final net.minecraft.item.Item bucket,
+        final net.minecraftforge.fluids.Fluid fluid) {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
@@ -2446,8 +2463,15 @@ throw new CastingException("hexcasting.error.get_media_context");
                     == net.minecraft.init.Blocks.CAULDRON) {
                     player.world.setBlockState(position, cauldronState, 3);
                 } else if (bucket instanceof net.minecraft.item.ItemBucket) {
-                    ((net.minecraft.item.ItemBucket) bucket).tryPlaceContainedLiquid(
-                        player, player.world, position);
+                    // Match Hex's Forge abstraction: a tank/container at the
+                    // target gets the fluid first, and only then do we fall
+                    // back to the vanilla bucket placement path.  Passing a
+                    // null player to the bucket avoids awarding a use
+                    // statistic for an action that did not use a real item.
+                    if (!tryPlaceFluidHandler(player.world, position, fluid)) {
+                        ((net.minecraft.item.ItemBucket) bucket).tryPlaceContainedLiquid(
+                            null, player.world, position);
+                    }
                 }
             }
         };
@@ -4300,14 +4324,54 @@ throw new CastingException("hexcasting.error.get_media_context");
         if (handler == null) {
             return false;
         }
-        net.minecraftforge.fluids.FluidStack drained =
-            handler.drain(Integer.MAX_VALUE, false);
-        return drained != null && drained.amount > 0;
+        boolean drainedAny = false;
+        net.minecraftforge.fluids.capability.IFluidTankProperties[] tanks =
+            handler.getTankProperties();
+        if (tanks != null) {
+            for (net.minecraftforge.fluids.capability.IFluidTankProperties tank : tanks) {
+                net.minecraftforge.fluids.FluidStack contents =
+                    tank == null ? null : tank.getContents();
+                if (contents == null || contents.amount <= 0) {
+                    continue;
+                }
+                net.minecraftforge.fluids.FluidStack drained =
+                    handler.drain(contents, false);
+                drainedAny |= drained != null && drained.amount > 0;
+            }
+        }
+        if (!drainedAny) {
+            net.minecraftforge.fluids.FluidStack drained =
+                handler.drain(Integer.MAX_VALUE, false);
+            drainedAny = drained != null && drained.amount > 0;
+        }
+        return drainedAny;
+    }
+
+    /** Fill a Forge fluid handler without awarding a bucket-use statistic. */
+    private static boolean tryPlaceFluidHandler(
+        net.minecraft.world.World world,
+        net.minecraft.util.math.BlockPos position,
+        net.minecraftforge.fluids.Fluid fluid) {
+        if (fluid == null) {
+            return false;
+        }
+        net.minecraftforge.fluids.capability.IFluidHandler handler =
+            net.minecraftforge.fluids.FluidUtil.getFluidHandler(
+                world, position, net.minecraft.util.EnumFacing.UP);
+        if (handler == null) {
+            return false;
+        }
+        net.minecraftforge.fluids.FluidStack requested =
+            new net.minecraftforge.fluids.FluidStack(fluid, 1000);
+        if (handler.fill(requested, true) <= 0) {
+            return false;
+        }
+        return handler.fill(requested, false) > 0;
     }
 
     private static boolean isFluidBlock(net.minecraft.block.Block block) {
         return block instanceof net.minecraft.block.BlockLiquid
-            || block instanceof net.minecraftforge.fluids.BlockFluidBase;
+            || block instanceof net.minecraftforge.fluids.IFluidBlock;
     }
 
     private static boolean isFilledCauldron(
