@@ -277,45 +277,76 @@ public final class MediaInventoryHelper {
         ItemStack targetBefore = targetStack.copy();
         long targetMediaBefore = target.getMedia();
         boolean sourceWasDead = source.isDead;
-        java.util.HashSet<java.util.UUID> existingEntities = new java.util.HashSet<>();
-        if (source.world != null) {
-            for (net.minecraft.entity.Entity entity : source.world.loadedEntityList) {
-                if (entity != null && entity.getUniqueID() != null) {
-                    existingEntities.add(entity.getUniqueID());
-                }
-            }
-        }
-
+        java.util.Set<java.util.UUID> existingEntities = snapshotEntityIds(source);
         long extracted = extractMediaAtMost(source, planned, false, false);
+        java.util.Set<net.minecraft.entity.Entity> spawnedItems =
+            newlySpawnedItems(source, existingEntities);
         if (extracted != planned) {
             restoreTransfer(source, targetStack, target, sourceBefore,
-                targetBefore, targetMediaBefore, sourceWasDead, existingEntities);
+                targetBefore, targetMediaBefore, sourceWasDead,
+                spawnedItems);
             return 0L;
         }
         long inserted = target.insertMedia(extracted, false);
         if (inserted != extracted) {
+            // A tagged material stack can split its remainder into a second
+            // EntityItem.  Only that split entity belongs to this transfer;
+            // never remove unrelated drops that happened to spawn after the
+            // source snapshot.
             restoreTransfer(source, targetStack, target, sourceBefore,
-                targetBefore, targetMediaBefore, sourceWasDead, existingEntities);
+                targetBefore, targetMediaBefore, sourceWasDead,
+                spawnedItems);
             return 0L;
         }
         return inserted;
     }
 
+    private static java.util.Set<java.util.UUID> snapshotEntityIds(EntityItem source) {
+        java.util.Set<java.util.UUID> existing = new java.util.HashSet<>();
+        if (source == null || source.world == null) {
+            return existing;
+        }
+        for (net.minecraft.entity.Entity entity : source.world.loadedEntityList) {
+            if (entity != null && entity.getUniqueID() != null) {
+                existing.add(entity.getUniqueID());
+            }
+        }
+        return existing;
+    }
+
+    private static java.util.Set<net.minecraft.entity.Entity> newlySpawnedItems(
+        EntityItem source, java.util.Set<java.util.UUID> existingEntities) {
+        java.util.Set<net.minecraft.entity.Entity> spawned =
+            new java.util.HashSet<>();
+        if (source == null || source.world == null) {
+            return spawned;
+        }
+        for (net.minecraft.entity.Entity entity : source.world.loadedEntityList) {
+            if (!(entity instanceof EntityItem) || entity == source
+                || entity.isDead || entity.getUniqueID() == null
+                || existingEntities.contains(entity.getUniqueID())) {
+                continue;
+            }
+            // This snapshot is taken immediately after source extraction and
+            // before the receiver is mutated, so only entities created by the
+            // source split can be present here.
+            spawned.add(entity);
+        }
+        return spawned;
+    }
+
     private static void restoreTransfer(EntityItem source, ItemStack targetStack,
-                                        ADMediaHolder target, ItemStack sourceBefore,
-                                        ItemStack targetBefore, long targetMediaBefore,
-                                        boolean sourceWasDead,
-                                        java.util.Set<java.util.UUID> existingEntities) {
+                                         ADMediaHolder target, ItemStack sourceBefore,
+                                         ItemStack targetBefore, long targetMediaBefore,
+                                         boolean sourceWasDead,
+                                         java.util.Set<net.minecraft.entity.Entity> spawnedItems) {
         source.setItem(sourceBefore);
         source.isDead = sourceWasDead;
         restoreStack(targetStack, targetBefore);
         target.setMedia(targetMediaBefore);
-        if (source.world != null) {
-            for (net.minecraft.entity.Entity entity
-                : new ArrayList<>(source.world.loadedEntityList)) {
-                if (entity instanceof EntityItem && entity != source
-                    && entity.getUniqueID() != null
-                    && !existingEntities.contains(entity.getUniqueID())) {
+        if (spawnedItems != null) {
+            for (net.minecraft.entity.Entity entity : spawnedItems) {
+                if (entity != null && entity != source) {
                     entity.setDead();
                 }
             }
