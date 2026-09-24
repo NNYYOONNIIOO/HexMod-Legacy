@@ -2954,7 +2954,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.potion_target");
                 }
                 if (Double.isNaN(duration) || Double.isInfinite(duration)
-                    || duration < 0.0D
+                    || duration <= 0.0D
                     || duration > (Integer.MAX_VALUE / 20.0D)) {
                     throw new CastingException("hexcasting.error.potion_duration");
                 }
@@ -2982,7 +2982,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                     (net.minecraft.entity.EntityLivingBase) target;
                 int ticks = (int) Math.floor(duration * 20.0D);
                 if (!living.world.isRemote) {
-                    if (ticks > 0) {
+                    // The upstream action only applies an effect for a
+                    // strictly positive duration after conversion to game
+                    // ticks; exactly 1/20 second is intentionally a no-op.
+                    if (duration > 1.0D / 20.0D && ticks > 0) {
                         living.addPotionEffect(new net.minecraft.potion.PotionEffect(
                             potion, ticks, (int) Math.floor(potency) - 1,
                             false, true));
