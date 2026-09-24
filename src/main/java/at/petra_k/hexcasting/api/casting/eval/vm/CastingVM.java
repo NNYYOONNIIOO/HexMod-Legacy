@@ -520,6 +520,16 @@ public final class CastingVM {
         return Math.max(0, maxOperations - operationsConsumed);
     }
 
+    /**
+     * Return the operations remaining before the currently executing action
+     * consumes its operation.  The VM increments {@link #operationsConsumed}
+     * before dispatching an action, while the modern image exposes the count
+     * from before that increment to the action itself.
+     */
+    public int getRemainingOperationsForCurrentAction() {
+        return Math.max(0, activeOperationLimit - Math.max(0, operationsConsumed - 1));
+    }
+
     public int getPendingCount() {
         return continuation.size();
     }

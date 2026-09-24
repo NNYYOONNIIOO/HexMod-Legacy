@@ -3095,7 +3095,7 @@ throw new CastingException("hexcasting.error.get_media_context");
         };
     }
 
-    /** End an entity with the 1.12.2 equivalent of the Thanatos spell. */
+    /** Return the number of operations remaining in the current casting image. */
     public static final ResourceLocation THANATOS_ID =
         new ResourceLocation(HexAPI.MOD_ID, "thanatos");
     public static final HexPattern THANATOS_PATTERN =
@@ -3109,14 +3109,10 @@ throw new CastingException("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                if (vm == null || vm.getPlayer() == null) {
+                if (vm == null) {
                     throw new CastingException("hexcasting.error.thanatos_context");
                 }
-                net.minecraft.entity.Entity target = resolveEntity(
-                    stack.pop(EntityIota.class), vm);
-                if (!vm.getPlayer().world.isRemote) {
-                    target.setDead();
-                }
+                stack.push(new DoubleIota(vm.getRemainingOperationsForCurrentAction()));
             }
         });
 
