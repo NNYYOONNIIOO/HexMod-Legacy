@@ -2,8 +2,10 @@ package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.properties.PropertyEnum;
@@ -37,7 +39,12 @@ public final class BlockBooleanDirectrix extends BlockDirectrixBase {
         BooleanIota value;
         try {
             value = image.getStack().pop(BooleanIota.class);
-        } catch (CastingException ignored) {
+        } catch (CastingException exception) {
+            Mishap mishap = MishapFeedback.asMishap(exception, null, null,
+                image.getPlayer(), image.getParenDepth(),
+                image.getOperationsConsumed());
+            image.recordMishap(mishap);
+            MishapFeedback.send(image.getPlayer(), mishap);
             return new ICircleComponent.Stop();
         }
         boolean truth = value.getValue();

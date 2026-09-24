@@ -2,7 +2,9 @@ package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import net.minecraft.block.Block;
@@ -97,7 +99,24 @@ public final class BlockSlate extends BlockCircleComponent {
             image.enqueue(pattern);
             image.run(CastingVM.DEFAULT_MAX_OPERATIONS);
             return new ICircleComponent.Continue(image, output);
-        } catch (Exception ignored) {
+        } catch (at.petra_k.hexcasting.api.casting.eval.CastingException exception) {
+            Mishap mishap = image.getLastMishap();
+            if (mishap == null) {
+                mishap = MishapFeedback.asMishap(exception, pattern, null,
+                    image.getPlayer(), image.getParenDepth(),
+                    image.getOperationsConsumed());
+                image.recordMishap(mishap);
+            }
+            MishapFeedback.send(image.getPlayer(), mishap);
+            return new ICircleComponent.Stop();
+        } catch (RuntimeException exception) {
+            Mishap mishap = Mishap.fromRuntime(exception, pattern, null,
+                image.getPlayer(), image.getParenDepth(),
+                image.getOperationsConsumed()).withExecutionContext(pattern, null,
+                    image.getPlayer(), image.getParenDepth(),
+                    image.getOperationsConsumed());
+            image.recordMishap(mishap);
+            MishapFeedback.send(image.getPlayer(), mishap);
             return new ICircleComponent.Stop();
         }
     }

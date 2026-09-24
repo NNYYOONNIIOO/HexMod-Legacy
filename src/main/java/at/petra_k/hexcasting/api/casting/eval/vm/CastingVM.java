@@ -301,6 +301,14 @@ public final class CastingVM {
         return lastMishap;
     }
 
+    /** Record a component-level failure that could not be thrown through the VM. */
+    public void recordMishap(Mishap mishap) {
+        if (mishap != null) {
+            lastMishap = mishap;
+            recordSound(HexEvalSounds.MISHAP);
+        }
+    }
+
     /** Record an entity an action is resolving or validating for a Mishap. */
     public void recordMishapTarget(Entity target) {
         if (target != null) {
