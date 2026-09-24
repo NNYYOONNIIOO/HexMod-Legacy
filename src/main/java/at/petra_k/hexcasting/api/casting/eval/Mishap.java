@@ -427,6 +427,14 @@ public class Mishap extends CastingException {
             null, null, null, null, 0, 0, null);
     }
 
+    /** Create a localized value/type failure while retaining diagnostic detail. */
+    public static Mishap invalidValue(String errorKey, String detail) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.invalid_value" : errorKey;
+        return new Mishap(Kind.INVALID_VALUE, key, null,
+            null, null, null, 0, 0, detail);
+    }
+
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,
                                         int parenthesisDepth, int operation) {
         return new Mishap(Kind.INVALID_PATTERN,
@@ -517,6 +525,15 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.stack_size".equals(key)) {
             return Kind.STACK_SIZE;
+        }
+        if ("hexcasting.mishap.needs_parens".equals(key)) {
+            return Kind.INVALID_CONTEXT;
+        }
+        if ("hexcasting.error.invalid_value".equals(key)
+            || "hexcasting.error.invalid_iota".equals(key)
+            || "hexcasting.error.invalid_operator_args".equals(key)
+            || key.startsWith("hexcasting.error.arithmetic_")) {
+            return Kind.INVALID_VALUE;
         }
 
         // Action-specific keys must be classified before the suffix rules

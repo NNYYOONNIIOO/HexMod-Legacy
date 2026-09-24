@@ -23,7 +23,8 @@ public final class CastingStack {
 
     public void push(Iota value) throws CastingException {
         if (value == null) {
-            throw new CastingException("Cannot push a null Iota");
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Cannot push a null Iota");
         }
         if (values.size() >= Iota.MAX_SERIALIZATION_TOTAL) {
             throw Mishap.stackSize();
@@ -52,8 +53,9 @@ public final class CastingStack {
         Iota value = pop();
         if (!expected.isInstance(value)) {
             values.add(value);
-            throw new CastingException("Expected " + expected.getSimpleName()
-                + " but found " + value.getType().getId());
+            throw Mishap.invalidValue("hexcasting.error.invalid_iota",
+                "Expected " + expected.getSimpleName() + " but found "
+                    + value.getType().getId());
         }
         return expected.cast(value);
     }

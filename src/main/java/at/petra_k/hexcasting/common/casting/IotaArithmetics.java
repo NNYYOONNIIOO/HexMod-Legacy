@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
@@ -50,7 +51,8 @@ public final class IotaArithmetics {
                 != ((BooleanIota) right).getValue());
         }
         if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
-            throw new CastingException("xor expects two booleans or two lists");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
+                "xor expects two booleans or two lists");
         }
         List<Iota> leftItems = ((ListIota) left).getItems();
         List<Iota> rightItems = ((ListIota) right).getItems();
@@ -129,16 +131,18 @@ public final class IotaArithmetics {
     private static boolean booleanValue(Iota value, String name, int index)
         throws CastingException {
         if (!(value instanceof BooleanIota)) {
-            throw new CastingException(name + " expects Boolean argument " + index
-                + " but found " + value.getClass().getSimpleName());
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
+                name + " expects Boolean argument " + index + " but found "
+                    + value.getClass().getSimpleName());
         }
         return ((BooleanIota) value).getValue();
     }
 
     private static double number(Iota value, String name, int index) throws CastingException {
         if (!(value instanceof DoubleIota)) {
-            throw new CastingException(name + " expects numeric argument " + index
-                + " but found " + value.getClass().getSimpleName());
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
+                name + " expects numeric argument " + index + " but found "
+                    + value.getClass().getSimpleName());
         }
         return ((DoubleIota) value).getValue();
     }
@@ -146,7 +150,8 @@ public final class IotaArithmetics {
     private static void requireCount(List<Iota> arguments, int expected, String name)
         throws CastingException {
         if (arguments.size() != expected) {
-            throw new CastingException(name + " expects exactly " + expected + " arguments");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                name + " expects exactly " + expected + " arguments");
         }
     }
 }

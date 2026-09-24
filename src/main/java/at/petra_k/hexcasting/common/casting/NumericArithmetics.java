@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 
@@ -34,7 +35,8 @@ public final class NumericArithmetics {
     public static Iota divide(List<Iota> arguments) throws CastingException {
         double[] values = numbers(arguments, "divide");
         if (values[1] == 0.0D) {
-            throw new CastingException("Cannot divide by zero");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_divide_zero",
+                "Cannot divide by zero");
         }
         return new DoubleIota(values[0] / values[1]);
     }
@@ -42,7 +44,8 @@ public final class NumericArithmetics {
     public static Iota modulo(List<Iota> arguments) throws CastingException {
         double[] values = numbers(arguments, "modulo");
         if (values[1] == 0.0D) {
-            throw new CastingException("Cannot take modulo by zero");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_modulo_zero",
+                "Cannot take modulo by zero");
         }
         return new DoubleIota(values[0] % values[1]);
     }
@@ -51,7 +54,8 @@ public final class NumericArithmetics {
         double[] values = numbers(arguments, "power");
         if (values[0] < 0.0D
             && Math.abs(values[1] - Math.rint(values[1])) > 1.0E-5D) {
-            throw new CastingException("Cannot raise a negative number to a fractional power");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
+                "Cannot raise a negative number to a fractional power");
         }
         return new DoubleIota(Math.pow(values[0], values[1]));
     }
@@ -78,11 +82,13 @@ public final class NumericArithmetics {
 
     public static Iota tangent(List<Iota> arguments) throws CastingException {
         if (arguments.size() != 1) {
-            throw new CastingException("tan expects exactly one argument");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                "tan expects exactly one argument");
         }
         double value = number(arguments.get(0), "tan", 0);
         if (Math.abs(Math.cos(value)) < 1.0E-12D) {
-            throw new CastingException("Tangent is undefined at this angle");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
+                "Tangent is undefined at this angle");
         }
         return new DoubleIota(Math.tan(value));
     }
@@ -105,12 +111,14 @@ public final class NumericArithmetics {
 
     public static Iota logarithm(List<Iota> arguments) throws CastingException {
         if (arguments.size() != 2) {
-            throw new CastingException("log expects exactly two arguments");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                "log expects exactly two arguments");
         }
         double value = number(arguments.get(0), "log", 0);
         double base = number(arguments.get(1), "log", 1);
         if (value <= 0.0D || base <= 0.0D || base == 1.0D) {
-            throw new CastingException("log expects a positive value and a positive base other than one");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
+                "log expects a positive value and a positive base other than one");
         }
         return new DoubleIota(Math.log(value) / Math.log(base));
     }
@@ -124,11 +132,13 @@ public final class NumericArithmetics {
     private static Iota boundedUnary(List<Iota> arguments, String name, double minimum,
         double maximum, Unary operation) throws CastingException {
         if (arguments.size() != 1) {
-            throw new CastingException(name + " expects exactly one argument");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                name + " expects exactly one argument");
         }
         double value = number(arguments.get(0), name, 0);
         if (value < minimum || value > maximum) {
-            throw new CastingException(name + " expects an argument in [" + minimum + ", " + maximum + "]");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
+                name + " expects an argument in [" + minimum + ", " + maximum + "]");
         }
         return new DoubleIota(operation.apply(value));
     }
@@ -136,14 +146,16 @@ public final class NumericArithmetics {
     private static Iota unary(List<Iota> arguments, String name, Unary operation)
         throws CastingException {
         if (arguments.size() != 1) {
-            throw new CastingException(name + " expects exactly one argument");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                name + " expects exactly one argument");
         }
         return new DoubleIota(operation.apply(number(arguments.get(0), name, 0)));
     }
 
     private static double[] numbers(List<Iota> arguments, String name) throws CastingException {
         if (arguments.size() != 2) {
-            throw new CastingException(name + " expects exactly two arguments");
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
+                name + " expects exactly two arguments");
         }
         return new double[] {
             number(arguments.get(0), name, 0),
@@ -153,8 +165,9 @@ public final class NumericArithmetics {
 
     private static double number(Iota value, String name, int index) throws CastingException {
         if (!(value instanceof DoubleIota)) {
-            throw new CastingException(name + " expects numeric argument " + index
-                + " but found " + value.getType().getId());
+            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
+                name + " expects numeric argument " + index + " but found "
+                    + value.getType().getId());
         }
         return ((DoubleIota) value).getValue();
     }
