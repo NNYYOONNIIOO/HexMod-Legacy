@@ -2948,7 +2948,7 @@ throw new CastingException("hexcasting.error.get_media_context");
                     throw new CastingException("hexcasting.error.potion_target");
                 }
                 if (Double.isNaN(duration) || Double.isInfinite(duration)
-                    || duration <= 0.0D
+                    || duration < 0.0D
                     || duration > (Integer.MAX_VALUE / 20.0D)) {
                     throw new CastingException("hexcasting.error.potion_duration");
                 }
