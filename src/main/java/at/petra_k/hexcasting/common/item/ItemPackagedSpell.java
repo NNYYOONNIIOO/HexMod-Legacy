@@ -324,9 +324,13 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
         vm.setCastingHand(hand);
         vm.setCastingData(HexCapabilities.CASTING_DATA == null
             ? null : player.getCapability(HexCapabilities.CASTING_DATA, null));
-        if (getMaxMedia(stack) > 0L && (!canDrawMediaFromInventory() || getMedia(stack) > 0L)) {
-            vm.setMediaHolder(new HexItemMediaHolder(this, stack));
-        }
+        // The package is always the first source.  Keeping an empty holder
+        // bound is significant for Cyphers and Trinkets: once their stored
+        // media is exhausted they must fail, rather than accidentally
+        // consuming the caster's inventory.  Artifacts explicitly opt into
+        // the fallback list after their own media is spent.
+        vm.setMediaHolder(new HexItemMediaHolder(this, stack),
+            canDrawMediaFromInventory());
 
         List<HexPattern> visualPatterns = new ArrayList<>();
         for (Iota iota : program) {

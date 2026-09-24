@@ -135,6 +135,8 @@ public final class CastingVM {
     private CircleExecutionState circleExecutionState;
     /** Runtime-only media source; circles bind this to their Impetus. */
     private ADMediaHolder mediaHolder;
+    /** Whether an explicitly bound holder may fall back to player media. */
+    private boolean allowMediaInventoryFallback;
     /** Shared source transaction for one complete evaluation. */
     private MediaInventoryHelper.MediaTransaction mediaTransaction;
     private int evaluationDepth;
@@ -284,7 +286,18 @@ public final class CastingVM {
     }
 
     public void setMediaHolder(ADMediaHolder mediaHolder) {
+        setMediaHolder(mediaHolder, false);
+    }
+
+    /**
+     * Bind a media source and optionally allow ordinary player sources after
+     * the bound source is exhausted.  The latter is used only by packaged
+     * artifacts; circles and direct holders stay isolated by default.
+     */
+    public void setMediaHolder(ADMediaHolder mediaHolder,
+                               boolean allowMediaInventoryFallback) {
         this.mediaHolder = mediaHolder;
+        this.allowMediaInventoryFallback = allowMediaInventoryFallback;
     }
 
     /** Return the media still available to this VM's current cast. */
@@ -292,7 +305,8 @@ public final class CastingVM {
         if (mediaTransaction != null) {
             return mediaTransaction.getAvailableMedia();
         }
-        return MediaInventoryHelper.begin(player, castingData, mediaHolder)
+        return MediaInventoryHelper.begin(player, castingData, mediaHolder,
+                allowMediaInventoryFallback)
             .getAvailableMedia();
     }
 
@@ -889,7 +903,8 @@ public final class CastingVM {
             throw new CastingException("hexcasting.error.no_media_context");
         }
         if (mediaTransaction == null) {
-            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder);
+            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
+                allowMediaInventoryFallback);
         }
         long available = mediaTransaction.getAvailableMedia();
         if (available < amount) {

@@ -33,7 +33,7 @@ public final class MediaInventoryHelper {
 
     /** Start a transaction over the player's normal media sources. */
     public static MediaTransaction begin(EntityPlayer player, IHexCastingData data) {
-        return begin(player, data, null);
+        return begin(player, data, null, false);
     }
 
     /**
@@ -44,20 +44,29 @@ public final class MediaInventoryHelper {
      */
     public static MediaTransaction begin(EntityPlayer player, IHexCastingData data,
                                          ADMediaHolder preferred) {
+        return begin(player, data, preferred, false);
+    }
+
+    /**
+     * Start a transaction with an explicitly bound source first, optionally
+     * followed by the caster's normal media sources.  Packaged spells use
+     * this to model the modern order: consume the media stored in the item,
+     * then fall back to the player's inventory when the item allows it.
+     * Circle Impetuses use the three-argument overload and therefore remain
+     * bound to the Impetus alone.
+     */
+    public static MediaTransaction begin(EntityPlayer player, IHexCastingData data,
+                                         ADMediaHolder preferred,
+                                         boolean includeInventoryFallback) {
         List<MediaSource> sources = new ArrayList<>();
         if (preferred != null) {
-            // An explicitly bound holder (for example a packaged spell) is
-            // allowed to provide media even when it deliberately opts out of
-            // the ordinary inventory scan.  canProvide() answers the latter
-            // question; explicit ownership is already established by the VM.
-            // A negative media value is the legacy representation of an
-            // infinite source (used by the Impetus).  Do not confuse it
-            // with an empty holder; its withdrawMedia implementation turns
-            // it into Long.MAX_VALUE for a simulated read.
-            if (preferred.withdrawMedia(-1L, true) > 0L) {
-                sources.add(new MediaSource(preferred, null, true));
+            // Keep an explicitly bound holder in the transaction even when it
+            // is empty.  This is important for Cyphers: an exhausted Cypher
+            // must not silently become a normal inventory cast.
+            sources.add(new MediaSource(preferred, null, true));
+            if (!includeInventoryFallback) {
+                return new MediaTransaction(sources);
             }
-            return new MediaTransaction(sources);
         }
 
         if (player != null) {
@@ -79,7 +88,7 @@ public final class MediaInventoryHelper {
         // Modern Hex consumes the highest-priority source first.  When two
         // sources have the same priority, the fuller source wins; this keeps
         // fractional and static sources deterministic across casts.
-        Collections.sort(sources, new Comparator<MediaSource>() {
+        Comparator<MediaSource> sourceComparator = new Comparator<MediaSource>() {
             @Override
             public int compare(MediaSource left, MediaSource right) {
                 int priority = Integer.compare(right.getPriority(), left.getPriority());
@@ -88,7 +97,16 @@ public final class MediaInventoryHelper {
                 }
                 return compareMedia(right.getAvailable(), left.getAvailable());
             }
-        });
+        };
+        if (preferred != null) {
+            List<MediaSource> normalSources = new ArrayList<>(
+                sources.subList(1, sources.size()));
+            Collections.sort(normalSources, sourceComparator);
+            sources.subList(1, sources.size()).clear();
+            sources.addAll(normalSources);
+        } else {
+            Collections.sort(sources, sourceComparator);
+        }
         return new MediaTransaction(sources);
     }
 
