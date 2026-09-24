@@ -518,6 +518,50 @@ public class Mishap extends CastingException {
         if ("hexcasting.mishap.stack_size".equals(key)) {
             return Kind.STACK_SIZE;
         }
+
+        // Action-specific keys must be classified before the suffix rules
+        // below.  A generic "target" or "position" suffix is not enough to
+        // tell an entity mishap from a location or block mishap.
+        if ("hexcasting.error.ignite_target".equals(key)
+            || "hexcasting.error.potion_target".equals(key)
+            || "hexcasting.error.flight_target".equals(key)
+            || "hexcasting.error.brainsweep_expected".equals(key)
+            || "hexcasting.error.brainsweep_mob".equals(key)
+            || "hexcasting.error.recharge_entity".equals(key)
+            || "hexcasting.error.entity_unavailable".equals(key)
+            || "hexcasting.error.blink_immune".equals(key)) {
+            return Kind.BAD_ENTITY;
+        }
+        if ("hexcasting.error.craft_battery_media_item".equals(key)
+            || "hexcasting.error.recharge_holder".equals(key)
+            || "hexcasting.error.recharge_item".equals(key)
+            || "hexcasting.error.recharge_full".equals(key)
+            || "hexcasting.error.craft_battery_base".equals(key)
+            || "hexcasting.error.craft_battery_media".equals(key)
+            || "hexcasting.error.place_block_item".equals(key)
+            || "hexcasting.error.erase_holder".equals(key)
+            || "hexcasting.error.data_holder_missing".equals(key)
+            || "hexcasting.error.colorize_dye".equals(key)) {
+            return Kind.BAD_ITEM;
+        }
+        if ("hexcasting.error.akashic_duplicate".equals(key)
+            || "hexcasting.error.place_block_target".equals(key)
+            || "hexcasting.error.place_block_failed".equals(key)
+            || "hexcasting.error.conjure_block_target".equals(key)
+            || "hexcasting.error.conjure_block_missing".equals(key)
+            || "hexcasting.error.conjure_light_target".equals(key)
+            || "hexcasting.error.conjure_light_missing".equals(key)
+            || "hexcasting.error.edify_sapling".equals(key)
+            || "hexcasting.error.edify_failed".equals(key)
+            || "hexcasting.error.compare_block_expected".equals(key)) {
+            return Kind.BAD_BLOCK;
+        }
+        if ("hexcasting.error.fluid_position".equals(key)
+            || "hexcasting.error.teleport_great_position".equals(key)
+            || "hexcasting.error.brainsweep_location".equals(key)) {
+            return Kind.BAD_LOCATION;
+        }
+
         if ("hexcasting.error.permission_denied".equals(key)
             || key.endsWith("_forbidden") || key.endsWith("_disallowed")) {
             return Kind.PERMISSION_DENIED;
@@ -534,12 +578,7 @@ public class Mishap extends CastingException {
             || key.endsWith("_dimension")) {
             return Kind.BAD_LOCATION;
         }
-        if ("hexcasting.error.entity_unavailable".equals(key)
-            || "hexcasting.error.blink_immune".equals(key)
-            || "hexcasting.error.flight_target".equals(key)
-            || "hexcasting.error.potion_target".equals(key)
-            || "hexcasting.error.recharge_entity".equals(key)
-            || "hexcasting.error.brainsweep_mob".equals(key)) {
+        if (key.endsWith("_entity") || key.endsWith("_mob")) {
             return Kind.BAD_ENTITY;
         }
         if ("hexcasting.error.compare_item_expected".equals(key)
@@ -548,11 +587,13 @@ public class Mishap extends CastingException {
             || key.contains("media_item") || key.startsWith("hexcasting.error.data_holder")) {
             return Kind.BAD_ITEM;
         }
-        if ("hexcasting.error.compare_block_expected".equals(key)
-            || key.endsWith("_block") || key.endsWith("_sapling")
+        if (key.endsWith("_block") || key.endsWith("_sapling")
             || key.endsWith("_recipe") || key.endsWith("_target")
             || key.endsWith("_missing") || key.endsWith("_failed")) {
             return Kind.BAD_BLOCK;
+        }
+        if (key.endsWith("_position")) {
+            return Kind.BAD_LOCATION;
         }
         if (key.endsWith("_args") || key.endsWith("_expected")
             || key.endsWith("_duration") || key.endsWith("_potency")
