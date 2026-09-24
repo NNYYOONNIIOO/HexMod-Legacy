@@ -3219,10 +3219,10 @@ throw new CastingException("hexcasting.error.get_media_context");
                 net.minecraft.entity.player.EntityPlayer target =
                     requireFlightTarget(stack.pop(EntityIota.class), vm);
                 long cost = flightCost(seconds, false);
-                long ticks = Math.round(seconds * 20.0D);
-                if (ticks <= 0L || ticks > Integer.MAX_VALUE) {
+                if (seconds > Integer.MAX_VALUE / 20.0D) {
                     throw new CastingException("hexcasting.error.flight_duration");
                 }
+                long ticks = Math.round(seconds * 20.0D);
                 vm.consumeMedia(cost);
                 if (!target.capabilities.allowFlying
                     && !HexFlightState.hasFlight(target)
@@ -4493,7 +4493,7 @@ throw new CastingException("hexcasting.error.bounded_integer");
     private static double requirePositiveFlightArgument(DoubleIota value)
         throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw <= 0.0D) {
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw < 0.0D) {
             throw new CastingException("hexcasting.error.flight_duration");
         }
         return raw;
