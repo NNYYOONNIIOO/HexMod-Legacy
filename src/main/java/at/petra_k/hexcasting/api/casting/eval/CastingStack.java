@@ -26,16 +26,26 @@ public final class CastingStack {
             throw new CastingException("Cannot push a null Iota");
         }
         if (values.size() >= Iota.MAX_SERIALIZATION_TOTAL) {
-            throw new CastingException("Casting stack exceeded its size limit");
+            throw Mishap.stackSize();
         }
         values.add(value);
     }
 
     public Iota pop() throws CastingException {
         if (values.isEmpty()) {
-            throw new CastingException("Not enough Iotas on the casting stack");
+            throw Mishap.notEnoughArguments(1, values.size());
         }
         return values.remove(values.size() - 1);
+    }
+
+    /** Fail before mutating the stack when an action needs several arguments. */
+    public void requireSize(int expected) throws CastingException {
+        if (expected < 0) {
+            throw new IllegalArgumentException("Expected stack size cannot be negative");
+        }
+        if (values.size() < expected) {
+            throw Mishap.notEnoughArguments(expected, values.size());
+        }
     }
 
     public <T extends Iota> T pop(Class<T> expected) throws CastingException {
@@ -50,7 +60,7 @@ public final class CastingStack {
 
     public Iota peek() throws CastingException {
         if (values.isEmpty()) {
-            throw new CastingException("Not enough Iotas on the casting stack");
+            throw Mishap.notEnoughArguments(1, values.size());
         }
         return values.get(values.size() - 1);
     }

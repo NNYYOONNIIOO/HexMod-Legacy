@@ -30,6 +30,7 @@ public class Mishap extends CastingException {
         PERMISSION_DENIED,
         INVALID_VALUE,
         EVALUATION_LIMIT,
+        STACK_SIZE,
         INVALID_CONTEXT,
         INTERNAL,
         UNKNOWN
@@ -63,6 +64,8 @@ public class Mishap extends CastingException {
     private boolean permissionAllowed = true;
     private long mediaRequired = -1L;
     private long mediaAvailable = -1L;
+    private int argumentsExpected = -1;
+    private int argumentsGot = -1;
     private boolean sideEffectsApplied;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
@@ -225,6 +228,16 @@ public class Mishap extends CastingException {
         return mediaAvailable;
     }
 
+    /** Expected argument count for a stack-underflow mishap, when known. */
+    public int getArgumentsExpected() {
+        return argumentsExpected;
+    }
+
+    /** Actual stack height for a stack-underflow mishap, when known. */
+    public int getArgumentsGot() {
+        return argumentsGot;
+    }
+
     /** Attach execution data to a Mishap created before the VM knew the action. */
     public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
                                       EntityPlayer caster, int parenthesisDepth,
@@ -328,6 +341,8 @@ public class Mishap extends CastingException {
                 return 0x303030;
             case NOT_ENOUGH_MEDIA:
                 return 0xE05252;
+            case STACK_SIZE:
+                return 0x202020;
             default:
                 return 0xB04040;
         }
@@ -388,6 +403,27 @@ public class Mishap extends CastingException {
             .withMedia(required, available);
     }
 
+    /** Construct the typed equivalent of modern MishapNotEnoughArgs. */
+    public static Mishap notEnoughArguments(int expected, int got) {
+        int normalizedExpected = Math.max(0, expected);
+        int normalizedGot = Math.max(0, got);
+        String key = normalizedGot == 0
+            ? "hexcasting.mishap.no_args"
+            : "hexcasting.mishap.not_enough_args";
+        Mishap mishap = new Mishap(Kind.NOT_ENOUGH_ARGUMENTS, key, null,
+            null, null, null, 0, 0,
+            "expected=" + normalizedExpected + ", got=" + normalizedGot);
+        mishap.argumentsExpected = normalizedExpected;
+        mishap.argumentsGot = normalizedGot;
+        return mishap;
+    }
+
+    /** Construct the black-spark stack-size mishap used by the modern VM. */
+    public static Mishap stackSize() {
+        return new Mishap(Kind.STACK_SIZE, "hexcasting.mishap.stack_size",
+            null, null, null, null, 0, 0, null);
+    }
+
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,
                                         int parenthesisDepth, int operation) {
         return new Mishap(Kind.INVALID_PATTERN,
@@ -430,6 +466,9 @@ public class Mishap extends CastingException {
         }
         if (message.contains("operation limit") || message.contains("too many patterns")
             || message.contains("evaluated too many") || message.contains("size limit")) {
+            if (message.contains("stack") && message.contains("size")) {
+                return Kind.STACK_SIZE;
+            }
             return Kind.EVALUATION_LIMIT;
         }
         if (message.contains("_range") || message.contains("out_of_range")

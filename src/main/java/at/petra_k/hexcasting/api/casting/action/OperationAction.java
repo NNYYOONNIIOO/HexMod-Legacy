@@ -40,6 +40,7 @@ public final class OperationAction implements HexAction {
     public void execute(CastingStack stack) throws CastingException {
         List<Iota> before = stack.snapshot();
         try {
+            stack.requireSize(argumentCount);
             ArrayList<Iota> arguments = new ArrayList<>(argumentCount);
             for (int i = 0; i < argumentCount; i++) {
                 arguments.add(0, stack.pop());

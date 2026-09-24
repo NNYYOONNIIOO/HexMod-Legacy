@@ -55,6 +55,8 @@ public final class HexEvaluator {
         vm.setCastingData(castingData);
         vm.setPlayer(player);
         vm.setCastingHand(castingHand);
+        vm.setMediaConsumptionBypassed(player != null
+            && player.capabilities.isCreativeMode);
         try {
             vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
             HexCastingEffects.onPortableCast(player, castingHand, patterns, true,

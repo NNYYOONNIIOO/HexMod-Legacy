@@ -107,6 +107,7 @@ public final class StaffCastExecutor {
             vm.setCastingData(castingData);
             vm.setPlayer(player);
             vm.setCastingHand(hand);
+            vm.setMediaConsumptionBypassed(player.capabilities.isCreativeMode);
             boolean wasEscaped = vm.isEscapeNext();
             boolean wasInParens = vm.getParenDepth() > 0;
             action = HexActionRegistry.get(pattern, player.world);

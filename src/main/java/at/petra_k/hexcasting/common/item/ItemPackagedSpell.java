@@ -322,6 +322,7 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
         CastingVM vm = new CastingVM(result);
         vm.setPlayer(player);
         vm.setCastingHand(hand);
+        vm.setMediaConsumptionBypassed(player.capabilities.isCreativeMode);
         vm.setCastingData(HexCapabilities.CASTING_DATA == null
             ? null : player.getCapability(HexCapabilities.CASTING_DATA, null));
         // The package is always the first source.  Keeping an empty holder

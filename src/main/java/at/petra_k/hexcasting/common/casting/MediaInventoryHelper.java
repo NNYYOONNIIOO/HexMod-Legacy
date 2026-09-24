@@ -86,27 +86,31 @@ public final class MediaInventoryHelper {
             addSource(sources, data, null);
         }
 
-        // Modern Hex consumes the highest-priority source first.  When two
-        // sources have the same priority, the fuller source wins; this keeps
-        // fractional and static sources deterministic across casts.
+        // Modern Hex sorts ascending and then reverses the complete list.
+        // Reversing after the stable sort is intentional: sources with equal
+        // priority and equal fullness also reverse their discovery order.
+        // Reproduce that detail so get_media and a real cast choose identical
+        // stacks even when several amethyst sources are tied.
         Comparator<MediaSource> sourceComparator = new Comparator<MediaSource>() {
             @Override
             public int compare(MediaSource left, MediaSource right) {
-                int priority = Integer.compare(right.getPriority(), left.getPriority());
+                int priority = Integer.compare(left.getPriority(), right.getPriority());
                 if (priority != 0) {
                     return priority;
                 }
-                return compareMedia(right.getAvailable(), left.getAvailable());
+                return compareMedia(left.getAvailable(), right.getAvailable());
             }
         };
         if (preferred != null) {
             List<MediaSource> normalSources = new ArrayList<>(
                 sources.subList(1, sources.size()));
             Collections.sort(normalSources, sourceComparator);
+            Collections.reverse(normalSources);
             sources.subList(1, sources.size()).clear();
             sources.addAll(normalSources);
         } else {
             Collections.sort(sources, sourceComparator);
+            Collections.reverse(sources);
         }
         return new MediaTransaction(sources);
     }

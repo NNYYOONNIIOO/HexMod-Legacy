@@ -138,6 +138,8 @@ public final class CastingVM {
     private ADMediaHolder mediaHolder;
     /** Whether an explicitly bound holder may fall back to player media. */
     private boolean allowMediaInventoryFallback;
+    /** Player-cast environments do not spend media while in creative mode. */
+    private boolean mediaConsumptionBypassed;
     /** Shared source transaction for one complete evaluation. */
     private MediaInventoryHelper.MediaTransaction mediaTransaction;
     private int evaluationDepth;
@@ -301,8 +303,24 @@ public final class CastingVM {
         this.allowMediaInventoryFallback = allowMediaInventoryFallback;
     }
 
+    /**
+     * Mark this VM as a player-cast environment whose media costs are free in
+     * creative mode.  Circle VMs deliberately leave this disabled: an
+     * Impetus is its own media environment and still has to be drained.
+     */
+    public void setMediaConsumptionBypassed(boolean bypassed) {
+        this.mediaConsumptionBypassed = bypassed;
+    }
+
+    public boolean isMediaConsumptionBypassed() {
+        return mediaConsumptionBypassed;
+    }
+
     /** Return the media still available to this VM's current cast. */
     public long getAvailableMedia() {
+        if (mediaConsumptionBypassed) {
+            return Long.MAX_VALUE;
+        }
         if (mediaTransaction != null) {
             return mediaTransaction.getAvailableMedia();
         }
@@ -900,6 +918,9 @@ public final class CastingVM {
     /** Consume persistent player media for a contextual spell action. */
     public void consumeMedia(long amount) throws CastingException {
         if (amount <= 0L) {
+            return;
+        }
+        if (mediaConsumptionBypassed) {
             return;
         }
         if (mediaHolder == null && player == null && castingData == null) {
