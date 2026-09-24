@@ -1392,6 +1392,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
                 requireVecInRange(vm, player, position,
                     "hexcasting.error.explode_range");
+                position = avoidExplosionEyePosition(player, position);
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     position.x, position.y, position.z);
                 boolean canEdit = hasEditPermission(vm, player, blockPos);
@@ -4162,6 +4163,35 @@ throw new CastingException("hexcasting.error.get_media_context");
             && ((net.minecraft.entity.player.EntityPlayer) entity).isSpectator())
             && isVecInRange(player, new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ));
+    }
+
+    /**
+     * Avoid the vanilla explosion edge case where a blast is centered exactly
+     * on an entity's eye position and therefore misses that entity's damage
+     * check.  This is the same one-microblock nudge used by modern Hex.
+     */
+    private static net.minecraft.util.math.Vec3d avoidExplosionEyePosition(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position) {
+        if (player == null || position == null) {
+            return position;
+        }
+        final double epsilon = 0.01D;
+        net.minecraft.util.math.AxisAlignedBB area =
+            new net.minecraft.util.math.AxisAlignedBB(
+                position.x - epsilon, position.y - epsilon, position.z - epsilon,
+                position.x + epsilon, position.y + epsilon, position.z + epsilon);
+        java.util.List<net.minecraft.entity.Entity> entities =
+            player.world.getEntitiesWithinAABB(net.minecraft.entity.Entity.class,
+                area, entity -> isReasonablySelectable(player, entity));
+        for (net.minecraft.entity.Entity entity : entities) {
+            net.minecraft.util.math.Vec3d eye = entity.getPositionEyes(1.0F);
+            if (eye.squareDistanceTo(position) == 0.0D) {
+                return position.add(new net.minecraft.util.math.Vec3d(
+                    0.0D, 0.000001D, 0.0D));
+            }
+        }
+        return position;
     }
 
     private static boolean isFiniteVector(net.minecraft.util.math.Vec3d vector) {
