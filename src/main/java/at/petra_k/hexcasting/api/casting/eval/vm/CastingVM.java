@@ -24,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagByte;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.entity.Entity;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -93,12 +94,13 @@ public final class CastingVM {
         private final boolean continuationInvoked;
         private final boolean lastNestedRunHalted;
         private final int operationsConsumed;
+        private final NBTTagCompound userData;
 
         private VmSnapshot(CastingStack stack, ArrayDeque<WorkItem> continuation,
                            ArrayDeque<ParenFrame> parentheses, int parenCount,
                            boolean escapeNext, boolean halted,
                            boolean continuationInvoked, boolean lastNestedRunHalted,
-                           int operationsConsumed) {
+                           int operationsConsumed, NBTTagCompound userData) {
             this.stack = stack;
             this.continuation = continuation;
             this.parentheses = parentheses;
@@ -108,6 +110,7 @@ public final class CastingVM {
             this.continuationInvoked = continuationInvoked;
             this.lastNestedRunHalted = lastNestedRunHalted;
             this.operationsConsumed = operationsConsumed;
+            this.userData = userData == null ? new NBTTagCompound() : userData;
         }
     }
 
@@ -121,6 +124,8 @@ public final class CastingVM {
     private boolean lastNestedRunHalted;
     private boolean continuationInvoked;
     private int operationsConsumed;
+    /** Persistent casting-image data for action-local bookkeeping. */
+    private NBTTagCompound userData = new NBTTagCompound();
     private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
     private IHexCastingData castingData;
     private EntityPlayer player;
@@ -352,6 +357,40 @@ public final class CastingVM {
         return operationsConsumed;
     }
 
+    /**
+     * Return the mutable userdata associated with this casting image.  It is
+     * serialized with the resumable VM state, just like the modern
+     * CastingImage.userData compound.
+     */
+    public NBTTagCompound getUserData() {
+        return userData;
+    }
+
+    /**
+     * Mark an entity as having received motion in this casting image.  The
+     * first impulse is charged normally; later impulses to the same entity
+     * pay the additional one-dust-unit surcharge used by modern Hex.
+     */
+    public boolean checkAndMarkGivenMotion(Entity entity) {
+        if (entity == null) {
+            return false;
+        }
+        NBTTagCompound marked;
+        if (userData.hasKey(at.petra_k.hexcasting.api.HexAPI.MARKED_MOVED_USERDATA, 10)) {
+            marked = userData.getCompoundTag(
+                at.petra_k.hexcasting.api.HexAPI.MARKED_MOVED_USERDATA);
+        } else {
+            marked = new NBTTagCompound();
+        }
+        String uuid = entity.getUniqueID().toString();
+        boolean alreadyMarked = marked.hasKey(uuid);
+        if (!alreadyMarked) {
+            marked.setBoolean(uuid, true);
+            userData.setTag(at.petra_k.hexcasting.api.HexAPI.MARKED_MOVED_USERDATA, marked);
+        }
+        return alreadyMarked;
+    }
+
     /** Return the number of operations still available in a given budget. */
     public int getRemainingOperations(int maxOperations) {
         validateBudget(maxOperations);
@@ -567,6 +606,7 @@ public final class CastingVM {
         out.setInteger("parenCount", parenCount);
         out.setBoolean("escapeNext", escapeNext);
         out.setBoolean("halted", halted);
+        out.setTag("userData", userData.copy());
         NBTTagList parenthesisTags = new NBTTagList();
         for (ParenFrame frame : parentheses) {
             NBTTagCompound frameTag = new NBTTagCompound();
@@ -604,6 +644,9 @@ public final class CastingVM {
         vm.parenCount = Math.max(0, serialized.getInteger("parenCount"));
         vm.escapeNext = serialized.getBoolean("escapeNext");
         vm.halted = serialized.getBoolean("halted");
+        if (serialized.hasKey("userData", 10)) {
+            vm.userData = serialized.getCompoundTag("userData").copy();
+        }
         if (serialized.hasKey("parentheses", 9)) {
             NBTTagList parenthesisTags = serialized.getTagList("parentheses", 10);
             if (parenthesisTags.tagCount() > Iota.MAX_SERIALIZATION_TOTAL) {
@@ -915,7 +958,7 @@ public final class CastingVM {
             CastingStack.deserializeState(stack.serializeState()),
             new ArrayDeque<>(continuation), parenthesisCopy, parenCount,
             escapeNext, halted, continuationInvoked, lastNestedRunHalted,
-            operationsConsumed);
+            operationsConsumed, userData.copy());
     }
 
     private void rollbackEvaluation(VmSnapshot before) {
@@ -939,6 +982,7 @@ public final class CastingVM {
             halted = before.halted;
             continuationInvoked = before.continuationInvoked;
             lastNestedRunHalted = before.lastNestedRunHalted;
+            userData = before.userData.copy();
             operationsConsumed = before.operationsConsumed;
         }
     }

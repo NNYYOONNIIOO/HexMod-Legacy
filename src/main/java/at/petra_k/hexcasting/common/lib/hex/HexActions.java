@@ -1210,11 +1210,20 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw new CastingException("hexcasting.error.add_motion_args");
                 }
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+                requireEntityInRange(vm.getPlayer(), entity,
+                    "hexcasting.error.add_motion_range");
                 net.minecraft.util.math.Vec3d motion = motionIota.getValue();
                 double motionLengthSquared = motion.x * motion.x
                     + motion.y * motion.y + motion.z * motion.z;
-                double motionCost = Math.min(8192.0D, motionLengthSquared);
-                vm.consumeMedia((long) (MediaConstants.DUST_UNIT * motionCost));
+                if (Double.isNaN(motionLengthSquared)
+                    || Double.isInfinite(motionLengthSquared)) {
+                    throw new CastingException("hexcasting.error.add_motion_invalid");
+                }
+                double motionCost = motionLengthSquared
+                    + (vm.checkAndMarkGivenMotion(entity) ? 1.0D : 0.0D);
+                long rawCost = motionCost >= Long.MAX_VALUE / (double) MediaConstants.DUST_UNIT
+                    ? Long.MAX_VALUE : (long) (motionCost * MediaConstants.DUST_UNIT);
+                vm.consumeMedia(rawCost);
                 if (motionLengthSquared > 8192.0D * 8192.0D) {
                     motion = motion.scale(8192.0D / Math.sqrt(motionLengthSquared));
                 }

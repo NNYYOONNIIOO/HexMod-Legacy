@@ -7,6 +7,8 @@ public final class HexAPI {
     public static final String MOD_ID = "hexcasting";
     public static final String MOD_NAME = "Hex Casting";
     public static final String MOD_VERSION = "0.1.0-1.12.2";
+    /** Casting-image userdata key used by actions with per-cast bookkeeping. */
+    public static final String MARKED_MOVED_USERDATA = "hexcasting:marked_moved";
 
     private HexAPI() {
     }
