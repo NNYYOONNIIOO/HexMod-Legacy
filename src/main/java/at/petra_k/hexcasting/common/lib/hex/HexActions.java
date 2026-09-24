@@ -1154,6 +1154,11 @@ public static final HexPattern BOOL_IF_PATTERN =
                         || !hasEditPermission(vm, player, current)) {
                         continue;
                     }
+                    net.minecraft.block.state.IBlockState state =
+                        player.world.getBlockState(current);
+                    if (!canBreakBlock(player, current, state)) {
+                        continue;
+                    }
                     if (extinguishBlock(player.world, current)) {
                         player.world.spawnParticle(
                             net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
