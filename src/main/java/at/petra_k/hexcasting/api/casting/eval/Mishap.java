@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayDeque;
@@ -89,6 +90,8 @@ public class Mishap extends CastingException {
     private String targetUuid;
     /** Runtime target retained for the mishap side-effect phase. */
     private Entity targetEntity;
+    /** Actual held stack retained for bad-offhand localization. */
+    private ItemStack offhandItem;
     private boolean locationRecorded;
     private double locationX = Double.NaN;
     private double locationY = Double.NaN;
@@ -241,6 +244,11 @@ public class Mishap extends CastingException {
     /** The live target, when the action resolved one before failing. */
     public Entity getTargetEntity() {
         return targetEntity;
+    }
+
+    /** The held stack that caused a bad-offhand failure, when available. */
+    public ItemStack getOffhandItem() {
+        return offhandItem == null ? null : offhandItem.copy();
     }
 
     public boolean hasLocationContext() {
@@ -433,6 +441,12 @@ public class Mishap extends CastingException {
         targetDimension = target.dimension;
         targetUuid = target.getUniqueID() == null ? null : target.getUniqueID().toString();
         targetEntity = target;
+        return this;
+    }
+
+    /** Retain the actual held stack for a more useful offhand error. */
+    public Mishap withOffhandItem(ItemStack item) {
+        offhandItem = item == null || item.isEmpty() ? null : item.copy();
         return this;
     }
 
@@ -685,6 +699,11 @@ public class Mishap extends CastingException {
             ? "hexcasting.error.bad_offhand_item" : errorKey;
         return new Mishap(Kind.BAD_OFFHAND_ITEM, key, null,
             null, null, null, 0, 0, null);
+    }
+
+    /** Construct a bad-offhand failure while retaining the actual stack. */
+    public static Mishap badOffhandItem(String errorKey, ItemStack item) {
+        return badOffhandItem(errorKey).withOffhandItem(item);
     }
 
     /** Construct a failure for a missing item in the caster's hotbar. */

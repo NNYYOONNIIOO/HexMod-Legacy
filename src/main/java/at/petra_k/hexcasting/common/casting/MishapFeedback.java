@@ -483,6 +483,14 @@ public final class MishapFeedback {
                 "hexcasting.mishap.bad_item.hotbar", expected);
         }
 
+        if (mishap.getKind() == Mishap.Kind.BAD_OFFHAND_ITEM
+            && mishap.getOffhandItem() != null) {
+            ItemStack held = mishap.getOffhandItem();
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.bad_item.offhand", expected,
+                held.getCount(), held.getDisplayName().getUnformattedText());
+        }
+
         Entity target = mishap.getTargetEntity();
         if (mishap.getKind() == Mishap.Kind.BAD_OFFHAND_ITEM
             || !(target instanceof EntityItem)) {
@@ -622,6 +630,9 @@ public final class MishapFeedback {
         }
         if (errorKey.endsWith("data_holder_missing")) {
             return "hexcasting.mishap.bad_item.iota";
+        }
+        if (errorKey.endsWith("data_holder_not_writable")) {
+            return "hexcasting.mishap.bad_item.iota.write";
         }
         return null;
     }

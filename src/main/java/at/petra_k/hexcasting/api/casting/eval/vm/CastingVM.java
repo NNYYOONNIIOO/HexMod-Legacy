@@ -716,6 +716,9 @@ public final class CastingVM {
         if (holder == null || holder.isEmpty()) {
             throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing");
         }
+        if (!IotaDataHolder.canRead(holder)) {
+            throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing", holder);
+        }
         Iota datum = IotaDataHolder.read(holder);
         parentheses.peek().values.add(new ParenEntry(datum, true));
     }

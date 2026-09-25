@@ -2202,6 +2202,10 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             net.minecraft.item.ItemStack target = dataHolder(vm, false);
+            if (!IotaDataHolder.canWrite(target)) {
+                throw Mishap.badOffhandItem(
+                    "hexcasting.error.data_holder_not_writable", target);
+            }
             Iota value = stack.peek();
             net.minecraft.entity.player.EntityPlayer otherName =
                 Mishap.findOtherPlayer(value, vm == null ? null : vm.getPlayer());
@@ -2424,7 +2428,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
 
     private static Iota readIota(net.minecraft.item.ItemStack stack) throws CastingException {
         if (!IotaDataHolder.canRead(stack)) {
-            throw Mishap.error("hexcasting.error.data_holder_missing");
+            throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing", stack);
         }
         return IotaDataHolder.read(stack);
     }
