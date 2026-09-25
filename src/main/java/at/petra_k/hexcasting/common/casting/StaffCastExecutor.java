@@ -94,7 +94,7 @@ public final class StaffCastExecutor {
             player.getCapability(HexCapabilities.CASTING_DATA, null);
         if (castingData == null) {
             MishapFeedback.send(player,
-                new CastingException("hexcasting.message.staff_error"));
+                Mishap.legacy("hexcasting.message.staff_error"));
             return CastOutcome.failure(Resolution.ERRORED,
                 Collections.<String>emptyList(), 0, 0, false, HexSounds.CAST_FAILURE, null);
         }

@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
@@ -83,7 +84,7 @@ public final class IotaDataHolder {
     /** Clear the data owned by a supported item without changing its item id. */
     public static void clear(ItemStack stack) throws CastingException {
         if (!canClear(stack)) {
-            throw new CastingException("hexcasting.error.data_holder_not_writable");
+            throw Mishap.legacy("hexcasting.error.data_holder_not_writable");
         }
         if (ItemHexStaff.isStaff(stack)) {
             ItemHexStaff.clearProgram(stack);
@@ -109,13 +110,13 @@ public final class IotaDataHolder {
 
     public static Iota read(ItemStack stack) throws CastingException {
         if (!canRead(stack)) {
-            throw new CastingException("hexcasting.error.data_holder_missing");
+            throw Mishap.legacy("hexcasting.error.data_holder_missing");
         }
         try {
             if (stack.getItem() instanceof IotaHolderItem) {
                 Iota value = ((IotaHolderItem) stack.getItem()).readIota(stack);
                 if (value == null) {
-                    throw new CastingException("hexcasting.error.data_holder_missing");
+                    throw Mishap.legacy("hexcasting.error.data_holder_missing");
                 }
                 return value;
             }
@@ -123,18 +124,18 @@ public final class IotaDataHolder {
         } catch (CastingException exception) {
             throw exception;
         } catch (RuntimeException exception) {
-            throw new CastingException("hexcasting.error.data_holder_invalid");
+            throw Mishap.legacy("hexcasting.error.data_holder_invalid");
         }
     }
 
     public static void write(ItemStack stack, Iota value) throws CastingException {
         if (!canWrite(stack) || value == null) {
-            throw new CastingException("hexcasting.error.data_holder_not_writable");
+            throw Mishap.legacy("hexcasting.error.data_holder_not_writable");
         }
         if (stack.getItem() instanceof IotaHolderItem) {
             IotaHolderItem holder = (IotaHolderItem) stack.getItem();
             if (!holder.canWrite(stack, value)) {
-                throw new CastingException("hexcasting.error.data_holder_not_writable");
+                throw Mishap.legacy("hexcasting.error.data_holder_not_writable");
             }
             holder.writeDatum(stack, value);
             return;

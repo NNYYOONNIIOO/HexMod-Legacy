@@ -536,6 +536,19 @@ public class Mishap extends CastingException {
             null, null, null, 0, 0, detail);
     }
 
+    /**
+     * Promote one of the remaining legacy translation-key exceptions into a
+     * typed Mishap at the point where it is created.  This keeps action
+     * context and category information intact when the exception crosses a
+     * nested eval/cc or continuation boundary.
+     */
+    public static Mishap legacy(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.unknown" : errorKey;
+        return new Mishap(classify(key), key, null,
+            null, null, null, 0, 0, null);
+    }
+
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,
                                         int parenthesisDepth, int operation) {
         Mishap mishap = new Mishap(Kind.INVALID_PATTERN,
