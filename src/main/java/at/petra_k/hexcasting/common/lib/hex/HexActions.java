@@ -4308,15 +4308,12 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     "hexcasting.error.permission_denied");
                 at.petra_k.hexcasting.common.block.BlockAkashicRecord record =
                     (at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock;
-                if (record.lookupPattern(player.world, target, key.getPattern()) != null) {
-                    throw Mishap.legacy("hexcasting.error.akashic_duplicate");
-                }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
-                boolean written =
-                    record.addNewDatum(player.world, target, key.getPattern(), value);
-                if (!written) {
-                    throw Mishap.legacy("hexcasting.error.akashic_duplicate");
-                }
+                // Modern Hex delegates the duplicate/open-slot decision to
+                // the Akashic record during the rendered spell.  A full or
+                // already-used record is therefore a no-op here, rather than
+                // a BAD_BLOCK Mishap that would trigger an explosion.
+                record.addNewDatum(player.world, target, key.getPattern(), value);
                 player.world.playSound(null, target,
                     HexSounds.SCROLL_SCRIBBLE,
                     net.minecraft.util.SoundCategory.BLOCKS, 1.0F, 0.8F);
