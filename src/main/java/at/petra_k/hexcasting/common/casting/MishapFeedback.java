@@ -363,7 +363,8 @@ public final class MishapFeedback {
             return localizeFormattedWithFallback(null,
                 new String[] {"hexcasting.mishap.invalid_value",
                     "hexcasting.mishap.invalid_value."},
-                mishap.getInvalidReverseIndex(), actual, perpetrator.display());
+                expected, mishap.getInvalidReverseIndex(), actual,
+                perpetrator.display());
         }
 
         if (mishap.getKind() == Mishap.Kind.ARITHMETIC
