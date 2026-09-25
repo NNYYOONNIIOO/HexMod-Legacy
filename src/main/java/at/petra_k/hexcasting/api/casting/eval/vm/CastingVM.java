@@ -912,6 +912,9 @@ public final class CastingVM {
             Mishap mishap = Mishap.invalidPattern(pattern, player, parenCount,
                 operationsConsumed);
             lastMishap = mishap;
+            if (evaluationDepth == 0) {
+                mishap.applyStackEffect(stack);
+            }
             throw mishap;
         }
         Iota value = pattern == null ? work.iota : new PatternIota(pattern);
@@ -948,6 +951,9 @@ public final class CastingVM {
                     parenCount, operationsConsumed);
             mishap = attachMishapContext(mishap);
             lastMishap = mishap;
+            if (evaluationDepth == 0) {
+                mishap.applyStackEffect(stack);
+            }
             MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } catch (RuntimeException exception) {
@@ -959,6 +965,9 @@ public final class CastingVM {
                     parenCount, operationsConsumed);
             mishap = attachMishapContext(mishap);
             lastMishap = mishap;
+            if (evaluationDepth == 0) {
+                mishap.applyStackEffect(stack);
+            }
             MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } finally {
@@ -1023,7 +1032,13 @@ public final class CastingVM {
                 rollbackEvaluation(before);
             }
             if (exception instanceof Mishap) {
-                MishapFeedback.applySideEffects((Mishap) exception);
+                Mishap mishap = (Mishap) exception;
+                try {
+                    mishap.applyStackEffect(stack);
+                } catch (CastingException ignored) {
+                    // A malformed stack effect must not hide the original Mishap.
+                }
+                MishapFeedback.applySideEffects(mishap);
             }
             throw exception;
         } catch (RuntimeException exception) {
@@ -1035,6 +1050,7 @@ public final class CastingVM {
                 .withExecutionContext(null, null, player,
                     parenCount, operationsConsumed);
             lastMishap = mishap;
+            MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } finally {
             evaluationDepth--;

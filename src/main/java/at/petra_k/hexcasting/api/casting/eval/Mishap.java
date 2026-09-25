@@ -1,6 +1,9 @@
 package at.petra_k.hexcasting.api.casting.eval;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
+import at.petra_k.hexcasting.api.casting.iota.GarbageIota;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
@@ -37,6 +40,15 @@ public class Mishap extends CastingException {
         UNKNOWN
     }
 
+    /** Stack mutation performed after the VM has restored the failed cast. */
+    private enum StackEffect {
+        NONE,
+        PUSH_GARBAGE,
+        REPLACE_WITH_GARBAGE,
+        CLEAR_AND_PUSH_GARBAGE,
+        PUSH_PATTERN
+    }
+
     private final Kind kind;
     private final String errorKey;
     private HexPattern pattern;
@@ -68,6 +80,13 @@ public class Mishap extends CastingException {
     private int argumentsExpected = -1;
     private int argumentsGot = -1;
     private boolean sideEffectsApplied;
+    private StackEffect stackEffect = StackEffect.NONE;
+    private int stackEffectCount;
+    private int stackEffectReverseIndex;
+    private HexPattern stackEffectPattern;
+    private boolean stackEffectApplied;
+    private String invalidExpected;
+    private Iota invalidPerpetrator;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
@@ -239,6 +258,55 @@ public class Mishap extends CastingException {
         return argumentsGot;
     }
 
+    /** Whether this Mishap has a modern Hex stack-resolution effect. */
+    public boolean hasStackEffect() {
+        return stackEffect != StackEffect.NONE;
+    }
+
+    /** Expected type key used by the structured invalid-Iota message. */
+    public String getInvalidExpected() {
+        return invalidExpected;
+    }
+
+    /** The value that failed an invalid-Iota predicate. */
+    public Iota getInvalidPerpetrator() {
+        return invalidPerpetrator;
+    }
+
+    /** Stack index counted from the top for an invalid-Iota replacement. */
+    public int getInvalidReverseIndex() {
+        return stackEffectReverseIndex;
+    }
+
+    /**
+     * Apply the stack portion of this Mishap once.  The caller must invoke it
+     * after restoring the VM snapshot, matching the modern side-effect phase.
+     */
+    public void applyStackEffect(CastingStack stack) throws CastingException {
+        if (stack == null || stackEffectApplied || stackEffect == StackEffect.NONE) {
+            return;
+        }
+        switch (stackEffect) {
+            case PUSH_GARBAGE:
+                stack.pushGarbage(stackEffectCount);
+                break;
+            case REPLACE_WITH_GARBAGE:
+                stack.replaceFromTop(stackEffectReverseIndex, new GarbageIota());
+                break;
+            case CLEAR_AND_PUSH_GARBAGE:
+                stack.clearAndPushGarbage();
+                break;
+            case PUSH_PATTERN:
+                if (stackEffectPattern != null) {
+                    stack.push(new PatternIota(stackEffectPattern));
+                }
+                break;
+            default:
+                break;
+        }
+        stackEffectApplied = true;
+    }
+
     /** Attach execution data to a Mishap created before the VM knew the action. */
     public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
                                       EntityPlayer caster, int parenthesisDepth,
@@ -264,6 +332,11 @@ public class Mishap extends CastingException {
         }
         this.parenthesisDepth = Math.max(0, parenthesisDepth);
         this.operation = Math.max(0, operation);
+        if ("hexcasting.mishap.needs_parens".equals(errorKey)
+            && pattern != null) {
+            stackEffect = StackEffect.PUSH_PATTERN;
+            stackEffectPattern = pattern;
+        }
         return this;
     }
 
@@ -420,13 +493,17 @@ public class Mishap extends CastingException {
             "expected=" + normalizedExpected + ", got=" + normalizedGot);
         mishap.argumentsExpected = normalizedExpected;
         mishap.argumentsGot = normalizedGot;
+        mishap.stackEffect = StackEffect.PUSH_GARBAGE;
+        mishap.stackEffectCount = Math.max(0, normalizedExpected - normalizedGot);
         return mishap;
     }
 
     /** Construct the black-spark stack-size mishap used by the modern VM. */
     public static Mishap stackSize() {
-        return new Mishap(Kind.STACK_SIZE, "hexcasting.mishap.stack_size",
+        Mishap mishap = new Mishap(Kind.STACK_SIZE, "hexcasting.mishap.stack_size",
             null, null, null, null, 0, 0, null);
+        mishap.stackEffect = StackEffect.CLEAR_AND_PUSH_GARBAGE;
+        return mishap;
     }
 
     /** Construct the operation-limit Mishap used by the evaluator boundary. */
@@ -446,10 +523,29 @@ public class Mishap extends CastingException {
 
     public static Mishap invalidPattern(HexPattern pattern, EntityPlayer caster,
                                         int parenthesisDepth, int operation) {
-        return new Mishap(Kind.INVALID_PATTERN,
+        Mishap mishap = new Mishap(Kind.INVALID_PATTERN,
             "hexcasting.error.invalid_pattern", null,
             pattern, null, caster, parenthesisDepth, operation,
             "No action is registered for pattern " + String.valueOf(pattern));
+        mishap.stackEffect = StackEffect.PUSH_GARBAGE;
+        mishap.stackEffectCount = 1;
+        return mishap;
+    }
+
+    /** Construct the modern invalid-Iota Mishap and its GarbageIota replacement. */
+    public static Mishap invalidIota(Iota perpetrator, int reverseIndex,
+                                     String expected) {
+        Mishap mishap = new Mishap(Kind.INVALID_VALUE,
+            "hexcasting.mishap.invalid_value", null,
+            null, null, null, 0, 0,
+            "expected=" + String.valueOf(expected) + ", got="
+                + (perpetrator == null ? "null" : perpetrator.display()));
+        mishap.stackEffect = StackEffect.REPLACE_WITH_GARBAGE;
+        mishap.stackEffectReverseIndex = Math.max(0, reverseIndex);
+        mishap.invalidExpected = expected == null || expected.isEmpty()
+            ? "unknown" : expected;
+        mishap.invalidPerpetrator = perpetrator;
+        return mishap;
     }
 
     private static Kind classify(String raw) {

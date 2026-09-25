@@ -2,6 +2,8 @@ package at.petra_k.hexcasting.api.casting.eval;
 
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.GarbageIota;
+import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -53,11 +55,35 @@ public final class CastingStack {
         Iota value = pop();
         if (!expected.isInstance(value)) {
             values.add(value);
-            throw Mishap.invalidValue("hexcasting.error.invalid_iota",
-                "Expected " + expected.getSimpleName() + " but found "
-                    + value.getType().getId());
+            throw Mishap.invalidIota(value, 0, expectedName(expected));
         }
         return expected.cast(value);
+    }
+
+    /** Add the placeholder values required by a not-enough-arguments Mishap. */
+    public void pushGarbage(int count) throws CastingException {
+        for (int i = 0; i < Math.max(0, count); i++) {
+            push(new GarbageIota());
+        }
+    }
+
+    /** Replace one value counted from the top of the stack. */
+    public void replaceFromTop(int reverseIndex, Iota replacement)
+        throws CastingException {
+        if (replacement == null) {
+            throw new IllegalArgumentException("Stack replacement cannot be null");
+        }
+        int index = values.size() - 1 - Math.max(0, reverseIndex);
+        if (index < 0 || index >= values.size()) {
+            throw new IllegalStateException("Stack replacement index is out of bounds");
+        }
+        values.set(index, replacement);
+    }
+
+    /** Resolve a stack-size Mishap to the single black-spark placeholder. */
+    public void clearAndPushGarbage() throws CastingException {
+        values.clear();
+        push(new GarbageIota());
     }
 
     public Iota peek() throws CastingException {
@@ -142,5 +168,19 @@ public final class CastingStack {
             out.push(HexIotaTypes.deserialize(serialized.getCompoundTagAt(i)));
         }
         return out;
+    }
+
+    private static String expectedName(Class<? extends Iota> expected) {
+        if (expected == null) {
+            return "unknown";
+        }
+        if (expected == Vec3Iota.class) {
+            return "vector";
+        }
+        String name = expected.getSimpleName();
+        if (name.endsWith("Iota")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        return name.toLowerCase(java.util.Locale.ROOT);
     }
 }
