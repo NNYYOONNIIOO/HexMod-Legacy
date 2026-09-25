@@ -2912,7 +2912,17 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 net.minecraft.entity.effect.EntityLightningBolt bolt =
                     new net.minecraft.entity.effect.EntityLightningBolt(
                         player.world, target.x, target.y, target.z, false);
-                player.world.addWeatherEffect(bolt);
+                if (player.world.addWeatherEffect(bolt)) {
+                    // Lightning is inserted into the world's weather list
+                    // immediately, so a later action in the same cast must
+                    // remove it when the VM rolls the cast back.
+                    vm.addRollbackAction(() -> {
+                        if (!bolt.isDead) {
+                            bolt.setDead();
+                        }
+                        player.world.removeWeatherEffect(bolt);
+                    });
+                }
             }
         });
 
