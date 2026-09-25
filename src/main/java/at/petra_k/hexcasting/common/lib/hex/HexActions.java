@@ -1617,13 +1617,13 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.entity.Entity nearest = null;
                 double nearestDistance = Double.MAX_VALUE;
                 for (net.minecraft.entity.Entity candidate : candidates) {
-                    // Item entities deliberately report canBeCollidedWith() as
-                    // false in 1.12.2, but modern Hex still lets the entity
-                    // raycast select them by their pick box. Filtering on
-                    // collision here made dropped items impossible to target.
-                    if (!isReasonablySelectable(caster, candidate)
-                        || candidate == caster
-                        || candidate.getLowestRidingEntity() == caster.getLowestRidingEntity()) {
+                    // Match modern Hex's raycast: the ray chooses the nearest
+                    // hit first, then the ambit check is applied to that hit.
+                    // Filtering by isReasonablySelectable here would let a
+                    // farther in-range entity win over the actual nearest hit.
+                    // Item entities deliberately report canBeCollidedWith()
+                    // as false in 1.12.2, so selection uses their pick box.
+                    if (candidate == caster) {
                         continue;
                     }
                     net.minecraft.util.math.AxisAlignedBB box = candidate.getEntityBoundingBox();
@@ -1634,18 +1634,31 @@ public static final HexPattern BOOL_IF_PATTERN =
                     if (border > 0.0F) {
                         box = box.grow(border);
                     }
-                    net.minecraft.util.math.RayTraceResult intercept =
-                        box.calculateIntercept(start, end);
-                    if (intercept == null || intercept.hitVec == null) {
+                    boolean containsStart = box.contains(start);
+                    net.minecraft.util.math.RayTraceResult intercept = containsStart
+                        ? null : box.calculateIntercept(start, end);
+                    if (!containsStart && (intercept == null || intercept.hitVec == null)) {
                         continue;
                     }
-                    double distance = start.squareDistanceTo(intercept.hitVec);
+                    // A passenger sharing the caster's root vehicle is only
+                    // ignored when it is genuinely farther along the ray.
+                    // If the ray starts inside its pick box, modern Hex still
+                    // resolves that entity at distance zero.
+                    if (candidate.getLowestRidingEntity() == caster.getLowestRidingEntity()
+                        && !containsStart) {
+                        continue;
+                    }
+                    double distance = containsStart ? 0.0D
+                        : start.squareDistanceTo(intercept.hitVec);
                     if (distance < nearestDistance) {
                         nearestDistance = distance;
                         nearest = candidate;
                     }
                 }
-                stack.push(nearest == null ? new NullIota() : new EntityIota(nearest));
+                stack.push(nearest == null || !isVecInRange(caster,
+                    new net.minecraft.util.math.Vec3d(nearest.posX,
+                        nearest.posY, nearest.posZ))
+                    ? new NullIota() : new EntityIota(nearest));
             }
         });
     /** Select the nearest entity centered on a position Iota. */
