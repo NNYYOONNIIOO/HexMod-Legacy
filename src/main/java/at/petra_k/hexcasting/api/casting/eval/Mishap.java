@@ -1067,8 +1067,7 @@ public class Mishap extends CastingException {
             || "hexcasting.error.flight_target".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
-            || "hexcasting.error.entity_data_target".equals(key)
-            || "hexcasting.error.entity_data_expected".equals(key)) {
+            || "hexcasting.error.entity_data_target".equals(key)) {
             return Kind.BAD_ENTITY;
         }
         if ("hexcasting.error.place_block_item".equals(key)) {
@@ -1099,8 +1098,7 @@ public class Mishap extends CastingException {
             || "hexcasting.error.conjure_light_target".equals(key)
             || "hexcasting.error.conjure_light_missing".equals(key)
             || "hexcasting.error.edify_sapling".equals(key)
-            || "hexcasting.error.edify_failed".equals(key)
-            || "hexcasting.error.compare_block_expected".equals(key)) {
+            || "hexcasting.error.edify_failed".equals(key)) {
             return Kind.BAD_BLOCK;
         }
         if ("hexcasting.error.entity_data_range".equals(key)
@@ -1113,6 +1111,10 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.permission_denied".equals(key)
             || key.endsWith("_forbidden") || key.endsWith("_disallowed")) {
             return Kind.PERMISSION_DENIED;
+        }
+        if ("hexcasting.error.entity_data_expected".equals(key)
+            || "hexcasting.error.compare_block_expected".equals(key)) {
+            return Kind.INVALID_VALUE;
         }
         if (key.endsWith("_context") || "hexcasting.error.no_media_context".equals(key)) {
             return Kind.INVALID_CONTEXT;

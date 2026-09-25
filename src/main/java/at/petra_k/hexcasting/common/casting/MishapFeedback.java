@@ -342,6 +342,36 @@ public final class MishapFeedback {
                 ? "?" : target.getDisplayName().getUnformattedText();
             return I18n.translateToLocalFormatted(mishap.getErrorKey(), name);
         }
+        if (mishap.getKind() == Mishap.Kind.BAD_ENTITY) {
+            return localizeBadEntity(mishap);
+        }
+        if (mishap.getKind() == Mishap.Kind.BAD_ITEM
+            || mishap.getKind() == Mishap.Kind.BAD_OFFHAND_ITEM
+            || mishap.getKind() == Mishap.Kind.LACKING_HOTBAR_ITEM) {
+            return localizeBadItem(mishap);
+        }
+        if (mishap.getKind() == Mishap.Kind.BAD_BLOCK) {
+            return localizeBadBlock(mishap);
+        }
+        if (mishap.getKind() == Mishap.Kind.BAD_LOCATION
+            || mishap.getKind() == Mishap.Kind.PERMISSION_DENIED) {
+            return localizeBadLocation(mishap);
+        }
+        if (mishap.getKind() == Mishap.Kind.NO_AKASHIC_RECORD
+            && mishap.hasLocationContext()) {
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.no_akashic_record",
+                locationDisplay(mishap));
+        }
+        if (mishap.getKind() == Mishap.Kind.BAD_BRAINSWEEP
+            && mishap.getTargetEntity() != null) {
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.bad_brainsweep",
+                entityDisplay(mishap.getTargetEntity()));
+        }
+        if (mishap.getKind() == Mishap.Kind.ALREADY_BRAINSWEPT) {
+            return localizeKey("hexcasting.mishap.already_brainswept");
+        }
         if (mishap.getKind() == Mishap.Kind.OTHERS_NAME) {
             Entity target = mishap.getTargetEntity();
             EntityPlayer caster = mishap.getCaster();
@@ -416,6 +446,173 @@ public final class MishapFeedback {
             return localizeRaw(mishap.getErrorKey());
         }
         return localizeKey(key);
+    }
+
+    /** Localize a modern bad-entity message while retaining old-key fallback. */
+    private static String localizeBadEntity(Mishap mishap) {
+        Entity target = mishap.getTargetEntity();
+        String expectedKey = entityExpectationKey(mishap.getErrorKey());
+        if (target == null || expectedKey == null) {
+            return localizeKey(mishap.getErrorKey());
+        }
+        return I18n.translateToLocalFormatted("hexcasting.mishap.bad_entity",
+            localizeKey(expectedKey), entityDisplay(target));
+    }
+
+    /** Localize item, offhand, and hotbar failures with actual stack data. */
+    private static String localizeBadItem(Mishap mishap) {
+        String expectedKey = itemExpectationKey(mishap.getErrorKey());
+        if (expectedKey == null) {
+            return localizeKey(mishap.getErrorKey());
+        }
+        String expected = localizeKey(expectedKey);
+        if (mishap.getKind() == Mishap.Kind.LACKING_HOTBAR_ITEM) {
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.bad_item.hotbar", expected);
+        }
+
+        Entity target = mishap.getTargetEntity();
+        if (mishap.getKind() == Mishap.Kind.BAD_OFFHAND_ITEM
+            || !(target instanceof EntityItem)) {
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.no_item.offhand", expected);
+        }
+        ItemStack stack = ((EntityItem) target).getItem();
+        if (stack == null || stack.isEmpty()) {
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.no_item", expected);
+        }
+        return I18n.translateToLocalFormatted("hexcasting.mishap.bad_item",
+            expected, stack.getCount(), stack.getDisplayName().getUnformattedText());
+    }
+
+    /** Localize a block failure with the recorded position and actual state. */
+    private static String localizeBadBlock(Mishap mishap) {
+        String expectedKey = blockExpectationKey(mishap.getErrorKey());
+        if (expectedKey == null || !mishap.hasLocationContext()) {
+            return localizeKey(mishap.getErrorKey());
+        }
+        String actual = "?";
+        EntityPlayer caster = mishap.getCaster();
+        if (caster != null && caster.world != null
+            && (mishap.getLocationDimension() == Integer.MIN_VALUE
+                || mishap.getLocationDimension() == caster.dimension)) {
+            net.minecraft.util.math.BlockPos position = locationBlock(mishap);
+            actual = caster.world.getBlockState(position).getBlock()
+                .getLocalizedName();
+        }
+        return I18n.translateToLocalFormatted("hexcasting.mishap.bad_block",
+            localizeKey(expectedKey), locationDisplay(mishap), actual);
+    }
+
+    /** Localize a range/permission failure using the modern location keys. */
+    private static String localizeBadLocation(Mishap mishap) {
+        if (!mishap.hasLocationContext()) {
+            return localizeKey(mishap.getErrorKey());
+        }
+        String suffix;
+        String key = mishap.getErrorKey() == null ? "" : mishap.getErrorKey();
+        if (mishap.getKind() == Mishap.Kind.PERMISSION_DENIED
+            || key.endsWith("_forbidden") || key.endsWith("_disallowed")) {
+            suffix = "forbidden";
+        } else if (key.endsWith("_dimension") || key.contains("dimension")) {
+            suffix = "bad_dimension";
+        } else if (key.endsWith("_position") || key.contains("out_of_world")) {
+            suffix = "out_of_world";
+        } else {
+            suffix = "too_far";
+        }
+        String modernKey = "hexcasting.mishap.location_." + suffix;
+        return I18n.translateToLocalFormatted(modernKey, locationDisplay(mishap));
+    }
+
+    private static String entityDisplay(Entity entity) {
+        return entity == null || entity.getDisplayName() == null
+            ? "?" : entity.getDisplayName().getUnformattedText();
+    }
+
+    private static String locationDisplay(Mishap mishap) {
+        return new Vec3Iota(new Vec3d(mishap.getLocationX(),
+            mishap.getLocationY(), mishap.getLocationZ())).display();
+    }
+
+    private static net.minecraft.util.math.BlockPos locationBlock(Mishap mishap) {
+        return new net.minecraft.util.math.BlockPos(
+            (int) Math.floor(mishap.getLocationX()),
+            (int) Math.floor(mishap.getLocationY()),
+            (int) Math.floor(mishap.getLocationZ()));
+    }
+
+    private static String entityExpectationKey(String errorKey) {
+        if (errorKey == null) {
+            return null;
+        }
+        if (errorKey.endsWith("ignite_target")) {
+            return "hexcasting.mishap.invalid_value.class.entity_or_vector";
+        }
+        if (errorKey.endsWith("potion_target")) {
+            return "hexcasting.mishap.invalid_value.class.entity.living";
+        }
+        if (errorKey.endsWith("flight_target")) {
+            return "hexcasting.mishap.invalid_value.class.entity.player";
+        }
+        if (errorKey.endsWith("recharge_entity")) {
+            return "hexcasting.mishap.invalid_value.class.entity.item";
+        }
+        if (errorKey.endsWith("entity_data_target")) {
+            return "hexcasting.mishap.bad_item.iota.read";
+        }
+        return null;
+    }
+
+    private static String itemExpectationKey(String errorKey) {
+        if (errorKey == null) {
+            return null;
+        }
+        if (errorKey.endsWith("craft_battery_base")) {
+            return "hexcasting.mishap.bad_item.bottle";
+        }
+        if (errorKey.endsWith("craft_battery_media_item")
+            || errorKey.endsWith("craft_battery_media")) {
+            return "hexcasting.mishap.bad_item.media_for_battery";
+        }
+        if (errorKey.endsWith("recharge_item")) {
+            return "hexcasting.mishap.bad_item.media";
+        }
+        if (errorKey.endsWith("recharge_holder")) {
+            return "hexcasting.mishap.bad_item.rechargable";
+        }
+        if (errorKey.endsWith("erase_holder")) {
+            return "hexcasting.mishap.bad_item.eraseable";
+        }
+        if (errorKey.endsWith("colorize_dye")) {
+            return "hexcasting.mishap.bad_item.colorizer";
+        }
+        if (errorKey.endsWith("cycle_variant_item")) {
+            return "hexcasting.mishap.bad_item.variant";
+        }
+        if (errorKey.endsWith("place_block_item")) {
+            return "hexcasting.mishap.bad_item.placeable";
+        }
+        if (errorKey.endsWith("data_holder_missing")) {
+            return "hexcasting.mishap.bad_item.iota";
+        }
+        return null;
+    }
+
+    private static String blockExpectationKey(String errorKey) {
+        if (errorKey == null) {
+            return null;
+        }
+        if (errorKey.endsWith("edify_sapling")) {
+            return "hexcasting.mishap.bad_block.sapling";
+        }
+        if (errorKey.endsWith("place_block_target")
+            || errorKey.endsWith("conjure_block_target")
+            || errorKey.endsWith("conjure_light_target")) {
+            return "hexcasting.mishap.bad_block.replaceable";
+        }
+        return null;
     }
 
     private static String localizeArithmeticMishap(Mishap mishap) {
