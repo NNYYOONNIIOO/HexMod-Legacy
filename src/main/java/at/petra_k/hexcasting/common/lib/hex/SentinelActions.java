@@ -57,7 +57,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.legacy("hexcasting.error.sentinel_context");
+                throw Mishap.badCaster();
             }
 
             @Override
@@ -78,7 +78,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.legacy("hexcasting.error.sentinel_context");
+                throw Mishap.badCaster();
             }
 
             @Override
@@ -99,7 +99,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.legacy("hexcasting.error.sentinel_context");
+                throw Mishap.badCaster();
             }
 
             @Override
@@ -124,7 +124,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.legacy("hexcasting.error.sentinel_context");
+                throw Mishap.badCaster();
             }
 
             @Override
@@ -149,7 +149,7 @@ public final class SentinelActions {
     private static EntityPlayer requirePlayer(CastingVM vm) throws CastingException {
         if (vm == null || vm.getPlayer() == null || vm.getPlayer().world == null
             || vm.getPlayer().world.isRemote) {
-            throw Mishap.legacy("hexcasting.error.sentinel_context");
+            throw Mishap.badCaster();
         }
         return vm.getPlayer();
     }
