@@ -122,12 +122,10 @@ public final class StaffCastExecutor {
                 vm.getStack().size(), vm.getParenDepth(), vm.isEscapeNext(),
                 isStackClear(vm), soundFor(vm, true), null);
         } catch (CastingException exception) {
-            Mishap mishap = exception instanceof Mishap
-                ? (Mishap) exception
-                : Mishap.from(exception, pattern,
-                    vm == null ? null : HexActionRegistry.idFor(action),
-                    player, vm == null ? 0 : vm.getParenDepth(),
-                    vm == null ? 0 : vm.getOperationsConsumed());
+            Mishap mishap = MishapFeedback.asMishap(exception, pattern,
+                vm == null ? null : HexActionRegistry.idFor(action), player,
+                vm == null ? 0 : vm.getParenDepth(),
+                vm == null ? 0 : vm.getOperationsConsumed());
             if (vm != null) {
                 vm.clearPendingWork();
                 save(staff, vm);
