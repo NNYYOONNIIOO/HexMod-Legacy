@@ -1021,8 +1021,30 @@ public final class CastingVM {
                 allowMediaInventoryFallback);
         }
         long extracted = mediaTransaction.consumeUpTo(amount);
-        long generated = extracted < amount && canOvercast()
-            ? OvercastHelper.consume(player, amount - extracted) : 0L;
+        long generated = 0L;
+        if (extracted < amount && canOvercast()) {
+            final float healthBefore = player.getHealth();
+            final boolean deadBefore = player.isDead;
+            final int hurtResistantBefore = player.hurtResistantTime;
+            generated = OvercastHelper.consume(player, amount - extracted);
+            if (generated > 0L) {
+                final long generatedMedia = generated;
+                addRollbackAction(() -> {
+                    player.setHealth(healthBefore);
+                    player.isDead = deadBefore;
+                    player.hurtResistantTime = hurtResistantBefore;
+                });
+                // A single action can still fail after overcasting.  The
+                // outer VM rollback handles that case; an insufficient
+                // overcast must be restored immediately because this method
+                // rolls back the media transaction before throwing.
+                if (extracted + generatedMedia < amount) {
+                    player.setHealth(healthBefore);
+                    player.isDead = deadBefore;
+                    player.hurtResistantTime = hurtResistantBefore;
+                }
+            }
+        }
         if (extracted + generated < amount) {
             mediaTransaction.rollback();
             throw Mishap.notEnoughMedia(amount, extracted + generated);
