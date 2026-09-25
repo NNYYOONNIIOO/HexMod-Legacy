@@ -2764,6 +2764,16 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 return;
             }
 
+            // The native 1.12 generator can place a trunk, leaves, and an
+            // accent log in one call. Capture its bounded growth area before
+            // the sapling is removed so a later Mishap restores every block,
+            // including the soil callback and any tile data.
+            BlockRegionSnapshot before = BlockRegionSnapshot.capture(
+                player.world,
+                position.add(-8, -1, -8),
+                position.add(8, 18, 8));
+            vm.addRollbackAction(before::restore);
+
             // Remove the sapling exactly as BlockSapling.generateTree does.
             // If all eight feature attempts are blocked, restore it. The
             // upstream action treats that as a normal no-op, not a Mishap.
@@ -2869,9 +2879,21 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     position.getZ() + 0.5D), "hexcasting.error.bonemeal_range");
                 requireEditPermission(vm, player, position,
                     "hexcasting.error.bonemeal_forbidden");
+                net.minecraft.block.state.IBlockState targetState =
+                    player.world.getBlockState(position);
+                if (!(targetState.getBlock() instanceof net.minecraft.block.IGrowable)
+                    || !((net.minecraft.block.IGrowable) targetState.getBlock())
+                        .canGrow(player.world, position, targetState, false)) {
+                    throw Mishap.badBlock("hexcasting.error.bonemeal_target");
+                }
                 vm.consumeMedia(MediaConstants.DUST_UNIT
                     + MediaConstants.DUST_UNIT / 8L);
                 if (!player.world.isRemote) {
+                    BlockRegionSnapshot before = BlockRegionSnapshot.capture(
+                        player.world,
+                        position.add(-8, -1, -8),
+                        position.add(8, 32, 8));
+                    vm.addRollbackAction(before::restore);
                     net.minecraft.item.ItemStack boneMeal = new net.minecraft.item.ItemStack(
                         net.minecraft.init.Items.DYE, 1, 15);
                     net.minecraft.item.ItemDye.applyBonemeal(
@@ -4531,6 +4553,45 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 world.removeTileEntity(position);
             }
             world.notifyBlockUpdate(position, state, state, 3);
+        }
+    }
+
+    /** Restore a bounded multi-block growth operation after a failed cast. */
+    private static final class BlockRegionSnapshot {
+        private final java.util.List<BlockSnapshot> blocks;
+
+        private BlockRegionSnapshot(java.util.List<BlockSnapshot> blocks) {
+            this.blocks = blocks;
+        }
+
+        private static BlockRegionSnapshot capture(
+            net.minecraft.world.World world,
+            net.minecraft.util.math.BlockPos first,
+            net.minecraft.util.math.BlockPos second) {
+            java.util.List<BlockSnapshot> blocks = new java.util.ArrayList<>();
+            if (world == null || first == null || second == null) {
+                return new BlockRegionSnapshot(blocks);
+            }
+            int minX = Math.min(first.getX(), second.getX());
+            int maxX = Math.max(first.getX(), second.getX());
+            int minY = Math.max(0, Math.min(first.getY(), second.getY()));
+            int maxY = Math.min(world.getHeight() - 1,
+                Math.max(first.getY(), second.getY()));
+            int minZ = Math.min(first.getZ(), second.getZ());
+            int maxZ = Math.max(first.getZ(), second.getZ());
+            for (int x = minX; x <= maxX; x++) {
+                for (int y = minY; y <= maxY; y++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        blocks.add(BlockSnapshot.capture(world,
+                            new net.minecraft.util.math.BlockPos(x, y, z)));
+                    }
+                }
+            }
+            return new BlockRegionSnapshot(blocks);
+        }
+
+        private void restore() {
+            restoreBlockSnapshots(blocks);
         }
     }
 
