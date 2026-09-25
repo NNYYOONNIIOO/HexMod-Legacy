@@ -1488,7 +1488,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                      // do the same before invoking destroyBlock so protected
                      // blocks are left untouched.
                      && canBreakBlock(player, blockPos, state)) {
-                     player.world.destroyBlock(blockPos, true);
+                      player.world.destroyBlock(blockPos, true, player);
                  }
             }
         });
