@@ -36,12 +36,12 @@ public final class HexEvalSounds {
 
     private static final Set<String> SPELL_ACTIONS = new HashSet<>(Arrays.asList(
         "print", "ignite", "extinguish", "add_motion", "beep",
-        "summon_rain", "dispel_rain", "explode", "explode_fire",
+        "summon_rain", "dispel_rain", "explode", "explode/fire",
         "break_block", "raycast", "raycast_axis", "raycast_entity",
-        "conjure_block", "conjure_light", "flight", "flight_can_fly",
-        "flight_range", "flight_time", "colorize", "brainsweep",
-        "teleport_great", "craft_battery", "craft_cypher", "craft_trinket",
-        "craft_artifact", "edify", "erase", "place_block", "bonemeal",
+        "conjure_block", "conjure_light", "flight", "flight/can_fly",
+        "flight/range", "flight/time", "colorize", "brainsweep",
+        "teleport/great", "craft_battery", "craft/cypher", "craft/trinket",
+        "craft/artifact", "edify", "erase", "place_block", "bonemeal",
         "lightning", "blink", "create_water", "create_lava", "destroy_water",
         "potion_absorption", "potion_haste", "potion_levitation",
         "potion_night_vision", "potion_poison", "potion_regeneration",
@@ -64,7 +64,7 @@ public final class HexEvalSounds {
         }
         String path = id.getResourceDomain().equals(HexAPI.MOD_ID)
             ? id.getResourcePath() : id.toString();
-        if ("eval".equals(path) || "eval_cc".equals(path)) {
+        if ("eval".equals(path) || "eval/cc".equals(path)) {
             return HERMES;
         }
         if ("for_each".equals(path)) {
