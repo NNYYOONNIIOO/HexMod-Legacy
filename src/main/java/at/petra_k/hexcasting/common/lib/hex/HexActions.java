@@ -2226,7 +2226,12 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            stack.push(new BooleanIota(IotaDataHolder.canRead(dataHolder(vm, true))));
+            if (vm == null) {
+                throw Mishap.error("hexcasting.error.readable_context");
+            }
+            net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
+                IotaDataHolder::isDataHolder);
+            stack.push(new BooleanIota(target != null && IotaDataHolder.canRead(target)));
         }
     });
 
@@ -2240,7 +2245,12 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-            stack.push(new BooleanIota(IotaDataHolder.canWrite(dataHolder(vm, false))));
+            if (vm == null) {
+                throw Mishap.error("hexcasting.error.writable_context");
+            }
+            net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
+                IotaDataHolder::isDataHolder);
+            stack.push(new BooleanIota(target != null && IotaDataHolder.canWrite(target)));
         }
     });
 
@@ -2344,6 +2354,9 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         }
         net.minecraft.item.ItemStack stack = vm.getHeldItemToOperateOn(
             readable ? IotaDataHolder::canRead : IotaDataHolder::canWrite);
+        if (stack == null || stack.isEmpty()) {
+            stack = vm.getHeldItemToOperateOn(IotaDataHolder::isDataHolder);
+        }
         if (stack == null || stack.isEmpty()) {
             throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing");
         }

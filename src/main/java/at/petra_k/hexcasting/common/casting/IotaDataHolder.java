@@ -19,6 +19,18 @@ public final class IotaDataHolder {
     private IotaDataHolder() {
     }
 
+    /** Whether this stack is backed by a recognized iota data-holder bridge. */
+    public static boolean isDataHolder(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (stack.getItem() instanceof IotaHolderItem) {
+            return true;
+        }
+        return stack.hasTagCompound()
+            && stack.getTagCompound().hasKey(TAG_IOTA, 10);
+    }
+
     public static boolean canRead(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return false;
@@ -41,7 +53,7 @@ public final class IotaDataHolder {
         if (stack.getItem() instanceof IotaHolderItem) {
             return ((IotaHolderItem) stack.getItem()).writeable(stack);
         }
-        return !(stack.getItem() instanceof ItemAbacus);
+        return isDataHolder(stack) && !(stack.getItem() instanceof ItemAbacus);
     }
 
     /** Whether the stack contains data that the erase action can remove. */

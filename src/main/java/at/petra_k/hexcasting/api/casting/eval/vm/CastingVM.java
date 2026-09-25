@@ -709,6 +709,11 @@ public final class CastingVM {
         }
         ItemStack holder = getHeldItemToOperateOn(IotaDataHolder::canRead);
         if (holder == null || holder.isEmpty()) {
+            // Match modern Hex: if neither hand has readable data, retain a
+            // real data holder for the more useful bad-offhand failure.
+            holder = getHeldItemToOperateOn(IotaDataHolder::isDataHolder);
+        }
+        if (holder == null || holder.isEmpty()) {
             throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing");
         }
         Iota datum = IotaDataHolder.read(holder);
