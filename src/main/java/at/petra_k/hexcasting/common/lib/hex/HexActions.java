@@ -42,6 +42,7 @@ import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import at.petra_k.hexcasting.common.world.HexEdifiedTreeGenerator;
 import at.petra_k.hexcasting.common.effect.HexPigmentSource;
+import at.petra_k.hexcasting.common.config.HexConfig;
 
 /**
  * First portable action slice of Hex Casting.
@@ -1499,7 +1500,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     : MediaConstants.DUST_UNIT / 8L);
                 if (!state.getBlock().isAir(state, player.world, blockPos)
                      && state.getBlock().getBlockHardness(state, player.world, blockPos) >= 0.0F
-                     && state.getBlock().getHarvestLevel(state) <= 3
+                     && state.getBlock().getHarvestLevel(state)
+                        <= HexConfig.opBreakHarvestLevel()
                      // Forge mods may veto destruction through
                      // Block#canEntityDestroy.  The modern action checks the
                      // platform breaking hook after its tier/harvest checks;

@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import at.petra_k.hexcasting.common.CommonProxy;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.block.TileEntityConjured;
@@ -44,6 +45,7 @@ public final class HexCasting {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        HexConfig.load(event.getSuggestedConfigurationFile());
         GameRegistry.registerTileEntity(TileEntityConjured.class,
             new net.minecraft.util.ResourceLocation(MOD_ID, "conjured"));
         GameRegistry.registerTileEntity(TileEntitySlate.class,
