@@ -622,6 +622,14 @@ public class Mishap extends CastingException {
             null, null, null, 0, 0, null);
     }
 
+    /** Construct a block-target failure while retaining its detail key. */
+    public static Mishap badBlock(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.bad_block" : errorKey;
+        return new Mishap(Kind.BAD_BLOCK, key, null,
+            null, null, null, 0, 0, null);
+    }
+
     /** Construct the typed failure for an entity which rejects an operation. */
     public static Mishap immuneEntity(Entity target) {
         Mishap mishap = new Mishap(Kind.IMMUNE_ENTITY,

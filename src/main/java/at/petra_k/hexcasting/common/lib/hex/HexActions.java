@@ -2703,7 +2703,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 "hexcasting.error.edify_forbidden");
             net.minecraft.block.state.IBlockState sapling = player.world.getBlockState(position);
             if (!(sapling.getBlock() instanceof net.minecraft.block.BlockSapling)) {
-                throw Mishap.legacy("hexcasting.error.edify_sapling");
+                throw Mishap.badBlock("hexcasting.error.edify_sapling");
             }
             vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
             if (player.world.isRemote) {
@@ -2714,8 +2714,8 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
             }
 
             // Remove the sapling exactly as BlockSapling.generateTree does.
-            // If all eight feature attempts are blocked, restore it instead
-            // of reporting a successful cast with no world-side result.
+            // If all eight feature attempts are blocked, restore it. The
+            // upstream action treats that as a normal no-op, not a Mishap.
             player.world.setBlockState(position, net.minecraft.init.Blocks.AIR.getDefaultState(), 4);
             boolean generated = false;
             for (int attempt = 0; attempt < 8 && !generated; attempt++) {
@@ -2724,7 +2724,6 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
             }
             if (!generated) {
                 player.world.setBlockState(position, sapling, 4);
-                throw Mishap.legacy("hexcasting.error.edify_failed");
             }
         }
     });
