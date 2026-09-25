@@ -10,6 +10,9 @@ import net.minecraft.util.ResourceLocation;
 /** Player-health fallback used when a player cast runs out of media. */
 public final class OvercastHelper {
     private static final String UNLOCKED_KEY = "hexcasting:overcast_unlocked";
+    private static final String ENLIGHTENED_KEY = "hexcasting:enlightened";
+    private static final ResourceLocation ENLIGHTENMENT_ADVANCEMENT =
+        new ResourceLocation("hexcasting", "enlightenment");
     private static final ResourceLocation UNLOCK_ADVANCEMENT =
         new ResourceLocation("hexcasting", "y_u_no_cast_angy");
     private static final double MEDIA_TO_HEALTH =
@@ -44,6 +47,33 @@ public final class OvercastHelper {
         if (player != null) {
             player.getEntityData().setBoolean(UNLOCKED_KEY, true);
         }
+    }
+
+    /**
+     * Return whether a player may run a great spell.  A 1.12.2 installation
+     * may not have the modern advancement JSON, so an absent advancement is
+     * treated as an unavailable gate rather than locking every great spell.
+     * Servers that provide the advancement get the exact progress check, and
+     * the persistent flag gives ports a stable fallback across respawns.
+     */
+    public static boolean isEnlightened(EntityPlayer player) {
+        if (player == null || player.world == null || player.world.isRemote
+            || player.isSpectator()) {
+            return false;
+        }
+        if (player.getEntityData().getBoolean(ENLIGHTENED_KEY)) {
+            return true;
+        }
+        if (!(player instanceof net.minecraft.entity.player.EntityPlayerMP)
+            || player.world.getMinecraftServer() == null) {
+            return true;
+        }
+        net.minecraft.advancements.Advancement advancement =
+            player.world.getMinecraftServer().getAdvancementManager()
+                .getAdvancement(ENLIGHTENMENT_ADVANCEMENT);
+        return advancement == null
+            || ((net.minecraft.entity.player.EntityPlayerMP) player)
+                .getAdvancements().getProgress(advancement).isDone();
     }
 
     /** Maximum media the player's current health can provide. */

@@ -928,6 +928,11 @@ public final class CastingVM {
         activeOperationLimit = maxOperations;
         clearMishapContext();
         try {
+            if (PerWorldPatternData.isPerWorldAction(actionId)
+                && player != null
+                && !OvercastHelper.isEnlightened(player)) {
+                throw Mishap.unenlightened();
+            }
             if (escapeNext) {
                 escapeNext = false;
                 capture(value, true);
