@@ -663,6 +663,14 @@ public class Mishap extends CastingException {
             null, null, null, 0, 0, null);
     }
 
+    /** Construct a context failure without relying on suffix classification. */
+    public static Mishap invalidContext(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.invalid_context" : errorKey;
+        return new Mishap(Kind.INVALID_CONTEXT, key, null,
+            null, null, null, 0, 0, null);
+    }
+
     /** Construct a data-container failure without a gameplay side effect. */
     public static Mishap invalidDataHolder(String errorKey) {
         String key = errorKey == null || errorKey.isEmpty()
