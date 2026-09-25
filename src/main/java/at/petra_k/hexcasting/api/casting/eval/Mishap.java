@@ -516,6 +516,8 @@ public class Mishap extends CastingException {
                 return 0xE05252;
             case EVALUATION_LIMIT:
                 return 0x5C86D6;
+            case INTERNAL:
+                return 0x202020;
             case STACK_SIZE:
                 return 0x202020;
             default:
@@ -568,15 +570,18 @@ public class Mishap extends CastingException {
                                      EntityPlayer caster,
                                      int parenthesisDepth, int operation) {
         String detail = exception == null ? "unknown" : exception.getClass().getSimpleName();
-        return new Mishap(Kind.INTERNAL, "hexcasting.error.unknown", exception, pattern,
+        Mishap mishap = new Mishap(Kind.INTERNAL, "hexcasting.mishap.unknown",
+            exception, pattern,
             actionId, caster,
             parenthesisDepth, operation, detail);
+        mishap.displayArgs = new Object[] {detail};
+        return mishap;
     }
 
     /** Construct the common media-shortage Mishap with quantitative context. */
     public static Mishap notEnoughMedia(long required, long available) {
         return new Mishap(Kind.NOT_ENOUGH_MEDIA,
-            "hexcasting.error.not_enough_media", null, null, null, null,
+            "hexcasting.message.cant_overcast", null, null, null, null,
             0, 0, "required=" + Math.max(0L, required)
                 + ", available=" + Math.max(0L, available))
             .withMedia(required, available);
@@ -778,7 +783,7 @@ public class Mishap extends CastingException {
     /** Construct the operation-limit Mishap used by the evaluator boundary. */
     public static Mishap evaluationLimit(int maxOperations) {
         return new Mishap(Kind.EVALUATION_LIMIT,
-            "hexcasting.error.evaluation_limit", null, null, null, null,
+            "hexcasting.mishap.eval_too_much", null, null, null, null,
             0, 0, "limit=" + Math.max(0, maxOperations));
     }
 
@@ -976,7 +981,8 @@ public class Mishap extends CastingException {
         if ("hexcasting.mishap.entity_too_far".equals(key)) {
             return Kind.ENTITY_TOO_FAR;
         }
-        if ("hexcasting.error.not_enough_media".equals(key)) {
+        if ("hexcasting.error.not_enough_media".equals(key)
+            || "hexcasting.message.cant_overcast".equals(key)) {
             return Kind.NOT_ENOUGH_MEDIA;
         }
         if (key.startsWith("hexcasting.error.data_holder")) {
@@ -1004,6 +1010,9 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.stack_size".equals(key)) {
             return Kind.STACK_SIZE;
+        }
+        if ("hexcasting.mishap.eval_too_much".equals(key)) {
+            return Kind.EVALUATION_LIMIT;
         }
         if ("hexcasting.mishap.needs_parens".equals(key)) {
             return Kind.INVALID_CONTEXT;
