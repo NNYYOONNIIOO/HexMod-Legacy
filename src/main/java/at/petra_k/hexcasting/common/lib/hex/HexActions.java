@@ -2189,6 +2189,9 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
             if (otherName != null) {
                 throw Mishap.othersName(otherName);
             }
+            final net.minecraft.item.ItemStack targetBefore = target.copy();
+            vm.addRollbackAction(() ->
+                MediaInventoryHelper.restoreStack(target, targetBefore));
             IotaDataHolder.write(target, value);
             stack.pop();
         }
@@ -2264,6 +2267,9 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 if (otherName != null) {
                     throw Mishap.othersName(otherName);
                 }
+                final net.minecraft.item.ItemStack targetBefore = target.copy();
+                vm.addRollbackAction(() ->
+                    MediaInventoryHelper.restoreStack(target, targetBefore));
                 IotaDataHolder.write(target, value);
             }
         });
