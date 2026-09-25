@@ -3256,6 +3256,18 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     // strictly positive duration after conversion to game
                     // ticks; exactly 1/20 second is intentionally a no-op.
                     if (duration > 1.0D / 20.0D && ticks > 0) {
+                        final net.minecraft.potion.PotionEffect effectBefore =
+                            living.getActivePotionEffect(potion);
+                        final net.minecraft.potion.PotionEffect savedEffect =
+                            effectBefore == null ? null
+                                : new net.minecraft.potion.PotionEffect(effectBefore);
+                        vm.addRollbackAction(() -> {
+                            living.removePotionEffect(potion);
+                            if (savedEffect != null) {
+                                living.addPotionEffect(
+                                    new net.minecraft.potion.PotionEffect(savedEffect));
+                            }
+                        });
                         living.addPotionEffect(new net.minecraft.potion.PotionEffect(
                             potion, ticks, (int) Math.floor(potency) - 1,
                             false, true));
