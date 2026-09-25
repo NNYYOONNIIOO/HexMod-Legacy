@@ -663,7 +663,7 @@ public final class CastingVM {
 
     public void closeParen() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+            throw Mishap.needsParens(
                 "Cannot close a parenthesis when none is open");
         }
         parenCount--;
@@ -684,7 +684,7 @@ public final class CastingVM {
 
     public void closeAllParens() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+            throw Mishap.needsParens(
                 "Cannot close parentheses when none is open");
         }
         ParenFrame frame = parentheses.peek();
@@ -701,7 +701,7 @@ public final class CastingVM {
     /** Read the off-hand data holder into the currently captured list. */
     public void readIntoParen() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+            throw Mishap.needsParens(
                 "Cannot read into parentheses when none is open");
         }
         if (player == null) {
@@ -718,7 +718,7 @@ public final class CastingVM {
     /** Undo the latest captured value, or the current empty parenthesis frame. */
     public void undo() throws CastingException {
         if (parenCount <= 0 || parentheses.isEmpty()) {
-            throw Mishap.invalidValue("hexcasting.mishap.needs_parens",
+            throw Mishap.needsParens(
                 "Undo requires an open parenthesis");
         }
         ParenFrame frame = parentheses.peek();

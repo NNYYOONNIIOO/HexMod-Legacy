@@ -473,6 +473,8 @@ public class Mishap extends CastingException {
             case BAD_BRAINSWEEP:
             case ALREADY_BRAINSWEPT:
                 return 0x62B64A;
+            case INVALID_CONTEXT:
+                return 0xD87F33;
             case NO_AKASHIC_RECORD:
                 return 0x8B5CC7;
             case BAD_LOCATION:
@@ -586,6 +588,12 @@ public class Mishap extends CastingException {
             ? "hexcasting.error.invalid_value" : errorKey;
         return new Mishap(Kind.INVALID_VALUE, key, null,
             null, null, null, 0, 0, detail);
+    }
+
+    /** Construct the orange-spark failure used by actions that require open parentheses. */
+    public static Mishap needsParens(String detail) {
+        return new Mishap(Kind.INVALID_CONTEXT, "hexcasting.mishap.needs_parens",
+            null, null, null, null, 0, 0, detail);
     }
 
     /** Construct the modern wrong-dimension Mishap and its garbage result. */
@@ -751,7 +759,9 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.brainsweep_already".equals(key)) {
             return Kind.ALREADY_BRAINSWEPT;
         }
-        if ("hexcasting.error.brainsweep_recipe".equals(key)) {
+        if ("hexcasting.error.brainsweep_expected".equals(key)
+            || "hexcasting.error.brainsweep_mob".equals(key)
+            || "hexcasting.error.brainsweep_recipe".equals(key)) {
             return Kind.BAD_BRAINSWEEP;
         }
         if ("hexcasting.error.no_akashic_record".equals(key)) {
@@ -787,8 +797,6 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.ignite_target".equals(key)
             || "hexcasting.error.potion_target".equals(key)
             || "hexcasting.error.flight_target".equals(key)
-            || "hexcasting.error.brainsweep_expected".equals(key)
-            || "hexcasting.error.brainsweep_mob".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
             || "hexcasting.error.entity_data_expected".equals(key)
