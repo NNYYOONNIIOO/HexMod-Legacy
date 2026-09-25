@@ -348,15 +348,14 @@ public final class MishapFeedback {
                     ? "hexcasting.mishap.invalid_value." + expectedSuffix
                     : "hexcasting.mishap.invalid_value.class." + expectedSuffix;
             Object[] expectedArgs = mishap.getInvalidExpectedArgs();
-            String expected = expectedArgs.length == 0
-                ? localizeKey(expectedKey)
-                : I18n.translateToLocalFormatted(expectedKey, expectedArgs);
+            String expected = localizeInvalidValue(expectedKey, expectedArgs);
             Iota perpetrator = mishap.getInvalidPerpetrator();
-            String actual = localizeKey(
+            String actual = localizeInvalidValue(
                 "hexcasting.mishap.invalid_value.class."
-                    + perpetrator.getType().getId());
-            return I18n.translateToLocalFormatted(
-                "hexcasting.mishap.invalid_value", expected,
+                    + perpetrator.getType().getId(), new Object[0]);
+            return localizeFormattedWithFallback(null,
+                new String[] {"hexcasting.mishap.invalid_value",
+                    "hexcasting.mishap.invalid_value."},
                 mishap.getInvalidReverseIndex(), actual, perpetrator.display());
         }
 
@@ -440,6 +439,41 @@ public final class MishapFeedback {
                 "hexcasting.message.pattern_unregistered", signature);
         }
         return localizeKey(message);
+    }
+
+    /**
+     * Resource packs from different Hex versions use both a trailing-dot and
+     * a non-trailing-dot spelling for invalid-value keys. Prefer the modern
+     * spelling, but keep old packs and the bundled legacy translations usable.
+     */
+    private static String localizeInvalidValue(String key, Object[] args) {
+        if (key == null || key.isEmpty()) {
+            return localizeKey(key);
+        }
+        String legacyKey = key.endsWith(".") ? key : key + ".";
+        return localizeFormattedWithFallback(null,
+            new String[] {key, legacyKey}, args);
+    }
+
+    private static String localizeFormattedWithFallback(String fallback,
+                                                         String[] keys,
+                                                         Object... args) {
+        if (keys != null) {
+            for (String key : keys) {
+                if (key == null || key.isEmpty()) {
+                    continue;
+                }
+                String translated = I18n.translateToLocal(key);
+                if (!key.equals(translated)) {
+                    return args == null || args.length == 0
+                        ? translated
+                        : I18n.translateToLocalFormatted(key, args);
+                }
+            }
+        }
+        return fallback == null
+            ? localizeKey(keys == null || keys.length == 0 ? null : keys[0])
+            : fallback;
     }
 
     private static String localizeKey(String key) {
