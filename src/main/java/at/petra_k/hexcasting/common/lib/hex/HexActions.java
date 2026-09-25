@@ -2881,13 +2881,6 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     position.getZ() + 0.5D), "hexcasting.error.bonemeal_range");
                 requireEditPermission(vm, player, position,
                     "hexcasting.error.bonemeal_forbidden");
-                net.minecraft.block.state.IBlockState targetState =
-                    player.world.getBlockState(position);
-                if (!(targetState.getBlock() instanceof net.minecraft.block.IGrowable)
-                    || !((net.minecraft.block.IGrowable) targetState.getBlock())
-                        .canGrow(player.world, position, targetState, false)) {
-                    throw Mishap.badBlock("hexcasting.error.bonemeal_target");
-                }
                 vm.consumeMedia(MediaConstants.DUST_UNIT
                     + MediaConstants.DUST_UNIT / 8L);
                 if (!player.world.isRemote) {
