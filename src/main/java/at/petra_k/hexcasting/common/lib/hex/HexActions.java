@@ -4404,8 +4404,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
-                net.minecraft.item.ItemStack right = itemStack(stack.pop(), vm);
-                net.minecraft.item.ItemStack left = itemStack(stack.pop(), vm);
+                net.minecraft.item.ItemStack right = itemStack(stack.pop(), vm, 0);
+                net.minecraft.item.ItemStack left = itemStack(stack.pop(), vm, 1);
                 boolean matches;
                 if (strict) {
                     matches = net.minecraft.item.ItemStack.areItemStacksEqual(left, right);
@@ -4420,15 +4420,20 @@ throw Mishap.error("hexcasting.error.get_media_context");
         };
     }
 
-    private static net.minecraft.item.ItemStack itemStack(Iota value, CastingVM vm)
+    private static net.minecraft.item.ItemStack itemStack(Iota value, CastingVM vm,
+                                                          int reverseIndex)
         throws CastingException {
         if (value instanceof ItemIota) {
             return ((ItemIota) value).getStack();
         }
         if (!(value instanceof EntityIota)) {
-            throw Mishap.error("hexcasting.error.compare_item_expected");
+            throw Mishap.invalidIota(value, reverseIndex, "entity.item_holder");
         }
-        return entityItem(value, vm).copy();
+        net.minecraft.item.ItemStack result = entityItemIfPresent(value, vm);
+        if (result == null || result.isEmpty()) {
+            throw Mishap.invalidIota(value, reverseIndex, "entity.item_holder");
+        }
+        return result.copy();
     }
 
     private static net.minecraft.item.ItemStack findPlaceableBlockStack(
