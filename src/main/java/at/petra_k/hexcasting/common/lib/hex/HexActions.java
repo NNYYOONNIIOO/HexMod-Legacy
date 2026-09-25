@@ -4563,6 +4563,12 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.util.math.BlockPos position,
         String errorKey) throws CastingException {
+        if (vm != null && player != null && position != null) {
+            vm.recordMishapLocation(position.getX() + 0.5D,
+                position.getY() + 0.5D, position.getZ() + 0.5D,
+                player.world == null || player.world.provider == null
+                    ? Integer.MIN_VALUE : player.world.provider.getDimension());
+        }
         if (!hasEditPermission(vm, player, position)) {
             throw Mishap.legacy(errorKey);
         }
