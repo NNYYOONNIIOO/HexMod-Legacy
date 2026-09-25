@@ -2536,6 +2536,10 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (player.world.isRemote) {
                     return;
                 }
+                final java.util.List<BlockSnapshot> changedBlocks =
+                    new java.util.ArrayList<>();
+                vm.addRollbackAction(() -> restoreBlockSnapshots(changedBlocks));
+                changedBlocks.add(BlockSnapshot.capture(player.world, position));
 
                 // Forge fluid handlers cover modded tanks and fluid blocks
                 // that do not inherit from vanilla BlockLiquid.  The modern
@@ -2579,6 +2583,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     if (fluid) {
                         boolean success = false;
                         if (canBreakBlock(player, current, state)) {
+                            changedBlocks.add(BlockSnapshot.capture(
+                                player.world, current));
                             if (block instanceof net.minecraftforge.fluids.IFluidBlock) {
                                 net.minecraftforge.fluids.IFluidBlock fluidBlock =
                                     (net.minecraftforge.fluids.IFluidBlock) block;
@@ -2602,12 +2608,16 @@ throw Mishap.error("hexcasting.error.get_media_context");
                         }
                     } else if (isFilledCauldron(state)
                         && canBreakBlock(player, current, state)) {
+                        changedBlocks.add(BlockSnapshot.capture(
+                            player.world, current));
                         player.world.setBlockState(current,
                             net.minecraft.init.Blocks.CAULDRON.getDefaultState(), 3);
                         removed++;
                         emitFluidRemovalFeedback(player.world, current);
                     } else if (isWaterPlant(state)
                         && canBreakBlock(player, current, state)) {
+                        changedBlocks.add(BlockSnapshot.capture(
+                            player.world, current));
                         block.dropBlockAsItem(player.world, current, state, 0);
                         player.world.setBlockToAir(current);
                         removed++;
@@ -2655,6 +2665,10 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (player.world.isRemote) {
                     return;
                 }
+                final java.util.List<BlockSnapshot> changedBlocks =
+                    new java.util.ArrayList<>();
+                vm.addRollbackAction(() -> restoreBlockSnapshots(changedBlocks));
+                changedBlocks.add(BlockSnapshot.capture(player.world, position));
                 if (!isPlacingAllowed(player, position,
                     new net.minecraft.item.ItemStack(bucket))) {
                     return;
@@ -3014,6 +3028,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (!isPlacingAllowed(player, position, useStack)) {
                     return;
                 }
+                final net.minecraft.item.ItemStack sourceBefore = source.copy();
+                final BlockSnapshot targetBefore = BlockSnapshot.capture(
+                    player.world, position);
+                vm.addRollbackAction(() -> {
+                    targetBefore.restore();
+                    MediaInventoryHelper.restoreStack(source, sourceBefore);
+                });
                 player.setHeldItem(blockHand, useStack);
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
@@ -3326,6 +3347,9 @@ throw Mishap.error("hexcasting.error.get_media_context");
                         new net.minecraft.item.ItemStack(conjured))) {
                         return;
                     }
+                    final BlockSnapshot targetBefore = BlockSnapshot.capture(
+                        player.world, target);
+                    vm.addRollbackAction(targetBefore::restore);
                     player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
@@ -3386,6 +3410,9 @@ throw Mishap.error("hexcasting.error.get_media_context");
                         new net.minecraft.item.ItemStack(conjured))) {
                         return;
                     }
+                    final BlockSnapshot targetBefore = BlockSnapshot.capture(
+                        player.world, target);
+                    vm.addRollbackAction(targetBefore::restore);
                     player.world.setBlockState(target, placement, 3);
                     net.minecraft.tileentity.TileEntity tile = player.world.getTileEntity(target);
                     if (tile instanceof at.petra_k.hexcasting.common.block.TileEntityConjured) {
@@ -4398,6 +4425,64 @@ throw Mishap.error("hexcasting.error.get_media_context");
         });
 
     private HexActions() {
+    }
+
+    /** Restore a set of block mutations in reverse order after a failed cast. */
+    private static void restoreBlockSnapshots(
+        java.util.List<BlockSnapshot> snapshots) {
+        for (int i = snapshots.size() - 1; i >= 0; i--) {
+            snapshots.get(i).restore();
+        }
+    }
+
+    /** A 1.12 block state plus its optional block-entity NBT. */
+    private static final class BlockSnapshot {
+        private final net.minecraft.world.World world;
+        private final net.minecraft.util.math.BlockPos position;
+        private final net.minecraft.block.state.IBlockState state;
+        private final net.minecraft.nbt.NBTTagCompound tileData;
+
+        private BlockSnapshot(net.minecraft.world.World world,
+                              net.minecraft.util.math.BlockPos position,
+                              net.minecraft.block.state.IBlockState state,
+                              net.minecraft.nbt.NBTTagCompound tileData) {
+            this.world = world;
+            this.position = position;
+            this.state = state;
+            this.tileData = tileData;
+        }
+
+        private static BlockSnapshot capture(
+            net.minecraft.world.World world,
+            net.minecraft.util.math.BlockPos position) {
+            net.minecraft.tileentity.TileEntity tile =
+                world == null ? null : world.getTileEntity(position);
+            return new BlockSnapshot(
+                world,
+                position,
+                world == null ? net.minecraft.init.Blocks.AIR.getDefaultState()
+                    : world.getBlockState(position),
+                tile == null ? null
+                    : tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));
+        }
+
+        private void restore() {
+            if (world == null || position == null || state == null
+                || world.isRemote) {
+                return;
+            }
+            world.setBlockState(position, state, 3);
+            net.minecraft.tileentity.TileEntity tile =
+                world.getTileEntity(position);
+            if (tileData != null && tile != null) {
+                tile.readFromNBT(tileData.copy());
+                tile.markDirty();
+            } else if (tileData == null && tile != null
+                && !state.getBlock().hasTileEntity(state)) {
+                world.removeTileEntity(position);
+            }
+            world.notifyBlockUpdate(position, state, state, 3);
+        }
     }
 
     private static boolean containsTolerant(java.util.List<Iota> values, Iota needle) {
