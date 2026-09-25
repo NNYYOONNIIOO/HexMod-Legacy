@@ -2182,6 +2182,11 @@ throw Mishap.legacy("hexcasting.error.entity_velocity_context");
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             net.minecraft.item.ItemStack target = dataHolder(vm, false);
             Iota value = stack.peek();
+            net.minecraft.entity.player.EntityPlayer otherName =
+                Mishap.findOtherPlayer(value, vm == null ? null : vm.getPlayer());
+            if (otherName != null) {
+                throw Mishap.othersName(otherName);
+            }
             IotaDataHolder.write(target, value);
             stack.pop();
         }
@@ -2251,7 +2256,13 @@ throw Mishap.legacy("hexcasting.error.entity_velocity_context");
                 }
                 Iota value = stack.pop();
                 Iota entity = stack.pop();
-                IotaDataHolder.write(entityItem(entity, vm), value);
+                net.minecraft.item.ItemStack target = entityItem(entity, vm);
+                net.minecraft.entity.player.EntityPlayer otherName =
+                    Mishap.findOtherPlayer(value, null);
+                if (otherName != null) {
+                    throw Mishap.othersName(otherName);
+                }
+                IotaDataHolder.write(target, value);
             }
         });
 
@@ -4170,6 +4181,11 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     sourceEntity, -1L, true, true);
                 if (available <= 0L) {
                     throw Mishap.legacy(mediaErrorKey);
+                }
+                net.minecraft.entity.player.EntityPlayer otherName =
+                    Mishap.findOtherPlayer(spell.getItems(), vm.getPlayer());
+                if (otherName != null) {
+                    throw Mishap.othersName(otherName);
                 }
 
                 // The fixed cost is paid by the casting environment.  The

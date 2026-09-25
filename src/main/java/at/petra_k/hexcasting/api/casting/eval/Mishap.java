@@ -2,12 +2,16 @@ package at.petra_k.hexcasting.api.casting.eval;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.iota.GarbageIota;
+import at.petra_k.hexcasting.api.casting.iota.ContinuationIota;
+import at.petra_k.hexcasting.api.casting.iota.EntityIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.ListIota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +36,7 @@ public class Mishap extends CastingException {
         BAD_BLOCK,
         BAD_BRAINSWEEP,
         ALREADY_BRAINSWEPT,
+        OTHERS_NAME,
         NO_AKASHIC_RECORD,
         BAD_LOCATION,
         WRONG_DIMENSION,
@@ -473,6 +478,8 @@ public class Mishap extends CastingException {
             case BAD_BRAINSWEEP:
             case ALREADY_BRAINSWEPT:
                 return 0x62B64A;
+            case OTHERS_NAME:
+                return 0x202020;
             case INVALID_CONTEXT:
                 return 0xD87F33;
             case NO_AKASHIC_RECORD:
@@ -548,6 +555,59 @@ public class Mishap extends CastingException {
             0, 0, "required=" + Math.max(0L, required)
                 + ", available=" + Math.max(0L, available))
             .withMedia(required, available);
+    }
+
+    /** Construct the true-name Mishap used by permanent Iota storage. */
+    public static Mishap othersName(EntityPlayer confidant) {
+        Mishap mishap = new Mishap(Kind.OTHERS_NAME,
+            "hexcasting.mishap.others_name", null, null, null, null,
+            0, 0, null);
+        mishap.withTarget(confidant);
+        return mishap;
+    }
+
+    /**
+     * Find a player reference anywhere in an Iota tree.  Lists and
+     * continuations are the two recursive containers in the 1.12 port; using
+     * a work queue keeps deeply nested spell lists from overflowing the Java
+     * call stack and mirrors modern true-name traversal.
+     */
+    public static EntityPlayer findOtherPlayer(Iota value, EntityPlayer caster) {
+        if (value == null) {
+            return null;
+        }
+        ArrayDeque<Iota> pending = new ArrayDeque<>();
+        pending.add(value);
+        int visited = 0;
+        while (!pending.isEmpty() && visited++ < Iota.MAX_SERIALIZATION_TOTAL) {
+            Iota current = pending.removeFirst();
+            if (current instanceof EntityIota) {
+                Entity entity = ((EntityIota) current).getEntity();
+                if (entity instanceof EntityPlayer && entity != caster) {
+                    return (EntityPlayer) entity;
+                }
+            } else if (current instanceof ListIota) {
+                pending.addAll(((ListIota) current).getItems());
+            } else if (current instanceof ContinuationIota) {
+                pending.addAll(((ContinuationIota) current).getContinuation());
+            }
+        }
+        return null;
+    }
+
+    /** Find the first other-player reference in an ordered collection. */
+    public static EntityPlayer findOtherPlayer(List<? extends Iota> values,
+                                               EntityPlayer caster) {
+        if (values == null) {
+            return null;
+        }
+        for (Iota value : values) {
+            EntityPlayer found = findOtherPlayer(value, caster);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
     }
 
     /** Construct the typed equivalent of modern MishapNotEnoughArgs. */

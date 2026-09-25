@@ -12,7 +12,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
@@ -92,6 +94,17 @@ public final class MishapFeedback {
                     ? location(mishap, caster) : target.getPositionVector();
                 if (destination != null) {
                     yeetHeldItemsTowards(caster, destination);
+                }
+                return;
+            case OTHERS_NAME:
+                // Modern Hex blinds the caster after a true-name violation;
+                // using a real potion effect keeps the consequence visible
+                // after the failed VM has restored its data transaction.
+                if (caster != null) {
+                    int duration = mishap.getTargetEntity() == caster
+                        ? 5 * 20 : 60 * 20;
+                    caster.addPotionEffect(new PotionEffect(
+                        MobEffects.BLINDNESS, duration, 0, false, true));
                 }
                 return;
             case PERMISSION_DENIED:
@@ -262,6 +275,17 @@ public final class MishapFeedback {
     }
 
     private static String localizeMishapDetail(Mishap mishap) {
+        if (mishap.getKind() == Mishap.Kind.OTHERS_NAME) {
+            Entity target = mishap.getTargetEntity();
+            EntityPlayer caster = mishap.getCaster();
+            if (target == caster) {
+                return I18n.translateToLocal("hexcasting.mishap.others_name.self");
+            }
+            String name = target == null || target.getDisplayName() == null
+                ? "?" : target.getDisplayName().getUnformattedText();
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.others_name", name);
+        }
         List<Iota> invalidOperators = mishap.getInvalidOperatorPerpetrators();
         if (invalidOperators != null && !invalidOperators.isEmpty()) {
             if (invalidOperators.size() == 1) {
