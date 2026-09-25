@@ -2767,7 +2767,10 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
                     throw Mishap.error("hexcasting.error.erase_cost");
                 }
+                final net.minecraft.item.ItemStack targetBefore = target.copy();
                 vm.consumeMedia(count * MediaConstants.DUST_UNIT);
+                vm.addRollbackAction(() ->
+                    MediaInventoryHelper.restoreStack(target, targetBefore));
                 IotaDataHolder.clear(target);
             }
     });
