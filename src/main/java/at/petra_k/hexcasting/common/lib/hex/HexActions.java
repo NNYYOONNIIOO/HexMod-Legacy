@@ -1348,6 +1348,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                final WeatherSnapshot weatherBefore = WeatherSnapshot.capture(info);
+                vm.addRollbackAction(weatherBefore::restore);
                 if (!info.isRaining()) {
                     int rainTime = (30 + player.world.rand.nextInt(60)) * 20 * 60;
                     info.setCleanWeatherTime(0);
@@ -1379,6 +1381,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
+                final WeatherSnapshot weatherBefore = WeatherSnapshot.capture(info);
+                vm.addRollbackAction(weatherBefore::restore);
                 if (info.isRaining()) {
                     int clearTime = (60 + player.world.rand.nextInt(120)) * 20 * 60;
                     info.setCleanWeatherTime(clearTime);
@@ -4610,6 +4614,41 @@ throw Mishap.error("hexcasting.error.get_media_context");
             entity.motionY = motionY;
             entity.motionZ = motionZ;
             entity.velocityChanged = velocityChanged;
+        }
+    }
+
+    /** Restore the weather timers changed by the weather actions. */
+    private static final class WeatherSnapshot {
+        private final net.minecraft.world.storage.WorldInfo info;
+        private final boolean raining;
+        private final boolean thundering;
+        private final int rainTime;
+        private final int thunderTime;
+        private final int cleanWeatherTime;
+
+        private WeatherSnapshot(net.minecraft.world.storage.WorldInfo info) {
+            this.info = info;
+            this.raining = info.isRaining();
+            this.thundering = info.isThundering();
+            this.rainTime = info.getRainTime();
+            this.thunderTime = info.getThunderTime();
+            this.cleanWeatherTime = info.getCleanWeatherTime();
+        }
+
+        private static WeatherSnapshot capture(
+            net.minecraft.world.storage.WorldInfo info) {
+            return new WeatherSnapshot(info);
+        }
+
+        private void restore() {
+            if (info == null) {
+                return;
+            }
+            info.setRaining(raining);
+            info.setThundering(thundering);
+            info.setRainTime(rainTime);
+            info.setThunderTime(thunderTime);
+            info.setCleanWeatherTime(cleanWeatherTime);
         }
     }
 
