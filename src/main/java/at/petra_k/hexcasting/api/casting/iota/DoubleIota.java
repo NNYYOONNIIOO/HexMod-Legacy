@@ -6,6 +6,8 @@ import java.util.Objects;
 
 /** Numeric Iota backed by a double, matching Hex Casting's numeric semantics. */
 public final class DoubleIota extends Iota {
+    /** Numeric comparison tolerance used by the 1.20.1 action helpers. */
+    public static final double TOLERANCE = 0.0001D;
     public static final String KEY_VALUE = "value";
     public static final IotaType<DoubleIota> TYPE =
         new IotaType<>("double", data -> new DoubleIota(data.getDouble(KEY_VALUE)));

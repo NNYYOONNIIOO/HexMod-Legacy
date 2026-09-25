@@ -595,8 +595,8 @@ public static final HexPattern BOOL_IF_PATTERN =
         DoubleIota index1Iota = stack.pop(DoubleIota.class);
         DoubleIota index0Iota = stack.pop(DoubleIota.class);
         ListIota list = stack.pop(ListIota.class);
-        int index0 = requireInteger(index0Iota, list.getItems().size());
-        int index1 = requireInteger(index1Iota, list.getItems().size());
+        int index0 = requireInteger(index0Iota, list.getItems().size(), 1);
+        int index1 = requireInteger(index1Iota, list.getItems().size(), 0);
         if (index0 == index1) {
             stack.push(new ListIota(java.util.Collections.<Iota>emptyList()));
             return;
@@ -613,7 +613,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_WEST, "wqaeaqw");
     public static final HexAction REPLACE = register(REPLACE_ID, REPLACE_PATTERN, stack -> {
         Iota value = stack.pop();
-        int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE);
+        int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE, 1);
         ListIota list = stack.pop(ListIota.class);
         if (index >= list.getItems().size()) {
             throw Mishap.legacy("hexcasting.error.list_index_out_of_bounds");
@@ -1009,11 +1009,13 @@ public static final HexPattern BOOL_IF_PATTERN =
     });
     private static long requireNonNegativeLong(DoubleIota value) throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
-            || raw < 0.0D || raw > 9.007199254740991E15D) {
-            throw Mishap.legacy("hexcasting.error.non_negative_integer");
+        long rounded = Math.round(raw);
+        if (Double.isNaN(raw) || Double.isInfinite(raw)
+            || Math.abs(raw - rounded) > DoubleIota.TOLERANCE
+            || rounded < 0L || raw > 9.007199254740991E15D) {
+            throw Mishap.invalidIota(value, 0, "int.positive");
         }
-        return (long) raw;
+        return rounded;
     }
 
     /** Return the number of factorial strides required by the code. */
@@ -4770,9 +4772,12 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
     private static int requireRoundedInteger(DoubleIota value) throws CastingException {
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw)) {
-            throw Mishap.legacy("hexcasting.error.expected_finite_integer");
+            throw Mishap.invalidIota(value, 0, "int");
         }
         long rounded = Math.round(raw);
+        if (Math.abs(raw - rounded) > DoubleIota.TOLERANCE) {
+            throw Mishap.invalidIota(value, 0, "int");
+        }
         if (rounded <= Integer.MIN_VALUE) {
             return Integer.MIN_VALUE;
         }
@@ -4783,28 +4788,39 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
     }
 
     private static int requireInteger(DoubleIota value, int maxInclusive) throws CastingException {
+        return requireInteger(value, maxInclusive, 0);
+    }
+
+    private static int requireInteger(DoubleIota value, int maxInclusive,
+                                      int reverseIndex) throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
-            || raw < 0.0D || raw > maxInclusive || raw > Integer.MAX_VALUE) {
-            throw Mishap.legacy("hexcasting.error.bounded_integer");
+        long rounded = Math.round(raw);
+        if (Double.isNaN(raw) || Double.isInfinite(raw)
+            || Math.abs(raw - rounded) > DoubleIota.TOLERANCE
+            || rounded < 0L || rounded > maxInclusive
+            || rounded > Integer.MAX_VALUE) {
+            throw Mishap.invalidIota(value, reverseIndex,
+                "int.positive.less.equal", maxInclusive);
         }
-        return (int) raw;
+        return (int) rounded;
     }
 
     private static int requireSignedInteger(DoubleIota value, int maxAbs) throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
-            || raw < -maxAbs || raw > maxAbs) {
-throw Mishap.legacy("hexcasting.error.bounded_integer");
+        long rounded = Math.round(raw);
+        if (Double.isNaN(raw) || Double.isInfinite(raw)
+            || Math.abs(raw - rounded) > DoubleIota.TOLERANCE
+            || rounded < -maxAbs || rounded > maxAbs) {
+            throw Mishap.invalidIota(value, 0, "int.between", -maxAbs, maxAbs);
         }
-        return (int) raw;
+        return (int) rounded;
     }
 
     private static double requirePositiveFlightArgument(DoubleIota value)
         throws CastingException {
         double raw = value.getValue();
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw < 0.0D) {
-            throw Mishap.legacy("hexcasting.error.flight_duration");
+            throw Mishap.invalidIota(value, 0, "double.positive");
         }
         return raw;
     }
