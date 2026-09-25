@@ -2018,7 +2018,7 @@ throw Mishap.legacy("hexcasting.error.entity_look_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
-            stack.push(new Vec3Iota(entity.getLookVec()));
+            stack.push(new Vec3Iota(HexAPI.getEntityLookDirSpecial(entity)));
             }
         });
 
@@ -2907,7 +2907,8 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
             if (Double.isNaN(delta) || Double.isInfinite(delta)) {
                 throw Mishap.legacy("hexcasting.error.blink_position");
             }
-            net.minecraft.util.math.Vec3d displacement = target.getLookVec().scale(delta);
+            net.minecraft.util.math.Vec3d displacement =
+                HexAPI.getEntityLookDirSpecial(target).scale(delta);
             net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                 target.posX + displacement.x, target.posY + displacement.y,
                 target.posZ + displacement.z);
