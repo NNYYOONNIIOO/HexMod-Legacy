@@ -1047,6 +1047,9 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.recharge_holder".equals(key)
             || "hexcasting.error.recharge_full".equals(key)
             || "hexcasting.error.craft_battery_base".equals(key)
+            || "hexcasting.error.craft_cypher_item".equals(key)
+            || "hexcasting.error.craft_trinket_item".equals(key)
+            || "hexcasting.error.craft_artifact_item".equals(key)
             || "hexcasting.error.erase_holder".equals(key)
             || "hexcasting.error.colorize_dye".equals(key)
             || "hexcasting.error.cycle_variant_item".equals(key)) {
