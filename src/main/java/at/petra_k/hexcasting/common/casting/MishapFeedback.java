@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
+import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
 import at.petra_k.hexcasting.interop.inline.HexInline;
@@ -233,7 +234,7 @@ public final class MishapFeedback {
                 "hexcasting.message.pattern_unregistered", pattern);
         }
 
-        String detail = localizeKey(mishap.getDisplayKey());
+        String detail = localizeMishapDetail(mishap);
         String action = localizeAction(mishap.getActionDisplayKey(),
             mishap.getActionName());
         if (action == null || action.isEmpty()) {
@@ -244,6 +245,36 @@ public final class MishapFeedback {
             return action + ": " + detail;
         }
         return I18n.translateToLocalFormatted("hexcasting.mishap", action, detail);
+    }
+
+    private static String localizeMishapDetail(Mishap mishap) {
+        if (mishap.getInvalidPerpetrator() != null
+            && mishap.getInvalidExpected() != null) {
+            String expected = localizeKey(
+                "hexcasting.mishap.invalid_value.class."
+                    + mishap.getInvalidExpected());
+            Iota perpetrator = mishap.getInvalidPerpetrator();
+            String actual = localizeKey(
+                "hexcasting.mishap.invalid_value.class."
+                    + perpetrator.getType().getId());
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.invalid_value", expected,
+                mishap.getInvalidReverseIndex(), actual, perpetrator.display());
+        }
+
+        String key = mishap.getDisplayKey();
+        if (mishap.getKind() == Mishap.Kind.NOT_ENOUGH_ARGUMENTS) {
+            if (mishap.getArgumentsGot() == 0) {
+                return I18n.translateToLocalFormatted(key,
+                    mishap.getArgumentsExpected());
+            }
+            return I18n.translateToLocalFormatted(key,
+                mishap.getArgumentsExpected(), mishap.getArgumentsGot());
+        }
+        if (key == null || key.isEmpty() || !key.startsWith("hexcasting.")) {
+            return localizeRaw(mishap.getErrorKey());
+        }
+        return localizeKey(key);
     }
 
     private static String localizeRaw(String message) {
