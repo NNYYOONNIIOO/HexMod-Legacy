@@ -3734,7 +3734,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CIRCLE_BOUNDS_MAX_ID, CIRCLE_BOUNDS_MAX_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.circle_context");
+                throw Mishap.noSpellCircle("hexcasting.error.circle_bounds_context");
             }
 
             @Override
@@ -3743,7 +3743,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
                     vm == null ? null : vm.getCircleExecutionState();
                 if (circle == null) {
-                    throw Mishap.error("hexcasting.error.circle_context");
+                    throw Mishap.noSpellCircle("hexcasting.error.circle_bounds_context");
                 }
                 net.minecraft.util.math.BlockPos max = circle.getGreaterCorner();
                 stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
@@ -3760,7 +3760,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.circle_context");
+                throw Mishap.noSpellCircle("hexcasting.error.circle_bounds_context");
             }
 
             @Override
@@ -3769,7 +3769,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
                     vm == null ? null : vm.getCircleExecutionState();
                 if (circle == null) {
-                    throw Mishap.error("hexcasting.error.circle_context");
+                    throw Mishap.noSpellCircle("hexcasting.error.circle_bounds_context");
                 }
                 net.minecraft.util.math.BlockPos min = circle.getLesserCorner();
                 stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
@@ -3786,7 +3786,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CIRCLE_IMPETUS_POS_ID, CIRCLE_IMPETUS_POS_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.circle_impetus_context");
+                throw Mishap.noSpellCircle("hexcasting.error.circle_impetus_context");
             }
 
             @Override
@@ -3794,7 +3794,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
                     vm == null ? null : vm.getCircleExecutionState();
                 if (circle == null) {
-                    throw Mishap.error("hexcasting.error.circle_impetus_context");
+                    throw Mishap.noSpellCircle("hexcasting.error.circle_impetus_context");
                 }
                 net.minecraft.util.math.BlockPos pos = circle.getImpetusPos();
                 stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
@@ -3811,7 +3811,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CIRCLE_IMPETUS_DIR_ID, CIRCLE_IMPETUS_DIR_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.circle_impetus_context");
+                throw Mishap.noSpellCircle("hexcasting.error.circle_impetus_context");
             }
 
             @Override
@@ -3819,7 +3819,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 at.petra_k.hexcasting.api.casting.circles.CircleExecutionState circle =
                     vm == null ? null : vm.getCircleExecutionState();
                 if (circle == null) {
-                    throw Mishap.error("hexcasting.error.circle_impetus_context");
+                    throw Mishap.noSpellCircle("hexcasting.error.circle_impetus_context");
                 }
                 net.minecraft.util.EnumFacing direction = circle.getImpetusDirection();
                 net.minecraft.util.math.Vec3i vector = direction.getDirectionVec();
