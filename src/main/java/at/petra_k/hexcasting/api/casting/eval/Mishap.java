@@ -44,6 +44,7 @@ public class Mishap extends CastingException {
         BAD_BLOCK,
         BAD_BRAINSWEEP,
         ALREADY_BRAINSWEPT,
+        NO_SPELL_CIRCLE,
         OTHERS_NAME,
         NO_AKASHIC_RECORD,
         BAD_LOCATION,
@@ -499,6 +500,8 @@ public class Mishap extends CastingException {
             case BAD_BRAINSWEEP:
             case ALREADY_BRAINSWEPT:
                 return 0x62B64A;
+            case NO_SPELL_CIRCLE:
+                return 0x72CFE5;
             case OTHERS_NAME:
                 return 0x202020;
             case INVALID_CONTEXT:
@@ -527,6 +530,9 @@ public class Mishap extends CastingException {
 
     /** Return a stable translation key for UI and logs. */
     public String getDisplayKey() {
+        if (kind == Kind.NO_SPELL_CIRCLE) {
+            return "hexcasting.mishap.no_spell_circle";
+        }
         if (errorKey.startsWith("hexcasting.")) {
             return errorKey;
         }
@@ -1019,6 +1025,10 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.wrong_dimension".equals(key)) {
             return Kind.WRONG_DIMENSION;
+        }
+        if ("hexcasting.error.circle_context".equals(key)
+            || "hexcasting.error.circle_impetus_context".equals(key)) {
+            return Kind.NO_SPELL_CIRCLE;
         }
         if (key.startsWith("hexcasting.mishap.divide_by_zero.")) {
             return Kind.ARITHMETIC;

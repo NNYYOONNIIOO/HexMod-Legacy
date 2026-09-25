@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionEffect;
@@ -109,6 +110,12 @@ public final class MishapFeedback {
                 caster.world.playSound(null, caster.posX, caster.posY, caster.posZ,
                     SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS,
                     0.5F, 0.7F);
+                return;
+            case NO_SPELL_CIRCLE:
+                // A circle-only action cast without a circle ejects the
+                // player's inventory. Binding-cursed armor remains equipped,
+                // matching MishapNoSpellCircle in modern Hex.
+                dropInventory(caster);
                 return;
             case OTHERS_NAME:
                 // Modern Hex blinds the caster after a true-name violation;
@@ -217,6 +224,26 @@ public final class MishapFeedback {
     private static void dropHeldItems(EntityPlayer caster) {
         yeetHeldItemsTowards(caster,
             caster.getPositionVector().add(caster.getLookVec()));
+    }
+
+    private static void dropInventory(EntityPlayer caster) {
+        dropInventoryList(caster, caster.inventory.mainInventory, false);
+        dropInventoryList(caster, caster.inventory.offHandInventory, false);
+        dropInventoryList(caster, caster.inventory.armorInventory, true);
+    }
+
+    private static void dropInventoryList(EntityPlayer caster,
+                                          java.util.List<ItemStack> inventory,
+                                          boolean preserveBinding) {
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.get(i);
+            if (stack == null || stack.isEmpty()
+                || preserveBinding && EnchantmentHelper.hasBindingCurse(stack)) {
+                continue;
+            }
+            inventory.set(i, ItemStack.EMPTY);
+            caster.dropItem(stack, true, false);
+        }
     }
 
     /** Match modern Hex's giveExperiencePoints(-100) through the 1.12 API. */
