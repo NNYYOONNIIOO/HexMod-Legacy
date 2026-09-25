@@ -13,6 +13,7 @@ import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
+import at.petra_k.hexcasting.common.item.ItemSpellbook;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
@@ -3236,7 +3237,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
             }
         });
 
-    /** Cycle the selected pattern variant stored on a focus or staff item. */
+    /** Cycle the selected visual variant on an item that exposes one. */
     public static final ResourceLocation CYCLE_VARIANT_ID =
         new ResourceLocation(HexAPI.MOD_ID, "cycle_variant");
     public static final HexPattern CYCLE_VARIANT_PATTERN =
@@ -3254,20 +3255,16 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     throw Mishap.error("hexcasting.error.cycle_variant_context");
                 }
                 net.minecraft.item.ItemStack held = vm.getHeldItemToOperateOn(
-                    candidate -> candidate != null && !candidate.isEmpty()
-                        && (candidate.getItem() instanceof ItemHexFocus
-                            || candidate.getItem() instanceof ItemHexStaff));
-                if (held == null
-                    || (!(held.getItem() instanceof ItemHexFocus)
-                    && !(held.getItem() instanceof ItemHexStaff))) {
+                    HexActions::isVariantItem);
+                if (!isVariantItem(held)) {
                     throw Mishap.badOffhandItem("hexcasting.error.cycle_variant_item");
                 }
-                final String key = "hexcasting_variant";
-                net.minecraft.nbt.NBTTagCompound variantData =
-                    held.getOrCreateSubCompound(HexAPI.MOD_ID);
-                int current = variantData.getInteger(key);
+                final int previous = getVariant(held);
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
-                variantData.setInteger(key, current + 1);
+                cycleVariant(held);
+                if (getVariant(held) != previous) {
+                    vm.addRollbackAction(() -> setVariant(held, previous));
+                }
             }
         });
 
@@ -4936,6 +4933,57 @@ throw Mishap.error("hexcasting.error.get_media_context");
             || ENTITY_POS_FOOT == null || GET_ENTITY_LOOK == null || GET_ENTITY_VELOCITY == null
             || BREAK_BLOCK == null || EXPLODE == null || EXPLODE_FIRE == null || SUMMON_RAIN == null || DISPEL_RAIN == null || BEEP == null || ADD_MOTION == null || IGNITE == null || EXTINGUISH == null || RAYCAST_ENTITY == null || COMPARE_ENTITY == null || GET_MEDIA == null || HALT == null || BLINK == null || BRAINSWEEP == null) {
             throw new IllegalStateException("Hex action registry failed to initialize");
+        }
+    }
+
+    private static boolean isVariantItem(net.minecraft.item.ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        return stack.getItem() instanceof ItemHexFocus
+            || stack.getItem() instanceof ItemSpellbook
+            || stack.getItem() instanceof ItemPackagedSpell;
+    }
+
+    private static int getVariant(net.minecraft.item.ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        if (stack.getItem() instanceof ItemHexFocus) {
+            return ItemHexFocus.getVariant(stack);
+        }
+        if (stack.getItem() instanceof ItemSpellbook) {
+            return ItemSpellbook.getVariant(stack);
+        }
+        if (stack.getItem() instanceof ItemPackagedSpell) {
+            return ItemPackagedSpell.getVariant(stack);
+        }
+        return 0;
+    }
+
+    private static void setVariant(net.minecraft.item.ItemStack stack, int variant) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        if (stack.getItem() instanceof ItemHexFocus) {
+            ItemHexFocus.setVariant(stack, variant);
+        } else if (stack.getItem() instanceof ItemSpellbook) {
+            ItemSpellbook.setVariant(stack, variant);
+        } else if (stack.getItem() instanceof ItemPackagedSpell) {
+            ItemPackagedSpell.setVariant(stack, variant);
+        }
+    }
+
+    private static void cycleVariant(net.minecraft.item.ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        if (stack.getItem() instanceof ItemHexFocus) {
+            setVariant(stack, (ItemHexFocus.getVariant(stack) + 1) % 8);
+        } else if (stack.getItem() instanceof ItemSpellbook) {
+            ItemSpellbook.cycleVariant(stack);
+        } else if (stack.getItem() instanceof ItemPackagedSpell) {
+            ItemPackagedSpell.cycleVariant(stack);
         }
     }
 
