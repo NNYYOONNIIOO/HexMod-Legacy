@@ -1090,7 +1090,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 net.minecraft.util.math.Vec3d position =
                     ((Vec3Iota) target).getValue();
-                requireFiniteWorldVector(position, "hexcasting.error.ignite_range");
+                requireFiniteWorldVector(vm, player, position,
+                    "hexcasting.error.ignite_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -1131,7 +1132,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
-                requireFiniteWorldVector(position, "hexcasting.error.extinguish_range");
+                requireFiniteWorldVector(vm, player, position,
+                    "hexcasting.error.extinguish_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -1462,7 +1464,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
-                requireFiniteWorldVector(position, "hexcasting.error.break_block_range");
+                requireFiniteWorldVector(vm, player, position,
+                    "hexcasting.error.break_block_range");
                 net.minecraft.util.math.BlockPos blockPos = new net.minecraft.util.math.BlockPos(
                     (int) Math.floor(position.x), (int) Math.floor(position.y),
                     (int) Math.floor(position.z));
@@ -4514,8 +4517,16 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
 
     /** Validate a raw vector before converting it to a legacy BlockPos. */
     private static void requireFiniteWorldVector(
-        net.minecraft.util.math.Vec3d position, String errorKey)
+        CastingVM vm,
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position,
+        String errorKey)
         throws CastingException {
+        if (vm != null && player != null && position != null && isFiniteVector(position)) {
+            vm.recordMishapLocation(position.x, position.y, position.z,
+                player.world == null || player.world.provider == null
+                    ? Integer.MIN_VALUE : player.world.provider.getDimension());
+        }
         if (!isVecInWorld(position)) {
             throw Mishap.legacy(errorKey);
         }
