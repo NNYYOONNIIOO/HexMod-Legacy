@@ -309,6 +309,10 @@ public final class MishapFeedback {
         }
 
         String key = mishap.getDisplayKey();
+        Object[] displayArgs = mishap.getDisplayArgs();
+        if (displayArgs.length > 0) {
+            return I18n.translateToLocalFormatted(key, displayArgs);
+        }
         if (mishap.getKind() == Mishap.Kind.NOT_ENOUGH_ARGUMENTS) {
             if (mishap.getArgumentsGot() == 0) {
                 return I18n.translateToLocalFormatted(key,

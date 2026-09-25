@@ -34,6 +34,7 @@ public class Mishap extends CastingException {
         ALREADY_BRAINSWEPT,
         NO_AKASHIC_RECORD,
         BAD_LOCATION,
+        WRONG_DIMENSION,
         PERMISSION_DENIED,
         INVALID_VALUE,
         ARITHMETIC,
@@ -97,6 +98,7 @@ public class Mishap extends CastingException {
     private Iota arithmeticLeft;
     private Iota arithmeticRight;
     private String arithmeticSuffix;
+    private Object[] displayArgs = new Object[0];
     private boolean executionContextAttached;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
@@ -162,6 +164,11 @@ public class Mishap extends CastingException {
     /** Human-readable detail retained separately from the stable error key. */
     public String getDetail() {
         return detail;
+    }
+
+    /** Arguments for a display key that needs formatted localization. */
+    public Object[] getDisplayArgs() {
+        return displayArgs.clone();
     }
 
     /** The registered action path, without the mod namespace. */
@@ -469,6 +476,7 @@ public class Mishap extends CastingException {
             case NO_AKASHIC_RECORD:
                 return 0x8B5CC7;
             case BAD_LOCATION:
+            case WRONG_DIMENSION:
                 return 0xE97AC1;
             case PERMISSION_DENIED:
                 return 0x303030;
@@ -578,6 +586,21 @@ public class Mishap extends CastingException {
             ? "hexcasting.error.invalid_value" : errorKey;
         return new Mishap(Kind.INVALID_VALUE, key, null,
             null, null, null, 0, 0, detail);
+    }
+
+    /** Construct the modern wrong-dimension Mishap and its garbage result. */
+    public static Mishap wrongDimension(String properDimension,
+                                        String currentDimension) {
+        Mishap mishap = new Mishap(Kind.WRONG_DIMENSION,
+            "hexcasting.mishap.wrong_dimension", null,
+            null, null, null, 0, 0, null);
+        mishap.displayArgs = new Object[] {
+            properDimension == null ? "?" : properDimension,
+            currentDimension == null ? "?" : currentDimension
+        };
+        mishap.stackEffect = StackEffect.PUSH_GARBAGE;
+        mishap.stackEffectCount = 1;
+        return mishap;
     }
 
     /**
@@ -744,6 +767,9 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.needs_parens".equals(key)) {
             return Kind.INVALID_CONTEXT;
+        }
+        if ("hexcasting.mishap.wrong_dimension".equals(key)) {
+            return Kind.WRONG_DIMENSION;
         }
         if (key.startsWith("hexcasting.mishap.divide_by_zero.")) {
             return Kind.ARITHMETIC;

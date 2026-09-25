@@ -64,7 +64,7 @@ public final class SentinelActions {
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
                 Vec3d target = vectorOf(stack.pop(Vec3Iota.class));
-                assertTargetInRange(player, target);
+                assertTargetInRange(vm, player, target);
                 vm.consumeMedia(MediaConstants.DUST_UNIT * (extendedRange ? 2L : 1L));
                 SentinelData.get(player.world).set(
                     player.getUniqueID(), extendedRange, target.x, target.y, target.z,
@@ -86,7 +86,7 @@ public final class SentinelActions {
                 EntityPlayer player = requirePlayer(vm);
                 SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
                 if (state != null && state.dimension != player.world.provider.getDimension()) {
-                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
+                    throw wrongDimension(state, player);
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.get(player.world).clear(player.getUniqueID());
@@ -112,7 +112,7 @@ public final class SentinelActions {
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
-                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
+                    throw wrongDimension(state, player);
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 stack.push(vectorIota(new Vec3d(state.x, state.y, state.z)));
@@ -138,7 +138,7 @@ public final class SentinelActions {
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
-                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
+                    throw wrongDimension(state, player);
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 stack.push(vectorIota(normalizedDifference(state, from)));
@@ -160,8 +160,13 @@ public final class SentinelActions {
         }
     }
 
-    private static void assertTargetInRange(EntityPlayer player, Vec3d target)
+    private static void assertTargetInRange(CastingVM vm, EntityPlayer player, Vec3d target)
         throws CastingException {
+        if (vm != null && player != null && target != null && isFinite(target)) {
+            vm.recordMishapLocation(target.x, target.y, target.z,
+                player.world == null || player.world.provider == null
+                    ? Integer.MIN_VALUE : player.world.provider.getDimension());
+        }
         if (target == null || Double.isNaN(target.x) || Double.isNaN(target.y)
             || Double.isNaN(target.z) || Double.isInfinite(target.x)
             || Double.isInfinite(target.y) || Double.isInfinite(target.z)) {
@@ -200,9 +205,15 @@ public final class SentinelActions {
     private static Vec3d vectorOf(Vec3Iota iota) throws CastingException {
         Vec3d value = iota == null ? null : iota.getValue();
         if (value == null || !isFinite(value)) {
-            throw Mishap.legacy("hexcasting.error.sentinel_vector");
+            throw Mishap.invalidIota(iota, 0, "vector");
         }
         return value;
+    }
+
+    private static Mishap wrongDimension(SentinelData.State state,
+                                         EntityPlayer player) {
+        return Mishap.wrongDimension(String.valueOf(state.dimension),
+            String.valueOf(player.world.provider.getDimension()));
     }
 
     private static Iota vectorIota(Vec3d value) {
