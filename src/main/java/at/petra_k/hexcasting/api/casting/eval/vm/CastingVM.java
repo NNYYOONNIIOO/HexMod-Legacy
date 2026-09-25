@@ -896,6 +896,7 @@ public final class CastingVM {
         }
 
         WorkItem work = continuation.removeFirst();
+        int stackSizeBefore = stack.size();
         HexPattern pattern = work.pattern;
         if (pattern == null && work.iota instanceof PatternIota) {
             pattern = ((PatternIota) work.iota).getPattern();
@@ -949,6 +950,7 @@ public final class CastingVM {
                 parenCount, operationsConsumed)
                 .withExecutionContext(pattern, actionId, player,
                     parenCount, operationsConsumed);
+            normalizeManualUnderflow(mishap, stackSizeBefore);
             mishap = attachMishapContext(mishap);
             lastMishap = mishap;
             if (evaluationDepth == 0) {
@@ -974,6 +976,23 @@ public final class CastingVM {
             activeOperationLimit = previousLimit;
         }
         return true;
+    }
+
+    /**
+     * Actions written as a sequence of plain pop() calls do not know their
+     * arity when the final pop reaches an empty stack. Recover that arity from
+     * the values removed by the failed action.
+     */
+    private void normalizeManualUnderflow(Mishap mishap, int stackSizeBefore) {
+        if (mishap == null || mishap.getKind() != Mishap.Kind.NOT_ENOUGH_ARGUMENTS
+            || mishap.getArgumentsExpected() != 1
+            || stackSizeBefore <= mishap.getArgumentsGot()) {
+            return;
+        }
+        int removed = Math.max(0, stackSizeBefore - stack.size());
+        if (removed > 0) {
+            mishap.withArguments(removed + 1, stackSizeBefore);
+        }
     }
 
     /** Drain all pending work using the default operation budget. */

@@ -258,6 +258,15 @@ public class Mishap extends CastingException {
         return argumentsGot;
     }
 
+    /** Replace the argument counts after the VM has recovered a manual pop chain. */
+    public Mishap withArguments(int expected, int got) {
+        argumentsExpected = Math.max(0, expected);
+        argumentsGot = Math.max(0, got);
+        stackEffect = StackEffect.PUSH_GARBAGE;
+        stackEffectCount = Math.max(0, argumentsExpected - argumentsGot);
+        return this;
+    }
+
     /** Whether this Mishap has a modern Hex stack-resolution effect. */
     public boolean hasStackEffect() {
         return stackEffect != StackEffect.NONE;
