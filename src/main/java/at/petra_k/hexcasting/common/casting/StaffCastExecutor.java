@@ -153,10 +153,13 @@ public final class StaffCastExecutor {
     }
 
     private static SoundEvent soundFor(CastingVM vm, boolean success) {
+        if (!success) {
+            return HexSounds.CAST_FAILURE;
+        }
         if (vm != null && vm.getSound() != null && vm.getSound().getSound() != null) {
             return vm.getSound().getSound();
         }
-        return success ? HexSounds.CAST_NORMAL : HexSounds.CAST_FAILURE;
+        return HexSounds.CAST_NORMAL;
     }
 
     private static boolean isStackClear(CastingVM vm) {
