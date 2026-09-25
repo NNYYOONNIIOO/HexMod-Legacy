@@ -496,7 +496,7 @@ public class Mishap extends CastingException {
             case BAD_BLOCK:
                 return 0x86D65A;
             case BAD_ENTITY:
-                return 0x78A8E8;
+                return 0xA06B3C;
             case IMMUNE_ENTITY:
                 return 0x78A8E8;
             case ENTITY_TOO_FAR:
