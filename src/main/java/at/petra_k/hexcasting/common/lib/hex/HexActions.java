@@ -2558,7 +2558,9 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     }
                 }
                 int removed = 0;
-                while (!todo.isEmpty() && removed < 1024) {
+                // Match OpDestroyFluid's inclusive cap.  The modern action
+                // permits the queue iteration that observes MAX as well.
+                while (!todo.isEmpty() && removed <= 1024) {
                     net.minecraft.util.math.BlockPos current = todo.removeFirst();
                     if (!seen.add(current)
                         || !hasEditPermission(vm, player, current)) {
@@ -4706,9 +4708,6 @@ throw Mishap.error("hexcasting.error.get_media_context");
             return false;
         }
         net.minecraft.block.Block block = state.getBlock();
-        if (block instanceof net.minecraft.block.BlockLilyPad) {
-            return true;
-        }
         net.minecraft.util.ResourceLocation id = block.getRegistryName();
         if (id == null) {
             return false;
