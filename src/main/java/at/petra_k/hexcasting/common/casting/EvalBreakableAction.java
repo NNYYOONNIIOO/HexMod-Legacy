@@ -19,8 +19,7 @@ public final class EvalBreakableAction implements HexAction {
     @Override
     public void execute(CastingStack stack, CastingVM vm) throws CastingException {
         if (vm == null) {
-            throw Mishap.invalidValue("hexcasting.error.eval_cc_context",
-                "eval/cc requires an active casting VM");
+            throw Mishap.invalidContext("hexcasting.error.eval_cc_context");
         }
         List<Iota> before = stack.snapshot();
         try {

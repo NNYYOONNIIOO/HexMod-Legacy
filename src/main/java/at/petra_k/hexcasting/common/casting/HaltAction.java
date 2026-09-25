@@ -16,8 +16,7 @@ public final class HaltAction implements HexAction {
     @Override
     public void execute(CastingStack stack, CastingVM vm) throws CastingException {
         if (vm == null) {
-            throw Mishap.invalidValue("hexcasting.error.halt_context",
-                "Halt requires an active casting VM");
+            throw Mishap.invalidContext("hexcasting.error.halt_context");
         }
         vm.halt();
     }
