@@ -23,7 +23,11 @@ public final class IotaArithmetics {
         requireCount(arguments, 2, "and");
         Iota left = arguments.get(0);
         Iota right = arguments.get(1);
-        if (left instanceof ListIota && right instanceof ListIota) {
+        if (left instanceof ListIota || right instanceof ListIota) {
+            if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
+                throw Mishap.invalidOperatorArgs(arguments,
+                    "and received incompatible overloaded arguments");
+            }
             return listIntersection((ListIota) left, (ListIota) right);
         }
         return new BooleanIota(booleanValue(left, "and", 0)
@@ -34,7 +38,11 @@ public final class IotaArithmetics {
         requireCount(arguments, 2, "or");
         Iota left = arguments.get(0);
         Iota right = arguments.get(1);
-        if (left instanceof ListIota && right instanceof ListIota) {
+        if (left instanceof ListIota || right instanceof ListIota) {
+            if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
+                throw Mishap.invalidOperatorArgs(arguments,
+                    "or received incompatible overloaded arguments");
+            }
             return listUnion((ListIota) left, (ListIota) right);
         }
         return new BooleanIota(booleanValue(left, "or", 0)
@@ -51,8 +59,8 @@ public final class IotaArithmetics {
                 != ((BooleanIota) right).getValue());
         }
         if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                "xor expects two booleans or two lists");
+            throw Mishap.invalidOperatorArgs(arguments,
+                "xor received incompatible overloaded arguments");
         }
         List<Iota> leftItems = ((ListIota) left).getItems();
         List<Iota> rightItems = ((ListIota) right).getItems();

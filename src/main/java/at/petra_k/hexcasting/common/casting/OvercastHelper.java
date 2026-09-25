@@ -74,6 +74,16 @@ public final class OvercastHelper {
         return ceilToLong(Math.max(0.0D, mediaBefore - mediaAfter));
     }
 
+    /** Apply the health loss used by arithmetic Mishaps, even before overcast is unlocked. */
+    public static void mishapDamage(EntityPlayer player) {
+        if (player == null || player.world == null || player.world.isRemote
+            || player.isDead || player.getHealth() <= 0.0F) {
+            return;
+        }
+        DamageSource source = damageSource(player);
+        trulyHurt(player, source, player.getHealth() * 0.5F);
+    }
+
     private static DamageSource damageSource(EntityPlayer player) {
         return new EntityDamageSource("hexcasting.overcast", player)
             .setDamageBypassesArmor().setDamageIsAbsolute().setMagicDamage();

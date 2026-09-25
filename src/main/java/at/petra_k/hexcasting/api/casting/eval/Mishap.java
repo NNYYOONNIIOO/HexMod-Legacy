@@ -8,6 +8,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -33,6 +36,7 @@ public class Mishap extends CastingException {
         BAD_LOCATION,
         PERMISSION_DENIED,
         INVALID_VALUE,
+        ARITHMETIC,
         EVALUATION_LIMIT,
         STACK_SIZE,
         INVALID_CONTEXT,
@@ -88,6 +92,11 @@ public class Mishap extends CastingException {
     private boolean stackEffectApplied;
     private String invalidExpected;
     private Iota invalidPerpetrator;
+    private Object[] invalidExpectedArgs = new Object[0];
+    private List<Iota> invalidOperatorPerpetrators = Collections.emptyList();
+    private Iota arithmeticLeft;
+    private Iota arithmeticRight;
+    private String arithmeticSuffix;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
@@ -278,6 +287,11 @@ public class Mishap extends CastingException {
         return invalidExpected;
     }
 
+    /** Optional format arguments for a structured invalid-Iota expectation. */
+    public Object[] getInvalidExpectedArgs() {
+        return invalidExpectedArgs.clone();
+    }
+
     /** The value that failed an invalid-Iota predicate. */
     public Iota getInvalidPerpetrator() {
         return invalidPerpetrator;
@@ -286,6 +300,25 @@ public class Mishap extends CastingException {
     /** Stack index counted from the top for an invalid-Iota replacement. */
     public int getInvalidReverseIndex() {
         return stackEffectReverseIndex;
+    }
+
+    /** The arguments rejected by an overloaded arithmetic operator. */
+    public List<Iota> getInvalidOperatorPerpetrators() {
+        return invalidOperatorPerpetrators;
+    }
+
+    /** Left and right operands retained for a divide-by-zero Mishap. */
+    public Iota getArithmeticLeft() {
+        return arithmeticLeft;
+    }
+
+    public Iota getArithmeticRight() {
+        return arithmeticRight;
+    }
+
+    /** Modern divide-by-zero suffix, such as divide, exponent, or logarithm. */
+    public String getArithmeticSuffix() {
+        return arithmeticSuffix;
     }
 
     /**
@@ -432,6 +465,8 @@ public class Mishap extends CastingException {
                 return 0x303030;
             case NOT_ENOUGH_MEDIA:
                 return 0xE05252;
+            case ARITHMETIC:
+                return 0xE05252;
             case EVALUATION_LIMIT:
                 return 0x5C86D6;
             case STACK_SIZE:
@@ -562,7 +597,7 @@ public class Mishap extends CastingException {
 
     /** Construct the modern invalid-Iota Mishap and its GarbageIota replacement. */
     public static Mishap invalidIota(Iota perpetrator, int reverseIndex,
-                                     String expected) {
+                                     String expected, Object... expectedArgs) {
         Mishap mishap = new Mishap(Kind.INVALID_VALUE,
             "hexcasting.mishap.invalid_value", null,
             null, null, null, 0, 0,
@@ -573,18 +608,45 @@ public class Mishap extends CastingException {
         mishap.invalidExpected = expected == null || expected.isEmpty()
             ? "unknown" : expected;
         mishap.invalidPerpetrator = perpetrator;
+        mishap.invalidExpectedArgs = expectedArgs == null
+            ? new Object[0] : expectedArgs.clone();
         return mishap;
     }
 
     /** Construct the modern invalid-operator-arguments replacement effect. */
     public static Mishap invalidOperatorArgs(java.util.List<Iota> perpetrators,
                                              String detail) {
+        List<Iota> safePerpetrators = perpetrators == null
+            ? Collections.<Iota>emptyList()
+            : new ArrayList<>(perpetrators);
         int count = perpetrators == null ? 0 : perpetrators.size();
         Mishap mishap = new Mishap(Kind.INVALID_VALUE,
             "hexcasting.error.invalid_operator_args", null,
             null, null, null, 0, 0, detail);
         mishap.stackEffect = StackEffect.REPLACE_MANY_WITH_GARBAGE;
         mishap.stackEffectCount = count;
+        mishap.invalidOperatorPerpetrators = Collections.unmodifiableList(safePerpetrators);
+        return mishap;
+    }
+
+    /** Construct the red-spark arithmetic Mishap used by modern Hex. */
+    public static Mishap divideByZero(Iota left, Iota right, String suffix) {
+        String safeSuffix = suffix == null || suffix.isEmpty() ? "divide" : suffix;
+        Mishap mishap = new Mishap(Kind.ARITHMETIC,
+            "hexcasting.mishap.divide_by_zero." + safeSuffix, null,
+            null, null, null, 0, 0, null);
+        mishap.arithmeticLeft = left;
+        mishap.arithmeticRight = right;
+        mishap.arithmeticSuffix = safeSuffix;
+        mishap.stackEffect = StackEffect.PUSH_GARBAGE;
+        mishap.stackEffectCount = 1;
+        return mishap;
+    }
+
+    /** Construct the tangent form, whose operands are sine and cosine text. */
+    public static Mishap tangentDivideByZero(Iota angle) {
+        Mishap mishap = divideByZero(angle, angle, "divide");
+        mishap.arithmeticSuffix = "tan";
         return mishap;
     }
 
@@ -673,6 +735,9 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.needs_parens".equals(key)) {
             return Kind.INVALID_CONTEXT;
+        }
+        if (key.startsWith("hexcasting.mishap.divide_by_zero.")) {
+            return Kind.ARITHMETIC;
         }
         if ("hexcasting.error.invalid_value".equals(key)
             || "hexcasting.error.invalid_iota".equals(key)

@@ -33,8 +33,8 @@ public final class HexArithmetics {
 
         if (left instanceof ListIota || right instanceof ListIota) {
             if (!(left instanceof ListIota) || !(right instanceof ListIota)) {
-                throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                    "add expects two values of the same supported type");
+                throw Mishap.invalidOperatorArgs(arguments,
+                    "add received incompatible overloaded arguments");
             }
             ArrayList<Iota> result = new ArrayList<>();
             result.addAll(((ListIota) left).getItems());
@@ -43,7 +43,7 @@ public final class HexArithmetics {
         }
 
         if (left instanceof Vec3Iota || right instanceof Vec3Iota) {
-            return vectorBinary(left, right, "add", true);
+            return vectorBinary(arguments, "add", true);
         }
 
         return NumericArithmetics.add(arguments);
@@ -54,23 +54,15 @@ public final class HexArithmetics {
         Iota left = arguments.get(0);
         Iota right = arguments.get(1);
         if (left instanceof Vec3Iota || right instanceof Vec3Iota) {
-            return vectorBinary(left, right, "subtract", false);
+            return vectorBinary(arguments, "subtract", false);
         }
         return NumericArithmetics.subtract(arguments);
     }
 
-    private static Iota vectorBinary(Iota left, Iota right, String name, boolean add)
+    private static Iota vectorBinary(List<Iota> arguments, String name, boolean add)
         throws CastingException {
-        if (!(left instanceof Vec3Iota) || !(right instanceof Vec3Iota)) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                name + " expects two numeric Iotas or two vectors");
-        }
-        Vec3d leftVector = ((Vec3Iota) left).getValue();
-        Vec3d rightVector = ((Vec3Iota) right).getValue();
-        double x = add ? leftVector.x + rightVector.x : leftVector.x - rightVector.x;
-        double y = add ? leftVector.y + rightVector.y : leftVector.y - rightVector.y;
-        double z = add ? leftVector.z + rightVector.z : leftVector.z - rightVector.z;
-        return new Vec3Iota(new Vec3d(x, y, z));
+        return vectorComponentwise(arguments, name, (left, right) ->
+            add ? left + right : left - right);
     }
 
     public static Iota sine(List<Iota> arguments) throws CastingException {
@@ -115,7 +107,7 @@ public final class HexArithmetics {
                 Vec3d rightVector = ((Vec3Iota) right).getValue();
                 return new DoubleIota(leftVector.dotProduct(rightVector));
             }
-            return scaleVector(left, right, "multiply");
+            return vectorComponentwise(arguments, "multiply", (a, b) -> a * b);
         }
         return NumericArithmetics.multiply(arguments);
     }
@@ -129,24 +121,14 @@ public final class HexArithmetics {
                 return new Vec3Iota(((Vec3Iota) left).getValue()
                     .crossProduct(((Vec3Iota) right).getValue()));
             }
-            if (left instanceof Vec3Iota && right instanceof DoubleIota) {
-                double divisor = ((DoubleIota) right).getValue();
-                if (divisor == 0.0D) {
-                    throw Mishap.invalidValue(
-                        "hexcasting.error.arithmetic_divide_zero",
-                        "Cannot divide by zero");
-                }
-                return new Vec3Iota(((Vec3Iota) left).getValue().scale(1.0D / divisor));
-            }
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                "divide expects a vector divided by a numeric Iota or two vectors");
+            return vectorComponentwise(arguments, "divide", (a, b) -> a / b);
         }
         return NumericArithmetics.divide(arguments);
     }
 
     public static Iota modulo(List<Iota> arguments) throws CastingException {
         requireBinary(arguments, "modulo");
-        if (arguments.get(0) instanceof Vec3Iota || arguments.get(1) instanceof Vec3Iota) {
+            if (arguments.get(0) instanceof Vec3Iota || arguments.get(1) instanceof Vec3Iota) {
             return vectorComponentwise(arguments, "modulo", (left, right) -> left % right);
         }
         return NumericArithmetics.modulo(arguments);
@@ -158,15 +140,15 @@ public final class HexArithmetics {
         Iota right = arguments.get(1);
         if (left instanceof Vec3Iota || right instanceof Vec3Iota) {
             if (!(left instanceof Vec3Iota) || !(right instanceof Vec3Iota)) {
-                throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                    "power expects two numeric Iotas or two vectors");
+                return vectorComponentwise(arguments, "power", (a, b) -> {
+                    if (a < 0.0D && Math.abs(b - Math.rint(b)) > 1.0E-5D) {
+                        throw Mishap.divideByZero(left, right, "exponent");
+                    }
+                    return Math.pow(a, b);
+                });
             }
             Vec3d base = ((Vec3Iota) left).getValue();
             Vec3d direction = ((Vec3Iota) right).getValue();
-            if (direction.lengthVector() == 0.0D) {
-                throw Mishap.invalidValue("hexcasting.error.arithmetic_vector_zero",
-                    "Cannot project onto a zero vector");
-            }
             Vec3d normalized = direction.normalize();
             return new Vec3Iota(normalized.scale(base.dotProduct(normalized)));
         }
@@ -203,50 +185,38 @@ public final class HexArithmetics {
     }
 
     private interface ComponentOperation {
-        double apply(double left, double right);
+        double apply(double left, double right) throws CastingException;
     }
 
     private static Iota vectorComponentwise(List<Iota> arguments, String name,
         ComponentOperation operation) throws CastingException {
         Iota left = arguments.get(0);
         Iota right = arguments.get(1);
-        if (left instanceof Vec3Iota && right instanceof Vec3Iota) {
-            Vec3d a = ((Vec3Iota) left).getValue();
-            Vec3d b = ((Vec3Iota) right).getValue();
-            if ("modulo".equals(name) && (b.x == 0.0D || b.y == 0.0D || b.z == 0.0D)) {
-                throw Mishap.invalidValue(
-                    "hexcasting.error.arithmetic_modulo_zero",
-                    "Cannot take modulo by zero");
-            }
-            return new Vec3Iota(new Vec3d(
-                operation.apply(a.x, b.x), operation.apply(a.y, b.y), operation.apply(a.z, b.z)));
+        if (!(left instanceof Vec3Iota || left instanceof DoubleIota)
+            || !(right instanceof Vec3Iota || right instanceof DoubleIota)) {
+            throw Mishap.invalidOperatorArgs(arguments,
+                name + " received incompatible overloaded arguments");
         }
-        if (left instanceof Vec3Iota && right instanceof DoubleIota) {
-            Vec3d a = ((Vec3Iota) left).getValue();
-            double b = ((DoubleIota) right).getValue();
-            if ("modulo".equals(name) && b == 0.0D) {
-                throw Mishap.invalidValue(
-                    "hexcasting.error.arithmetic_modulo_zero",
-                    "Cannot take modulo by zero");
-            }
-            return new Vec3Iota(new Vec3d(
-                operation.apply(a.x, b), operation.apply(a.y, b), operation.apply(a.z, b)));
+        Vec3d a = left instanceof Vec3Iota
+            ? ((Vec3Iota) left).getValue()
+            : new Vec3d(((DoubleIota) left).getValue(),
+                ((DoubleIota) left).getValue(), ((DoubleIota) left).getValue());
+        Vec3d b = right instanceof Vec3Iota
+            ? ((Vec3Iota) right).getValue()
+            : new Vec3d(((DoubleIota) right).getValue(),
+                ((DoubleIota) right).getValue(), ((DoubleIota) right).getValue());
+        if (("divide".equals(name) || "modulo".equals(name))
+            && (b.x == 0.0D || b.y == 0.0D || b.z == 0.0D)) {
+            throw Mishap.divideByZero(left, right, "divide");
         }
-        throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-            name + " expects two vectors or a vector and a numeric Iota");
-    }
-
-    private static Iota scaleVector(Iota left, Iota right, String name) throws CastingException {
-        if (left instanceof Vec3Iota && right instanceof DoubleIota) {
-            return new Vec3Iota(((Vec3Iota) left).getValue()
-                .scale(((DoubleIota) right).getValue()));
+        if ("power".equals(name)
+            && ((a.x < 0.0D && Math.abs(b.x - Math.rint(b.x)) > 1.0E-5D)
+                || (a.y < 0.0D && Math.abs(b.y - Math.rint(b.y)) > 1.0E-5D)
+                || (a.z < 0.0D && Math.abs(b.z - Math.rint(b.z)) > 1.0E-5D))) {
+            throw Mishap.divideByZero(left, right, "exponent");
         }
-        if (left instanceof DoubleIota && right instanceof Vec3Iota) {
-            return new Vec3Iota(((Vec3Iota) right).getValue()
-                .scale(((DoubleIota) left).getValue()));
-        }
-        throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-            name + " expects two vectors or a vector and a numeric Iota");
+        return new Vec3Iota(new Vec3d(
+            operation.apply(a.x, b.x), operation.apply(a.y, b.y), operation.apply(a.z, b.z)));
     }
 
     private static void requireBinary(List<Iota> arguments, String name)

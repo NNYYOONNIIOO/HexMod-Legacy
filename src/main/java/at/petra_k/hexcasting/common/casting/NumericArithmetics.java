@@ -35,8 +35,7 @@ public final class NumericArithmetics {
     public static Iota divide(List<Iota> arguments) throws CastingException {
         double[] values = numbers(arguments, "divide");
         if (values[1] == 0.0D) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_divide_zero",
-                "Cannot divide by zero");
+            throw Mishap.divideByZero(arguments.get(0), arguments.get(1), "divide");
         }
         return new DoubleIota(values[0] / values[1]);
     }
@@ -44,8 +43,7 @@ public final class NumericArithmetics {
     public static Iota modulo(List<Iota> arguments) throws CastingException {
         double[] values = numbers(arguments, "modulo");
         if (values[1] == 0.0D) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_modulo_zero",
-                "Cannot take modulo by zero");
+            throw Mishap.divideByZero(arguments.get(0), arguments.get(1), "divide");
         }
         return new DoubleIota(values[0] % values[1]);
     }
@@ -54,8 +52,7 @@ public final class NumericArithmetics {
         double[] values = numbers(arguments, "power");
         if (values[0] < 0.0D
             && Math.abs(values[1] - Math.rint(values[1])) > 1.0E-5D) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
-                "Cannot raise a negative number to a fractional power");
+            throw Mishap.divideByZero(arguments.get(0), arguments.get(1), "exponent");
         }
         return new DoubleIota(Math.pow(values[0], values[1]));
     }
@@ -86,9 +83,10 @@ public final class NumericArithmetics {
                 "tan expects exactly one argument");
         }
         double value = number(arguments.get(0), "tan", 0, 1);
-        if (Math.abs(Math.cos(value)) < 1.0E-12D) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
-                "Tangent is undefined at this angle");
+        // Match Hex's DoubleArithmetic exactly: only an actual zero cosine
+        // is undefined.  A tolerance here changes valid values near pi/2.
+        if (Math.cos(value) == 0.0D) {
+            throw Mishap.tangentDivideByZero(arguments.get(0));
         }
         return new DoubleIota(Math.tan(value));
     }
@@ -117,8 +115,7 @@ public final class NumericArithmetics {
         double value = number(arguments.get(0), "log", 0, 2);
         double base = number(arguments.get(1), "log", 1, 2);
         if (value <= 0.0D || base <= 0.0D || base == 1.0D) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
-                "log expects a positive value and a positive base other than one");
+            throw Mishap.divideByZero(arguments.get(0), arguments.get(1), "logarithm");
         }
         return new DoubleIota(Math.log(value) / Math.log(base));
     }
@@ -137,8 +134,8 @@ public final class NumericArithmetics {
         }
         double value = number(arguments.get(0), name, 0, 1);
         if (value < minimum || value > maximum) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
-                name + " expects an argument in [" + minimum + ", " + maximum + "]");
+            throw Mishap.invalidIota(arguments.get(0), 0, "double.between",
+                (int) minimum, (int) maximum);
         }
         return new DoubleIota(operation.apply(value));
     }

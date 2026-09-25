@@ -2,7 +2,9 @@ package at.petra_k.hexcasting.common.casting;
 
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
+import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
+import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
 import at.petra_k.hexcasting.interop.inline.HexInline;
@@ -18,6 +20,7 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 
 import java.util.Locale;
+import java.util.List;
 
 /**
  * One message boundary for every 1.12.2 casting entry point.
@@ -125,6 +128,9 @@ public final class MishapFeedback {
                     caster.attackEntityFrom(net.minecraft.util.DamageSource.DROWN, 2.0F);
                 }
                 caster.setAir(0);
+                return;
+            case ARITHMETIC:
+                OvercastHelper.mishapDamage(caster);
                 return;
             default:
                 // Media shortages, invalid values and context failures do
@@ -248,11 +254,38 @@ public final class MishapFeedback {
     }
 
     private static String localizeMishapDetail(Mishap mishap) {
+        List<Iota> invalidOperators = mishap.getInvalidOperatorPerpetrators();
+        if (invalidOperators != null && !invalidOperators.isEmpty()) {
+            if (invalidOperators.size() == 1) {
+                return I18n.translateToLocalFormatted(
+                    "hexcasting.mishap.invalid_operator_args.one", 0,
+                    invalidOperators.get(0).display());
+            }
+            StringBuilder values = new StringBuilder();
+            for (int i = 0; i < invalidOperators.size(); i++) {
+                if (i > 0) {
+                    values.append(", ");
+                }
+                values.append(invalidOperators.get(i).display());
+            }
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.invalid_operator_args.many",
+                invalidOperators.size(), 0, invalidOperators.size() - 1,
+                values.toString());
+        }
+
         if (mishap.getInvalidPerpetrator() != null
             && mishap.getInvalidExpected() != null) {
-            String expected = localizeKey(
-                "hexcasting.mishap.invalid_value.class."
-                    + mishap.getInvalidExpected());
+            String expectedSuffix = mishap.getInvalidExpected();
+            String expectedKey = expectedSuffix.startsWith("class.")
+                ? "hexcasting.mishap.invalid_value." + expectedSuffix
+                : expectedSuffix.indexOf('.') >= 0
+                    ? "hexcasting.mishap.invalid_value." + expectedSuffix
+                    : "hexcasting.mishap.invalid_value.class." + expectedSuffix;
+            Object[] expectedArgs = mishap.getInvalidExpectedArgs();
+            String expected = expectedArgs.length == 0
+                ? localizeKey(expectedKey)
+                : I18n.translateToLocalFormatted(expectedKey, expectedArgs);
             Iota perpetrator = mishap.getInvalidPerpetrator();
             String actual = localizeKey(
                 "hexcasting.mishap.invalid_value.class."
@@ -260,6 +293,11 @@ public final class MishapFeedback {
             return I18n.translateToLocalFormatted(
                 "hexcasting.mishap.invalid_value", expected,
                 mishap.getInvalidReverseIndex(), actual, perpetrator.display());
+        }
+
+        if (mishap.getKind() == Mishap.Kind.ARITHMETIC
+            && mishap.getArithmeticLeft() != null) {
+            return localizeArithmeticMishap(mishap);
         }
 
         String key = mishap.getDisplayKey();
@@ -275,6 +313,42 @@ public final class MishapFeedback {
             return localizeRaw(mishap.getErrorKey());
         }
         return localizeKey(key);
+    }
+
+    private static String localizeArithmeticMishap(Mishap mishap) {
+        String suffix = mishap.getArithmeticSuffix();
+        String left = arithmeticDisplay(mishap.getArithmeticLeft(), false);
+        String right = arithmeticDisplay(mishap.getArithmeticRight(),
+            "exponent".equals(suffix));
+        if ("tan".equals(suffix)) {
+            String sine = I18n.translateToLocalFormatted(
+                "hexcasting.mishap.divide_by_zero.sin", left);
+            String cosine = I18n.translateToLocalFormatted(
+                "hexcasting.mishap.divide_by_zero.cos", left);
+            return I18n.translateToLocalFormatted(
+                "hexcasting.mishap.divide_by_zero.divide", sine, cosine);
+        }
+        String key = "hexcasting.mishap.divide_by_zero."
+            + (suffix == null || suffix.isEmpty() ? "divide" : suffix);
+        return I18n.translateToLocalFormatted(key, left, right);
+    }
+
+    private static String arithmeticDisplay(Iota value, boolean exponent) {
+        if (value == null) {
+            return "?";
+        }
+        if (value instanceof DoubleIota
+            && ((DoubleIota) value).getValue() == 0.0D) {
+            return I18n.translateToLocal(
+                exponent ? "hexcasting.mishap.divide_by_zero.zero.power"
+                    : "hexcasting.mishap.divide_by_zero.zero");
+        }
+        if (value instanceof Vec3Iota
+            && ((Vec3Iota) value).getValue().lengthVector() == 0.0D) {
+            return I18n.translateToLocal(
+                "hexcasting.mishap.divide_by_zero.zero.vec");
+        }
+        return value.display();
     }
 
     private static String localizeRaw(String message) {
