@@ -49,6 +49,42 @@ public final class AkashicRecordData extends WorldSavedData {
         markDirty();
     }
 
+    /** Copy every legacy mapping stored at one record position. */
+    public NBTTagCompound snapshotAt(BlockPos position) {
+        NBTTagCompound snapshot = new NBTTagCompound();
+        NBTTagList list = new NBTTagList();
+        String prefix = position.getX() + ":" + position.getY() + ":"
+            + position.getZ() + ":";
+        for (Map.Entry<String, NBTTagCompound> record : records.entrySet()) {
+            if (!record.getKey().startsWith(prefix)) {
+                continue;
+            }
+            NBTTagCompound entry = new NBTTagCompound();
+            entry.setString("pattern", record.getKey().substring(prefix.length()));
+            entry.setTag("value", record.getValue().copy());
+            list.appendTag(entry);
+        }
+        snapshot.setTag("entries", list);
+        return snapshot;
+    }
+
+    /** Restore the legacy mappings at one record position from a snapshot. */
+    public void restoreAt(BlockPos position, NBTTagCompound snapshot) {
+        clearAt(position);
+        if (snapshot == null || !snapshot.hasKey("entries", 9)) {
+            return;
+        }
+        NBTTagList list = snapshot.getTagList("entries", 10);
+        for (int i = 0; i < list.tagCount(); i++) {
+            NBTTagCompound entry = list.getCompoundTagAt(i);
+            if (entry.hasKey("pattern", 8) && entry.hasKey("value", 10)) {
+                records.put(key(position, entry.getString("pattern")),
+                    entry.getCompoundTag("value").copy());
+            }
+        }
+        markDirty();
+    }
+
     public int countAt(BlockPos position) {
         String prefix = position.getX() + ":" + position.getY() + ":"
             + position.getZ() + ":";

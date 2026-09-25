@@ -79,6 +79,65 @@ public final class BlockAkashicRecord extends Block {
         return true;
     }
 
+    /** Capture both bookshelf block entities and legacy world data. */
+    public MappingSnapshot captureMappings(World world, BlockPos pos) {
+        List<NBTTagCompound> shelves = new ArrayList<>();
+        if (world != null && pos != null) {
+            for (TileEntityAkashicBookshelf shelf : connectedBookshelves(world, pos)) {
+                NBTTagCompound tag = shelf.writeToNBT(new NBTTagCompound());
+                tag.setInteger("x", shelf.getPos().getX());
+                tag.setInteger("y", shelf.getPos().getY());
+                tag.setInteger("z", shelf.getPos().getZ());
+                shelves.add(tag);
+            }
+        }
+        NBTTagCompound legacy = world == null || pos == null
+            ? new NBTTagCompound() : AkashicRecordData.get(world).snapshotAt(pos);
+        return new MappingSnapshot(shelves, legacy);
+    }
+
+    /** Restore a previously captured mapping network after a failed cast. */
+    public static final class MappingSnapshot {
+        private final List<NBTTagCompound> shelves;
+        private final NBTTagCompound legacy;
+
+        private MappingSnapshot(List<NBTTagCompound> shelves,
+                                NBTTagCompound legacy) {
+            this.shelves = new ArrayList<>();
+            for (NBTTagCompound shelf : shelves) {
+                this.shelves.add(shelf.copy());
+            }
+            this.legacy = legacy == null ? new NBTTagCompound() : legacy.copy();
+        }
+
+        public void restore(World world, BlockPos pos) {
+            if (world == null || pos == null || world.isRemote) {
+                return;
+            }
+            for (NBTTagCompound shelfTag : shelves) {
+                BlockPos shelfPos = new BlockPos(
+                    shelfTag.getInteger("x"), shelfTag.getInteger("y"),
+                    shelfTag.getInteger("z"));
+                TileEntity tile = world.getTileEntity(shelfPos);
+                if (!(tile instanceof TileEntityAkashicBookshelf)) {
+                    continue;
+                }
+                TileEntityAkashicBookshelf shelf =
+                    (TileEntityAkashicBookshelf) tile;
+                shelf.readFromNBT(shelfTag.copy());
+                shelf.markDirty();
+                IBlockState oldState = world.getBlockState(shelfPos);
+                if (oldState.getBlock() instanceof BlockAkashicBookshelf) {
+                    IBlockState newState = oldState.withProperty(
+                        BlockAkashicBookshelf.HAS_BOOKS, shelf.hasMapping());
+                    world.setBlockState(shelfPos, newState, 3);
+                    world.notifyBlockUpdate(shelfPos, oldState, newState, 3);
+                }
+            }
+            AkashicRecordData.get(world).restoreAt(pos, legacy.copy());
+        }
+    }
+
     /** Clear both connected bookshelf mappings and the legacy per-record data. */
     public void clearMappings(World world, BlockPos pos) {
         if (world == null || pos == null) {
