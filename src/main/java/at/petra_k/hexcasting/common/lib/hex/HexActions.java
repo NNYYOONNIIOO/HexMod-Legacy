@@ -1086,7 +1086,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     return;
                 }
                 if (!(target instanceof Vec3Iota)) {
-                    throw Mishap.legacy("hexcasting.error.ignite_target");
+                    throw Mishap.invalidIota(target, 0, "entity_or_vector");
                 }
                 net.minecraft.util.math.Vec3d position =
                     ((Vec3Iota) target).getValue();
@@ -1206,9 +1206,11 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 Iota motionValue = stack.pop();
                 Iota entityValue = stack.pop();
-                if (!(motionValue instanceof Vec3Iota)
-                    || !(entityValue instanceof EntityIota)) {
-                    throw Mishap.legacy("hexcasting.error.add_motion_args");
+                if (!(motionValue instanceof Vec3Iota)) {
+                    throw Mishap.invalidIota(motionValue, 0, "vector");
+                }
+                if (!(entityValue instanceof EntityIota)) {
+                    throw Mishap.invalidIota(entityValue, 1, "entity");
                 }
                 Vec3Iota motionIota = (Vec3Iota) motionValue;
                 EntityIota entityIota = (EntityIota) entityValue;
@@ -1220,7 +1222,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     + motion.y * motion.y + motion.z * motion.z;
                 if (Double.isNaN(motionLengthSquared)
                     || Double.isInfinite(motionLengthSquared)) {
-                    throw Mishap.legacy("hexcasting.error.add_motion_invalid");
+                    throw Mishap.invalidIota(motionValue, 0, "vector");
                 }
                 double motionCost = motionLengthSquared
                     + (vm.checkAndMarkGivenMotion(entity) ? 1.0D : 0.0D);
@@ -2805,9 +2807,11 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
             }
             Iota deltaValue = stack.pop();
             Iota entityValue = stack.pop();
-            if (!(entityValue instanceof EntityIota)
-                || !(deltaValue instanceof DoubleIota)) {
-                throw Mishap.legacy("hexcasting.error.blink_args");
+            if (!(deltaValue instanceof DoubleIota)) {
+                throw Mishap.invalidIota(deltaValue, 0, "double");
+            }
+            if (!(entityValue instanceof EntityIota)) {
+                throw Mishap.invalidIota(entityValue, 1, "entity");
             }
             EntityIota entityIota = (EntityIota) entityValue;
             DoubleIota deltaIota = (DoubleIota) deltaValue;
@@ -3770,21 +3774,31 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 Iota second = stack.pop();
                 EntityIota entityIota;
                 Vec3Iota positionIota;
+                int entityReverseIndex;
                 if (first instanceof EntityIota && second instanceof Vec3Iota) {
                     entityIota = (EntityIota) first;
                     positionIota = (Vec3Iota) second;
+                    entityReverseIndex = 0;
                 } else if (second instanceof EntityIota && first instanceof Vec3Iota) {
                     entityIota = (EntityIota) second;
                     positionIota = (Vec3Iota) first;
+                    entityReverseIndex = 1;
+                } else if (first instanceof EntityIota) {
+                    throw Mishap.invalidIota(second, 1, "vector");
+                } else if (second instanceof EntityIota) {
+                    throw Mishap.invalidIota(first, 0, "vector");
+                } else if (first instanceof Vec3Iota) {
+                    throw Mishap.invalidIota(second, 1, "entity");
                 } else {
-                    throw Mishap.legacy("hexcasting.error.brainsweep_expected");
+                    throw Mishap.invalidIota(first, 0, "entity_or_vector");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.Vec3d rawPosition = positionIota.getValue();
                 requireVecInRange(vm, player, rawPosition, "hexcasting.error.brainsweep_range");
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 if (!(entity instanceof net.minecraft.entity.EntityLiving)) {
-                    throw Mishap.legacy("hexcasting.error.brainsweep_mob");
+                    throw Mishap.invalidIota(entityIota, entityReverseIndex,
+                        "entity.mob");
                 }
                 net.minecraft.entity.EntityLiving living =
                     (net.minecraft.entity.EntityLiving) entity;
@@ -3859,7 +3873,11 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     throw Mishap.legacy("hexcasting.error.teleport_great_context");
                 }
                 Vec3Iota deltaIota = stack.pop(Vec3Iota.class);
-                EntityIota entityIota = stack.pop(EntityIota.class);
+                Iota entityValue = stack.pop();
+                if (!(entityValue instanceof EntityIota)) {
+                    throw Mishap.invalidIota(entityValue, 1, "entity");
+                }
+                EntityIota entityIota = (EntityIota) entityValue;
                 net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
                 requireEntityInRange(vm, vm.getPlayer(), target,
                     "hexcasting.error.teleport_great_range");
