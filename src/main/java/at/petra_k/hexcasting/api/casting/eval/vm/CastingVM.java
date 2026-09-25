@@ -449,7 +449,7 @@ public final class CastingVM {
     public ItemStack getHeldItemToOperateOn(Predicate<ItemStack> predicate)
         throws CastingException {
         if (player == null) {
-            throw Mishap.legacy("hexcasting.error.read_context");
+            throw Mishap.error("hexcasting.error.read_context");
         }
         if (predicate == null) {
             throw new IllegalArgumentException("Held-item predicate cannot be null");
@@ -705,11 +705,11 @@ public final class CastingVM {
                 "Cannot read into parentheses when none is open");
         }
         if (player == null) {
-            throw Mishap.legacy("hexcasting.error.read_context");
+            throw Mishap.error("hexcasting.error.read_context");
         }
         ItemStack holder = getHeldItemToOperateOn(IotaDataHolder::canRead);
         if (holder == null || holder.isEmpty()) {
-            throw Mishap.legacy("hexcasting.error.data_holder_missing");
+            throw Mishap.error("hexcasting.error.data_holder_missing");
         }
         Iota datum = IotaDataHolder.read(holder);
         parentheses.peek().values.add(new ParenEntry(datum, true));
@@ -1014,7 +1014,7 @@ public final class CastingVM {
             return;
         }
         if (mediaHolder == null && player == null && castingData == null) {
-            throw Mishap.legacy("hexcasting.error.no_media_context");
+            throw Mishap.error("hexcasting.error.no_media_context");
         }
         if (mediaTransaction == null) {
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
