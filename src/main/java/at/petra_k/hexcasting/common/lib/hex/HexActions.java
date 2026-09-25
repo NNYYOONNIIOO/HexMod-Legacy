@@ -4110,6 +4110,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 }
                 vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
                 if (!vm.getPlayer().world.isRemote) {
+                    final EntitySnapshot targetBefore = EntitySnapshot.capture(target);
+                    vm.addRollbackAction(targetBefore::restore);
                     prepareTeleport(target);
                     target.setPosition(destination.x, destination.y, destination.z);
                     if (target instanceof net.minecraft.entity.player.EntityPlayer) {
@@ -4482,6 +4484,74 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 world.removeTileEntity(position);
             }
             world.notifyBlockUpdate(position, state, state, 3);
+        }
+    }
+
+    /** Restore the mutable state changed by the greater-teleport action. */
+    private static final class EntitySnapshot {
+        private final net.minecraft.entity.Entity entity;
+        private final double x;
+        private final double y;
+        private final double z;
+        private final double motionX;
+        private final double motionY;
+        private final double motionZ;
+        private final float yaw;
+        private final float pitch;
+        private final float fallDistance;
+        private final boolean onGround;
+        private final net.minecraft.entity.Entity vehicle;
+        private final java.util.List<net.minecraft.entity.Entity> passengers;
+
+        private EntitySnapshot(net.minecraft.entity.Entity entity) {
+            this.entity = entity;
+            this.x = entity.posX;
+            this.y = entity.posY;
+            this.z = entity.posZ;
+            this.motionX = entity.motionX;
+            this.motionY = entity.motionY;
+            this.motionZ = entity.motionZ;
+            this.yaw = entity.rotationYaw;
+            this.pitch = entity.rotationPitch;
+            this.fallDistance = entity.fallDistance;
+            this.onGround = entity.onGround;
+            this.vehicle = entity.getRidingEntity();
+            this.passengers = new java.util.ArrayList<>(entity.getPassengers());
+        }
+
+        private static EntitySnapshot capture(net.minecraft.entity.Entity entity) {
+            return new EntitySnapshot(entity);
+        }
+
+        private void restore() {
+            if (entity == null || entity.isDead) {
+                return;
+            }
+            entity.dismountRidingEntity();
+            for (net.minecraft.entity.Entity passenger
+                : new java.util.ArrayList<>(entity.getPassengers())) {
+                passenger.dismountRidingEntity();
+            }
+            if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
+                ((net.minecraft.entity.player.EntityPlayer) entity)
+                    .setPositionAndUpdate(x, y, z);
+            } else {
+                entity.setPosition(x, y, z);
+            }
+            entity.setPositionAndRotation(x, y, z, yaw, pitch);
+            entity.motionX = motionX;
+            entity.motionY = motionY;
+            entity.motionZ = motionZ;
+            entity.fallDistance = fallDistance;
+            entity.onGround = onGround;
+            if (vehicle != null && !vehicle.isDead) {
+                entity.startRiding(vehicle, true);
+            }
+            for (net.minecraft.entity.Entity passenger : passengers) {
+                if (passenger != null && !passenger.isDead) {
+                    passenger.startRiding(entity, true);
+                }
+            }
         }
     }
 
