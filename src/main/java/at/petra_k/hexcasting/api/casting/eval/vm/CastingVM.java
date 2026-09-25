@@ -956,7 +956,11 @@ public final class CastingVM {
             if (evaluationDepth == 0) {
                 mishap.applyStackEffect(stack);
             }
-            MishapFeedback.applySideEffects(mishap);
+            // Nested evaluations must defer gameplay effects until the outer
+            // VM has restored its snapshot and media transaction.
+            if (evaluationDepth == 0) {
+                MishapFeedback.applySideEffects(mishap);
+            }
             throw mishap;
         } catch (RuntimeException exception) {
             unlockOvercastForFailedGreatSpell(actionId);
@@ -970,7 +974,9 @@ public final class CastingVM {
             if (evaluationDepth == 0) {
                 mishap.applyStackEffect(stack);
             }
-            MishapFeedback.applySideEffects(mishap);
+            if (evaluationDepth == 0) {
+                MishapFeedback.applySideEffects(mishap);
+            }
             throw mishap;
         } finally {
             activeOperationLimit = previousLimit;

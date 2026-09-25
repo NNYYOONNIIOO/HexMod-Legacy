@@ -97,6 +97,7 @@ public class Mishap extends CastingException {
     private Iota arithmeticLeft;
     private Iota arithmeticRight;
     private String arithmeticSuffix;
+    private boolean executionContextAttached;
 
     public Mishap(Kind kind, String errorKey, Throwable cause, HexPattern pattern,
                   ResourceLocation actionId, EntityPlayer caster,
@@ -126,6 +127,7 @@ public class Mishap extends CastingException {
         this.casterX = caster == null ? Double.NaN : caster.posX;
         this.casterY = caster == null ? Double.NaN : caster.posY;
         this.casterZ = caster == null ? Double.NaN : caster.posZ;
+        this.executionContextAttached = pattern != null || actionId != null || caster != null;
     }
 
     public Kind getKind() {
@@ -359,6 +361,9 @@ public class Mishap extends CastingException {
     public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
                                       EntityPlayer caster, int parenthesisDepth,
                                       int operation) {
+        if (executionContextAttached) {
+            return this;
+        }
         if (pattern != null) {
             this.pattern = pattern;
         }
@@ -380,6 +385,7 @@ public class Mishap extends CastingException {
         }
         this.parenthesisDepth = Math.max(0, parenthesisDepth);
         this.operation = Math.max(0, operation);
+        this.executionContextAttached = true;
         if ("hexcasting.mishap.needs_parens".equals(errorKey)
             && pattern != null) {
             stackEffect = StackEffect.PUSH_PATTERN;
@@ -397,7 +403,7 @@ public class Mishap extends CastingException {
 
     /** Attach target data without losing the original exception context. */
     public Mishap withTarget(Entity target) {
-        if (target == null) {
+        if (target == null || targetEntity != null) {
             return this;
         }
         targetDistance = caster == null ? Double.NaN : caster.getDistance(target);
@@ -409,7 +415,7 @@ public class Mishap extends CastingException {
 
     /** Attach the world position that an action was validating or editing. */
     public Mishap withLocation(double x, double y, double z, int dimension) {
-        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
+        if (locationRecorded || Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
             return this;
         }
         locationRecorded = true;
@@ -422,6 +428,9 @@ public class Mishap extends CastingException {
 
     /** Record whether a world/permission check was performed for this mishap. */
     public Mishap withPermission(boolean checked, boolean allowed) {
+        if (permissionChecked) {
+            return this;
+        }
         permissionChecked = checked;
         permissionAllowed = allowed;
         return this;
