@@ -1082,6 +1082,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                         "hexcasting.error.ignite_range");
                     vm.consumeMedia(MediaConstants.DUST_UNIT);
                     if (!player.world.isRemote) {
+                        final int fireBefore = entity.getFire();
+                        vm.addRollbackAction(() -> restoreFire(entity, fireBefore));
                         entity.setFire(8);
                     }
                     return;
@@ -1103,6 +1105,9 @@ public static final HexPattern BOOL_IF_PATTERN =
                     "hexcasting.error.ignite_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
+                    final BlockSnapshot targetBefore = BlockSnapshot.capture(
+                        player.world, blockPos);
+                    vm.addRollbackAction(targetBefore::restore);
                     tryIgnitionItem(player, blockPos, net.minecraft.init.Items.FIRE_CHARGE);
                     if (!player.world.getBlockState(blockPos).getBlock()
                         .equals(net.minecraft.init.Blocks.FIRE)) {
@@ -1147,6 +1152,9 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player.world.isRemote) {
                     return;
                 }
+                final java.util.List<BlockSnapshot> changedBlocks =
+                    new java.util.ArrayList<>();
+                vm.addRollbackAction(() -> restoreBlockSnapshots(changedBlocks));
                 java.util.ArrayDeque<net.minecraft.util.math.BlockPos> todo =
                     new java.util.ArrayDeque<>();
                 java.util.HashSet<net.minecraft.util.math.BlockPos> seen =
@@ -1165,7 +1173,10 @@ public static final HexPattern BOOL_IF_PATTERN =
                     if (!canBreakBlock(player, current, state)) {
                         continue;
                     }
+                    BlockSnapshot before = BlockSnapshot.capture(
+                        player.world, current);
                     if (extinguishBlock(player.world, current)) {
+                        changedBlocks.add(before);
                         player.world.spawnParticle(
                             net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
                             current.getX() + 0.5D, current.getY() + 0.5D,
@@ -1232,6 +1243,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 long rawCost = motionCost >= Long.MAX_VALUE / (double) MediaConstants.DUST_UNIT
                     ? Long.MAX_VALUE : (long) (motionCost * MediaConstants.DUST_UNIT);
                 vm.consumeMedia(rawCost);
+                final MotionSnapshot motionBefore = MotionSnapshot.capture(entity);
+                vm.addRollbackAction(motionBefore::restore);
                 if (motionLengthSquared > 8192.0D * 8192.0D) {
                     motion = motion.scale(8192.0D / Math.sqrt(motionLengthSquared));
                 }
@@ -2963,6 +2976,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
             }
             vm.consumeMedia(Math.round(mediaCost));
             if (!caster.world.isRemote) {
+                final EntitySnapshot targetBefore = EntitySnapshot.capture(target);
+                vm.addRollbackAction(targetBefore::restore);
                 prepareTeleport(target);
                 target.setPosition(destination.x, destination.y, destination.z);
                 if (target instanceof net.minecraft.entity.player.EntityPlayer) {
@@ -4552,6 +4567,49 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     passenger.startRiding(entity, true);
                 }
             }
+        }
+    }
+
+    private static void restoreFire(net.minecraft.entity.Entity entity,
+                                    int fireTicks) {
+        if (entity == null || entity.isDead) {
+            return;
+        }
+        if (fireTicks > 0) {
+            entity.setFire((fireTicks + 19) / 20);
+        } else {
+            entity.extinguish();
+        }
+    }
+
+    /** Restore only velocity for actions that do not teleport an entity. */
+    private static final class MotionSnapshot {
+        private final net.minecraft.entity.Entity entity;
+        private final double motionX;
+        private final double motionY;
+        private final double motionZ;
+        private final boolean velocityChanged;
+
+        private MotionSnapshot(net.minecraft.entity.Entity entity) {
+            this.entity = entity;
+            this.motionX = entity.motionX;
+            this.motionY = entity.motionY;
+            this.motionZ = entity.motionZ;
+            this.velocityChanged = entity.velocityChanged;
+        }
+
+        private static MotionSnapshot capture(net.minecraft.entity.Entity entity) {
+            return new MotionSnapshot(entity);
+        }
+
+        private void restore() {
+            if (entity == null || entity.isDead) {
+                return;
+            }
+            entity.motionX = motionX;
+            entity.motionY = motionY;
+            entity.motionZ = motionZ;
+            entity.velocityChanged = velocityChanged;
         }
     }
 
