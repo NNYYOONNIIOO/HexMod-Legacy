@@ -2669,7 +2669,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInWorld(value)) {
-            throw Mishap.legacy(errorKey);
+            throw Mishap.badLocation(errorKey);
         }
         return new net.minecraft.util.math.BlockPos(
             (int) Math.floor(value.x), (int) Math.floor(value.y),
@@ -4566,7 +4566,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInRange(player, position)) {
-            throw Mishap.legacy(errorKey);
+            throw Mishap.badLocation(errorKey);
         }
     }
 
@@ -4604,7 +4604,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!hasEditPermission(vm, player, position)) {
-            throw Mishap.legacy(errorKey);
+            throw Mishap.permissionDenied(errorKey);
         }
     }
 
@@ -4810,10 +4810,13 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
         if (vm != null) {
             vm.recordMishapTarget(entity);
         }
-        if (player == null || entity == null || entity.world != player.world
+        if (player == null || entity == null) {
+            throw Mishap.badEntity(errorKey);
+        }
+        if (entity.world != player.world
             || !isVecInRange(player, new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ))) {
-            throw Mishap.legacy(errorKey);
+            throw Mishap.entityTooFar(entity);
         }
     }
 
@@ -4902,7 +4905,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
             }
         }
         if (entity == null) {
-            throw Mishap.legacy("hexcasting.error.entity_unavailable");
+            throw Mishap.badEntity("hexcasting.error.entity_unavailable");
         }
         if (vm != null) {
             vm.recordMishapTarget(entity);

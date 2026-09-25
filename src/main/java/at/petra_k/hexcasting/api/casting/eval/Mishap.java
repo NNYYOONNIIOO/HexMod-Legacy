@@ -598,6 +598,30 @@ public class Mishap extends CastingException {
             null, null, null, null, 0, 0, null);
     }
 
+    /** Construct a location failure while retaining the action-specific detail key. */
+    public static Mishap badLocation(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.bad_location" : errorKey;
+        return new Mishap(Kind.BAD_LOCATION, key, null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct an edit-permission failure while retaining its detail key. */
+    public static Mishap permissionDenied(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.permission_denied" : errorKey;
+        return new Mishap(Kind.PERMISSION_DENIED, key, null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct an entity-target failure for an unavailable entity reference. */
+    public static Mishap badEntity(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.entity_unavailable" : errorKey;
+        return new Mishap(Kind.BAD_ENTITY, key, null,
+            null, null, null, 0, 0, null);
+    }
+
     /** Construct the typed failure for an entity which rejects an operation. */
     public static Mishap immuneEntity(Entity target) {
         Mishap mishap = new Mishap(Kind.IMMUNE_ENTITY,
