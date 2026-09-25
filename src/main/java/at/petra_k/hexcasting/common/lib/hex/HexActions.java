@@ -1874,9 +1874,9 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 double radius = ((DoubleIota) radiusValue).getValue();
                 if (Double.isNaN(radius) || Double.isInfinite(radius)
-                    || radius < 0.0D || radius > 128.0D) {
+                    || radius < 0.0D) {
                     throw Mishap.invalidIota(radiusValue, 0,
-                        "double.positive.less.equal", 128);
+                        "double.positive");
                 }
                 net.minecraft.util.math.Vec3d position =
                     ((Vec3Iota) positionValue).getValue();
