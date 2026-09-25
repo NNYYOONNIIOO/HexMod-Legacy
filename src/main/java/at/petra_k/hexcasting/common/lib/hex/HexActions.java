@@ -2259,7 +2259,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 Iota entity = stack.pop();
                 net.minecraft.item.ItemStack target = entityItem(entity, vm);
                 net.minecraft.entity.player.EntityPlayer otherName =
-                    Mishap.findOtherPlayer(value, null);
+                    Mishap.findOtherPlayer(value, vm.getPlayer());
                 if (otherName != null) {
                     throw Mishap.othersName(otherName);
                 }
