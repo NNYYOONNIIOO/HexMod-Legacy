@@ -1365,13 +1365,25 @@ public static final HexPattern BOOL_IF_PATTERN =
                 }
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
-                if (info.isRaining()) {
-                    int clearTime = (60 + player.world.rand.nextInt(120)) * 20 * 60;
-                    info.setCleanWeatherTime(clearTime);
-                    info.setRaining(false);
-                    info.setRainTime(0);
-                    info.setThundering(false);
-                    info.setThunderTime(0);
+                if (info.isRaining() != rain) {
+                    int minMinutes = rain ? 30 : 60;
+                    int maxMinutes = rain ? 90 : 180;
+                    int duration = (minMinutes
+                        + player.world.rand.nextInt(maxMinutes - minMinutes))
+                        * 20 * 60;
+                    if (rain) {
+                        info.setCleanWeatherTime(0);
+                        info.setRainTime(duration);
+                        info.setRaining(true);
+                        info.setThunderTime(duration);
+                        info.setThundering(player.world.rand.nextDouble() < 0.05D);
+                    } else {
+                        info.setCleanWeatherTime(duration);
+                        info.setRainTime(0);
+                        info.setRaining(false);
+                        info.setThundering(false);
+                        info.setThunderTime(0);
+                    }
                 }
             }
         });
