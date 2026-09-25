@@ -616,6 +616,21 @@ public class Mishap extends CastingException {
             null, null, null, null, 0, 0, null);
     }
 
+    /**
+     * Construct the circle-only failure explicitly.
+     *
+     * <p>Circle actions used to throw an action-specific {@code *_context}
+     * key.  That was enough for a translated message, but it lost the modern
+     * Mishap category and made the no-circle side effect impossible to apply
+     * consistently at non-VM entry points.</p>
+     */
+    public static Mishap noSpellCircle(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.mishap.no_spell_circle" : errorKey;
+        return new Mishap(Kind.NO_SPELL_CIRCLE, key, null,
+            null, null, null, 0, 0, null);
+    }
+
     /** Construct a location failure while retaining the action-specific detail key. */
     public static Mishap badLocation(String errorKey) {
         String key = errorKey == null || errorKey.isEmpty()
@@ -968,6 +983,9 @@ public class Mishap extends CastingException {
     }
 
     private static Kind classifyTranslationKey(String key) {
+        if ("hexcasting.mishap.no_spell_circle".equals(key)) {
+            return Kind.NO_SPELL_CIRCLE;
+        }
         if ("hexcasting.message.cant_great_spell".equals(key)) {
             return Kind.UNENLIGHTENED;
         }
@@ -1026,7 +1044,8 @@ public class Mishap extends CastingException {
         if ("hexcasting.mishap.wrong_dimension".equals(key)) {
             return Kind.WRONG_DIMENSION;
         }
-        if ("hexcasting.error.circle_context".equals(key)
+        if ("hexcasting.error.circle_bounds_context".equals(key)
+            || "hexcasting.error.circle_context".equals(key)
             || "hexcasting.error.circle_impetus_context".equals(key)) {
             return Kind.NO_SPELL_CIRCLE;
         }
@@ -1048,7 +1067,8 @@ public class Mishap extends CastingException {
             || "hexcasting.error.flight_target".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
-            || "hexcasting.error.entity_data_target".equals(key)) {
+            || "hexcasting.error.entity_data_target".equals(key)
+            || "hexcasting.error.entity_data_expected".equals(key)) {
             return Kind.BAD_ENTITY;
         }
         if ("hexcasting.error.place_block_item".equals(key)) {
