@@ -9,6 +9,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
+import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
@@ -212,12 +213,9 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
                     )
                 ));
             } catch (CastingException exception) {
-                player.sendMessage(new TextComponentString(
-                    I18n.translateToLocalFormatted(
-                        "hexcasting.message.error",
-                        exception.getMessage()
-                    )
-                ));
+                // HexEvaluator already applied the VM-side mishap effect;
+                // this boundary only needs to use the shared localization.
+                MishapFeedback.send(player, exception);
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, held);
