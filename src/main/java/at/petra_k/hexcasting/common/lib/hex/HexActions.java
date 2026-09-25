@@ -2988,8 +2988,12 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     || !(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
                     throw Mishap.error("hexcasting.error.place_block_item");
                 }
-                if (!player.world.getBlockState(position).getBlock()
-                    .isReplaceable(player.world, position)) {
+                net.minecraft.item.ItemBlock blockItem =
+                    (net.minecraft.item.ItemBlock) source.getItem();
+                net.minecraft.util.EnumFacing placementFacing =
+                    player.getHorizontalFacing();
+                if (!canReplaceWithBlock(player, position, blockItem,
+                    placementFacing)) {
                     throw Mishap.error("hexcasting.error.place_block_target");
                 }
                 net.minecraft.util.EnumHand blockHand = vm.getOtherHand();
@@ -3005,7 +3009,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 try {
                     result = ((net.minecraft.item.ItemBlock) useStack.getItem()).onItemUse(
                         player, player.world, position, blockHand,
-                        player.getHorizontalFacing(), 0.5F, 0.5F, 0.5F);
+                        placementFacing, 0.5F, 0.5F, 0.5F);
                 } finally {
                     player.setHeldItem(blockHand, previousBlock);
                 }
@@ -4458,6 +4462,28 @@ throw Mishap.error("hexcasting.error.get_media_context");
             }
         }
         return null;
+    }
+
+    /**
+     * 1.12.2 has no BlockPlaceContext.  Combine its replaceability check with
+     * the placement predicate used by ItemBlock so custom blocks and collision
+     * boxes are validated before the spell consumes media.
+     */
+    private static boolean canReplaceWithBlock(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.BlockPos position,
+        net.minecraft.item.ItemBlock blockItem,
+        net.minecraft.util.EnumFacing facing) {
+        if (player == null || player.world == null || position == null
+            || blockItem == null || facing == null) {
+            return false;
+        }
+        net.minecraft.block.state.IBlockState current =
+            player.world.getBlockState(position);
+        return current != null
+            && current.getBlock().isReplaceable(player.world, position)
+            && player.world.canBlockBePlaced(blockItem.getBlock(), position,
+                false, facing, player);
     }
 
     private static boolean isAnimalEntity(net.minecraft.entity.Entity entity) {
