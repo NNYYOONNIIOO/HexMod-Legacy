@@ -2942,10 +2942,6 @@ throw Mishap.error("hexcasting.error.get_media_context");
             if (!caster.world.isRemote) {
                 prepareTeleport(target);
                 target.setPosition(destination.x, destination.y, destination.z);
-                target.motionX = 0.0D;
-                target.motionY = 0.0D;
-                target.motionZ = 0.0D;
-                target.velocityChanged = true;
                 if (target instanceof net.minecraft.entity.player.EntityPlayer) {
                     ((net.minecraft.entity.player.EntityPlayer) target)
                         .setPositionAndUpdate(destination.x, destination.y, destination.z);
@@ -4045,9 +4041,6 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (!vm.getPlayer().world.isRemote) {
                     prepareTeleport(target);
                     target.setPosition(destination.x, destination.y, destination.z);
-                    target.motionX = 0.0D;
-                    target.motionY = 0.0D;
-                    target.motionZ = 0.0D;
                     if (target instanceof net.minecraft.entity.player.EntityPlayer) {
                         ((net.minecraft.entity.player.EntityPlayer) target).setPositionAndUpdate(
                             destination.x, destination.y, destination.z);
