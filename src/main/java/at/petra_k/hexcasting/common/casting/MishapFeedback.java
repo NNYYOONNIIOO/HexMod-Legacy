@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.BrainsweepRecipes;
+import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -72,6 +73,12 @@ public final class MishapFeedback {
         if (caster == null || caster.world == null || caster.world.isRemote) {
             return;
         }
+
+        // All casting carriers use this boundary, so the failure sound is
+        // emitted exactly once even when the VM and the item entry point both
+        // report the same Mishap.
+        caster.world.playSound(null, caster.posX, caster.posY, caster.posZ,
+            HexSounds.CAST_FAILURE, SoundCategory.PLAYERS, 1.0F, 1.0F);
 
         Entity target = mishap.getTargetEntity();
         switch (mishap.getKind()) {

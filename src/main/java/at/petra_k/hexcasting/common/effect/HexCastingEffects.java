@@ -76,7 +76,6 @@ public final class HexCastingEffects {
                     0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26,
                     ERROR_COLOR, null);
             }
-            playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }
 
@@ -184,7 +183,6 @@ public final class HexCastingEffects {
                     0.0D, 1.0D, 0.0D, 0.55D, Math.PI * 0.85D, 26,
                     ERROR_COLOR, null);
             }
-            playSound(player, HexSounds.CAST_FAILURE, 1.0F, 1.0F);
         }
     }
 
