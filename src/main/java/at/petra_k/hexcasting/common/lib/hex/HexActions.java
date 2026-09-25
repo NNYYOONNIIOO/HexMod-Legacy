@@ -2236,7 +2236,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.error("hexcasting.error.entity_data_context");
                 }
-                stack.push(readIota(entityItem(stack.pop(), vm)));
+                stack.push(readIota(entityItem(stack.pop(), vm, 0)));
             }
         });
 
@@ -2257,7 +2257,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 }
                 Iota value = stack.pop();
                 Iota entity = stack.pop();
-                net.minecraft.item.ItemStack target = entityItem(entity, vm);
+                net.minecraft.item.ItemStack target = entityItem(entity, vm, 1);
                 net.minecraft.entity.player.EntityPlayer otherName =
                     Mishap.findOtherPlayer(value, vm.getPlayer());
                 if (otherName != null) {
@@ -2282,7 +2282,8 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.error("hexcasting.error.entity_data_context");
                 }
-                net.minecraft.item.ItemStack target = entityItemIfPresent(stack.pop(), vm);
+                net.minecraft.item.ItemStack target = entityItemIfPresent(
+                    stack.pop(), vm, 0, "entity");
                 stack.push(new BooleanIota(
                     target != null && IotaDataHolder.canRead(target)));
             }
@@ -2303,7 +2304,8 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.error("hexcasting.error.entity_data_context");
                 }
-                net.minecraft.item.ItemStack target = entityItemIfPresent(stack.pop(), vm);
+                net.minecraft.item.ItemStack target = entityItemIfPresent(
+                    stack.pop(), vm, 0, "entity");
                 stack.push(new BooleanIota(
                     target != null && IotaDataHolder.canWrite(target)));
             }
@@ -2389,21 +2391,29 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     }
 
     private static net.minecraft.item.ItemStack entityItem(Iota value,
-                                                           CastingVM vm)
+                                                           CastingVM vm,
+                                                           int reverseIndex)
         throws CastingException {
-        net.minecraft.item.ItemStack result = entityItemIfPresent(value, vm);
+        net.minecraft.item.ItemStack result = entityItemIfPresent(
+            value, vm, reverseIndex, "entity");
         if (result == null || result.isEmpty()) {
-            throw Mishap.error("hexcasting.error.entity_data_target");
+            net.minecraft.entity.Entity target = resolveEntity(
+                (EntityIota) value, vm);
+            throw Mishap.badEntity("hexcasting.error.entity_data_target")
+                .withTarget(target);
         }
         return result;
     }
 
     /** Resolve an entity's item container without turning an unsupported entity into a mishap. */
     private static net.minecraft.item.ItemStack entityItemIfPresent(Iota value,
-                                                                    CastingVM vm)
+                                                                    CastingVM vm,
+                                                                    int reverseIndex,
+                                                                    String expected)
         throws CastingException {
         if (!(value instanceof EntityIota)) {
-            throw Mishap.error("hexcasting.error.entity_data_expected");
+            throw Mishap.invalidIota(value, reverseIndex,
+                expected == null || expected.isEmpty() ? "entity" : expected);
         }
         if (vm == null || vm.getPlayer() == null) {
             throw Mishap.error("hexcasting.error.entity_data_context");
@@ -4429,7 +4439,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
         if (!(value instanceof EntityIota)) {
             throw Mishap.invalidIota(value, reverseIndex, "entity.item_holder");
         }
-        net.minecraft.item.ItemStack result = entityItemIfPresent(value, vm);
+        net.minecraft.item.ItemStack result = entityItemIfPresent(
+            value, vm, reverseIndex, "entity.item_holder");
         if (result == null || result.isEmpty()) {
             throw Mishap.invalidIota(value, reverseIndex, "entity.item_holder");
         }
