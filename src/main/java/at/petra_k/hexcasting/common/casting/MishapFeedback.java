@@ -17,6 +17,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
@@ -100,10 +102,12 @@ public final class MishapFeedback {
                 return;
             case UNENLIGHTENED:
                 // Great-spell rejection drops the active focus, matching the
-                // modern MishapUnenlightened side effect.  The failure sound
-                // remains the VM/effect boundary's responsibility.
+                // modern MishapUnenlightened side effect.
                 yeetHeldItemsTowards(caster,
                     caster.getPositionVector().add(caster.getLookVec()));
+                caster.world.playSound(null, caster.posX, caster.posY, caster.posZ,
+                    SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS,
+                    0.5F, 0.7F);
                 return;
             case OTHERS_NAME:
                 // Modern Hex blinds the caster after a true-name violation;
