@@ -131,18 +131,14 @@ public final class IotaArithmetics {
     private static boolean booleanValue(Iota value, String name, int index)
         throws CastingException {
         if (!(value instanceof BooleanIota)) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                name + " expects Boolean argument " + index + " but found "
-                    + value.getClass().getSimpleName());
+            throw Mishap.invalidIota(value, 1 - index, "boolean");
         }
         return ((BooleanIota) value).getValue();
     }
 
     private static double number(Iota value, String name, int index) throws CastingException {
         if (!(value instanceof DoubleIota)) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                name + " expects numeric argument " + index + " but found "
-                    + value.getClass().getSimpleName());
+            throw Mishap.invalidIota(value, 1 - index, "double");
         }
         return ((DoubleIota) value).getValue();
     }

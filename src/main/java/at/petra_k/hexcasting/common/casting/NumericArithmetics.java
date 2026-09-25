@@ -85,7 +85,7 @@ public final class NumericArithmetics {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
                 "tan expects exactly one argument");
         }
-        double value = number(arguments.get(0), "tan", 0);
+        double value = number(arguments.get(0), "tan", 0, 1);
         if (Math.abs(Math.cos(value)) < 1.0E-12D) {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
                 "Tangent is undefined at this angle");
@@ -114,8 +114,8 @@ public final class NumericArithmetics {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
                 "log expects exactly two arguments");
         }
-        double value = number(arguments.get(0), "log", 0);
-        double base = number(arguments.get(1), "log", 1);
+        double value = number(arguments.get(0), "log", 0, 2);
+        double base = number(arguments.get(1), "log", 1, 2);
         if (value <= 0.0D || base <= 0.0D || base == 1.0D) {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
                 "log expects a positive value and a positive base other than one");
@@ -135,7 +135,7 @@ public final class NumericArithmetics {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
                 name + " expects exactly one argument");
         }
-        double value = number(arguments.get(0), name, 0);
+        double value = number(arguments.get(0), name, 0, 1);
         if (value < minimum || value > maximum) {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_domain",
                 name + " expects an argument in [" + minimum + ", " + maximum + "]");
@@ -149,7 +149,7 @@ public final class NumericArithmetics {
             throw Mishap.invalidValue("hexcasting.error.arithmetic_arity",
                 name + " expects exactly one argument");
         }
-        return new DoubleIota(operation.apply(number(arguments.get(0), name, 0)));
+        return new DoubleIota(operation.apply(number(arguments.get(0), name, 0, 1)));
     }
 
     private static double[] numbers(List<Iota> arguments, String name) throws CastingException {
@@ -158,16 +158,15 @@ public final class NumericArithmetics {
                 name + " expects exactly two arguments");
         }
         return new double[] {
-            number(arguments.get(0), name, 0),
-            number(arguments.get(1), name, 1)
+            number(arguments.get(0), name, 0, 2),
+            number(arguments.get(1), name, 1, 2)
         };
     }
 
-    private static double number(Iota value, String name, int index) throws CastingException {
+    private static double number(Iota value, String name, int index, int argumentCount)
+        throws CastingException {
         if (!(value instanceof DoubleIota)) {
-            throw Mishap.invalidValue("hexcasting.error.arithmetic_type",
-                name + " expects numeric argument " + index + " but found "
-                    + value.getType().getId());
+            throw Mishap.invalidIota(value, argumentCount - (index + 1), "double");
         }
         return ((DoubleIota) value).getValue();
     }

@@ -45,6 +45,7 @@ public class Mishap extends CastingException {
         NONE,
         PUSH_GARBAGE,
         REPLACE_WITH_GARBAGE,
+        REPLACE_MANY_WITH_GARBAGE,
         CLEAR_AND_PUSH_GARBAGE,
         PUSH_PATTERN
     }
@@ -302,6 +303,11 @@ public class Mishap extends CastingException {
             case REPLACE_WITH_GARBAGE:
                 stack.replaceFromTop(stackEffectReverseIndex, new GarbageIota());
                 break;
+            case REPLACE_MANY_WITH_GARBAGE:
+                for (int i = 0; i < stackEffectCount; i++) {
+                    stack.replaceFromTop(i, new GarbageIota());
+                }
+                break;
             case CLEAR_AND_PUSH_GARBAGE:
                 stack.clearAndPushGarbage();
                 break;
@@ -554,6 +560,18 @@ public class Mishap extends CastingException {
         mishap.invalidExpected = expected == null || expected.isEmpty()
             ? "unknown" : expected;
         mishap.invalidPerpetrator = perpetrator;
+        return mishap;
+    }
+
+    /** Construct the modern invalid-operator-arguments replacement effect. */
+    public static Mishap invalidOperatorArgs(java.util.List<Iota> perpetrators,
+                                             String detail) {
+        int count = perpetrators == null ? 0 : perpetrators.size();
+        Mishap mishap = new Mishap(Kind.INVALID_VALUE,
+            "hexcasting.error.invalid_operator_args", null,
+            null, null, null, 0, 0, detail);
+        mishap.stackEffect = StackEffect.REPLACE_MANY_WITH_GARBAGE;
+        mishap.stackEffectCount = count;
         return mishap;
     }
 
