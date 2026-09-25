@@ -3916,6 +3916,11 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.EntityLiving living =
                     (net.minecraft.entity.EntityLiving) entity;
+                // Keep the resolved mob in the Mishap context before any
+                // brainsweep-specific validation can fail.  The feedback
+                // phase uses it for failed-sweep damage and repeat-kill
+                // behavior after the VM has rolled back its transaction.
+                vm.recordMishapTarget(living);
                 if (living.isDead) {
                     throw Mishap.legacy("hexcasting.error.brainsweep_mob");
                 }
