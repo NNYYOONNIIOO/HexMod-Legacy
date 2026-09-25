@@ -859,8 +859,6 @@ public class Mishap extends CastingException {
             || "hexcasting.error.flight_target".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
-            || "hexcasting.error.entity_data_expected".equals(key)
-            || "hexcasting.error.entity_data_range".equals(key)
             || "hexcasting.error.entity_data_target".equals(key)
             || "hexcasting.error.blink_immune".equals(key)) {
             return Kind.BAD_ENTITY;
@@ -890,7 +888,8 @@ public class Mishap extends CastingException {
             || "hexcasting.error.compare_block_expected".equals(key)) {
             return Kind.BAD_BLOCK;
         }
-        if ("hexcasting.error.fluid_position".equals(key)
+        if ("hexcasting.error.entity_data_range".equals(key)
+            || "hexcasting.error.fluid_position".equals(key)
             || "hexcasting.error.teleport_great_position".equals(key)
             || "hexcasting.error.brainsweep_location".equals(key)) {
             return Kind.BAD_LOCATION;
