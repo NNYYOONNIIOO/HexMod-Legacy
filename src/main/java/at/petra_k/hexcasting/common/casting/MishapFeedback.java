@@ -90,11 +90,20 @@ public final class MishapFeedback {
                 return;
             case BAD_ENTITY:
             case BAD_LOCATION:
+            case IMMUNE_ENTITY:
+            case ENTITY_TOO_FAR:
                 Vec3d destination = target == null
                     ? location(mishap, caster) : target.getPositionVector();
                 if (destination != null) {
                     yeetHeldItemsTowards(caster, destination);
                 }
+                return;
+            case UNENLIGHTENED:
+                // Great-spell rejection drops the active focus, matching the
+                // modern MishapUnenlightened side effect.  The failure sound
+                // remains the VM/effect boundary's responsibility.
+                yeetHeldItemsTowards(caster,
+                    caster.getPositionVector().add(caster.getLookVec()));
                 return;
             case OTHERS_NAME:
                 // Modern Hex blinds the caster after a true-name violation;
@@ -254,6 +263,9 @@ public final class MishapFeedback {
     }
 
     private static String localizeMishap(Mishap mishap) {
+        if (mishap.getKind() == Mishap.Kind.UNENLIGHTENED) {
+            return localizeKey("hexcasting.message.cant_great_spell");
+        }
         if (mishap.getKind() == Mishap.Kind.INVALID_PATTERN) {
             String pattern = mishap.getPattern() == null ? "?"
                 : HexInline.formatPattern(mishap.getPattern());
@@ -275,6 +287,27 @@ public final class MishapFeedback {
     }
 
     private static String localizeMishapDetail(Mishap mishap) {
+        if (mishap.getKind() == Mishap.Kind.DISALLOWED_SPELL) {
+            String suffix = mishap.getActionDisplayKey() == null
+                ? "_generic" : "";
+            String key = mishap.getErrorKey() + suffix;
+            if (suffix.isEmpty()) {
+                return I18n.translateToLocalFormatted(key,
+                    localizeAction(mishap.getActionDisplayKey(),
+                        mishap.getActionName()));
+            }
+            return localizeKey(key);
+        }
+        if (mishap.getKind() == Mishap.Kind.BAD_CASTER) {
+            return localizeKey("hexcasting.mishap.bad_caster");
+        }
+        if (mishap.getKind() == Mishap.Kind.IMMUNE_ENTITY
+            || mishap.getKind() == Mishap.Kind.ENTITY_TOO_FAR) {
+            Entity target = mishap.getTargetEntity();
+            String name = target == null || target.getDisplayName() == null
+                ? "?" : target.getDisplayName().getUnformattedText();
+            return I18n.translateToLocalFormatted(mishap.getErrorKey(), name);
+        }
         if (mishap.getKind() == Mishap.Kind.OTHERS_NAME) {
             Entity target = mishap.getTargetEntity();
             EntityPlayer caster = mishap.getCaster();

@@ -29,9 +29,14 @@ import java.util.Locale;
 public class Mishap extends CastingException {
     public enum Kind {
         INVALID_PATTERN,
+        UNENLIGHTENED,
+        DISALLOWED_SPELL,
+        BAD_CASTER,
         NOT_ENOUGH_MEDIA,
         NOT_ENOUGH_ARGUMENTS,
         BAD_ENTITY,
+        IMMUNE_ENTITY,
+        ENTITY_TOO_FAR,
         BAD_ITEM,
         BAD_BLOCK,
         BAD_BRAINSWEEP,
@@ -467,6 +472,11 @@ public class Mishap extends CastingException {
         switch (kind) {
             case INVALID_PATTERN:
                 return 0xE5C84B;
+            case UNENLIGHTENED:
+            case BAD_CASTER:
+                return 0xE05252;
+            case DISALLOWED_SPELL:
+                return 0x202020;
             case NOT_ENOUGH_ARGUMENTS:
                 return 0xD8D8D8;
             case BAD_ITEM:
@@ -475,6 +485,10 @@ public class Mishap extends CastingException {
                 return 0x86D65A;
             case BAD_ENTITY:
                 return 0x78A8E8;
+            case IMMUNE_ENTITY:
+                return 0x78A8E8;
+            case ENTITY_TOO_FAR:
+                return 0xE97AC1;
             case BAD_BRAINSWEEP:
             case ALREADY_BRAINSWEPT:
                 return 0x62B64A;
@@ -510,6 +524,10 @@ public class Mishap extends CastingException {
         switch (kind) {
             case INVALID_PATTERN:
                 return "hexcasting.mishap.invalid_pattern_generic";
+            case UNENLIGHTENED:
+                return "hexcasting.message.cant_great_spell";
+            case BAD_CASTER:
+                return "hexcasting.mishap.bad_caster";
             case NOT_ENOUGH_MEDIA:
                 return "hexcasting.error.not_enough_media";
             case NOT_ENOUGH_ARGUMENTS:
@@ -555,6 +573,47 @@ public class Mishap extends CastingException {
             0, 0, "required=" + Math.max(0L, required)
                 + ", available=" + Math.max(0L, available))
             .withMedia(required, available);
+    }
+
+    /** Construct the failure used when a great spell is attempted too early. */
+    public static Mishap unenlightened() {
+        return new Mishap(Kind.UNENLIGHTENED,
+            "hexcasting.message.cant_great_spell", null, null, null, null,
+            0, 0, null);
+    }
+
+    /** Construct a server action-deny failure, retaining the denied action. */
+    public static Mishap disallowedSpell(boolean inCircle,
+                                         ResourceLocation actionId) {
+        String key = inCircle ? "hexcasting.mishap.disallowed_circle"
+            : "hexcasting.mishap.disallowed";
+        Mishap mishap = new Mishap(Kind.DISALLOWED_SPELL, key, null,
+            null, actionId, null, 0, 0, null);
+        return mishap;
+    }
+
+    /** Construct the failure used when an action has no valid caster context. */
+    public static Mishap badCaster() {
+        return new Mishap(Kind.BAD_CASTER, "hexcasting.mishap.bad_caster",
+            null, null, null, null, 0, 0, null);
+    }
+
+    /** Construct the typed failure for an entity which rejects an operation. */
+    public static Mishap immuneEntity(Entity target) {
+        Mishap mishap = new Mishap(Kind.IMMUNE_ENTITY,
+            "hexcasting.mishap.immune_entity", null, null, null, null,
+            0, 0, null);
+        mishap.withTarget(target);
+        return mishap;
+    }
+
+    /** Construct the typed failure for an entity outside the caster's range. */
+    public static Mishap entityTooFar(Entity target) {
+        Mishap mishap = new Mishap(Kind.ENTITY_TOO_FAR,
+            "hexcasting.mishap.entity_too_far", null, null, null, null,
+            0, 0, null);
+        mishap.withTarget(target);
+        return mishap;
     }
 
     /** Construct the true-name Mishap used by permanent Iota storage. */
@@ -809,6 +868,25 @@ public class Mishap extends CastingException {
     }
 
     private static Kind classifyTranslationKey(String key) {
+        if ("hexcasting.message.cant_great_spell".equals(key)) {
+            return Kind.UNENLIGHTENED;
+        }
+        if ("hexcasting.mishap.bad_caster".equals(key)) {
+            return Kind.BAD_CASTER;
+        }
+        if ("hexcasting.mishap.disallowed".equals(key)
+            || "hexcasting.mishap.disallowed_circle".equals(key)
+            || "hexcasting.mishap.disallowed_generic".equals(key)
+            || "hexcasting.mishap.disallowed_circle_generic".equals(key)) {
+            return Kind.DISALLOWED_SPELL;
+        }
+        if ("hexcasting.mishap.immune_entity".equals(key)
+            || "hexcasting.error.blink_immune".equals(key)) {
+            return Kind.IMMUNE_ENTITY;
+        }
+        if ("hexcasting.mishap.entity_too_far".equals(key)) {
+            return Kind.ENTITY_TOO_FAR;
+        }
         if ("hexcasting.error.not_enough_media".equals(key)) {
             return Kind.NOT_ENOUGH_MEDIA;
         }
@@ -859,8 +937,7 @@ public class Mishap extends CastingException {
             || "hexcasting.error.flight_target".equals(key)
             || "hexcasting.error.recharge_entity".equals(key)
             || "hexcasting.error.entity_unavailable".equals(key)
-            || "hexcasting.error.entity_data_target".equals(key)
-            || "hexcasting.error.blink_immune".equals(key)) {
+            || "hexcasting.error.entity_data_target".equals(key)) {
             return Kind.BAD_ENTITY;
         }
         if ("hexcasting.error.craft_battery_media_item".equals(key)
