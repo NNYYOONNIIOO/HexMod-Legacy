@@ -956,11 +956,10 @@ public final class CastingVM {
             if (evaluationDepth == 0) {
                 mishap.applyStackEffect(stack);
             }
-            // Nested evaluations must defer gameplay effects until the outer
-            // VM has restored its snapshot and media transaction.
-            if (evaluationDepth == 0) {
-                MishapFeedback.applySideEffects(mishap);
-            }
+            // The outer run() catch block applies gameplay effects only after
+            // restoring the VM snapshot and rolling back its media
+            // transaction.  Applying them here would make explosions,
+            // dropped items, and brainsweep damage observe pre-rollback state.
             throw mishap;
         } catch (RuntimeException exception) {
             unlockOvercastForFailedGreatSpell(actionId);
@@ -974,9 +973,8 @@ public final class CastingVM {
             if (evaluationDepth == 0) {
                 mishap.applyStackEffect(stack);
             }
-            if (evaluationDepth == 0) {
-                MishapFeedback.applySideEffects(mishap);
-            }
+            // Defer all world-side effects until run() has restored the
+            // failed evaluation and media transaction.
             throw mishap;
         } finally {
             activeOperationLimit = previousLimit;
