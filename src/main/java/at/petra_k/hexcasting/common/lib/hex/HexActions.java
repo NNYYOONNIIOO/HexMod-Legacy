@@ -1257,20 +1257,39 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player == null) {
                     throw Mishap.legacy("hexcasting.error.beep_context");
                 }
-                DoubleIota noteIota = stack.pop(DoubleIota.class);
-                DoubleIota instrumentIota = stack.pop(DoubleIota.class);
-                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                Iota noteValue = stack.pop();
+                Iota instrumentValue = stack.pop();
+                Iota positionValue = stack.pop();
+                if (!(noteValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(noteValue, 0, "int.positive.less.equal", 24);
+                }
+                if (!(instrumentValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(instrumentValue, 1, "int.positive.less", 10);
+                }
+                if (!(positionValue instanceof Vec3Iota)) {
+                    throw Mishap.invalidIota(positionValue, 2, "vector");
+                }
+                DoubleIota noteIota = (DoubleIota) noteValue;
+                DoubleIota instrumentIota = (DoubleIota) instrumentValue;
+                Vec3Iota positionIota = (Vec3Iota) positionValue;
                 double rawNote = noteIota.getValue();
                 double rawInstrument = instrumentIota.getValue();
-                int note = (int) rawNote;
-                int instrument = (int) rawInstrument;
+                long roundedNote = Math.round(rawNote);
+                long roundedInstrument = Math.round(rawInstrument);
                 if (Double.isNaN(rawNote) || Double.isInfinite(rawNote)
-                    || Double.isNaN(rawInstrument) || Double.isInfinite(rawInstrument)
-                    || rawNote != Math.rint(rawNote)
-                    || rawInstrument != Math.rint(rawInstrument)
-                    || note < 0 || note > 24 || instrument < 0 || instrument >= 10) {
-                    throw Mishap.legacy("hexcasting.error.beep_args");
+                    || Math.abs(rawNote - roundedNote) > DoubleIota.TOLERANCE
+                    || roundedNote < 0L || roundedNote > 24L) {
+                    throw Mishap.invalidIota(noteIota, 0,
+                        "int.positive.less.equal", 24);
                 }
+                if (Double.isNaN(rawInstrument) || Double.isInfinite(rawInstrument)
+                    || Math.abs(rawInstrument - roundedInstrument) > DoubleIota.TOLERANCE
+                    || roundedInstrument < 0L || roundedInstrument >= 10L) {
+                    throw Mishap.invalidIota(instrumentIota, 1,
+                        "int.positive.less", 10);
+                }
+                int note = (int) roundedNote;
+                int instrument = (int) roundedInstrument;
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
                 requireVecInRange(vm, player, position, "hexcasting.error.beep_range");
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
@@ -1384,12 +1403,22 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player == null) {
                     throw Mishap.legacy("hexcasting.error.explode_context");
                 }
-                DoubleIota strengthIota = stack.pop(DoubleIota.class);
-                Vec3Iota positionIota = stack.pop(Vec3Iota.class);
+                Iota strengthValue = stack.pop();
+                Iota positionValue = stack.pop();
+                if (!(strengthValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(strengthValue, 0,
+                        "double.positive.less.equal", 10);
+                }
+                if (!(positionValue instanceof Vec3Iota)) {
+                    throw Mishap.invalidIota(positionValue, 1, "vector");
+                }
+                DoubleIota strengthIota = (DoubleIota) strengthValue;
+                Vec3Iota positionIota = (Vec3Iota) positionValue;
                 double strength = strengthIota.getValue();
                 if (Double.isNaN(strength) || Double.isInfinite(strength)
                     || strength < 0.0D || strength > 10.0D) {
-                    throw Mishap.legacy("hexcasting.error.explode_args");
+                    throw Mishap.invalidIota(strengthIota, 0,
+                        "double.positive.less.equal", 10);
                 }
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
                 requireVecInRange(vm, player, position,
@@ -1818,12 +1847,23 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (player == null) {
                     throw Mishap.legacy("hexcasting.error.zone_entity_context");
                 }
-                double radius = stack.pop(DoubleIota.class).getValue();
+                Iota radiusValue = stack.pop();
+                Iota positionValue = stack.pop();
+                if (!(radiusValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(radiusValue, 0,
+                        "double.positive.less.equal", 128);
+                }
+                if (!(positionValue instanceof Vec3Iota)) {
+                    throw Mishap.invalidIota(positionValue, 1, "vector");
+                }
+                double radius = ((DoubleIota) radiusValue).getValue();
                 if (Double.isNaN(radius) || Double.isInfinite(radius)
                     || radius < 0.0D || radius > 128.0D) {
-                    throw Mishap.legacy("hexcasting.error.zone_entity_radius");
+                    throw Mishap.invalidIota(radiusValue, 0,
+                        "double.positive.less.equal", 128);
                 }
-                net.minecraft.util.math.Vec3d position = stack.pop(Vec3Iota.class).getValue();
+                net.minecraft.util.math.Vec3d position =
+                    ((Vec3Iota) positionValue).getValue();
                 requireVecInRange(vm, player, position, "hexcasting.error.zone_entity_range");
                 net.minecraft.util.math.AxisAlignedBB area = new net.minecraft.util.math.AxisAlignedBB(
                     position.x - radius, position.y - radius, position.z - radius,
@@ -3051,25 +3091,46 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.legacy("hexcasting.error.potion_context");
                 }
+                Iota potencyValue = allowPotency ? stack.pop() : null;
+                Iota durationValue = stack.pop();
+                Iota targetValue = stack.pop();
+                int durationReverseIndex = allowPotency ? 1 : 0;
+                int targetReverseIndex = allowPotency ? 2 : 1;
+                if (allowPotency && !(potencyValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(potencyValue, 0,
+                        "double.between", 1, 127);
+                }
+                if (!(durationValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(durationValue, durationReverseIndex,
+                        "double.positive");
+                }
+                if (!(targetValue instanceof EntityIota)) {
+                    throw Mishap.invalidIota(targetValue, targetReverseIndex,
+                        "entity");
+                }
                 DoubleIota potencyIota = allowPotency
-                    ? stack.pop(DoubleIota.class) : null;
-                double duration = stack.pop(DoubleIota.class).getValue();
+                    ? (DoubleIota) potencyValue : null;
+                DoubleIota durationIota = (DoubleIota) durationValue;
+                double duration = durationIota.getValue();
                 net.minecraft.entity.Entity target = resolveEntity(
-                    stack.pop(EntityIota.class), vm);
+                    (EntityIota) targetValue, vm);
                 if (!(target instanceof net.minecraft.entity.EntityLivingBase)
                     || target instanceof net.minecraft.entity.item.EntityArmorStand) {
-                    throw Mishap.legacy("hexcasting.error.potion_target");
+                    throw Mishap.invalidIota(targetValue, targetReverseIndex,
+                        "entity.living");
                 }
                 if (Double.isNaN(duration) || Double.isInfinite(duration)
                     || duration < 0.0D
                     || duration > (Integer.MAX_VALUE / 20.0D)) {
-                    throw Mishap.legacy("hexcasting.error.potion_duration");
+                    throw Mishap.invalidIota(durationValue, durationReverseIndex,
+                        "double.positive");
                 }
                 double potency = potencyIota == null ? 1.0D
                     : potencyIota.getValue();
                 if (Double.isNaN(potency) || Double.isInfinite(potency)
                     || potency < 1.0D || potency > 127.0D) {
-                    throw Mishap.legacy("hexcasting.error.potion_potency");
+                    throw Mishap.invalidIota(potencyValue, 0,
+                        "double.between", 1, 127);
                 }
                 requireEntityInRange(vm, vm.getPlayer(), target,
                     "hexcasting.error.potion_range");
@@ -3349,10 +3410,18 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.legacy("hexcasting.error.flight_context");
                 }
+                Iota radiusValue = stack.pop();
+                Iota targetValue = stack.pop();
+                if (!(radiusValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(radiusValue, 0, "double.positive");
+                }
+                if (!(targetValue instanceof EntityIota)) {
+                    throw Mishap.invalidIota(targetValue, 1, "entity.player");
+                }
                 double radius = requirePositiveFlightArgument(
-                    stack.pop(DoubleIota.class));
+                    (DoubleIota) radiusValue);
                 net.minecraft.entity.player.EntityPlayer target =
-                    requireFlightTarget(stack.pop(EntityIota.class), vm);
+                    requireFlightTarget((EntityIota) targetValue, vm, 1);
                 long cost = flightCost(radius, true);
                 vm.consumeMedia(cost);
                 if (!target.capabilities.allowFlying
@@ -3380,13 +3449,21 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.legacy("hexcasting.error.flight_context");
                 }
-                double seconds = requirePositiveFlightArgument(
-                    stack.pop(DoubleIota.class));
+                Iota secondsValue = stack.pop();
+                Iota targetValue = stack.pop();
+                if (!(secondsValue instanceof DoubleIota)) {
+                    throw Mishap.invalidIota(secondsValue, 0, "double.positive");
+                }
+                if (!(targetValue instanceof EntityIota)) {
+                    throw Mishap.invalidIota(targetValue, 1, "entity.player");
+                }
+                DoubleIota secondsIota = (DoubleIota) secondsValue;
+                double seconds = requirePositiveFlightArgument(secondsIota);
                 net.minecraft.entity.player.EntityPlayer target =
-                    requireFlightTarget(stack.pop(EntityIota.class), vm);
+                    requireFlightTarget((EntityIota) targetValue, vm, 1);
                 long cost = flightCost(seconds, false);
                 if (seconds > Integer.MAX_VALUE / 20.0D) {
-                    throw Mishap.legacy("hexcasting.error.flight_duration");
+                    throw Mishap.invalidIota(secondsIota, 0, "double.positive");
                 }
                 long ticks = Math.round(seconds * 20.0D);
                 vm.consumeMedia(cost);
@@ -4857,9 +4934,14 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
 
     private static net.minecraft.entity.player.EntityPlayer requireFlightTarget(
         EntityIota entityIota, CastingVM vm) throws CastingException {
+        return requireFlightTarget(entityIota, vm, 0);
+    }
+
+    private static net.minecraft.entity.player.EntityPlayer requireFlightTarget(
+        EntityIota entityIota, CastingVM vm, int reverseIndex) throws CastingException {
         net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
         if (!(entity instanceof net.minecraft.entity.player.EntityPlayer)) {
-            throw Mishap.legacy("hexcasting.error.flight_target");
+            throw Mishap.invalidIota(entityIota, reverseIndex, "entity.player");
         }
         net.minecraft.entity.player.EntityPlayer target =
             (net.minecraft.entity.player.EntityPlayer) entity;
