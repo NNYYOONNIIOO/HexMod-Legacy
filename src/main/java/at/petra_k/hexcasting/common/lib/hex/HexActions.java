@@ -3481,6 +3481,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     requireFlightTarget(stack.pop(EntityIota.class), vm);
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 if (!player.world.isRemote) {
+                    final FlightSnapshot before = FlightSnapshot.capture(player);
+                    vm.addRollbackAction(before::restore);
                     player.addVelocity(0.0D, 1.5D, 0.0D);
                     player.velocityChanged = true;
                     player.fallDistance = 0.0F;
@@ -3542,6 +3544,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     requireFlightTarget((EntityIota) targetValue, vm, 1);
                 long cost = flightCost(radius, true);
                 vm.consumeMedia(cost);
+                final FlightSnapshot before = FlightSnapshot.capture(target);
+                vm.addRollbackAction(before::restore);
                 if (!target.capabilities.allowFlying
                     && !HexFlightState.hasFlight(target)
                     && !target.capabilities.isCreativeMode) {
@@ -3585,6 +3589,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 }
                 long ticks = Math.round(seconds * 20.0D);
                 vm.consumeMedia(cost);
+                final FlightSnapshot before = FlightSnapshot.capture(target);
+                vm.addRollbackAction(before::restore);
                 if (!target.capabilities.allowFlying
                     && !HexFlightState.hasFlight(target)
                     && !target.capabilities.isCreativeMode) {
@@ -4661,6 +4667,82 @@ throw Mishap.error("hexcasting.error.get_media_context");
             info.setRainTime(rainTime);
             info.setThunderTime(thunderTime);
             info.setCleanWeatherTime(cleanWeatherTime);
+        }
+    }
+
+    /** Restore player flight capability and movement state after a failure. */
+    private static final class FlightSnapshot {
+        private final net.minecraft.entity.player.EntityPlayer player;
+        private final IHexCastingData data;
+        private final int flightTicks;
+        private final boolean flightActive;
+        private final int flightDimension;
+        private final double flightOriginX;
+        private final double flightOriginY;
+        private final double flightOriginZ;
+        private final double flightRadius;
+        private final int altioraTicks;
+        private final boolean altioraActive;
+        private final boolean allowFlying;
+        private final boolean isFlying;
+        private final double motionX;
+        private final double motionY;
+        private final double motionZ;
+        private final boolean velocityChanged;
+        private final float fallDistance;
+
+        private FlightSnapshot(net.minecraft.entity.player.EntityPlayer player) {
+            this.player = player;
+            this.data = player == null || HexCapabilities.CASTING_DATA == null
+                ? null : player.getCapability(HexCapabilities.CASTING_DATA, null);
+            this.flightTicks = data == null ? 0 : data.getFlightTicks();
+            this.flightActive = data != null && data.isFlightActive();
+            this.flightDimension = data == null ? 0 : data.getFlightDimension();
+            this.flightOriginX = data == null ? 0.0D : data.getFlightOriginX();
+            this.flightOriginY = data == null ? 0.0D : data.getFlightOriginY();
+            this.flightOriginZ = data == null ? 0.0D : data.getFlightOriginZ();
+            this.flightRadius = data == null ? -1.0D : data.getFlightRadius();
+            this.altioraTicks = data == null ? 0 : data.getAltioraTicks();
+            this.altioraActive = data != null && data.isAltioraActive();
+            this.allowFlying = player != null && player.capabilities.allowFlying;
+            this.isFlying = player != null && player.capabilities.isFlying;
+            this.motionX = player == null ? 0.0D : player.motionX;
+            this.motionY = player == null ? 0.0D : player.motionY;
+            this.motionZ = player == null ? 0.0D : player.motionZ;
+            this.velocityChanged = player != null && player.velocityChanged;
+            this.fallDistance = player == null ? 0.0F : player.fallDistance;
+        }
+
+        private static FlightSnapshot capture(
+            net.minecraft.entity.player.EntityPlayer player) {
+            return new FlightSnapshot(player);
+        }
+
+        private void restore() {
+            if (player == null) {
+                return;
+            }
+            if (data != null) {
+                data.setFlightActive(flightActive);
+                data.setFlightTicks(flightTicks);
+                data.setFlightDimension(flightDimension);
+                data.setFlightOrigin(flightOriginX, flightOriginY, flightOriginZ);
+                data.setFlightRadius(flightRadius);
+                data.setAltioraActive(altioraActive);
+                data.setAltioraTicks(altioraTicks);
+            }
+            player.capabilities.allowFlying = allowFlying;
+            player.capabilities.isFlying = isFlying;
+            player.motionX = motionX;
+            player.motionY = motionY;
+            player.motionZ = motionZ;
+            player.velocityChanged = velocityChanged;
+            player.fallDistance = fallDistance;
+            if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                ((net.minecraft.entity.player.EntityPlayerMP) player)
+                    .sendPlayerAbilities();
+            }
+            at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
         }
     }
 
