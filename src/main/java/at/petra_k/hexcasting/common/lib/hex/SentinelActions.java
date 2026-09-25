@@ -170,19 +170,19 @@ public final class SentinelActions {
         if (target == null || Double.isNaN(target.x) || Double.isNaN(target.y)
             || Double.isNaN(target.z) || Double.isInfinite(target.x)
             || Double.isInfinite(target.y) || Double.isInfinite(target.z)) {
-            throw Mishap.error("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.badLocation("hexcasting.error.sentinel_out_of_range");
         }
         if (target.y < 0.0D || target.y >= 256.0D
             || Math.abs(target.x) > 30000000.0D
             || Math.abs(target.z) > 30000000.0D) {
-            throw Mishap.error("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.badLocation("hexcasting.error.sentinel_out_of_range");
         }
         double dx = target.x - player.posX;
         double dy = target.y - player.posY;
         double dz = target.z - player.posZ;
         double range = 32.0D;
         if (dx * dx + dy * dy + dz * dz > range * range + 1.0E-8D) {
-            throw Mishap.error("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.badLocation("hexcasting.error.sentinel_out_of_range");
         }
     }
 

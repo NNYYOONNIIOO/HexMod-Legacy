@@ -709,7 +709,7 @@ public final class CastingVM {
         }
         ItemStack holder = getHeldItemToOperateOn(IotaDataHolder::canRead);
         if (holder == null || holder.isEmpty()) {
-            throw Mishap.error("hexcasting.error.data_holder_missing");
+            throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing");
         }
         Iota datum = IotaDataHolder.read(holder);
         parentheses.peek().values.add(new ParenEntry(datum, true));

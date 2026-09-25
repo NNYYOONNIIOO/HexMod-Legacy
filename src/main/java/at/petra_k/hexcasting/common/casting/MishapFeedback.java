@@ -81,14 +81,15 @@ public final class MishapFeedback {
                     item.motionY += 0.75D;
                     item.motionZ += (caster.world.rand.nextDouble() - 0.5D) * 0.05D;
                     item.velocityChanged = true;
-                } else {
-                    // Bad offhand/hotbar items use the same drop effect as
-                    // modern MishapBadOffhandItem and MishapLackingHotbarItem:
-                    // both held stacks leave the caster, rather than being
-                    // silently restored after the VM rolls back.
-                    yeetHeldItemsTowards(caster,
-                        caster.getPositionVector().add(caster.getLookVec()));
                 }
+                return;
+            case BAD_OFFHAND_ITEM:
+            case LACKING_HOTBAR_ITEM:
+                // These are the two modern mishaps whose execute method drops
+                // the caster's held stacks.  Keep them separate from BAD_ITEM:
+                // an invalid data holder or another item-shaped error must not
+                // eject unrelated items from the player's hands.
+                dropHeldItems(caster);
                 return;
             case BAD_ENTITY:
             case BAD_LOCATION:
@@ -211,6 +212,11 @@ public final class MishapFeedback {
             dropped.motionZ = delta.z + (caster.world.rand.nextDouble() - 0.5D) * 0.1D;
             caster.world.spawnEntity(dropped);
         }
+    }
+
+    private static void dropHeldItems(EntityPlayer caster) {
+        yeetHeldItemsTowards(caster,
+            caster.getPositionVector().add(caster.getLookVec()));
     }
 
     /** Match modern Hex's giveExperiencePoints(-100) through the 1.12 API. */

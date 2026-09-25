@@ -38,6 +38,9 @@ public class Mishap extends CastingException {
         IMMUNE_ENTITY,
         ENTITY_TOO_FAR,
         BAD_ITEM,
+        BAD_OFFHAND_ITEM,
+        LACKING_HOTBAR_ITEM,
+        INVALID_DATA_HOLDER,
         BAD_BLOCK,
         BAD_BRAINSWEEP,
         ALREADY_BRAINSWEPT,
@@ -480,7 +483,11 @@ public class Mishap extends CastingException {
             case NOT_ENOUGH_ARGUMENTS:
                 return 0xD8D8D8;
             case BAD_ITEM:
+            case BAD_OFFHAND_ITEM:
+            case LACKING_HOTBAR_ITEM:
                 return 0xA06B3C;
+            case INVALID_DATA_HOLDER:
+                return 0xD87F33;
             case BAD_BLOCK:
                 return 0x86D65A;
             case BAD_ENTITY:
@@ -627,6 +634,40 @@ public class Mishap extends CastingException {
         String key = errorKey == null || errorKey.isEmpty()
             ? "hexcasting.error.bad_block" : errorKey;
         return new Mishap(Kind.BAD_BLOCK, key, null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct a failure for an invalid dropped item entity. */
+    public static Mishap badItem(String errorKey, Entity target) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.bad_item" : errorKey;
+        Mishap mishap = new Mishap(Kind.BAD_ITEM, key, null,
+            null, null, null, 0, 0, null);
+        mishap.withTarget(target);
+        return mishap;
+    }
+
+    /** Construct a failure for the item held in the caster's other hand. */
+    public static Mishap badOffhandItem(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.bad_offhand_item" : errorKey;
+        return new Mishap(Kind.BAD_OFFHAND_ITEM, key, null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct a failure for a missing item in the caster's hotbar. */
+    public static Mishap lackingHotbarItem(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.lacking_hotbar_item" : errorKey;
+        return new Mishap(Kind.LACKING_HOTBAR_ITEM, key, null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct a data-container failure without a gameplay side effect. */
+    public static Mishap invalidDataHolder(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.data_holder_invalid" : errorKey;
+        return new Mishap(Kind.INVALID_DATA_HOLDER, key, null,
             null, null, null, 0, 0, null);
     }
 
@@ -930,6 +971,9 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.not_enough_media".equals(key)) {
             return Kind.NOT_ENOUGH_MEDIA;
         }
+        if (key.startsWith("hexcasting.error.data_holder")) {
+            return Kind.INVALID_DATA_HOLDER;
+        }
         if ("hexcasting.error.invalid_pattern".equals(key)
             || "hexcasting.mishap.invalid_pattern_generic".equals(key)) {
             return Kind.INVALID_PATTERN;
@@ -980,17 +1024,21 @@ public class Mishap extends CastingException {
             || "hexcasting.error.entity_data_target".equals(key)) {
             return Kind.BAD_ENTITY;
         }
-        if ("hexcasting.error.craft_battery_media_item".equals(key)
-            || "hexcasting.error.recharge_holder".equals(key)
-            || "hexcasting.error.recharge_item".equals(key)
+        if ("hexcasting.error.place_block_item".equals(key)) {
+            return Kind.LACKING_HOTBAR_ITEM;
+        }
+        if ("hexcasting.error.recharge_holder".equals(key)
             || "hexcasting.error.recharge_full".equals(key)
             || "hexcasting.error.craft_battery_base".equals(key)
+            || "hexcasting.error.erase_holder".equals(key)
+            || "hexcasting.error.colorize_dye".equals(key)
+            || "hexcasting.error.cycle_variant_item".equals(key)) {
+            return Kind.BAD_OFFHAND_ITEM;
+        }
+        if ("hexcasting.error.craft_battery_media_item".equals(key)
+            || "hexcasting.error.recharge_item".equals(key)
             || "hexcasting.error.craft_battery_media".equals(key)
-             || "hexcasting.error.place_block_item".equals(key)
-             || key.endsWith("_media")
-             || "hexcasting.error.erase_holder".equals(key)
-            || "hexcasting.error.data_holder_missing".equals(key)
-            || "hexcasting.error.colorize_dye".equals(key)) {
+            || key.endsWith("_media")) {
             return Kind.BAD_ITEM;
         }
         if ("hexcasting.error.akashic_duplicate".equals(key)
@@ -1034,7 +1082,7 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.compare_item_expected".equals(key)
             || key.endsWith("_item") || key.endsWith("_holder")
             || key.endsWith("_bottle") || key.endsWith("_dye")
-            || key.contains("media_item") || key.startsWith("hexcasting.error.data_holder")) {
+            || key.contains("media_item")) {
             return Kind.BAD_ITEM;
         }
         if (key.endsWith("_block") || key.endsWith("_sapling")

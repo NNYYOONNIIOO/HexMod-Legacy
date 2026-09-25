@@ -2094,19 +2094,20 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 EntityIota entityIota = stack.pop(EntityIota.class);
                 net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
                 if (!(entity instanceof net.minecraft.entity.item.EntityItem)) {
-                    throw Mishap.error("hexcasting.error.recharge_entity");
+                    throw Mishap.badEntity("hexcasting.error.recharge_entity")
+                        .withTarget(entity);
                 }
                 net.minecraft.item.ItemStack offHand = vm.getHeldItemToOperateOn(
                     MediaInventoryHelper::canRechargeItem);
                 at.petra_k.hexcasting.api.addldata.ADMediaHolder holder =
                     MediaInventoryHelper.findMediaHolder(offHand);
                 if (offHand == null || offHand.isEmpty() || holder == null) {
-                    throw Mishap.error("hexcasting.error.recharge_holder");
+                    throw Mishap.badOffhandItem("hexcasting.error.recharge_holder");
                 }
 
                 if (!holder.canRecharge()
                     || holder.insertMedia(-1L, true) <= 0L) {
-                    throw Mishap.error("hexcasting.error.recharge_holder");
+                    throw Mishap.badOffhandItem("hexcasting.error.recharge_holder");
                 }
 
                 requireEntityInRange(vm, vm.getPlayer(), entity,
@@ -2116,22 +2117,22 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 net.minecraft.item.ItemStack dropped = droppedEntity.getItem();
                 if (dropped == null || dropped.isEmpty()
                     || !MediaInventoryHelper.isMediaItem(dropped)) {
-                    throw Mishap.error("hexcasting.error.recharge_item");
+                    throw Mishap.badItem("hexcasting.error.recharge_item", entity);
                 }
 
                 long emptySpace = holder.insertMedia(-1L, true);
                 long sourceMedia = MediaInventoryHelper.extractMedia(
                     dropped, -1L, false, true);
                 if (emptySpace <= 0L || sourceMedia <= 0L) {
-                    throw Mishap.error("hexcasting.error.recharge_full");
+                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
                 }
                 long simulated = MediaInventoryHelper.extractMediaAtMost(
                     droppedEntity, emptySpace, false, true);
                 if (simulated <= 0L) {
-                    throw Mishap.error("hexcasting.error.recharge_item");
+                    throw Mishap.badItem("hexcasting.error.recharge_item", entity);
                 }
                 if (holder.insertMedia(simulated, true) != simulated) {
-                    throw Mishap.error("hexcasting.error.recharge_full");
+                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
                 }
                 // Recharge itself has the fixed one-shard spell cost.  All
                 // item/entity mutation happens after this validation so a
@@ -2316,7 +2317,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         net.minecraft.item.ItemStack stack = vm.getHeldItemToOperateOn(
             readable ? IotaDataHolder::canRead : IotaDataHolder::canWrite);
         if (stack == null || stack.isEmpty()) {
-            throw Mishap.error("hexcasting.error.data_holder_missing");
+            throw Mishap.badOffhandItem("hexcasting.error.data_holder_missing");
         }
         return stack;
     }
@@ -2749,7 +2750,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
                     IotaDataHolder::canClear);
                 if (target == null || target.isEmpty()) {
-                    throw Mishap.error("hexcasting.error.erase_holder");
+                    throw Mishap.badOffhandItem("hexcasting.error.erase_holder");
                 }
                 long count = Math.max(1L, (long) target.getCount());
                 if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
@@ -2974,7 +2975,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack source = findPlaceableBlockStack(player, vm);
                 if (source == null || source.isEmpty()
                     || !(source.getItem() instanceof net.minecraft.item.ItemBlock)) {
-                    throw Mishap.error("hexcasting.error.place_block_item");
+                    throw Mishap.lackingHotbarItem("hexcasting.error.place_block_item");
                 }
                 net.minecraft.item.ItemBlock blockItem =
                     (net.minecraft.item.ItemBlock) source.getItem();
@@ -3245,7 +3246,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (held == null
                     || (!(held.getItem() instanceof ItemHexFocus)
                     && !(held.getItem() instanceof ItemHexStaff))) {
-                    throw Mishap.error("hexcasting.error.cycle_variant_item");
+                    throw Mishap.badOffhandItem("hexcasting.error.cycle_variant_item");
                 }
                 final String key = "hexcasting_variant";
                 net.minecraft.nbt.NBTTagCompound variantData =
@@ -3849,7 +3850,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 net.minecraft.item.ItemStack dye = vm.getHeldItemToOperateOn(
                     ItemColorizer::isPigment);
                 if (dye == null || dye.isEmpty()) {
-                    throw Mishap.error("hexcasting.error.colorize_dye");
+                    throw Mishap.badOffhandItem("hexcasting.error.colorize_dye");
                 }
                 IHexCastingData data = player.getCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
                 if (data == null) {
@@ -4063,7 +4064,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 EntityIota entityIota = stack.pop(EntityIota.class);
                 net.minecraft.entity.Entity sourceEntity = resolveEntity(entityIota, vm);
                 if (!(sourceEntity instanceof net.minecraft.entity.item.EntityItem)) {
-                    throw Mishap.error("hexcasting.error.craft_battery_media_item");
+                    throw Mishap.badEntity("hexcasting.error.craft_battery_media_item")
+                        .withTarget(sourceEntity);
                 }
                 net.minecraft.entity.item.EntityItem itemEntity =
                     (net.minecraft.entity.item.EntityItem) sourceEntity;
@@ -4074,18 +4076,20 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (bottle == null || bottle.isEmpty()
                     || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE
                     || bottle.getCount() != 1 || hand == null) {
-                    throw Mishap.error("hexcasting.error.craft_battery_base");
+                    throw Mishap.badOffhandItem("hexcasting.error.craft_battery_base");
                 }
                 requireEntityInRange(vm, player, itemEntity,
                     "hexcasting.error.craft_battery_range");
                 net.minecraft.item.ItemStack source = itemEntity.getItem();
                 if (!MediaInventoryHelper.isBatteryMediaItem(source)) {
-                    throw Mishap.error("hexcasting.error.craft_battery_media_item");
+                    throw Mishap.badItem("hexcasting.error.craft_battery_media_item",
+                        itemEntity);
                 }
                 long sourceMedia = MediaInventoryHelper.extractMedia(
                     source, -1L, true, true);
                 if (sourceMedia <= 0L) {
-                    throw Mishap.error("hexcasting.error.craft_battery_media");
+                    throw Mishap.badItem("hexcasting.error.craft_battery_media",
+                        itemEntity);
                 }
                 // A survival phial is limited to the normal 64-crystal
                 // capacity.  Creative players keep the complete media
@@ -4098,7 +4102,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 long plannedDrain = MediaInventoryHelper.extractMediaAtMost(
                     itemEntity, maxBatteryMedia, true, true);
                 if (plannedDrain <= 0L) {
-                    throw Mishap.error("hexcasting.error.craft_battery_media");
+                    throw Mishap.badItem("hexcasting.error.craft_battery_media",
+                        itemEntity);
                 }
                 net.minecraft.item.ItemStack result = new net.minecraft.item.ItemStack(
                     at.petra_k.hexcasting.common.lib.HexItems.BATTERY, 1);
@@ -4122,7 +4127,8 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     itemEntity, maxBatteryMedia, true, false);
                 if (drained <= 0L || !player.capabilities.isCreativeMode
                     && drained > at.petra_k.hexcasting.common.item.ItemMediaBattery.DEFAULT_MAX_MEDIA) {
-                    throw Mishap.error("hexcasting.error.craft_battery_media");
+                    throw Mishap.badItem("hexcasting.error.craft_battery_media",
+                        itemEntity);
                 }
                 battery.setMaxMedia(result, drained);
                 battery.setMedia(result, drained);
@@ -4166,25 +4172,25 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 EntityIota entityIota = stack.pop(EntityIota.class);
                 net.minecraft.entity.Entity source = resolveEntity(entityIota, vm);
                 if (!(source instanceof net.minecraft.entity.item.EntityItem)) {
-                    throw Mishap.error(mediaErrorKey);
+                    throw Mishap.badEntity(mediaErrorKey).withTarget(source);
                 }
                 net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
                     candidate -> outputPredicate.test(candidate)
                         && ItemPackagedSpell.getPackagedIotas(candidate).isEmpty());
                 if (target == null || target.isEmpty() || !outputPredicate.test(target)
                     || !ItemPackagedSpell.getPackagedIotas(target).isEmpty()) {
-                    throw Mishap.error(itemErrorKey);
+                    throw Mishap.badOffhandItem(itemErrorKey);
                 }
                 net.minecraft.entity.item.EntityItem sourceEntity =
                     (net.minecraft.entity.item.EntityItem) source;
                 requireEntityInRange(vm, vm.getPlayer(), sourceEntity, mediaErrorKey);
                 if (!MediaInventoryHelper.isBatteryMediaEntity(sourceEntity)) {
-                    throw Mishap.error(mediaErrorKey);
+                    throw Mishap.badItem(mediaErrorKey, sourceEntity);
                 }
                 long available = MediaInventoryHelper.extractMedia(
                     sourceEntity, -1L, true, true);
                 if (available <= 0L) {
-                    throw Mishap.error(mediaErrorKey);
+                    throw Mishap.badItem(mediaErrorKey, sourceEntity);
                 }
                 net.minecraft.entity.player.EntityPlayer otherName =
                     Mishap.findOtherPlayer(spell.getItems(), vm.getPlayer());
@@ -4470,7 +4476,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
             player.world.getBlockState(position);
         return current != null
             && current.getBlock().isReplaceable(player.world, position)
-            && player.world.canBlockBePlaced(blockItem.getBlock(), position,
+            && player.world.mayPlace(blockItem.getBlock(), position,
                 false, facing, player);
     }
 
