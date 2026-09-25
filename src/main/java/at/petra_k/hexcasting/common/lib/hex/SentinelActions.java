@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.NullIota;
@@ -56,7 +57,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("hexcasting.error.sentinel_context");
+                throw Mishap.legacy("hexcasting.error.sentinel_context");
             }
 
             @Override
@@ -77,7 +78,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("hexcasting.error.sentinel_context");
+                throw Mishap.legacy("hexcasting.error.sentinel_context");
             }
 
             @Override
@@ -85,7 +86,7 @@ public final class SentinelActions {
                 EntityPlayer player = requirePlayer(vm);
                 SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
                 if (state != null && state.dimension != player.world.provider.getDimension()) {
-                    throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
+                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 SentinelData.get(player.world).clear(player.getUniqueID());
@@ -98,7 +99,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("hexcasting.error.sentinel_context");
+                throw Mishap.legacy("hexcasting.error.sentinel_context");
             }
 
             @Override
@@ -111,7 +112,7 @@ public final class SentinelActions {
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
-                    throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
+                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 stack.push(vectorIota(new Vec3d(state.x, state.y, state.z)));
@@ -123,7 +124,7 @@ public final class SentinelActions {
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw new CastingException("hexcasting.error.sentinel_context");
+                throw Mishap.legacy("hexcasting.error.sentinel_context");
             }
 
             @Override
@@ -137,7 +138,7 @@ public final class SentinelActions {
                     return;
                 }
                 if (state.dimension != player.world.provider.getDimension()) {
-                    throw new CastingException("hexcasting.error.sentinel_wrong_dimension");
+                    throw Mishap.legacy("hexcasting.error.sentinel_wrong_dimension");
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
                 stack.push(vectorIota(normalizedDifference(state, from)));
@@ -148,7 +149,7 @@ public final class SentinelActions {
     private static EntityPlayer requirePlayer(CastingVM vm) throws CastingException {
         if (vm == null || vm.getPlayer() == null || vm.getPlayer().world == null
             || vm.getPlayer().world.isRemote) {
-            throw new CastingException("hexcasting.error.sentinel_context");
+            throw Mishap.legacy("hexcasting.error.sentinel_context");
         }
         return vm.getPlayer();
     }
@@ -164,19 +165,19 @@ public final class SentinelActions {
         if (target == null || Double.isNaN(target.x) || Double.isNaN(target.y)
             || Double.isNaN(target.z) || Double.isInfinite(target.x)
             || Double.isInfinite(target.y) || Double.isInfinite(target.z)) {
-            throw new CastingException("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.legacy("hexcasting.error.sentinel_out_of_range");
         }
         if (target.y < 0.0D || target.y >= 256.0D
             || Math.abs(target.x) > 30000000.0D
             || Math.abs(target.z) > 30000000.0D) {
-            throw new CastingException("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.legacy("hexcasting.error.sentinel_out_of_range");
         }
         double dx = target.x - player.posX;
         double dy = target.y - player.posY;
         double dz = target.z - player.posZ;
         double range = 32.0D;
         if (dx * dx + dy * dy + dz * dz > range * range + 1.0E-8D) {
-            throw new CastingException("hexcasting.error.sentinel_out_of_range");
+            throw Mishap.legacy("hexcasting.error.sentinel_out_of_range");
         }
     }
 
@@ -199,7 +200,7 @@ public final class SentinelActions {
     private static Vec3d vectorOf(Vec3Iota iota) throws CastingException {
         Vec3d value = iota == null ? null : iota.getValue();
         if (value == null || !isFinite(value)) {
-            throw new CastingException("hexcasting.error.sentinel_vector");
+            throw Mishap.legacy("hexcasting.error.sentinel_vector");
         }
         return value;
     }
