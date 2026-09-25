@@ -213,33 +213,30 @@ public final class MishapFeedback {
         }
     }
 
-    /** Remove raw XP while keeping the vanilla level bar internally coherent. */
+    /** Match modern Hex's giveExperiencePoints(-100) through the 1.12 API. */
     private static void removeExperience(EntityPlayer player, int amount) {
         if (player == null || amount <= 0 || player.experienceTotal <= 0) {
             return;
         }
-        int total = Math.max(0, player.experienceTotal - amount);
-        player.experienceTotal = total;
+        int removed = Math.min(amount, player.experienceTotal);
+        player.addScore(-removed);
+        player.experienceTotal -= removed;
+        player.experience -= (float) removed / Math.max(1, player.xpBarCap());
 
-        int level = 0;
-        while (level < 32767 && experienceForLevel(level + 1) <= total) {
-            level++;
+        // EntityPlayer.addExperience only handles positive amounts in 1.12.
+        // Reproduce modern negative-XP handling so crossing a level boundary
+        // preserves the remaining progress instead of making the bar negative.
+        while (player.experience < 0.0F) {
+            float remaining = player.experience * Math.max(1, player.xpBarCap());
+            if (player.experienceLevel > 0) {
+                player.addExperienceLevel(-1);
+                player.experience = 1.0F + remaining
+                    / Math.max(1, player.xpBarCap());
+            } else {
+                player.addExperienceLevel(-1);
+                player.experience = 0.0F;
+            }
         }
-        player.experienceLevel = level;
-        int base = experienceForLevel(level);
-        int cap = Math.max(1, player.xpBarCap());
-        player.experience = Math.max(0.0F,
-            Math.min(0.999999F, (total - base) / (float) cap));
-    }
-
-    private static int experienceForLevel(int level) {
-        if (level <= 15) {
-            return level * level + 6 * level;
-        }
-        if (level <= 30) {
-            return (int) (2.5D * level * level - 40.5D * level + 360.0D);
-        }
-        return (int) (4.5D * level * level - 162.5D * level + 2220.0D);
     }
 
     /** Convert an exception at an item/effect boundary and retain its context. */
