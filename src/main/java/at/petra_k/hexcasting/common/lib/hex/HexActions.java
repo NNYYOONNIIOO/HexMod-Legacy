@@ -3987,6 +3987,22 @@ throw Mishap.error("hexcasting.error.get_media_context");
                     if (oldTile != null) {
                         oldTileData = oldTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
                     }
+                    final net.minecraft.util.math.BlockPos rollbackTarget = target;
+                    final net.minecraft.block.state.IBlockState oldState = input;
+                    final net.minecraft.nbt.NBTTagCompound rollbackTileData = oldTileData == null
+                        ? null : oldTileData.copy();
+                    final boolean oldNoAi = living.isAIDisabled();
+                    vm.addRollbackAction(() -> {
+                        player.world.setBlockState(rollbackTarget, oldState, 3);
+                        net.minecraft.tileentity.TileEntity restoredTile =
+                            player.world.getTileEntity(rollbackTarget);
+                        if (rollbackTileData != null && restoredTile != null) {
+                            restoredTile.readFromNBT(rollbackTileData.copy());
+                            restoredTile.markDirty();
+                        }
+                        BrainsweepRecipes.unmarkBrainswept(living);
+                        living.setNoAI(oldNoAi);
+                    });
                     player.world.setBlockState(target, match.getResult(), 3);
                     net.minecraft.tileentity.TileEntity newTile =
                         player.world.getTileEntity(target);

@@ -239,6 +239,16 @@ public final class BrainsweepRecipes {
         living.enablePersistence();
     }
 
+    /** Undo a marker applied by a brainsweep that was later rolled back. */
+    public static void unmarkBrainswept(EntityLiving living) {
+        if (living == null) {
+            return;
+        }
+        NBTTagCompound data = living.getEntityData();
+        data.removeTag(BRAINSWEPT_TAG);
+        data.removeTag(LEGACY_BRAINSWEPT_TAG);
+    }
+
     private static Match result(IBlockState original, String resultId, long mediaCost) {
         Block resultBlock = Block.REGISTRY.getObject(new ResourceLocation(resultId));
         if (resultBlock == null || resultBlock == Blocks.AIR) {
