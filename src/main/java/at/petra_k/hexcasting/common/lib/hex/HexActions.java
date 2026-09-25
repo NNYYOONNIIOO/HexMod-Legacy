@@ -4770,10 +4770,7 @@ throw Mishap.legacy("hexcasting.error.get_media_context");
         if (vm != null) {
             vm.recordMishapTarget(entity);
         }
-        if (entity == null || entity.world != player.world
-            || entity.isDead
-            || entity instanceof net.minecraft.entity.player.EntityPlayer
-                && ((net.minecraft.entity.player.EntityPlayer) entity).isSpectator()
+        if (player == null || entity == null || entity.world != player.world
             || !isVecInRange(player, new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ))) {
             throw Mishap.legacy(errorKey);
