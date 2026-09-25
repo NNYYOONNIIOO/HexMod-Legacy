@@ -1027,6 +1027,18 @@ public class Mishap extends CastingException {
         if ("hexcasting.error.no_akashic_record".equals(key)) {
             return Kind.NO_AKASHIC_RECORD;
         }
+        if ("hexcasting.error.recharge_full".equals(key)) {
+            return Kind.BAD_OFFHAND_ITEM;
+        }
+        if ("hexcasting.error.list_index_out_of_bounds".equals(key)
+            || "hexcasting.error.swizzle_width".equals(key)
+            || "hexcasting.error.swizzle_too_large".equals(key)
+            || "hexcasting.error.coerce_axial_zero".equals(key)
+            || "hexcasting.error.raycast_zero".equals(key)
+            || "hexcasting.error.raycast_axis_zero".equals(key)
+            || "hexcasting.error.raycast_entity_zero".equals(key)) {
+            return Kind.INVALID_VALUE;
+        }
         if ("hexcasting.mishap.no_args".equals(key)
             || "hexcasting.mishap.not_enough_args".equals(key)
             || "hexcasting.error.stack_underflow".equals(key)) {
@@ -1092,14 +1104,15 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.error.akashic_duplicate".equals(key)
             || "hexcasting.error.place_block_target".equals(key)
-            || "hexcasting.error.place_block_failed".equals(key)
             || "hexcasting.error.conjure_block_target".equals(key)
-            || "hexcasting.error.conjure_block_missing".equals(key)
             || "hexcasting.error.conjure_light_target".equals(key)
-            || "hexcasting.error.conjure_light_missing".equals(key)
-            || "hexcasting.error.edify_sapling".equals(key)
-            || "hexcasting.error.edify_failed".equals(key)) {
+            || "hexcasting.error.edify_sapling".equals(key)) {
             return Kind.BAD_BLOCK;
+        }
+        if ("hexcasting.error.conjure_block_missing".equals(key)
+            || "hexcasting.error.conjure_light_missing".equals(key)
+            || "hexcasting.error.edify_failed".equals(key)) {
+            return Kind.INTERNAL;
         }
         if ("hexcasting.error.entity_data_range".equals(key)
             || "hexcasting.error.fluid_position".equals(key)

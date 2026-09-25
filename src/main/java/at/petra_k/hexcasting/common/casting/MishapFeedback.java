@@ -367,7 +367,7 @@ public final class MishapFeedback {
             && mishap.getTargetEntity() != null) {
             return I18n.translateToLocalFormatted(
                 "hexcasting.mishap.bad_brainsweep",
-                entityDisplay(mishap.getTargetEntity()));
+                blockDisplayAt(mishap));
         }
         if (mishap.getKind() == Mishap.Kind.ALREADY_BRAINSWEPT) {
             return localizeKey("hexcasting.mishap.already_brainswept");
@@ -536,6 +536,17 @@ public final class MishapFeedback {
             mishap.getLocationY(), mishap.getLocationZ())).display();
     }
 
+    private static String blockDisplayAt(Mishap mishap) {
+        EntityPlayer caster = mishap.getCaster();
+        if (caster != null && caster.world != null && mishap.hasLocationContext()
+            && (mishap.getLocationDimension() == Integer.MIN_VALUE
+                || mishap.getLocationDimension() == caster.dimension)) {
+            return caster.world.getBlockState(locationBlock(mishap)).getBlock()
+                .getLocalizedName();
+        }
+        return entityDisplay(mishap.getTargetEntity());
+    }
+
     private static net.minecraft.util.math.BlockPos locationBlock(Mishap mishap) {
         return new net.minecraft.util.math.BlockPos(
             (int) Math.floor(mishap.getLocationX()),
@@ -580,6 +591,9 @@ public final class MishapFeedback {
             return "hexcasting.mishap.bad_item.media";
         }
         if (errorKey.endsWith("recharge_holder")) {
+            return "hexcasting.mishap.bad_item.rechargable";
+        }
+        if (errorKey.endsWith("recharge_full")) {
             return "hexcasting.mishap.bad_item.rechargable";
         }
         if (errorKey.endsWith("erase_holder")) {

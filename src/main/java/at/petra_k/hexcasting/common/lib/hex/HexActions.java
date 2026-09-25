@@ -3016,7 +3016,11 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 // effect while returning PASS; modern Hex accepts every
                 // non-FAIL result here.
                 if (result == net.minecraft.util.EnumActionResult.FAIL) {
-                    throw Mishap.error("hexcasting.error.place_block_failed");
+                    // OpPlaceBlock's rendered spell is deliberately a no-op
+                    // when the delegated ItemBlock rejects the use.  The
+                    // media cost was already paid by the successful action
+                    // precheck, but the source stack must remain untouched.
+                    return;
                 }
                 if (!player.capabilities.isCreativeMode) {
                     source.shrink(1);
