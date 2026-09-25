@@ -3867,6 +3867,21 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 if (data == null) {
                     throw Mishap.error("hexcasting.error.colorize_context");
                 }
+                final int previousPigment = data.getPigment();
+                final String previousVariant = data.getPigmentVariant();
+                final UUID previousOwner = data.getPigmentOwner();
+                final boolean previousInternalized = data.hasInternalizedPigment();
+                final net.minecraft.item.ItemStack dyeBefore = dye.copy();
+                vm.consumeMedia(MediaConstants.DUST_UNIT);
+                vm.addRollbackAction(() -> {
+                    data.setPigment(previousPigment);
+                    data.setPigmentVariant(previousVariant, previousOwner);
+                    data.setInternalizedPigment(previousInternalized);
+                    at.petra_k.hexcasting.common.capability.HexCapabilityHandler
+                        .savePersistent(player, data);
+                    at.petra_k.hexcasting.common.capability.HexCapabilitySync.send(player);
+                    MediaInventoryHelper.restoreStack(dye, dyeBefore);
+                });
                 data.setPigment(ItemColorizer.getPigmentColor(dye));
                 data.setPigmentVariant(((ItemColorizer) dye.getItem()).getVariant(),
                     player.getUniqueID());
