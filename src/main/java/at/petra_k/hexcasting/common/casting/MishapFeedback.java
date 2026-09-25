@@ -342,6 +342,11 @@ public final class MishapFeedback {
         if (mishap.getKind() == Mishap.Kind.BAD_CASTER) {
             return localizeKey("hexcasting.mishap.bad_caster");
         }
+        if (mishap.getKind() == Mishap.Kind.UNESCAPED) {
+            Iota perpetrator = mishap.getUnescapedPerpetrator();
+            return I18n.translateToLocalFormatted("hexcasting.mishap.unescaped",
+                perpetrator == null ? "?" : perpetrator.display());
+        }
         if (mishap.getKind() == Mishap.Kind.IMMUNE_ENTITY
             || mishap.getKind() == Mishap.Kind.ENTITY_TOO_FAR) {
             Entity target = mishap.getTargetEntity();

@@ -945,6 +945,13 @@ public final class CastingVM {
             } else if (special != null) {
                 special.execute(stack);
             } else {
+                // A non-pattern Iota is only literal when it was explicitly
+                // escaped or captured inside parentheses.  Reaching this
+                // branch during evaluation is the modern unescaped-value
+                // Mishap, rather than a silent stack push.
+                if (work.iota != null) {
+                    throw Mishap.unescaped(value);
+                }
                 stack.push(value);
             }
             recordSound(HexEvalSounds.forAction(action, actionId));

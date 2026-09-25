@@ -29,6 +29,7 @@ import java.util.Locale;
 public class Mishap extends CastingException {
     public enum Kind {
         INVALID_PATTERN,
+        UNESCAPED,
         UNENLIGHTENED,
         DISALLOWED_SPELL,
         BAD_CASTER,
@@ -112,6 +113,7 @@ public class Mishap extends CastingException {
     private Iota arithmeticLeft;
     private Iota arithmeticRight;
     private String arithmeticSuffix;
+    private Iota unescapedPerpetrator;
     private Object[] displayArgs = new Object[0];
     private boolean executionContextAttached;
 
@@ -476,6 +478,8 @@ public class Mishap extends CastingException {
         switch (kind) {
             case INVALID_PATTERN:
                 return 0xE5C84B;
+            case UNESCAPED:
+                return 0xB8B8B8;
             case UNENLIGHTENED:
             case BAD_CASTER:
                 return 0xE05252;
@@ -539,6 +543,8 @@ public class Mishap extends CastingException {
         switch (kind) {
             case INVALID_PATTERN:
                 return "hexcasting.mishap.invalid_pattern_generic";
+            case UNESCAPED:
+                return "hexcasting.mishap.unescaped";
             case UNENLIGHTENED:
                 return "hexcasting.message.cant_great_spell";
             case BAD_CASTER:
@@ -822,6 +828,20 @@ public class Mishap extends CastingException {
             null, null, null, null, 0, 0, detail);
     }
 
+    /** Construct the gray-spark failure for executing a literal Iota. */
+    public static Mishap unescaped(Iota perpetrator) {
+        Mishap mishap = new Mishap(Kind.UNESCAPED, "hexcasting.mishap.unescaped",
+            null, null, null, null, 0, 0,
+            perpetrator == null ? null : perpetrator.display());
+        mishap.unescapedPerpetrator = perpetrator;
+        return mishap;
+    }
+
+    /** The literal Iota that was executed without escaping. */
+    public Iota getUnescapedPerpetrator() {
+        return unescapedPerpetrator;
+    }
+
     /** Construct the modern wrong-dimension Mishap and its garbage result. */
     public static Mishap wrongDimension(String properDimension,
                                         String currentDimension) {
@@ -1052,6 +1072,9 @@ public class Mishap extends CastingException {
         }
         if ("hexcasting.mishap.needs_parens".equals(key)) {
             return Kind.INVALID_CONTEXT;
+        }
+        if ("hexcasting.mishap.unescaped".equals(key)) {
+            return Kind.UNESCAPED;
         }
         if ("hexcasting.mishap.wrong_dimension".equals(key)) {
             return Kind.WRONG_DIMENSION;
