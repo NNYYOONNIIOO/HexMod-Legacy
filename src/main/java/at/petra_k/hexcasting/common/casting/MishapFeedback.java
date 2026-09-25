@@ -36,11 +36,19 @@ public final class MishapFeedback {
     }
 
     public static void send(EntityPlayer player, CastingException exception) {
-        if (exception instanceof Mishap) {
-            applySideEffects((Mishap) exception);
+        if (exception == null) {
+            return;
         }
+        // Scrolls, spellbooks, and older block entry points do not have an
+        // action context at their catch site. Convert them here so every
+        // carrier still gets the same classification, side effects, and
+        // localized message as the VM and staff paths.
+        Mishap mishap = exception instanceof Mishap
+            ? (Mishap) exception
+            : asMishap(exception, null, null, player, 0, 0);
+        applySideEffects(mishap);
         if (player != null) {
-            player.sendMessage(new TextComponentString(localize(exception)));
+            player.sendMessage(new TextComponentString(localizeMishap(mishap)));
         }
     }
 
