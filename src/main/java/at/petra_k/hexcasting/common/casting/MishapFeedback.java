@@ -160,9 +160,10 @@ public final class MishapFeedback {
                 if (mishap.hasLocationContext()
                     && (mishap.getLocationDimension() == Integer.MIN_VALUE
                         || mishap.getLocationDimension() == caster.dimension)) {
+                    net.minecraft.util.math.BlockPos position = locationBlock(mishap);
                     caster.world.newExplosion(null,
-                        mishap.getLocationX(), mishap.getLocationY(),
-                        mishap.getLocationZ(), 0.25F, false, false);
+                        position.getX() + 0.5D, position.getY() + 0.5D,
+                        position.getZ() + 0.5D, 0.25F, false, false);
                 }
                 return;
             case NO_AKASHIC_RECORD:

@@ -2953,8 +2953,12 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     "hexcasting.error.lightning_out_of_range");
                 net.minecraft.util.math.BlockPos blockPos =
                     new net.minecraft.util.math.BlockPos(target.x, target.y, target.z);
-                requireEditPermission(vm, player, blockPos,
-                    "hexcasting.error.lightning_forbidden");
+                if (!hasEditPermission(vm, player, blockPos)) {
+                    // The upstream action reports this as a bad location,
+                    // not as a separate permission Mishap. The recorded
+                    // vector is still used by the common feedback path.
+                    throw Mishap.badLocation("hexcasting.error.lightning_forbidden");
+                }
                 vm.consumeMedia(3L * MediaConstants.SHARD_UNIT);
                 net.minecraft.entity.effect.EntityLightningBolt bolt =
                     new net.minecraft.entity.effect.EntityLightningBolt(
