@@ -2626,6 +2626,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         player.world.getBlockState(current);
                     net.minecraft.block.Block block = state.getBlock();
                     boolean fluid = isFluidBlock(block);
+                    boolean removedHere = false;
                     if (fluid) {
                         boolean success = false;
                         if (canBreakBlock(player, current, state)) {
@@ -2646,11 +2647,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         }
                         if (success) {
                             removed++;
+                            removedHere = true;
                             emitFluidRemovalFeedback(player.world, current);
-                            for (net.minecraft.util.EnumFacing facing
-                                : net.minecraft.util.EnumFacing.values()) {
-                                todo.add(current.offset(facing));
-                            }
                         }
                     } else if (isFilledCauldron(state)
                         && canBreakBlock(player, current, state)) {
@@ -2659,6 +2657,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         player.world.setBlockState(current,
                             net.minecraft.init.Blocks.CAULDRON.getDefaultState(), 3);
                         removed++;
+                        removedHere = true;
                         emitFluidRemovalFeedback(player.world, current);
                     } else if (isWaterPlant(state)
                         && canBreakBlock(player, current, state)) {
@@ -2667,7 +2666,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         block.dropBlockAsItem(player.world, current, state, 0);
                         player.world.setBlockToAir(current);
                         removed++;
+                        removedHere = true;
                         emitFluidRemovalFeedback(player.world, current);
+                    }
+                    if (removedHere) {
+                        for (net.minecraft.util.EnumFacing facing
+                            : net.minecraft.util.EnumFacing.values()) {
+                            todo.add(current.offset(facing));
+                        }
                     }
                 }
                 if (removed > 0) {
