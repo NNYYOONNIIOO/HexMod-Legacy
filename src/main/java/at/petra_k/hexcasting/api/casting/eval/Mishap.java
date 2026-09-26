@@ -398,35 +398,41 @@ public class Mishap extends CastingException {
     public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
                                       EntityPlayer caster, int parenthesisDepth,
                                       int operation) {
-        if (executionContextAttached) {
-            return this;
-        }
         if (pattern != null) {
-            this.pattern = pattern;
+            if (this.pattern == null) {
+                this.pattern = pattern;
+            }
         }
         if (actionId != null) {
-            this.actionId = actionId;
+            if (this.actionId == null) {
+                this.actionId = actionId;
+            }
         }
         if (caster != null) {
-            this.caster = caster;
-            this.casterUuid = caster.getUniqueID() == null
-                ? null : caster.getUniqueID().toString();
-            this.casterName = caster.getName();
-            this.casterDimension = caster.dimension;
-            this.casterX = caster.posX;
-            this.casterY = caster.posY;
-            this.casterZ = caster.posZ;
+            if (this.caster == null) {
+                this.caster = caster;
+                this.casterUuid = caster.getUniqueID() == null
+                    ? null : caster.getUniqueID().toString();
+                this.casterName = caster.getName();
+                this.casterDimension = caster.dimension;
+                this.casterX = caster.posX;
+                this.casterY = caster.posY;
+                this.casterZ = caster.posZ;
+            }
         }
-        if (targetEntity != null && caster != null) {
-            targetDistance = caster.getDistance(targetEntity);
+        if (targetEntity != null && this.caster != null
+            && Double.isNaN(targetDistance)) {
+            targetDistance = this.caster.getDistance(targetEntity);
         }
-        this.parenthesisDepth = Math.max(0, parenthesisDepth);
-        this.operation = Math.max(0, operation);
-        this.executionContextAttached = true;
+        if (this.pattern != null || this.actionId != null || this.caster != null) {
+            this.parenthesisDepth = Math.max(0, parenthesisDepth);
+            this.operation = Math.max(0, operation);
+            this.executionContextAttached = true;
+        }
         if ("hexcasting.mishap.needs_parens".equals(errorKey)
-            && pattern != null) {
+            && this.pattern != null) {
             stackEffect = StackEffect.PUSH_PATTERN;
-            stackEffectPattern = pattern;
+            stackEffectPattern = this.pattern;
         }
         return this;
     }
