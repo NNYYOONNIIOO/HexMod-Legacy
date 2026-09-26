@@ -74,11 +74,14 @@ public final class MishapFeedback {
      * blocks, and brainsweep mishaps).
      */
     public static void applySideEffects(Mishap mishap) {
-        if (mishap == null || !mishap.beginSideEffects()) {
+        if (mishap == null) {
             return;
         }
         EntityPlayer caster = mishap.getCaster();
         if (caster == null || caster.world == null || caster.world.isRemote) {
+            return;
+        }
+        if (!mishap.beginSideEffects()) {
             return;
         }
 
