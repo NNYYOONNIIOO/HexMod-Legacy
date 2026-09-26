@@ -2577,8 +2577,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
-                requireEditPermission(vm, player, position,
-                    "hexcasting.error.fluid_forbidden");
                 vm.consumeMedia(2L * MediaConstants.CRYSTAL_UNIT);
                 if (player.world.isRemote) {
                     return;
@@ -2709,8 +2707,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.fluid_range");
-                requireEditPermission(vm, player, position,
-                    "hexcasting.error.fluid_forbidden");
                 // Match OpCreateFluid: the action pays before applying the
                 // world-side effect, fills a cauldron to its maximum level,
                 // and otherwise delegates placement to the matching bucket.
@@ -2786,8 +2782,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                 position.getX() + 0.5D, position.getY() + 0.5D,
                 position.getZ() + 0.5D), "hexcasting.error.edify_range");
-            requireEditPermission(vm, player, position,
-                "hexcasting.error.edify_forbidden");
             net.minecraft.block.state.IBlockState sapling = player.world.getBlockState(position);
             if (!(sapling.getBlock() instanceof net.minecraft.block.BlockSapling)) {
                 throw Mishap.badBlock("hexcasting.error.edify_sapling");
@@ -2796,7 +2790,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             if (player.world.isRemote) {
                 return;
             }
-            if (!canBreakBlock(player, position, sapling)) {
+            if (!hasEditPermission(vm, player, position)
+                || !canBreakBlock(player, position, sapling)) {
                 return;
             }
 
@@ -2913,11 +2908,12 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.bonemeal_range");
-                requireEditPermission(vm, player, position,
-                    "hexcasting.error.bonemeal_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT
                     + MediaConstants.DUST_UNIT / 8L);
                 if (!player.world.isRemote) {
+                    if (!hasEditPermission(vm, player, position)) {
+                        return;
+                    }
                     BlockRegionSnapshot before = BlockRegionSnapshot.capture(
                         player.world,
                         position.add(-8, -1, -8),
@@ -3080,8 +3076,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     position.getX() + 0.5D, position.getY() + 0.5D,
                     position.getZ() + 0.5D), "hexcasting.error.place_block_range");
-                requireEditPermission(vm, player, position,
-                    "hexcasting.error.place_block_forbidden");
                 if (player.world.isRemote) {
                     return;
                 }
@@ -3415,8 +3409,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     target.getX() + 0.5D, target.getY() + 0.5D,
                     target.getZ() + 0.5D), "hexcasting.error.conjure_block_range");
-                requireEditPermission(vm, player, target,
-                    "hexcasting.error.conjure_block_forbidden");
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_block");
                 if (conjured == null) {
                     throw Mishap.internal("hexcasting.error.conjure_block_missing");
@@ -3436,7 +3428,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
-                    if (!isPlacingAllowed(player, target,
+                    if (!hasEditPermission(vm, player, target)
+                        || !isPlacingAllowed(player, target,
                         new net.minecraft.item.ItemStack(conjured))) {
                         return;
                     }
@@ -3478,8 +3471,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     target.getX() + 0.5D, target.getY() + 0.5D,
                     target.getZ() + 0.5D), "hexcasting.error.conjure_light_range");
-                requireEditPermission(vm, player, target,
-                    "hexcasting.error.conjure_light_forbidden");
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_light");
                 if (conjured == null) {
                     throw Mishap.internal("hexcasting.error.conjure_light_missing");
@@ -3499,7 +3490,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
-                    if (!isPlacingAllowed(player, target,
+                    if (!hasEditPermission(vm, player, target)
+                        || !isPlacingAllowed(player, target,
                         new net.minecraft.item.ItemStack(conjured))) {
                         return;
                     }
@@ -4515,8 +4507,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
                     throw Mishap.noAkashicRecord();
                 }
-                requireEditPermission(vm, player, target,
-                    "hexcasting.error.permission_denied");
                 at.petra_k.hexcasting.common.block.BlockAkashicRecord record =
                     (at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock;
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
