@@ -919,7 +919,8 @@ public final class CastingVM {
             && parenCount == 0 && !escapeNext) {
             recordSound(HexEvalSounds.MISHAP);
             Mishap mishap = Mishap.invalidPattern(pattern, player, parenCount,
-                operationsConsumed);
+                operationsConsumed).withExecutionContext(pattern, null, player,
+                    parenCount, operationsConsumed);
             lastMishap = mishap;
             if (evaluationDepth == 0) {
                 mishap.applyStackEffect(stack);
