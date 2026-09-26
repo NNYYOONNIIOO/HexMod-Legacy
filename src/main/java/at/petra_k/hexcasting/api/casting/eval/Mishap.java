@@ -853,6 +853,45 @@ public class Mishap extends CastingException {
             null, null, null, 0, 0, detail);
     }
 
+    /** Create a localized value failure without an additional diagnostic detail. */
+    public static Mishap invalidValue(String errorKey) {
+        return invalidValue(errorKey, null);
+    }
+
+    /** Construct a brainsweep failure while retaining the mob for its effect. */
+    public static Mishap badBrainsweep(String errorKey, Entity target) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.error.brainsweep_recipe" : errorKey;
+        Mishap mishap = new Mishap(Kind.BAD_BRAINSWEEP, key, null,
+            null, null, null, 0, 0, null);
+        mishap.withTarget(target);
+        return mishap;
+    }
+
+    /** Construct the fatal repeated-brainsweep failure for a mob. */
+    public static Mishap alreadyBrainswept(Entity target) {
+        Mishap mishap = new Mishap(Kind.ALREADY_BRAINSWEPT,
+            "hexcasting.error.brainsweep_already", null,
+            null, null, null, 0, 0, null);
+        mishap.withTarget(target);
+        return mishap;
+    }
+
+    /** Construct the Akashic-record absence failure. */
+    public static Mishap noAkashicRecord() {
+        return new Mishap(Kind.NO_AKASHIC_RECORD,
+            "hexcasting.error.no_akashic_record", null,
+            null, null, null, 0, 0, null);
+    }
+
+    /** Construct an internal registration/integration failure. */
+    public static Mishap internal(String errorKey) {
+        String key = errorKey == null || errorKey.isEmpty()
+            ? "hexcasting.mishap.unknown" : errorKey;
+        return new Mishap(Kind.INTERNAL, key, null,
+            null, null, null, 0, 0, null);
+    }
+
     /** Construct the orange-spark failure used by actions that require open parentheses. */
     public static Mishap needsParens(String detail) {
         return new Mishap(Kind.INVALID_CONTEXT, "hexcasting.mishap.needs_parens",

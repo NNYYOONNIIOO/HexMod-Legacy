@@ -538,7 +538,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         double y = Math.abs(value.y);
         double z = Math.abs(value.z);
         if (x == 0.0D && y == 0.0D && z == 0.0D) {
-            throw Mishap.error("hexcasting.error.coerce_axial_zero");
+            throw Mishap.invalidValue("hexcasting.error.coerce_axial_zero");
         }
         if (x >= y && x >= z) {
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
@@ -618,7 +618,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE, 1);
         ListIota list = stack.pop(ListIota.class);
         if (index >= list.getItems().size()) {
-            throw Mishap.error("hexcasting.error.list_index_out_of_bounds");
+            throw Mishap.invalidValue("hexcasting.error.list_index_out_of_bounds");
         }
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>(list.getItems());
         items.set(index, value);
@@ -771,7 +771,7 @@ public static final HexPattern BOOL_IF_PATTERN =
             java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
             int width = swizzleWidth(code);
             if (width > values.size()) {
-                throw Mishap.error("hexcasting.error.swizzle_width");
+                throw Mishap.invalidValue("hexcasting.error.swizzle_width");
             }
             int start = values.size() - width;
             java.util.ArrayList<Iota> selected = new java.util.ArrayList<>(
@@ -1028,7 +1028,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         while (factorial <= code) {
             width++;
             if (width >= 20 || factorial > Long.MAX_VALUE / multiplier) {
-                throw Mishap.error("hexcasting.error.swizzle_too_large");
+                throw Mishap.invalidValue("hexcasting.error.swizzle_too_large");
             }
             factorial *= multiplier;
             multiplier++;
@@ -1535,7 +1535,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
                 if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
-                    throw Mishap.error("hexcasting.error.raycast_zero");
+                    throw Mishap.invalidValue("hexcasting.error.raycast_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
@@ -1579,7 +1579,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
                 if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
-                    throw Mishap.error("hexcasting.error.raycast_axis_zero");
+                    throw Mishap.invalidValue("hexcasting.error.raycast_axis_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
@@ -1626,7 +1626,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 double length = vector.lengthVector();
                 if (!isFiniteVector(vector) || length == 0.0D
                     || Double.isNaN(length) || Double.isInfinite(length)) {
-                    throw Mishap.error("hexcasting.error.raycast_entity_zero");
+                    throw Mishap.invalidValue("hexcasting.error.raycast_entity_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = start.add(
@@ -2168,7 +2168,7 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                 long inserted = MediaInventoryHelper.transferMedia(
                     droppedEntity, offHand, holder, simulated);
                 if (inserted <= 0L) {
-                    throw Mishap.error("hexcasting.error.recharge_full");
+                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
                 }
                 vm.addRollbackAction(() -> {
                     sourceBefore.restore();
@@ -2846,7 +2846,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 }
                 long count = Math.max(1L, (long) target.getCount());
                 if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
-                    throw Mishap.error("hexcasting.error.erase_cost");
+                    throw Mishap.invalidValue("hexcasting.error.erase_cost");
                 }
                 final net.minecraft.item.ItemStack targetBefore = target.copy();
                 vm.consumeMedia(count * MediaConstants.DUST_UNIT);
@@ -3005,20 +3005,20 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
             requireEntityInRange(vm, caster, target, "hexcasting.error.blink_range");
             if (isTeleportImmune(target)) {
-                throw Mishap.error("hexcasting.error.blink_immune");
+                throw Mishap.immuneEntity(target);
             }
             if (isStickyTeleporter(target)) {
                 for (net.minecraft.entity.Entity passenger
                     : new java.util.ArrayList<>(target.getPassengers())) {
                     if (isTeleportImmune(passenger)) {
                         vm.recordMishapTarget(passenger);
-                        throw Mishap.error("hexcasting.error.blink_immune");
+                        throw Mishap.immuneEntity(passenger);
                     }
                 }
             }
             double delta = deltaIota.getValue();
             if (Double.isNaN(delta) || Double.isInfinite(delta)) {
-                throw Mishap.error("hexcasting.error.blink_position");
+                throw Mishap.invalidValue("hexcasting.error.blink_position");
             }
             net.minecraft.util.math.Vec3d displacement =
                 HexAPI.getEntityLookDirSpecial(target).scale(delta);
@@ -3030,12 +3030,12 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             if (!isVecInWorld(destination)
                 || !isVecInWorld(new net.minecraft.util.math.Vec3d(
                     destination.x, destination.y - 1.0D, destination.z))) {
-                throw Mishap.error("hexcasting.error.blink_position");
+                throw Mishap.badLocation("hexcasting.error.blink_position");
             }
             double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
             if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
                 || mediaCost >= Long.MAX_VALUE) {
-                throw Mishap.error("hexcasting.error.blink_cost");
+                throw Mishap.invalidValue("hexcasting.error.blink_cost");
             }
             vm.consumeMedia(Math.round(mediaCost));
             if (!caster.world.isRemote) {
@@ -3095,7 +3095,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     player.getHorizontalFacing();
                 if (!canReplaceWithBlock(player, position, blockItem,
                     placementFacing)) {
-                    throw Mishap.error("hexcasting.error.place_block_target");
+                    throw Mishap.badBlock("hexcasting.error.place_block_target");
                 }
                 net.minecraft.util.EnumHand blockHand = vm.getOtherHand();
                 net.minecraft.item.ItemStack previousBlock = player.getHeldItem(blockHand);
@@ -3300,7 +3300,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 double mediaCost = baseCost * duration * potencyCost;
                 if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
                     || mediaCost > Long.MAX_VALUE) {
-                    throw Mishap.error("hexcasting.error.potion_cost");
+                    throw Mishap.invalidValue("hexcasting.error.potion_cost");
                 }
                 // SpellAction.Result stores the Kotlin Double as a Long,
                 // which truncates fractional media rather than rounding it
@@ -3416,20 +3416,20 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     "hexcasting.error.conjure_block_forbidden");
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_block");
                 if (conjured == null) {
-                    throw Mishap.error("hexcasting.error.conjure_block_missing");
+                    throw Mishap.internal("hexcasting.error.conjure_block_missing");
                 }
                 net.minecraft.block.state.IBlockState current =
                     player.world.getBlockState(target);
                 if (!current.getBlock().isReplaceable(player.world, target)
                     || !conjured.canPlaceBlockAt(player.world, target)) {
-                    throw Mishap.error("hexcasting.error.conjure_block_target");
+                    throw Mishap.badBlock("hexcasting.error.conjure_block_target");
                 }
                 net.minecraft.block.state.IBlockState placement =
                     conjured.getStateForPlacement(player.world, target,
                         net.minecraft.util.EnumFacing.DOWN, 0.5F, 0.5F, 0.5F,
                         0, player);
                 if (placement == null) {
-                    throw Mishap.error("hexcasting.error.conjure_block_missing");
+                    throw Mishap.internal("hexcasting.error.conjure_block_missing");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
@@ -3479,20 +3479,20 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     "hexcasting.error.conjure_light_forbidden");
                 net.minecraft.block.Block conjured = HexBlocks.BLOCKS.get("conjured_light");
                 if (conjured == null) {
-                    throw Mishap.error("hexcasting.error.conjure_light_missing");
+                    throw Mishap.internal("hexcasting.error.conjure_light_missing");
                 }
                 net.minecraft.block.state.IBlockState current =
                     player.world.getBlockState(target);
                 if (!current.getBlock().isReplaceable(player.world, target)
                     || !conjured.canPlaceBlockAt(player.world, target)) {
-                    throw Mishap.error("hexcasting.error.conjure_light_target");
+                    throw Mishap.badBlock("hexcasting.error.conjure_light_target");
                 }
                 net.minecraft.block.state.IBlockState placement =
                     conjured.getStateForPlacement(player.world, target,
                         net.minecraft.util.EnumFacing.DOWN, 0.5F, 0.5F, 0.5F,
                         0, player);
                 if (placement == null) {
-                    throw Mishap.error("hexcasting.error.conjure_light_missing");
+                    throw Mishap.internal("hexcasting.error.conjure_light_missing");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
@@ -4083,7 +4083,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 // behavior after the VM has rolled back its transaction.
                 vm.recordMishapTarget(living);
                 if (living.isDead) {
-                    throw Mishap.error("hexcasting.error.brainsweep_mob");
+                    throw Mishap.badBrainsweep("hexcasting.error.brainsweep_mob", living);
                 }
                 requireEntityInRange(vm, player, living, "hexcasting.error.brainsweep_range");
                 net.minecraft.util.math.BlockPos target = blockPosition(
@@ -4095,12 +4095,12 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireEditPermission(vm, player, target,
                     "hexcasting.error.brainsweep_location");
                 if (BrainsweepRecipes.isBrainswept(living)) {
-                    throw Mishap.error("hexcasting.error.brainsweep_already");
+                    throw Mishap.alreadyBrainswept(living);
                 }
                 net.minecraft.block.state.IBlockState input = player.world.getBlockState(target);
                 BrainsweepRecipes.Match match = BrainsweepRecipes.find(input, living);
                 if (match == null || match.getResult() == null) {
-                    throw Mishap.error("hexcasting.error.brainsweep_recipe");
+                    throw Mishap.badBrainsweep("hexcasting.error.brainsweep_recipe", living);
                 }
                 vm.consumeMedia(match.getMediaCost());
                 if (!player.world.isRemote) {
@@ -4178,23 +4178,23 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 requireEntityInRange(vm, vm.getPlayer(), target,
                     "hexcasting.error.teleport_great_range");
                 if (isTeleportImmune(target)) {
-                    throw Mishap.error("hexcasting.error.blink_immune");
+                    throw Mishap.immuneEntity(target);
                 }
                 if (isStickyTeleporter(target)) {
                     for (net.minecraft.entity.Entity passenger
                         : new java.util.ArrayList<>(target.getPassengers())) {
                         if (isTeleportImmune(passenger)) {
                             vm.recordMishapTarget(passenger);
-                            throw Mishap.error("hexcasting.error.blink_immune");
+                            throw Mishap.immuneEntity(passenger);
                         }
                     }
                 }
                 if (deltaIota == null) {
-                    throw Mishap.error("hexcasting.error.teleport_great_expected");
+                    throw Mishap.invalidValue("hexcasting.error.teleport_great_expected");
                 }
                 net.minecraft.util.math.Vec3d delta = deltaIota.getValue();
                 if (!isFiniteVector(delta)) {
-                    throw Mishap.error("hexcasting.error.teleport_great_position");
+                    throw Mishap.invalidValue("hexcasting.error.teleport_great_position");
                 }
                 net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                     target.posX + delta.x, target.posY + delta.y,
@@ -4202,7 +4202,10 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 if (!isVecInWorld(destination)
                     || !isVecInWorld(new net.minecraft.util.math.Vec3d(
                         destination.x, destination.y - 1.0D, destination.z))) {
-                    throw Mishap.error("hexcasting.error.teleport_great_position");
+                    vm.recordMishapLocation(destination.x, destination.y, destination.z,
+                        vm.getPlayer().world.provider == null
+                            ? Integer.MIN_VALUE : vm.getPlayer().world.provider.getDimension());
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_position");
                 }
                 vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
                 if (!vm.getPlayer().world.isRemote) {
@@ -4332,14 +4335,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error(errorKey);
+                throw Mishap.invalidContext(errorKey);
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error(errorKey);
+                    throw Mishap.invalidContext(errorKey);
                 }
                 // The arguments are [media item entity, program list].  The
                 // list is on top of the casting stack, so pop it before the
@@ -4388,7 +4391,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 long captured = MediaInventoryHelper.extractMedia(
                     sourceEntity, -1L, true, false);
                 if (captured <= 0L) {
-                    throw Mishap.error(mediaErrorKey);
+                    throw Mishap.badItem(mediaErrorKey, sourceEntity);
                 }
                 ItemPackagedSpell.writePackagedProgram(target, spell.getItems(), captured);
                 HexPigmentSource pigment = castingPigmentSource(vm);
@@ -4461,7 +4464,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 net.minecraft.block.Block targetBlock =
                     vm.getPlayer().world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
-                    throw Mishap.error("hexcasting.error.no_akashic_record");
+                    throw Mishap.noAkashicRecord();
                 }
                 net.minecraft.nbt.NBTTagCompound stored =
                     ((at.petra_k.hexcasting.common.block.BlockAkashicRecord) targetBlock)
@@ -4504,7 +4507,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 net.minecraft.block.Block targetBlock =
                     player.world.getBlockState(target).getBlock();
                 if (!(targetBlock instanceof at.petra_k.hexcasting.common.block.BlockAkashicRecord)) {
-                    throw Mishap.error("hexcasting.error.no_akashic_record");
+                    throw Mishap.noAkashicRecord();
                 }
                 requireEditPermission(vm, player, target,
                     "hexcasting.error.permission_denied");
@@ -5088,7 +5091,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInWorld(position)) {
-            throw Mishap.error(errorKey);
+            throw Mishap.badLocation(errorKey);
         }
     }
 
@@ -5478,7 +5481,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
     private static net.minecraft.entity.Entity resolveEntity(EntityIota entityIota, CastingVM vm)
         throws CastingException {
         if (entityIota == null) {
-            throw Mishap.error("hexcasting.error.entity_data_expected");
+            throw Mishap.invalidValue("hexcasting.error.entity_data_expected");
         }
         net.minecraft.entity.Entity entity = entityIota.getEntity();
         if (entity == null && vm != null && vm.getPlayer() != null) {
@@ -5563,7 +5566,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         double rawCost = amount * 2.0D * MediaConstants.DUST_UNIT;
         if (Double.isNaN(rawCost) || Double.isInfinite(rawCost)
             || rawCost > Long.MAX_VALUE) {
-            throw Mishap.error("hexcasting.error.flight_duration");
+            throw Mishap.invalidValue("hexcasting.error.flight_duration");
         }
         long rounded = Math.round(rawCost);
         return minimumOneUnit
