@@ -206,7 +206,8 @@ public final class SpecialPatternResolver {
                 throw exception;
             } catch (RuntimeException exception) {
                 stack.restore(before);
-                throw Mishap.fromRuntime(exception, null, null,
+                throw Mishap.fromRuntime(exception, null,
+                    vm == null ? null : vm.getActiveActionId(),
                     vm == null ? null : vm.getPlayer(),
                     vm == null ? 0 : vm.getParenDepth(),
                     vm == null ? 0 : vm.getOperationsConsumed());

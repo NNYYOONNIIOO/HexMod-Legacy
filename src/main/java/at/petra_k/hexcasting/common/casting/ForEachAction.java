@@ -53,8 +53,9 @@ public final class ForEachAction implements HexAction {
             throw exception;
         } catch (RuntimeException exception) {
             stack.restore(before);
-            throw Mishap.fromRuntime(exception, null, null,
-                vm.getPlayer(), vm.getParenDepth(), vm.getOperationsConsumed());
+            throw Mishap.fromRuntime(exception, null,
+                vm.getActiveActionId(), vm.getPlayer(), vm.getParenDepth(),
+                vm.getOperationsConsumed());
         }
     }
 }
