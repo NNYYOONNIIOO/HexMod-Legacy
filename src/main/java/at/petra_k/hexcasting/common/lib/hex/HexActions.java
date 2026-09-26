@@ -1183,15 +1183,10 @@ public static final HexPattern BOOL_IF_PATTERN =
                             current.getX() + 0.5D, current.getY() + 0.5D,
                             current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
                         successes++;
-                    }
-                    // The upstream flood fill expands from every editable,
-                    // newly visited node; success only controls the feedback
-                    // and count limit.  Keeping this outside the success
-                    // branch is important for connected fire/campfire areas
-                    // separated by an already unlit block.
-                    for (net.minecraft.util.EnumFacing facing
-                        : net.minecraft.util.EnumFacing.values()) {
-                        todo.addLast(current.offset(facing));
+                        for (net.minecraft.util.EnumFacing facing
+                            : net.minecraft.util.EnumFacing.values()) {
+                            todo.addLast(current.offset(facing));
+                        }
                     }
                 }
                 if (successes > 0) {
