@@ -18,6 +18,7 @@ import at.petra_k.hexcasting.common.casting.MediaInventoryHelper;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.casting.OvercastHelper;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexEvalSounds;
@@ -134,6 +135,8 @@ public final class CastingVM {
     private EntityPlayer player;
     /** The hand containing the staff/focus that started this cast. */
     private EnumHand castingHand = EnumHand.MAIN_HAND;
+    /** Action currently executing; used to apply its configured media cost. */
+    private ResourceLocation activeActionId;
     /** Runtime-only circle context; it is rebound after a persisted state loads. */
     private CircleExecutionState circleExecutionState;
     /** Runtime-only media source; circles bind this to their Impetus. */
@@ -284,6 +287,11 @@ public final class CastingVM {
      */
     public void setCastingHand(EnumHand castingHand) {
         this.castingHand = castingHand == null ? EnumHand.MAIN_HAND : castingHand;
+    }
+
+    /** Return the action whose body is currently consuming media. */
+    public ResourceLocation getActiveActionId() {
+        return activeActionId;
     }
 
     public CircleExecutionState getCircleExecutionState() {
@@ -936,6 +944,8 @@ public final class CastingVM {
         int previousLimit = activeOperationLimit;
         activeOperationLimit = maxOperations;
         clearMishapContext();
+        ResourceLocation previousActionId = activeActionId;
+        activeActionId = actionId;
         try {
             if (PerWorldPatternData.isPerWorldAction(actionId)
                 && player != null
@@ -998,6 +1008,7 @@ public final class CastingVM {
             // failed evaluation and media transaction.
             throw mishap;
         } finally {
+            activeActionId = previousActionId;
             activeOperationLimit = previousLimit;
         }
         return true;
@@ -1026,6 +1037,10 @@ public final class CastingVM {
         if (amount <= 0L) {
             return;
         }
+        long effectiveAmount = scaleMediaCost(amount);
+        if (effectiveAmount <= 0L) {
+            return;
+        }
         if (mediaConsumptionBypassed) {
             return;
         }
@@ -1036,13 +1051,13 @@ public final class CastingVM {
             mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
                 allowMediaInventoryFallback);
         }
-        long extracted = mediaTransaction.consumeUpTo(amount);
+        long extracted = mediaTransaction.consumeUpTo(effectiveAmount);
         long generated = 0L;
-        if (extracted < amount && canOvercast()) {
+        if (extracted < effectiveAmount && canOvercast()) {
             final float healthBefore = player.getHealth();
             final boolean deadBefore = player.isDead;
             final int hurtResistantBefore = player.hurtResistantTime;
-            generated = OvercastHelper.consume(player, amount - extracted);
+            generated = OvercastHelper.consume(player, effectiveAmount - extracted);
             if (generated > 0L) {
                 final long generatedMedia = generated;
                 addRollbackAction(() -> {
@@ -1054,17 +1069,30 @@ public final class CastingVM {
                 // outer VM rollback handles that case; an insufficient
                 // overcast must be restored immediately because this method
                 // rolls back the media transaction before throwing.
-                if (extracted + generatedMedia < amount) {
+                if (extracted + generatedMedia < effectiveAmount) {
                     player.setHealth(healthBefore);
                     player.isDead = deadBefore;
                     player.hurtResistantTime = hurtResistantBefore;
                 }
             }
         }
-        if (extracted + generated < amount) {
+        if (extracted + generated < effectiveAmount) {
             mediaTransaction.rollback();
-            throw Mishap.notEnoughMedia(amount, extracted + generated);
+            throw Mishap.notEnoughMedia(effectiveAmount, extracted + generated);
         }
+    }
+
+    /** Apply the same configured multiplier to every extraction path. */
+    private long scaleMediaCost(long amount) {
+        double multiplier = HexConfig.mediaCostMultiplier(activeActionId);
+        if (multiplier <= 0.0D) {
+            return 0L;
+        }
+        double scaled = amount * multiplier;
+        if (Double.isInfinite(scaled) || scaled >= Long.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        return Math.max(0L, (long) scaled);
     }
 
     public CastingStack run() throws CastingException {
