@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.casting.action.HexAction;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
+import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.BooleanIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
@@ -31,7 +32,8 @@ public final class BranchAction implements HexAction {
             throw exception;
         } catch (RuntimeException exception) {
             stack.restore(before);
-            throw exception;
+            throw Mishap.fromRuntime(exception, null, null,
+                vm.getPlayer(), vm.getParenDepth(), vm.getOperationsConsumed());
         }
     }
 }

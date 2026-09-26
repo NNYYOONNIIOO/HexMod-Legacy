@@ -33,7 +33,8 @@ public final class EvalBreakableAction implements HexAction {
             throw exception;
         } catch (RuntimeException exception) {
             stack.restore(before);
-            throw exception;
+            throw Mishap.fromRuntime(exception, null, null,
+                vm.getPlayer(), vm.getParenDepth(), vm.getOperationsConsumed());
         }
     }
 }
