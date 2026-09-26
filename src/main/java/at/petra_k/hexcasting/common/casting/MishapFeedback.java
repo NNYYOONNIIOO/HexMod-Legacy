@@ -49,9 +49,17 @@ public final class MishapFeedback {
         // action context at their catch site. Convert them here so every
         // carrier still gets the same classification, side effects, and
         // localized message as the VM and staff paths.
-        Mishap mishap = exception instanceof Mishap
-            ? (Mishap) exception
-            : asMishap(exception, null, null, player, 0, 0);
+        Mishap mishap;
+        if (exception instanceof Mishap) {
+            mishap = (Mishap) exception;
+            // A few legacy item/effect entry points receive a typed Mishap
+            // before the VM has attached its caster.  Enrich it here so the
+            // shared sound and world-side effect phase behaves identically
+            // to the normal VM path.
+            mishap.withExecutionContext(null, null, player, 0, 0);
+        } else {
+            mishap = asMishap(exception, null, null, player, 0, 0);
+        }
         applySideEffects(mishap);
         if (player != null) {
             player.sendMessage(new TextComponentString(localizeMishap(mishap)));
