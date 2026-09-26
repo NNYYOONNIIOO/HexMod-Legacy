@@ -269,7 +269,7 @@ public final class MediaInventoryHelper {
             return 0L;
         }
         long limit = Math.min(requested, targetSpace);
-        long planned = extractMedia(source.getItem(), limit, false, true);
+        long planned = extractMedia(source, limit, false, true);
         if (planned <= 0L || target.insertMedia(planned, true) <= 0L) {
             return 0L;
         }
@@ -280,7 +280,7 @@ public final class MediaInventoryHelper {
         long targetMediaBefore = target.getMedia();
         boolean sourceWasDead = source.isDead;
         java.util.Set<java.util.UUID> existingEntities = snapshotEntityIds(source);
-        long extracted = extractMedia(source.getItem(), limit, false, false);
+        long extracted = extractMedia(source, limit, false, false);
         java.util.Set<net.minecraft.entity.Entity> spawnedItems =
             newlySpawnedItems(source, existingEntities);
         if (extracted != planned) {
