@@ -695,6 +695,17 @@ public class Mishap extends CastingException {
             null, null, null, 0, 0, null);
     }
 
+    /**
+     * Construct the modern entity failure, converting dropped items to the
+     * item-specific mishap used by the matching side effects and message.
+     */
+    public static Mishap badEntity(String errorKey, Entity target) {
+        if (target instanceof net.minecraft.entity.item.EntityItem) {
+            return badItem(errorKey, target);
+        }
+        return badEntity(errorKey).withTarget(target);
+    }
+
     /** Construct a block-target failure while retaining its detail key. */
     public static Mishap badBlock(String errorKey) {
         String key = errorKey == null || errorKey.isEmpty()

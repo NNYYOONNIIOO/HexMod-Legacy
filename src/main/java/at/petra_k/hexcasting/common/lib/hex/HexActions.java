@@ -2445,8 +2445,7 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
         if (result == null || result.isEmpty()) {
             net.minecraft.entity.Entity target = resolveEntity(
                 (EntityIota) value, vm);
-            throw Mishap.badEntity("hexcasting.error.entity_data_target")
-                .withTarget(target);
+            throw Mishap.badEntity("hexcasting.error.entity_data_target", target);
         }
         return result;
     }
