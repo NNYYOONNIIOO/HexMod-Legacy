@@ -1105,8 +1105,6 @@ public static final HexPattern BOOL_IF_PATTERN =
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.ignite_range");
-                requireEditPermission(vm, player, blockPos,
-                    "hexcasting.error.ignite_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT);
                 if (!player.world.isRemote) {
                     final BlockSnapshot targetBefore = BlockSnapshot.capture(
@@ -1149,8 +1147,6 @@ public static final HexPattern BOOL_IF_PATTERN =
                 requireVecInRange(vm, player, new net.minecraft.util.math.Vec3d(
                     blockPos.getX() + 0.5D, blockPos.getY() + 0.5D,
                     blockPos.getZ() + 0.5D), "hexcasting.error.extinguish_range");
-                requireEditPermission(vm, player, blockPos,
-                    "hexcasting.error.extinguish_forbidden");
                 vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
                 if (player.world.isRemote) {
                     return;
