@@ -3031,6 +3031,9 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                 target.posX + displacement.x, target.posY + displacement.y,
                 target.posZ + displacement.z);
+            if (!canTeleportInDimension(caster.world)) {
+                throw Mishap.badLocation("hexcasting.error.blink_dimension");
+            }
             requireVecInRange(vm, caster, destination,
                 "hexcasting.error.blink_range");
             if (!isVecInWorld(destination)
@@ -4203,6 +4206,9 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                     target.posX + delta.x, target.posY + delta.y,
                     target.posZ + delta.z);
+                if (!canTeleportInDimension(vm.getPlayer().world)) {
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_dimension");
+                }
                 if (!isVecInWorld(destination)
                     || !isVecInWorld(new net.minecraft.util.math.Vec3d(
                         destination.x, destination.y - 1.0D, destination.z))) {
@@ -5410,6 +5416,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         // accept the conventional boss entity id suffix used by backports
         // while leaving ordinary mod entities teleportable.
         return path.endsWith("_boss") || path.endsWith("_boss_entity");
+    }
+
+    private static boolean canTeleportInDimension(net.minecraft.world.World world) {
+        return world != null && world.provider != null
+            && HexConfig.canTeleportInDimension(
+                world.provider.getDimension(),
+                world.provider.getDimensionType().getName(),
+                world.provider.getClass().getName());
     }
 
     /** Compatibility equivalent of Hex's sticky_teleporters entity tag. */

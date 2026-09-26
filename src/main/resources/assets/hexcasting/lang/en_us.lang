@@ -371,6 +371,7 @@ hexcasting.error.blink_args=Blink expects an entity and a displacement.
 hexcasting.error.blink_cost=The blink displacement is too large to price.
 hexcasting.error.blink_range=The blink target or destination is out of range.
 hexcasting.error.blink_immune=The target entity cannot be teleported.
+hexcasting.error.blink_dimension=This dimension forbids Blink.
 hexcasting.error.break_block_forbidden=The target block cannot be edited.
 hexcasting.error.circle_context=This action requires an active circle context.
 hexcasting.error.erase_cost=The cost of erasing this holder is too large.
