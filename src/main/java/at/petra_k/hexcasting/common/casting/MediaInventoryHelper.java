@@ -252,9 +252,11 @@ public final class MediaInventoryHelper {
 
     /**
      * Move media from a dropped item into a target holder atomically from the
-     * action's point of view.  Simulation is performed against both sides so
-     * a discrete source item is never consumed when the target cannot accept
-     * the exact transfer.
+     * action's point of view.  This follows the normal Hex extraction rule:
+     * a discrete source may yield more media than the requested space, and
+     * the receiver keeps what fits while the excess is intentionally wasted.
+     * The bounded {@link #extractMediaAtMost} helpers remain available for
+     * Craft Phial, where the source must be preserved at its capacity limit.
      */
     public static long transferMedia(EntityItem source, ItemStack targetStack,
                                      ADMediaHolder target, long requested) {
@@ -267,8 +269,8 @@ public final class MediaInventoryHelper {
             return 0L;
         }
         long limit = Math.min(requested, targetSpace);
-        long planned = extractMediaAtMost(source, limit, false, true);
-        if (planned <= 0L || target.insertMedia(planned, true) != planned) {
+        long planned = extractMedia(source.getItem(), limit, false, true);
+        if (planned <= 0L || target.insertMedia(planned, true) <= 0L) {
             return 0L;
         }
 
@@ -278,7 +280,7 @@ public final class MediaInventoryHelper {
         long targetMediaBefore = target.getMedia();
         boolean sourceWasDead = source.isDead;
         java.util.Set<java.util.UUID> existingEntities = snapshotEntityIds(source);
-        long extracted = extractMediaAtMost(source, planned, false, false);
+        long extracted = extractMedia(source.getItem(), limit, false, false);
         java.util.Set<net.minecraft.entity.Entity> spawnedItems =
             newlySpawnedItems(source, existingEntities);
         if (extracted != planned) {
@@ -288,11 +290,7 @@ public final class MediaInventoryHelper {
             return 0L;
         }
         long inserted = target.insertMedia(extracted, false);
-        if (inserted != extracted) {
-            // A tagged material stack can split its remainder into a second
-            // EntityItem.  Only that split entity belongs to this transfer;
-            // never remove unrelated drops that happened to spawn after the
-            // source snapshot.
+        if (inserted <= 0L) {
             restoreTransfer(source, targetStack, target, sourceBefore,
                 targetBefore, targetMediaBefore, sourceWasDead,
                 spawnedItems);

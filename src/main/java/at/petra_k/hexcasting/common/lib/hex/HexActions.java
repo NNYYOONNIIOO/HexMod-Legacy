@@ -2146,12 +2146,15 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 if (emptySpace <= 0L || sourceMedia <= 0L) {
                     throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
                 }
-                long simulated = MediaInventoryHelper.extractMediaAtMost(
-                    droppedEntity, emptySpace, false, true);
+                // Recharge uses the ordinary extraction contract: discrete
+                // media may be consumed as a whole item even when the target
+                // has less than one item's worth of free capacity.
+                long simulated = MediaInventoryHelper.extractMedia(
+                    dropped, emptySpace, false, true);
                 if (simulated <= 0L) {
                     throw Mishap.badItem("hexcasting.error.recharge_item", entity);
                 }
-                if (holder.insertMedia(simulated, true) != simulated) {
+                if (holder.insertMedia(simulated, true) <= 0L) {
                     throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
                 }
                 // Recharge itself has the fixed one-shard spell cost.  All
