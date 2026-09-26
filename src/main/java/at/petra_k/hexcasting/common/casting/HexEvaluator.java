@@ -74,7 +74,10 @@ public final class HexEvaluator {
                     vm.getParenDepth(), vm.getOperationsConsumed());
             HexCastingEffects.onPortableCast(player, castingHand, patterns, false,
                 null, mishap);
-            throw exception;
+            // Portable callers handle CastingException uniformly.  Let an
+            // unexpected implementation failure use the same typed Mishap
+            // path instead of escaping as an uncaught runtime exception.
+            throw mishap;
         }
     }
 
