@@ -623,6 +623,14 @@ public final class MishapFeedback {
             || errorKey.endsWith("craft_battery_media")) {
             return "hexcasting.mishap.bad_item.media_for_battery";
         }
+        if (errorKey.endsWith("craft_cypher_media")
+            || errorKey.endsWith("craft_trinket_media")
+            || errorKey.endsWith("craft_artifact_media")) {
+            // Packaged spells use the same raw-media requirement as Craft
+            // Battery. Keep the modern shared description instead of
+            // exposing the legacy action-specific error key.
+            return "hexcasting.mishap.bad_item.media_for_battery";
+        }
         if (errorKey.endsWith("recharge_item")) {
             return "hexcasting.mishap.bad_item.media";
         }
