@@ -5150,7 +5150,10 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D
             && position.y >= 0.0D && position.y < 256.0D
             && Math.abs(position.x) <= 30000000.0D
-            && Math.abs(position.z) <= 30000000.0D;
+            && Math.abs(position.z) <= 30000000.0D
+            && player.world != null
+            && player.world.getWorldBorder().contains(
+                new net.minecraft.util.math.BlockPos(position.x, position.y, position.z));
     }
 
     private static boolean isVecInWorld(net.minecraft.util.math.Vec3d position) {
