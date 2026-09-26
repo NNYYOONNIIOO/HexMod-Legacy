@@ -3293,7 +3293,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         "entity.living");
                 }
                 if (Double.isNaN(duration) || Double.isInfinite(duration)
-                    || duration < 0.0D
+                    || duration <= 0.0D
                     || duration > (Integer.MAX_VALUE / 20.0D)) {
                     throw Mishap.invalidIota(durationValue, durationReverseIndex,
                         "double.positive");
@@ -5705,7 +5705,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
     private static double requirePositiveFlightArgument(DoubleIota value)
         throws CastingException {
         double raw = value.getValue();
-        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw < 0.0D) {
+        if (Double.isNaN(raw) || Double.isInfinite(raw) || raw <= 0.0D) {
             throw Mishap.invalidIota(value, 0, "double.positive");
         }
         return raw;
