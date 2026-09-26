@@ -193,7 +193,9 @@ public final class SentinelActions {
         }
         if (target.y < 0.0D || target.y >= 256.0D
             || Math.abs(target.x) > 30000000.0D
-            || Math.abs(target.z) > 30000000.0D) {
+            || Math.abs(target.z) > 30000000.0D
+            || !player.world.getWorldBorder().contains(
+                new net.minecraft.util.math.BlockPos(target.x, target.y, target.z))) {
             throw Mishap.badLocation("hexcasting.error.sentinel_out_of_range");
         }
         double dx = target.x - player.posX;
