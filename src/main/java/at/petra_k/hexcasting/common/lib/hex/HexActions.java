@@ -2638,7 +2638,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                                     (net.minecraftforge.fluids.IFluidBlock) block;
                                 if (fluidBlock.canDrain(player.world, current)) {
                                     net.minecraftforge.fluids.FluidStack drained =
-                                        fluidBlock.drain(player.world, current, false);
+                                        fluidBlock.drain(player.world, current, true);
                                     success = drained != null && drained.amount > 0;
                                 }
                             } else if (block instanceof net.minecraft.block.BlockLiquid) {
