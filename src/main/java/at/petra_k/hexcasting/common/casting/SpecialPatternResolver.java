@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.casting;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
+import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
@@ -172,6 +173,11 @@ public final class SpecialPatternResolver {
 
         /** Execute the dynamically resolved action transactionally. */
         public void execute(CastingStack stack) throws CastingException {
+            execute(stack, null);
+        }
+
+        /** Execute with the active VM so failures retain casting context. */
+        public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             if (stack == null) {
                 throw Mishap.invalidValue("hexcasting.error.invalid_value",
                     "Casting stack cannot be null");
@@ -200,7 +206,10 @@ public final class SpecialPatternResolver {
                 throw exception;
             } catch (RuntimeException exception) {
                 stack.restore(before);
-                throw exception;
+                throw Mishap.fromRuntime(exception, null, null,
+                    vm == null ? null : vm.getPlayer(),
+                    vm == null ? 0 : vm.getParenDepth(),
+                    vm == null ? 0 : vm.getOperationsConsumed());
             }
         }
     }

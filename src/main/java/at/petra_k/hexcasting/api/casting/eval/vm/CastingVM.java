@@ -951,7 +951,7 @@ public final class CastingVM {
             } else if (action != null) {
                 action.execute(stack, this);
             } else if (special != null) {
-                special.execute(stack);
+                special.execute(stack, this);
             } else {
                 // A non-pattern Iota is only literal when it was explicitly
                 // escaped or captured inside parentheses.  Reaching this

@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.api.casting.action;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
+import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 
 import java.util.ArrayList;
@@ -31,6 +32,11 @@ public final class StackOperationAction implements HexAction {
 
     @Override
     public void execute(CastingStack stack) throws CastingException {
+        execute(stack, null);
+    }
+
+    @Override
+    public void execute(CastingStack stack, CastingVM vm) throws CastingException {
         List<Iota> before = stack.snapshot();
         try {
             stack.requireSize(argumentCount);
@@ -55,7 +61,10 @@ public final class StackOperationAction implements HexAction {
             throw exception;
         } catch (RuntimeException exception) {
             stack.restore(before);
-            throw exception;
+            throw Mishap.fromRuntime(exception, null, null,
+                vm == null ? null : vm.getPlayer(),
+                vm == null ? 0 : vm.getParenDepth(),
+                vm == null ? 0 : vm.getOperationsConsumed());
         }
     }
 }
