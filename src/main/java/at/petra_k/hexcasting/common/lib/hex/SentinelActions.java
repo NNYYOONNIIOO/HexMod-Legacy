@@ -65,8 +65,19 @@ public final class SentinelActions {
                 EntityPlayer player = requirePlayer(vm);
                 Vec3d target = vectorOf(stack.pop(Vec3Iota.class));
                 assertTargetInRange(vm, player, target);
+                SentinelData data = SentinelData.get(player.world);
+                SentinelData.State before = data.get(player.getUniqueID());
                 vm.consumeMedia(MediaConstants.DUST_UNIT * (extendedRange ? 2L : 1L));
-                SentinelData.get(player.world).set(
+                vm.addRollbackAction(() -> {
+                    if (before == null) {
+                        data.clear(player.getUniqueID());
+                    } else {
+                        data.set(player.getUniqueID(), before.extendedRange,
+                            before.x, before.y, before.z, before.dimension);
+                    }
+                    sync(player);
+                });
+                data.set(
                     player.getUniqueID(), extendedRange, target.x, target.y, target.z,
                     player.world.provider.getDimension());
                 sync(player);
@@ -84,12 +95,20 @@ public final class SentinelActions {
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 EntityPlayer player = requirePlayer(vm);
-                SentinelData.State state = SentinelData.get(player.world).get(player.getUniqueID());
+                SentinelData data = SentinelData.get(player.world);
+                SentinelData.State state = data.get(player.getUniqueID());
                 if (state != null && state.dimension != player.world.provider.getDimension()) {
                     throw wrongDimension(state, player);
                 }
                 vm.consumeMedia(NEGLIGIBLE_MEDIA);
-                SentinelData.get(player.world).clear(player.getUniqueID());
+                if (state != null) {
+                    vm.addRollbackAction(() -> {
+                        data.set(player.getUniqueID(), state.extendedRange,
+                            state.x, state.y, state.z, state.dimension);
+                        sync(player);
+                    });
+                }
+                data.clear(player.getUniqueID());
                 sync(player);
             }
         };
