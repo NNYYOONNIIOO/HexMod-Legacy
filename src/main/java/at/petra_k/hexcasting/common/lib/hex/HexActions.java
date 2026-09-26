@@ -1112,9 +1112,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     final BlockSnapshot targetBefore = BlockSnapshot.capture(
                         player.world, blockPos);
                     vm.addRollbackAction(targetBefore::restore);
-                    tryIgnitionItem(player, blockPos, net.minecraft.init.Items.FIRE_CHARGE);
-                    if (!player.world.getBlockState(blockPos).getBlock()
-                        .equals(net.minecraft.init.Blocks.FIRE)) {
+                    if (!tryIgnitionItem(player, blockPos,
+                        net.minecraft.init.Items.FIRE_CHARGE)) {
                         tryIgnitionItem(player, blockPos,
                             net.minecraft.init.Items.FLINT_AND_STEEL);
                     }
