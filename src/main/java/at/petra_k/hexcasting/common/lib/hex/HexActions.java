@@ -1486,8 +1486,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                     : MediaConstants.DUST_UNIT / 8L);
                 if (!state.getBlock().isAir(state, player.world, blockPos)
                      && state.getBlock().getBlockHardness(state, player.world, blockPos) >= 0.0F
-                     && state.getBlock().getHarvestLevel(state)
-                        <= HexConfig.opBreakHarvestLevel()
+                     && isCorrectBreakTier(state)
                      // Forge mods may veto destruction through
                      // Block#canEntityDestroy.  The modern action checks the
                      // platform breaking hook after its tier/harvest checks;
@@ -5144,6 +5143,18 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         net.minecraft.block.state.IBlockState state) {
         return state != null
             && state.getBlock() instanceof at.petra_k.hexcasting.common.block.BlockConjured;
+    }
+
+    /** Match Forge's distinction between tool-required and tool-free blocks. */
+    private static boolean isCorrectBreakTier(
+        net.minecraft.block.state.IBlockState state) {
+        if (state == null || state.getBlock() == null) {
+            return false;
+        }
+        net.minecraft.block.Block block = state.getBlock();
+        String harvestTool = block.getHarvestTool(state);
+        return harvestTool == null || harvestTool.isEmpty()
+            || block.getHarvestLevel(state) <= HexConfig.opBreakHarvestLevel();
     }
 
     /** Drain a Forge fluid capability at the target before flood filling. */
