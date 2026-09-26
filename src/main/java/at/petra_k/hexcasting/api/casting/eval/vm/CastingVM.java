@@ -1076,15 +1076,18 @@ public final class CastingVM {
         validateBudget(maxOperations);
         boolean outermost = evaluationDepth == 0;
         VmSnapshot before = null;
-        if (outermost) {
-            before = snapshotState();
-            rollbackActions.clear();
-            mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
-                allowMediaInventoryFallback);
-            lastMishap = null;
-        }
-        evaluationDepth++;
+        boolean enteredEvaluation = false;
         try {
+            if (outermost) {
+                rollbackActions.clear();
+                mediaTransaction = null;
+                lastMishap = null;
+                before = snapshotState();
+                mediaTransaction = MediaInventoryHelper.begin(player, castingData, mediaHolder,
+                    allowMediaInventoryFallback);
+            }
+            evaluationDepth++;
+            enteredEvaluation = true;
             while (hasPendingWork()) {
                 step(maxOperations);
             }
@@ -1097,16 +1100,18 @@ public final class CastingVM {
             if (outermost) {
                 rollbackEvaluation(before);
             }
-            if (exception instanceof Mishap) {
-                Mishap mishap = (Mishap) exception;
-                try {
-                    mishap.applyStackEffect(stack);
-                } catch (CastingException ignored) {
-                    // A malformed stack effect must not hide the original Mishap.
-                }
-                MishapFeedback.applySideEffects(mishap);
+            Mishap mishap = Mishap.from(exception, null, null, player,
+                parenCount, operationsConsumed)
+                .withExecutionContext(null, null, player,
+                    parenCount, operationsConsumed);
+            lastMishap = mishap;
+            try {
+                mishap.applyStackEffect(stack);
+            } catch (CastingException ignored) {
+                // A malformed stack effect must not hide the original Mishap.
             }
-            throw exception;
+            MishapFeedback.applySideEffects(mishap);
+            throw mishap;
         } catch (RuntimeException exception) {
             if (outermost) {
                 rollbackEvaluation(before);
@@ -1119,7 +1124,9 @@ public final class CastingVM {
             MishapFeedback.applySideEffects(mishap);
             throw mishap;
         } finally {
-            evaluationDepth--;
+            if (enteredEvaluation) {
+                evaluationDepth--;
+            }
             if (outermost) {
                 mediaTransaction = null;
             }
@@ -1142,7 +1149,14 @@ public final class CastingVM {
         throws CastingException {
         validateBudget(maxOperations);
         if (patterns == null) {
-            throw new IllegalArgumentException("Nested pattern sequence cannot be null");
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Nested pattern sequence cannot be null");
+        }
+        for (HexPattern pattern : patterns) {
+            if (pattern == null) {
+                throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                    "Nested pattern cannot be null");
+            }
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
         boolean previousHalted = halted;
@@ -1183,7 +1197,14 @@ public final class CastingVM {
         throws CastingException {
         validateBudget(maxOperations);
         if (iotas == null) {
-            throw new IllegalArgumentException("Nested Iota sequence cannot be null");
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Nested Iota sequence cannot be null");
+        }
+        for (Iota iota : iotas) {
+            if (iota == null) {
+                throw Mishap.invalidValue("hexcasting.error.invalid_iota",
+                    "Nested Iota cannot be null");
+            }
         }
         ArrayDeque<WorkItem> outerContinuation = new ArrayDeque<>(continuation);
         boolean previousHalted = halted;
