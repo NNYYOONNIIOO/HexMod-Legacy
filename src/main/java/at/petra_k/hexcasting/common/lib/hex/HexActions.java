@@ -2137,23 +2137,6 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                     throw Mishap.badItem("hexcasting.error.recharge_item", entity);
                 }
 
-                long emptySpace = holder.insertMedia(-1L, true);
-                long sourceMedia = MediaInventoryHelper.extractMedia(
-                    dropped, -1L, false, true);
-                if (emptySpace <= 0L || sourceMedia <= 0L) {
-                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
-                }
-                // Recharge uses the ordinary extraction contract: discrete
-                // media may be consumed as a whole item even when the target
-                // has less than one item's worth of free capacity.
-                long simulated = MediaInventoryHelper.extractMedia(
-                    dropped, emptySpace, false, true);
-                if (simulated <= 0L) {
-                    throw Mishap.badItem("hexcasting.error.recharge_item", entity);
-                }
-                if (holder.insertMedia(simulated, true) <= 0L) {
-                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
-                }
                 // Recharge itself has the fixed one-shard spell cost.  All
                 // item/entity mutation happens after this validation so a
                 // failed cast cannot leave a partially transferred source.
@@ -2162,10 +2145,17 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                     MediaInventoryHelper.snapshotEntity(droppedEntity);
                 final net.minecraft.item.ItemStack holderBefore = offHand.copy();
                 final long holderMediaBefore = holder.getMedia();
-                long inserted = MediaInventoryHelper.transferMedia(
-                    droppedEntity, offHand, holder, simulated);
-                if (inserted <= 0L) {
-                    throw Mishap.badOffhandItem("hexcasting.error.recharge_full");
+                // The modern rendered spell does not fail when the receiver
+                // is full. It extracts only up to the currently available
+                // space; a discrete source may still be consumed as a whole
+                // item when that space is smaller than its worth.
+                long emptySpace = holder.insertMedia(-1L, true);
+                if (emptySpace > 0L) {
+                    long transferred = MediaInventoryHelper.extractMedia(
+                        droppedEntity, emptySpace, false, false);
+                    if (transferred > 0L) {
+                        holder.insertMedia(transferred, false);
+                    }
                 }
                 vm.addRollbackAction(() -> {
                     sourceBefore.restore();
