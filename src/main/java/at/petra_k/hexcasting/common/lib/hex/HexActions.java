@@ -1186,10 +1186,14 @@ public static final HexPattern BOOL_IF_PATTERN =
                             current.getX() + 0.5D, current.getY() + 0.5D,
                             current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
                         successes++;
-                        for (net.minecraft.util.EnumFacing facing
-                            : net.minecraft.util.EnumFacing.values()) {
-                            todo.addLast(current.offset(facing));
-                        }
+                    }
+                    // The upstream action continues the flood from every
+                    // editable position, even when that position was not
+                    // itself lit. This lets the search pass through empty
+                    // blocks and find fire farther inside the area.
+                    for (net.minecraft.util.EnumFacing facing
+                        : net.minecraft.util.EnumFacing.values()) {
+                        todo.addLast(current.offset(facing));
                     }
                 }
                 if (successes > 0) {
