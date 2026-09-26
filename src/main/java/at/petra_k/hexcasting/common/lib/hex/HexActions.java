@@ -2742,7 +2742,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInWorld(value)) {
-            throw Mishap.badLocation(errorKey);
+            throw Mishap.badLocation(errorKey).withLocationType("out_of_world");
         }
         return new net.minecraft.util.math.BlockPos(
             (int) Math.floor(value.x), (int) Math.floor(value.y),
@@ -2947,7 +2947,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     // The upstream action reports this as a bad location,
                     // not as a separate permission Mishap. The recorded
                     // vector is still used by the common feedback path.
-                    throw Mishap.badLocation("hexcasting.error.lightning_forbidden");
+                    throw Mishap.badLocation("hexcasting.error.lightning_forbidden")
+                        .withLocationType("forbidden");
                 }
                 vm.consumeMedia(3L * MediaConstants.SHARD_UNIT);
                 net.minecraft.entity.effect.EntityLightningBolt bolt =
@@ -3017,15 +3018,23 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                 target.posX + displacement.x, target.posY + displacement.y,
                 target.posZ + displacement.z);
+            vm.recordMishapLocation(destination.x, destination.y, destination.z,
+                caster.world.provider == null
+                    ? Integer.MIN_VALUE : caster.world.provider.getDimension());
             if (!canTeleportInDimension(caster.world)) {
-                throw Mishap.badLocation("hexcasting.error.blink_dimension");
+                throw Mishap.badLocation("hexcasting.error.blink_dimension")
+                    .withLocationType("bad_dimension");
             }
             requireVecInRange(vm, caster, destination,
                 "hexcasting.error.blink_range");
-            if (!isVecInWorld(destination)
-                || !isVecInWorld(new net.minecraft.util.math.Vec3d(
+            if (!isVecInWorld(destination)) {
+                throw Mishap.badLocation("hexcasting.error.blink_position")
+                    .withLocationType("out_of_world");
+            }
+            if (!isVecInWorld(new net.minecraft.util.math.Vec3d(
                     destination.x, destination.y - 1.0D, destination.z))) {
-                throw Mishap.badLocation("hexcasting.error.blink_position");
+                throw Mishap.badLocation("hexcasting.error.blink_position")
+                    .withLocationType("too_close_to_out");
             }
             double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
             if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
@@ -4188,16 +4197,21 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                     target.posX + delta.x, target.posY + delta.y,
                     target.posZ + delta.z);
+                vm.recordMishapLocation(destination.x, destination.y, destination.z,
+                    vm.getPlayer().world.provider == null
+                        ? Integer.MIN_VALUE : vm.getPlayer().world.provider.getDimension());
                 if (!canTeleportInDimension(vm.getPlayer().world)) {
-                    throw Mishap.badLocation("hexcasting.error.teleport_great_dimension");
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_dimension")
+                        .withLocationType("bad_dimension");
                 }
-                if (!isVecInWorld(destination)
-                    || !isVecInWorld(new net.minecraft.util.math.Vec3d(
+                if (!isVecInWorld(destination)) {
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_position")
+                        .withLocationType("out_of_world");
+                }
+                if (!isVecInWorld(new net.minecraft.util.math.Vec3d(
                         destination.x, destination.y - 1.0D, destination.z))) {
-                    vm.recordMishapLocation(destination.x, destination.y, destination.z,
-                        vm.getPlayer().world.provider == null
-                            ? Integer.MIN_VALUE : vm.getPlayer().world.provider.getDimension());
-                    throw Mishap.badLocation("hexcasting.error.teleport_great_position");
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_position")
+                        .withLocationType("too_close_to_out");
                 }
                 vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
                 if (!vm.getPlayer().world.isRemote) {
@@ -5140,6 +5154,28 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 new net.minecraft.util.math.BlockPos(position.x, position.y, position.z));
     }
 
+    /** Check only the caster's ambit, leaving world-boundary checks separate. */
+    private static boolean isWithinCastingRange(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position) {
+        if (player == null || position == null || !isFiniteVector(position)) {
+            return false;
+        }
+        double dx = position.x - player.posX;
+        double dy = position.y - player.posY;
+        double dz = position.z - player.posZ;
+        return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D;
+    }
+
+    /** Check the 1.12 world border independently of vanilla Y/X/Z bounds. */
+    private static boolean isWithinWorldBorder(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position) {
+        return player != null && player.world != null && position != null
+            && player.world.getWorldBorder().contains(
+                new net.minecraft.util.math.BlockPos(position.x, position.y, position.z));
+    }
+
     private static boolean isVecInWorld(net.minecraft.util.math.Vec3d position) {
         if (position == null
             || Double.isNaN(position.x) || Double.isInfinite(position.x)
@@ -5161,11 +5197,11 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         throws CastingException {
         if (vm != null && player != null && position != null && isFiniteVector(position)) {
             vm.recordMishapLocation(position.x, position.y, position.z,
-                player.world == null || player.world.provider == null
+            player.world == null || player.world.provider == null
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
         if (!isVecInWorld(position)) {
-            throw Mishap.badLocation(errorKey);
+            throw Mishap.badLocation(errorKey).withLocationType("out_of_world");
         }
     }
 
@@ -5179,8 +5215,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 player.world == null || player.world.provider == null
                     ? Integer.MIN_VALUE : player.world.provider.getDimension());
         }
-        if (!isVecInRange(player, position)) {
-            throw Mishap.badLocation(errorKey);
+        if (!isVecInWorld(position)) {
+            throw Mishap.badLocation(errorKey).withLocationType("out_of_world");
+        }
+        if (player == null || !isWithinCastingRange(player, position)) {
+            throw Mishap.badLocation(errorKey).withLocationType("too_far");
+        }
+        if (!isWithinWorldBorder(player, position)) {
+            throw Mishap.badLocation(errorKey).withLocationType("out_of_world");
         }
     }
 

@@ -97,6 +97,8 @@ public class Mishap extends CastingException {
     private double locationY = Double.NaN;
     private double locationZ = Double.NaN;
     private int locationDimension = Integer.MIN_VALUE;
+    /** Explicit modern location error subtype, when the action knows it. */
+    private String locationType;
     private boolean permissionChecked;
     private boolean permissionAllowed = true;
     private long mediaRequired = -1L;
@@ -275,6 +277,10 @@ public class Mishap extends CastingException {
 
     public int getLocationDimension() {
         return locationDimension;
+    }
+
+    public String getLocationType() {
+        return locationType;
     }
 
     public boolean isPermissionChecked() {
@@ -480,6 +486,14 @@ public class Mishap extends CastingException {
         locationY = y;
         locationZ = z;
         locationDimension = dimension;
+        return this;
+    }
+
+    /** Retain the modern location subtype used by the localized error text. */
+    public Mishap withLocationType(String type) {
+        if (type != null && !type.isEmpty()) {
+            locationType = type;
+        }
         return this;
     }
 

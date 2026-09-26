@@ -546,17 +546,19 @@ public final class MishapFeedback {
         if (!mishap.hasLocationContext()) {
             return localizeKey(mishap.getErrorKey());
         }
-        String suffix;
+        String suffix = mishap.getLocationType();
         String key = mishap.getErrorKey() == null ? "" : mishap.getErrorKey();
-        if (mishap.getKind() == Mishap.Kind.PERMISSION_DENIED
+        if (suffix == null || suffix.isEmpty()) {
+            if (mishap.getKind() == Mishap.Kind.PERMISSION_DENIED
             || key.endsWith("_forbidden") || key.endsWith("_disallowed")) {
-            suffix = "forbidden";
-        } else if (key.endsWith("_dimension") || key.contains("dimension")) {
-            suffix = "bad_dimension";
-        } else if (key.endsWith("_position") || key.contains("out_of_world")) {
-            suffix = "out_of_world";
-        } else {
-            suffix = "too_far";
+                suffix = "forbidden";
+            } else if (key.endsWith("_dimension") || key.contains("dimension")) {
+                suffix = "bad_dimension";
+            } else if (key.endsWith("_position") || key.contains("out_of_world")) {
+                suffix = "out_of_world";
+            } else {
+                suffix = "too_far";
+            }
         }
         String modernKey = "hexcasting.mishap.location_." + suffix;
         return I18n.translateToLocalFormatted(modernKey, locationDisplay(mishap));
