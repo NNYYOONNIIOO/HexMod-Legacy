@@ -3125,9 +3125,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     // precheck, but the source stack must remain untouched.
                     return;
                 }
-                if (!player.capabilities.isCreativeMode) {
-                    source.shrink(1);
-                }
+                withdrawPlaceableBlock(player, source);
             }
         });
 
@@ -4958,6 +4956,55 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             }
         }
         return null;
+    }
+
+    /**
+     * Consume the placed block using Hex's EXTRACTION order rather than the
+     * stack returned by the QUERY pass.  Query and extraction intentionally
+     * have different orders: this is observable when several matching block
+     * stacks are present in the inventory.
+     */
+    private static boolean withdrawPlaceableBlock(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.item.ItemStack expected) {
+        if (player == null || expected == null || expected.isEmpty()
+            || player.capabilities.isCreativeMode) {
+            return true;
+        }
+
+        for (int i = player.inventory.mainInventory.size() - 1; i >= 0; i--) {
+            if (i == player.inventory.currentItem) {
+                continue;
+            }
+            net.minecraft.item.ItemStack candidate =
+                player.inventory.mainInventory.get(i);
+            if (sameItemAndTags(candidate, expected)) {
+                candidate.shrink(1);
+                return true;
+            }
+        }
+
+        for (net.minecraft.item.ItemStack candidate
+            : player.inventory.offHandInventory) {
+            if (sameItemAndTags(candidate, expected)) {
+                candidate.shrink(1);
+                return true;
+            }
+        }
+
+        net.minecraft.item.ItemStack selected =
+            player.inventory.getCurrentItem();
+        if (sameItemAndTags(selected, expected)) {
+            selected.shrink(1);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean sameItemAndTags(
+        net.minecraft.item.ItemStack left, net.minecraft.item.ItemStack right) {
+        return left != null && right != null && !left.isEmpty() && !right.isEmpty()
+            && net.minecraft.item.ItemStack.areItemStacksEqual(left, right);
     }
 
     /**
