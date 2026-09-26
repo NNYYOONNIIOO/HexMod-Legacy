@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.api.item;
 
 import net.minecraft.item.ItemStack;
+import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 
 /** Stack-backed media storage contract for 1.12.2 items. */
 public interface MediaHolderItem {
@@ -10,7 +11,10 @@ public interface MediaHolderItem {
 
     default boolean canRecharge(ItemStack stack) { return true; }
     default boolean canProvide(ItemStack stack) { return true; }
-    default int getConsumptionPriority(ItemStack stack) { return 0; }
+    /** Match modern media-holder items: unspecified sources use battery priority. */
+    default int getConsumptionPriority(ItemStack stack) {
+        return (int) ADMediaHolder.BATTERY_PRIORITY;
+    }
     default boolean canConstructBattery(ItemStack stack) { return false; }
 
     default long withdrawMedia(ItemStack stack, long amount, boolean simulate) {
