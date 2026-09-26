@@ -1066,14 +1066,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         IGNITE_ID, IGNITE_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.ignite_context");
+            throw Mishap.invalidContext("hexcasting.error.ignite_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.ignite_context");
+                    throw Mishap.invalidContext("hexcasting.error.ignite_context");
                 }
                 Iota target = stack.pop();
                 if (target instanceof EntityIota) {
@@ -1128,14 +1128,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         EXTINGUISH_ID, EXTINGUISH_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.extinguish_context");
+            throw Mishap.invalidContext("hexcasting.error.extinguish_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.extinguish_context");
+                    throw Mishap.invalidContext("hexcasting.error.extinguish_context");
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
@@ -1211,13 +1211,13 @@ public static final HexPattern BOOL_IF_PATTERN =
         ADD_MOTION_ID, ADD_MOTION_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.add_motion_context");
+                throw Mishap.invalidContext("hexcasting.error.add_motion_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.add_motion_context");
+                    throw Mishap.invalidContext("hexcasting.error.add_motion_context");
                 }
                 Iota motionValue = stack.pop();
                 Iota entityValue = stack.pop();
@@ -1265,14 +1265,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         BEEP_ID, BEEP_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.beep_context");
+                throw Mishap.invalidContext("hexcasting.error.beep_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.beep_context");
+                    throw Mishap.invalidContext("hexcasting.error.beep_context");
                 }
                 Iota noteValue = stack.pop();
                 Iota instrumentValue = stack.pop();
@@ -1338,14 +1338,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         SUMMON_RAIN_ID, SUMMON_RAIN_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.weather_context");
+                throw Mishap.invalidContext("hexcasting.error.weather_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.weather_context");
+                    throw Mishap.invalidContext("hexcasting.error.weather_context");
                 }
                 vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
@@ -1371,14 +1371,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         DISPEL_RAIN_ID, DISPEL_RAIN_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.weather_context");
+                throw Mishap.invalidContext("hexcasting.error.weather_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.weather_context");
+                    throw Mishap.invalidContext("hexcasting.error.weather_context");
                 }
                 vm.consumeMedia(MediaConstants.SHARD_UNIT);
                 net.minecraft.world.storage.WorldInfo info = player.world.getWorldInfo();
@@ -1415,14 +1415,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.explode_context");
+                throw Mishap.invalidContext("hexcasting.error.explode_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.explode_context");
+                    throw Mishap.invalidContext("hexcasting.error.explode_context");
                 }
                 Iota strengthValue = stack.pop();
                 Iota positionValue = stack.pop();
@@ -1472,14 +1472,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         BREAK_BLOCK_ID, BREAK_BLOCK_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.break_block_context");
+                throw Mishap.invalidContext("hexcasting.error.break_block_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.break_block_context");
+                    throw Mishap.invalidContext("hexcasting.error.break_block_context");
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
@@ -1521,13 +1521,13 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.raycast_context");
+                throw Mishap.invalidContext("hexcasting.error.raycast_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.raycast_context");
+                    throw Mishap.invalidContext("hexcasting.error.raycast_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
@@ -1565,13 +1565,13 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.raycast_axis_context");
+                throw Mishap.invalidContext("hexcasting.error.raycast_axis_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.raycast_axis_context");
+                    throw Mishap.invalidContext("hexcasting.error.raycast_axis_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
@@ -1609,14 +1609,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.raycast_entity_context");
+                throw Mishap.invalidContext("hexcasting.error.raycast_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer caster = vm.getPlayer();
                 if (caster == null) {
-                    throw Mishap.error("hexcasting.error.raycast_entity_context");
+                    throw Mishap.invalidContext("hexcasting.error.raycast_entity_context");
                 }
                 Vec3Iota direction = stack.pop(Vec3Iota.class);
                 Vec3Iota origin = stack.pop(Vec3Iota.class);
@@ -1742,14 +1742,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.get_entity_context");
+                throw Mishap.invalidContext("hexcasting.error.get_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.get_entity_context");
+                    throw Mishap.invalidContext("hexcasting.error.get_entity_context");
                 }
                 Vec3Iota positionIota = stack.pop(Vec3Iota.class);
                 net.minecraft.util.math.Vec3d position = positionIota.getValue();
@@ -1874,14 +1874,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.zone_entity_context");
+                throw Mishap.invalidContext("hexcasting.error.zone_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.zone_entity_context");
+                    throw Mishap.invalidContext("hexcasting.error.zone_entity_context");
                 }
                 Iota radiusValue = stack.pop();
                 Iota positionValue = stack.pop();
@@ -1944,14 +1944,14 @@ public static final HexPattern BOOL_IF_PATTERN =
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.get_caster_context");
+throw Mishap.invalidContext("hexcasting.error.get_caster_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-throw Mishap.error("hexcasting.error.get_caster_context");
+throw Mishap.invalidContext("hexcasting.error.get_caster_context");
                 }
                 stack.push(new EntityIota(player));
             }
@@ -1967,7 +1967,7 @@ throw Mishap.error("hexcasting.error.get_caster_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.entity_height_context");
+throw Mishap.invalidContext("hexcasting.error.entity_height_context");
             }
 
             @Override
@@ -1988,7 +1988,7 @@ throw Mishap.error("hexcasting.error.entity_height_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.entity_pos_eye_context");
+throw Mishap.invalidContext("hexcasting.error.entity_pos_eye_context");
             }
 
             @Override
@@ -2009,7 +2009,7 @@ throw Mishap.error("hexcasting.error.entity_pos_eye_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.entity_pos_foot_context");
+throw Mishap.invalidContext("hexcasting.error.entity_pos_foot_context");
             }
 
             @Override
@@ -2031,7 +2031,7 @@ throw Mishap.error("hexcasting.error.entity_pos_foot_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.entity_look_context");
+throw Mishap.invalidContext("hexcasting.error.entity_look_context");
             }
 
             @Override
@@ -2052,7 +2052,7 @@ throw Mishap.error("hexcasting.error.entity_look_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.entity_velocity_context");
+throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
             }
 
             @Override
@@ -2073,13 +2073,13 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         COMPARE_ENTITY_ID, COMPARE_ENTITY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.compare_entity_context");
+                throw Mishap.invalidContext("hexcasting.error.compare_entity_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.compare_entity_context");
+                    throw Mishap.invalidContext("hexcasting.error.compare_entity_context");
                 }
                 EntityIota right = stack.pop(EntityIota.class);
                 EntityIota left = stack.pop(EntityIota.class);
@@ -2102,13 +2102,13 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.recharge_context");
+                throw Mishap.invalidContext("hexcasting.error.recharge_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.recharge_context");
+                    throw Mishap.invalidContext("hexcasting.error.recharge_context");
                 }
 
                 EntityIota entityIota = stack.pop(EntityIota.class);
@@ -2185,7 +2185,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     public static final HexAction READ = register(READ_ID, READ_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.read_context");
+            throw Mishap.invalidContext("hexcasting.error.read_context");
         }
 
         @Override
@@ -2199,13 +2199,13 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     public static final HexAction WRITE = register(WRITE_ID, WRITE_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.write_context");
+            throw Mishap.invalidContext("hexcasting.error.write_context");
         }
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             if (vm == null) {
-                throw Mishap.error("hexcasting.error.write_context");
+                throw Mishap.invalidContext("hexcasting.error.write_context");
             }
             Iota value = stack.peek();
             net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
@@ -2240,13 +2240,13 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     public static final HexAction READABLE = register(READABLE_ID, READABLE_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.readable_context");
+            throw Mishap.invalidContext("hexcasting.error.readable_context");
         }
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             if (vm == null) {
-                throw Mishap.error("hexcasting.error.readable_context");
+                throw Mishap.invalidContext("hexcasting.error.readable_context");
             }
             net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
                 IotaDataHolder::isDataHolder);
@@ -2259,13 +2259,13 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     public static final HexAction WRITABLE = register(WRITABLE_ID, WRITABLE_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.writable_context");
+            throw Mishap.invalidContext("hexcasting.error.writable_context");
         }
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             if (vm == null) {
-                throw Mishap.error("hexcasting.error.writable_context");
+                throw Mishap.invalidContext("hexcasting.error.writable_context");
             }
             net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
                 IotaDataHolder::isDataHolder);
@@ -2279,14 +2279,14 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         READ_ENTITY_ID, READ_ENTITY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.entity_data_context");
+                throw Mishap.invalidContext("hexcasting.error.entity_data_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.entity_data_context");
+                    throw Mishap.invalidContext("hexcasting.error.entity_data_context");
                 }
                 stack.push(readIota(entityItem(stack.pop(), vm, 0)));
             }
@@ -2298,14 +2298,14 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         WRITE_ENTITY_ID, WRITE_ENTITY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.entity_data_context");
+                throw Mishap.invalidContext("hexcasting.error.entity_data_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.entity_data_context");
+                    throw Mishap.invalidContext("hexcasting.error.entity_data_context");
                 }
                 Iota value = stack.pop();
                 Iota entity = stack.pop();
@@ -2328,14 +2328,14 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         READABLE_ENTITY_ID, READABLE_ENTITY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.entity_data_context");
+                throw Mishap.invalidContext("hexcasting.error.entity_data_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.entity_data_context");
+                    throw Mishap.invalidContext("hexcasting.error.entity_data_context");
                 }
                 net.minecraft.item.ItemStack target = entityItemIfPresent(
                     stack.pop(), vm, 0, "entity");
@@ -2350,14 +2350,14 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.entity_data_context");
+                throw Mishap.invalidContext("hexcasting.error.entity_data_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.entity_data_context");
+                    throw Mishap.invalidContext("hexcasting.error.entity_data_context");
                 }
                 net.minecraft.item.ItemStack target = entityItemIfPresent(
                     stack.pop(), vm, 0, "entity");
@@ -2369,7 +2369,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
     private static net.minecraft.item.ItemStack dataHolder(CastingVM vm, boolean readable)
         throws CastingException {
         if (vm == null) {
-            throw Mishap.error("hexcasting.error.read_context");
+            throw Mishap.invalidContext("hexcasting.error.read_context");
         }
         net.minecraft.item.ItemStack stack = vm.getHeldItemToOperateOn(
             readable ? IotaDataHolder::canRead : IotaDataHolder::canWrite);
@@ -2474,7 +2474,7 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
                 expected == null || expected.isEmpty() ? "entity" : expected);
         }
         if (vm == null || vm.getPlayer() == null) {
-            throw Mishap.error("hexcasting.error.entity_data_context");
+            throw Mishap.invalidContext("hexcasting.error.entity_data_context");
         }
         net.minecraft.entity.Entity entity = resolveEntity((EntityIota) value, vm);
         requireEntityInRange(vm, vm.getPlayer(), entity,
@@ -2513,14 +2513,14 @@ throw Mishap.error("hexcasting.error.entity_velocity_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-throw Mishap.error("hexcasting.error.get_media_context");
+throw Mishap.invalidContext("hexcasting.error.get_media_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || (vm.getPlayer() == null
                     && vm.getCastingData() == null && vm.getMediaHolder() == null)) {
-                    throw Mishap.error("hexcasting.error.get_media_context");
+                    throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 }
                 // Ask the same transaction/source resolver used by consumeMedia
                 // instead of reading one holder directly.  This keeps the
@@ -2566,14 +2566,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.fluid_context");
+                throw Mishap.invalidContext("hexcasting.error.fluid_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.fluid_context");
+                    throw Mishap.invalidContext("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     vm, player, stack.pop(Vec3Iota.class),
@@ -2692,14 +2692,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.fluid_context");
+                throw Mishap.invalidContext("hexcasting.error.fluid_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 if (player == null) {
-                    throw Mishap.error("hexcasting.error.fluid_context");
+                    throw Mishap.invalidContext("hexcasting.error.fluid_context");
                 }
                 net.minecraft.util.math.BlockPos position = blockPosition(
                     vm, player, stack.pop(Vec3Iota.class),
@@ -2769,14 +2769,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
     public static final HexAction EDIFY = register(EDIFY_ID, EDIFY_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.edify_context");
+            throw Mishap.invalidContext("hexcasting.error.edify_context");
         }
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
             if (player == null) {
-                throw Mishap.error("hexcasting.error.edify_context");
+                throw Mishap.invalidContext("hexcasting.error.edify_context");
             }
             net.minecraft.util.math.BlockPos position = blockPosition(
                 vm, player, stack.pop(Vec3Iota.class),
@@ -2831,13 +2831,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
     public static final HexAction ERASE = register(ERASE_ID, ERASE_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.erase_context");
+            throw Mishap.invalidContext("hexcasting.error.erase_context");
         }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.erase_context");
+                    throw Mishap.invalidContext("hexcasting.error.erase_context");
                 }
                 net.minecraft.item.ItemStack target = vm.getHeldItemToOperateOn(
                     IotaDataHolder::canClear);
@@ -2896,13 +2896,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         BONEMEAL_ID, BONEMEAL_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.bonemeal_context");
+                throw Mishap.invalidContext("hexcasting.error.bonemeal_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.bonemeal_context");
+                    throw Mishap.invalidContext("hexcasting.error.bonemeal_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos position = blockPosition(
@@ -2939,7 +2939,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         LIGHTNING_ID, LIGHTNING_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.lightning_context");
+                throw Mishap.invalidContext("hexcasting.error.lightning_context");
             }
 
             @Override
@@ -2947,7 +2947,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null
                     || vm.getPlayer().world == null) {
-                    throw Mishap.error("hexcasting.error.lightning_context");
+                    throw Mishap.invalidContext("hexcasting.error.lightning_context");
                 }
                 net.minecraft.util.math.Vec3d target = stack.pop(Vec3Iota.class).getValue();
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
@@ -2983,13 +2983,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
     public static final HexAction BLINK = register(BLINK_ID, BLINK_PATTERN, new HexAction() {
         @Override
         public void execute(CastingStack stack) throws CastingException {
-            throw Mishap.error("hexcasting.error.blink_context");
+            throw Mishap.invalidContext("hexcasting.error.blink_context");
         }
 
         @Override
         public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             if (vm == null || vm.getPlayer() == null) {
-                throw Mishap.error("hexcasting.error.blink_context");
+                throw Mishap.invalidContext("hexcasting.error.blink_context");
             }
             Iota deltaValue = stack.pop();
             Iota entityValue = stack.pop();
@@ -3060,13 +3060,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         PLACE_BLOCK_ID, PLACE_BLOCK_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.place_block_context");
+                throw Mishap.invalidContext("hexcasting.error.place_block_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.place_block_context");
+                    throw Mishap.invalidContext("hexcasting.error.place_block_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos position = blockPosition(
@@ -3244,13 +3244,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.potion_context");
+                throw Mishap.invalidContext("hexcasting.error.potion_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.potion_context");
+                    throw Mishap.invalidContext("hexcasting.error.potion_context");
                 }
                 Iota potencyValue = allowPotency ? stack.pop() : null;
                 Iota durationValue = stack.pop();
@@ -3345,13 +3345,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         THANATOS_ID, THANATOS_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.thanatos_context");
+                throw Mishap.invalidContext("hexcasting.error.thanatos_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null) {
-                    throw Mishap.error("hexcasting.error.thanatos_context");
+                    throw Mishap.invalidContext("hexcasting.error.thanatos_context");
                 }
                 stack.push(new DoubleIota(vm.getRemainingOperationsForCurrentAction()));
             }
@@ -3366,13 +3366,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CYCLE_VARIANT_ID, CYCLE_VARIANT_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.cycle_variant_context");
+                throw Mishap.invalidContext("hexcasting.error.cycle_variant_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.cycle_variant_context");
+                    throw Mishap.invalidContext("hexcasting.error.cycle_variant_context");
                 }
                 net.minecraft.item.ItemStack held = vm.getHeldItemToOperateOn(
                     HexActions::isVariantItem);
@@ -3397,13 +3397,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CONJURE_BLOCK_ID, CONJURE_BLOCK_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.conjure_block_context");
+                throw Mishap.invalidContext("hexcasting.error.conjure_block_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.conjure_block_context");
+                    throw Mishap.invalidContext("hexcasting.error.conjure_block_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos target = blockPosition(
@@ -3460,13 +3460,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CONJURE_LIGHT_ID, CONJURE_LIGHT_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.conjure_light_context");
+                throw Mishap.invalidContext("hexcasting.error.conjure_light_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.conjure_light_context");
+                    throw Mishap.invalidContext("hexcasting.error.conjure_light_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos target = blockPosition(
@@ -3528,13 +3528,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         FLIGHT_ID, FLIGHT_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.flight_context");
+                throw Mishap.invalidContext("hexcasting.error.flight_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.flight_context");
+                    throw Mishap.invalidContext("hexcasting.error.flight_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player =
                     requireFlightTarget(stack.pop(EntityIota.class), vm);
@@ -3559,7 +3559,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         FLIGHT_CAN_FLY_ID, FLIGHT_CAN_FLY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.flight_can_fly_context");
+                throw Mishap.invalidContext("hexcasting.error.flight_can_fly_context");
             }
 
             @Override
@@ -3580,14 +3580,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         FLIGHT_RANGE_ID, FLIGHT_RANGE_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.flight_context");
+                throw Mishap.invalidContext("hexcasting.error.flight_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.flight_context");
+                    throw Mishap.invalidContext("hexcasting.error.flight_context");
                 }
                 Iota radiusValue = stack.pop();
                 Iota targetValue = stack.pop();
@@ -3622,13 +3622,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         FLIGHT_TIME_ID, FLIGHT_TIME_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.flight_context");
+                throw Mishap.invalidContext("hexcasting.error.flight_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.flight_context");
+                    throw Mishap.invalidContext("hexcasting.error.flight_context");
                 }
                 Iota secondsValue = stack.pop();
                 Iota targetValue = stack.pop();
@@ -3980,14 +3980,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         COLORIZE_ID, COLORIZE_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.colorize_context");
+                throw Mishap.invalidContext("hexcasting.error.colorize_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.colorize_context");
+                    throw Mishap.invalidContext("hexcasting.error.colorize_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.item.ItemStack dye = vm.getHeldItemToOperateOn(
@@ -3997,7 +3997,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
                 }
                 IHexCastingData data = player.getCapability(at.petra_k.hexcasting.common.capability.HexCapabilities.CASTING_DATA, null);
                 if (data == null) {
-                    throw Mishap.error("hexcasting.error.colorize_context");
+                    throw Mishap.invalidContext("hexcasting.error.colorize_context");
                 }
                 final int previousPigment = data.getPigment();
                 final String previousVariant = data.getPigmentVariant();
@@ -4036,14 +4036,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         BRAINSWEEP_ID, BRAINSWEEP_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.brainsweep_context");
+                throw Mishap.invalidContext("hexcasting.error.brainsweep_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.brainsweep_context");
+                    throw Mishap.invalidContext("hexcasting.error.brainsweep_context");
                 }
                 Iota first = stack.pop();
                 Iota second = stack.pop();
@@ -4159,14 +4159,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         TELEPORT_GREAT_ID, TELEPORT_GREAT_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.teleport_great_context");
+                throw Mishap.invalidContext("hexcasting.error.teleport_great_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.teleport_great_context");
+                    throw Mishap.invalidContext("hexcasting.error.teleport_great_context");
                 }
                 Vec3Iota deltaIota = stack.pop(Vec3Iota.class);
                 Iota entityValue = stack.pop();
@@ -4227,14 +4227,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         CRAFT_BATTERY_ID, CRAFT_BATTERY_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.craft_battery_context");
+                throw Mishap.invalidContext("hexcasting.error.craft_battery_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.craft_battery_context");
+                    throw Mishap.invalidContext("hexcasting.error.craft_battery_context");
                 }
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 EntityIota entityIota = stack.pop(EntityIota.class);
@@ -4441,14 +4441,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         AKASHIC_READ_ID, AKASHIC_READ_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.akashic_context");
+                throw Mishap.invalidContext("hexcasting.error.akashic_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.akashic_context");
+                    throw Mishap.invalidContext("hexcasting.error.akashic_context");
                 }
                 PatternIota key = stack.pop(PatternIota.class);
                 Vec3Iota position = stack.pop(Vec3Iota.class);
@@ -4484,14 +4484,14 @@ throw Mishap.error("hexcasting.error.get_media_context");
         AKASHIC_WRITE_ID, AKASHIC_WRITE_PATTERN, new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.akashic_context");
+                throw Mishap.invalidContext("hexcasting.error.akashic_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm)
                 throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.akashic_context");
+                    throw Mishap.invalidContext("hexcasting.error.akashic_context");
                 }
                 Iota value = stack.pop();
                 PatternIota key = stack.pop(PatternIota.class);
@@ -4861,13 +4861,13 @@ throw Mishap.error("hexcasting.error.get_media_context");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.compare_block_context");
+                throw Mishap.invalidContext("hexcasting.error.compare_block_context");
             }
 
             @Override
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
                 if (vm == null || vm.getPlayer() == null) {
-                    throw Mishap.error("hexcasting.error.compare_block_context");
+                    throw Mishap.invalidContext("hexcasting.error.compare_block_context");
                 }
                 Vec3Iota first = stack.pop(Vec3Iota.class);
                 Vec3Iota second = stack.pop(Vec3Iota.class);
@@ -4898,7 +4898,7 @@ throw Mishap.error("hexcasting.error.get_media_context");
         return new HexAction() {
             @Override
             public void execute(CastingStack stack) throws CastingException {
-                throw Mishap.error("hexcasting.error.compare_item_context");
+                throw Mishap.invalidContext("hexcasting.error.compare_item_context");
             }
 
             @Override
