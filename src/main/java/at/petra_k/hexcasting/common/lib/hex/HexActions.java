@@ -1496,7 +1496,22 @@ public static final HexPattern BOOL_IF_PATTERN =
                      // do the same before invoking destroyBlock so protected
                      // blocks are left untouched.
                      && canBreakBlock(player, blockPos, state)) {
-                      player.world.destroyBlock(blockPos, true, player);
+                      final BlockSnapshot before = BlockSnapshot.capture(
+                          player.world, blockPos);
+                      final java.util.Set<java.util.UUID> existingEntities =
+                          snapshotEntityIds(player.world);
+                      if (player.world.destroyBlock(blockPos, true, player)) {
+                          final java.util.List<net.minecraft.entity.item.EntityItem> drops =
+                              findNewItemEntities(player.world, existingEntities);
+                          vm.addRollbackAction(() -> {
+                              for (net.minecraft.entity.item.EntityItem drop : drops) {
+                                  if (drop != null && !drop.isDead) {
+                                      drop.setDead();
+                                  }
+                              }
+                              before.restore();
+                          });
+                      }
                  }
             }
         });
@@ -4529,6 +4544,38 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         for (int i = snapshots.size() - 1; i >= 0; i--) {
             snapshots.get(i).restore();
         }
+    }
+
+    private static java.util.Set<java.util.UUID> snapshotEntityIds(
+        net.minecraft.world.World world) {
+        java.util.Set<java.util.UUID> result = new java.util.HashSet<>();
+        if (world == null) {
+            return result;
+        }
+        for (net.minecraft.entity.Entity entity : world.loadedEntityList) {
+            if (entity != null && entity.getUniqueID() != null) {
+                result.add(entity.getUniqueID());
+            }
+        }
+        return result;
+    }
+
+    private static java.util.List<net.minecraft.entity.item.EntityItem> findNewItemEntities(
+        net.minecraft.world.World world, java.util.Set<java.util.UUID> existingEntities) {
+        java.util.List<net.minecraft.entity.item.EntityItem> result =
+            new java.util.ArrayList<>();
+        if (world == null) {
+            return result;
+        }
+        for (net.minecraft.entity.Entity entity : world.loadedEntityList) {
+            if (entity instanceof net.minecraft.entity.item.EntityItem
+                && entity.getUniqueID() != null
+                && (existingEntities == null
+                    || !existingEntities.contains(entity.getUniqueID()))) {
+                result.add((net.minecraft.entity.item.EntityItem) entity);
+            }
+        }
+        return result;
     }
 
     /** A 1.12 block state plus its optional block-entity NBT. */
