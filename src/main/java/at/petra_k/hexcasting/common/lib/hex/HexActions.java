@@ -1887,7 +1887,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 Iota positionValue = stack.pop();
                 if (!(radiusValue instanceof DoubleIota)) {
                     throw Mishap.invalidIota(radiusValue, 0,
-                        "double.positive.less.equal", 128);
+                        "double.positive");
                 }
                 if (!(positionValue instanceof Vec3Iota)) {
                     throw Mishap.invalidIota(positionValue, 1, "vector");
