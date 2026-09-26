@@ -14,7 +14,16 @@ public interface IotaHolderItem {
 
     default Iota readIota(ItemStack stack) throws CastingException {
         NBTTagCompound tag = readIotaTag(stack);
-        return tag == null ? null : HexIotaTypes.deserialize(tag);
+        return tag == null ? emptyIota(stack) : HexIotaTypes.deserialize(tag);
+    }
+
+    /**
+     * The iota exposed by an empty holder, when the item has a default value.
+     * This mirrors Hex's emptyIota hook without forcing every holder to store
+     * a synthetic NBT payload just to be readable.
+     */
+    default Iota emptyIota(ItemStack stack) {
+        return null;
     }
 
     boolean writeable(ItemStack stack);

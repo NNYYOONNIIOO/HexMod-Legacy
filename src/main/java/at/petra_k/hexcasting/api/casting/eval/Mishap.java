@@ -190,6 +190,12 @@ public class Mishap extends CastingException {
         return displayArgs.clone();
     }
 
+    /** Attach arguments for a detail key that is rendered by MishapFeedback. */
+    public Mishap withDisplayArgs(Object... args) {
+        displayArgs = args == null ? new Object[0] : args.clone();
+        return this;
+    }
+
     /** The registered action path, without the mod namespace. */
     public String getActionName() {
         return actionId == null ? null : actionId.toString();

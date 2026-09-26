@@ -477,7 +477,11 @@ public final class MishapFeedback {
         if (expectedKey == null) {
             return localizeKey(mishap.getErrorKey());
         }
-        String expected = localizeKey(expectedKey);
+        String expected = expectedKey.endsWith("iota.readonly")
+            && mishap.getDisplayArgs().length > 0
+            ? I18n.translateToLocalFormatted(expectedKey,
+                mishap.getDisplayArgs())
+            : localizeKey(expectedKey);
         if (mishap.getKind() == Mishap.Kind.LACKING_HOTBAR_ITEM) {
             return I18n.translateToLocalFormatted(
                 "hexcasting.mishap.bad_item.hotbar", expected);
@@ -633,6 +637,9 @@ public final class MishapFeedback {
         }
         if (errorKey.endsWith("data_holder_not_writable")) {
             return "hexcasting.mishap.bad_item.iota.write";
+        }
+        if (errorKey.endsWith("data_holder_readonly")) {
+            return "hexcasting.mishap.bad_item.iota.readonly";
         }
         return null;
     }
