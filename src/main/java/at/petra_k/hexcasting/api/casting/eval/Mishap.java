@@ -398,14 +398,17 @@ public class Mishap extends CastingException {
     public Mishap withExecutionContext(HexPattern pattern, ResourceLocation actionId,
                                       EntityPlayer caster, int parenthesisDepth,
                                       int operation) {
+        boolean attachedNewContext = !executionContextAttached;
         if (pattern != null) {
             if (this.pattern == null) {
                 this.pattern = pattern;
+                attachedNewContext = true;
             }
         }
         if (actionId != null) {
             if (this.actionId == null) {
                 this.actionId = actionId;
+                attachedNewContext = true;
             }
         }
         if (caster != null) {
@@ -418,13 +421,18 @@ public class Mishap extends CastingException {
                 this.casterX = caster.posX;
                 this.casterY = caster.posY;
                 this.casterZ = caster.posZ;
+                attachedNewContext = true;
             }
         }
         if (targetEntity != null && this.caster != null
             && Double.isNaN(targetDistance)) {
             targetDistance = this.caster.getDistance(targetEntity);
         }
-        if (this.pattern != null || this.actionId != null || this.caster != null) {
+        // Item and block entry points may pass a typed Mishap through this
+        // method after the VM already attached its real counters.  Do not
+        // replace those counters with the boundary's default zeroes.
+        if (attachedNewContext
+            && (this.pattern != null || this.actionId != null || this.caster != null)) {
             this.parenthesisDepth = Math.max(0, parenthesisDepth);
             this.operation = Math.max(0, operation);
             this.executionContextAttached = true;
