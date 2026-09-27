@@ -2862,9 +2862,6 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     throw Mishap.badOffhandItem("hexcasting.error.erase_holder");
                 }
                 long count = Math.max(1L, (long) target.getCount());
-                if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
-                    throw Mishap.invalidValue("hexcasting.error.erase_cost");
-                }
                 final net.minecraft.item.ItemStack targetBefore = target.copy();
                 vm.consumeMedia(count * MediaConstants.DUST_UNIT);
                 vm.addRollbackAction(() ->
