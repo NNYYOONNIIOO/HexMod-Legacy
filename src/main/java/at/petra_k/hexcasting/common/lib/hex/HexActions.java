@@ -5340,7 +5340,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             return false;
         }
         boolean drainedAny = false;
-        net.minecraftforge.fluids.capability.IFluidTankProperties[] tanks =
+                net.minecraftforge.fluids.capability.IFluidTankProperties[] tanks =
             handler.getTankProperties();
         if (tanks != null) {
             for (net.minecraftforge.fluids.capability.IFluidTankProperties tank : tanks) {
@@ -5350,13 +5350,13 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     continue;
                 }
                 net.minecraftforge.fluids.FluidStack drained =
-                    handler.drain(contents, true);
+                    handler.drain(contents, false);
                 drainedAny |= drained != null && drained.amount > 0;
             }
         }
         if (!drainedAny) {
             net.minecraftforge.fluids.FluidStack drained =
-                handler.drain(Integer.MAX_VALUE, true);
+                handler.drain(Integer.MAX_VALUE, false);
             drainedAny = drained != null && drained.amount > 0;
         }
         return drainedAny;
