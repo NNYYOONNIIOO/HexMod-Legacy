@@ -5340,7 +5340,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             return false;
         }
         boolean drainedAny = false;
-                net.minecraftforge.fluids.capability.IFluidTankProperties[] tanks =
+        net.minecraftforge.fluids.capability.IFluidTankProperties[] tanks =
             handler.getTankProperties();
         if (tanks != null) {
             for (net.minecraftforge.fluids.capability.IFluidTankProperties tank : tanks) {
