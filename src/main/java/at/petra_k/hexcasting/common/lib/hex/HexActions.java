@@ -232,7 +232,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_WEST, "edqde");
     public static final HexAction APPEND = register(APPEND_ID, APPEND_PATTERN, stack -> {
         Iota value = stack.pop();
-        ListIota list = stack.pop(ListIota.class);
+        ListIota list = stack.pop(ListIota.class, 1);
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>(list.getItems());
         items.add(value);
         stack.push(new ListIota(items));
@@ -261,8 +261,8 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern INDEX_PATTERN =
         pattern(HexDir.NORTH_WEST, "deeed");
     public static final HexAction INDEX = register(INDEX_ID, INDEX_PATTERN, stack -> {
-        DoubleIota indexIota = stack.pop(DoubleIota.class);
-        ListIota list = stack.pop(ListIota.class);
+        DoubleIota indexIota = stack.pop(DoubleIota.class, 0);
+        ListIota list = stack.pop(ListIota.class, 1);
         int index = requireRoundedInteger(indexIota);
         if (index < 0 || index >= list.getItems().size()) {
             stack.push(new NullIota());
@@ -513,9 +513,9 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern CONSTRUCT_VEC_PATTERN =
         pattern(HexDir.EAST, "eqqqqq");
     public static final HexAction CONSTRUCT_VEC = register(CONSTRUCT_VEC_ID, CONSTRUCT_VEC_PATTERN, stack -> {
-        double z = stack.pop(DoubleIota.class).getValue();
-        double y = stack.pop(DoubleIota.class).getValue();
-        double x = stack.pop(DoubleIota.class).getValue();
+        double z = stack.pop(DoubleIota.class, 0).getValue();
+        double y = stack.pop(DoubleIota.class, 1).getValue();
+        double x = stack.pop(DoubleIota.class, 2).getValue();
         stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(x, y, z)));
     });
 
@@ -562,7 +562,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.EAST, "dedqde");
     public static final HexAction INDEX_OF = register(INDEX_OF_ID, INDEX_OF_PATTERN, stack -> {
         Iota value = stack.pop();
-        ListIota list = stack.pop(ListIota.class);
+        ListIota list = stack.pop(ListIota.class, 1);
         int index = -1;
         for (int i = 0; i < list.getItems().size(); i++) {
             if (Iota.tolerates(list.getItems().get(i), value)) {
@@ -579,8 +579,8 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern REMOVE_FROM_PATTERN =
         pattern(HexDir.SOUTH_WEST, "edqdewaqa");
     public static final HexAction REMOVE_FROM = register(REMOVE_FROM_ID, REMOVE_FROM_PATTERN, stack -> {
-        DoubleIota indexIota = stack.pop(DoubleIota.class);
-        ListIota list = stack.pop(ListIota.class);
+        DoubleIota indexIota = stack.pop(DoubleIota.class, 0);
+        ListIota list = stack.pop(ListIota.class, 1);
         int index = requireRoundedInteger(indexIota);
         if (index < 0 || index >= list.getItems().size()) {
             stack.push(list);
@@ -597,9 +597,9 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern SLICE_PATTERN =
         pattern(HexDir.NORTH_WEST, "qaeaqwded");
     public static final HexAction SLICE = register(SLICE_ID, SLICE_PATTERN, stack -> {
-        DoubleIota index1Iota = stack.pop(DoubleIota.class);
-        DoubleIota index0Iota = stack.pop(DoubleIota.class);
-        ListIota list = stack.pop(ListIota.class);
+        DoubleIota index1Iota = stack.pop(DoubleIota.class, 0);
+        DoubleIota index0Iota = stack.pop(DoubleIota.class, 1);
+        ListIota list = stack.pop(ListIota.class, 2);
         int index0 = requireInteger(index0Iota, list.getItems().size(), 1);
         int index1 = requireInteger(index1Iota, list.getItems().size(), 0);
         if (index0 == index1) {
@@ -618,8 +618,8 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_WEST, "wqaeaqw");
     public static final HexAction REPLACE = register(REPLACE_ID, REPLACE_PATTERN, stack -> {
         Iota value = stack.pop();
-        int index = requireInteger(stack.pop(DoubleIota.class), Integer.MAX_VALUE, 1);
-        ListIota list = stack.pop(ListIota.class);
+        int index = requireInteger(stack.pop(DoubleIota.class, 1), Integer.MAX_VALUE, 1);
+        ListIota list = stack.pop(ListIota.class, 2);
         if (index >= list.getItems().size()) {
             throw Mishap.invalidValue("hexcasting.error.list_index_out_of_bounds");
         }
@@ -988,7 +988,7 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.SOUTH_EAST, "ddewedd");
     public static final HexAction CONSTRUCT = register(CONSTRUCT_ID, CONSTRUCT_PATTERN, stack -> {
         Iota value = stack.pop();
-        ListIota list = stack.pop(ListIota.class);
+        ListIota list = stack.pop(ListIota.class, 1);
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>();
         items.add(value);
         items.addAll(list.getItems());
@@ -1532,8 +1532,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.raycast_context");
                 }
-                Vec3Iota direction = stack.pop(Vec3Iota.class);
-                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                Vec3Iota direction = stack.pop(Vec3Iota.class, 0);
+                Vec3Iota origin = stack.pop(Vec3Iota.class, 1);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
@@ -1576,8 +1576,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.raycast_axis_context");
                 }
-                Vec3Iota direction = stack.pop(Vec3Iota.class);
-                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                Vec3Iota direction = stack.pop(Vec3Iota.class, 0);
+                Vec3Iota origin = stack.pop(Vec3Iota.class, 1);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
@@ -1621,8 +1621,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                 if (caster == null) {
                     throw Mishap.invalidContext("hexcasting.error.raycast_entity_context");
                 }
-                Vec3Iota direction = stack.pop(Vec3Iota.class);
-                Vec3Iota origin = stack.pop(Vec3Iota.class);
+                Vec3Iota direction = stack.pop(Vec3Iota.class, 0);
+                Vec3Iota origin = stack.pop(Vec3Iota.class, 1);
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, caster, start, "hexcasting.error.raycast_entity_range");
@@ -2084,8 +2084,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.compare_entity_context");
                 }
-                EntityIota right = stack.pop(EntityIota.class);
-                EntityIota left = stack.pop(EntityIota.class);
+                EntityIota right = stack.pop(EntityIota.class, 0);
+                EntityIota left = stack.pop(EntityIota.class, 1);
                 net.minecraft.entity.Entity rightEntity = resolveEntity(right, vm);
                 net.minecraft.entity.Entity leftEntity = resolveEntity(left, vm);
                 requireEntityInRange(vm, vm.getPlayer(), rightEntity,
@@ -4367,8 +4367,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 // The arguments are [media item entity, program list].  The
                 // list is on top of the casting stack, so pop it before the
                 // entity, matching the argument order used by modern Hex.
-                ListIota spell = stack.pop(ListIota.class);
-                EntityIota entityIota = stack.pop(EntityIota.class);
+                ListIota spell = stack.pop(ListIota.class, 0);
+                EntityIota entityIota = stack.pop(EntityIota.class, 1);
                 net.minecraft.entity.Entity source = resolveEntity(entityIota, vm);
                 if (!(source instanceof net.minecraft.entity.item.EntityItem)) {
                     throw Mishap.badEntity(mediaErrorKey).withTarget(source);
@@ -4473,8 +4473,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.akashic_context");
                 }
-                PatternIota key = stack.pop(PatternIota.class);
-                Vec3Iota position = stack.pop(Vec3Iota.class);
+                PatternIota key = stack.pop(PatternIota.class, 0);
+                Vec3Iota position = stack.pop(Vec3Iota.class, 1);
                 net.minecraft.util.math.Vec3d rawPosition = position.getValue();
                 vm.recordMishapLocation(rawPosition.x, rawPosition.y, rawPosition.z,
                     vm.getPlayer().world.provider == null
@@ -4517,8 +4517,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     throw Mishap.invalidContext("hexcasting.error.akashic_context");
                 }
                 Iota value = stack.pop();
-                PatternIota key = stack.pop(PatternIota.class);
-                Vec3Iota position = stack.pop(Vec3Iota.class);
+                PatternIota key = stack.pop(PatternIota.class, 1);
+                Vec3Iota position = stack.pop(Vec3Iota.class, 2);
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 requireVecInRange(vm, player, position.getValue(),
                     "hexcasting.error.akashic_write_range");
@@ -4922,8 +4922,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.compare_block_context");
                 }
-                Vec3Iota first = stack.pop(Vec3Iota.class);
-                Vec3Iota second = stack.pop(Vec3Iota.class);
+                Vec3Iota first = stack.pop(Vec3Iota.class, 0);
+                Vec3Iota second = stack.pop(Vec3Iota.class, 1);
                 net.minecraft.entity.player.EntityPlayer player = vm.getPlayer();
                 net.minecraft.util.math.BlockPos firstPos = blockPosition(
                     vm, player, first, "hexcasting.error.compare_block_range");

@@ -52,10 +52,24 @@ public final class CastingStack {
     }
 
     public <T extends Iota> T pop(Class<T> expected) throws CastingException {
+        return pop(expected, 0);
+    }
+
+    /**
+     * Pop a typed argument and retain the argument's position for a Mishap.
+     *
+     * <p>The reverse index is counted from the top of the complete action
+     * argument slice after the VM restores the failed image. This matches the
+     * modern action helpers: the top argument is index {@code 0}, the next is
+     * {@code 1}, and so on.</p>
+     */
+    public <T extends Iota> T pop(Class<T> expected, int reverseIndex)
+        throws CastingException {
         Iota value = pop();
         if (!expected.isInstance(value)) {
             values.add(value);
-            throw Mishap.invalidIota(value, 0, expectedName(expected));
+            throw Mishap.invalidIota(value, Math.max(0, reverseIndex),
+                expectedName(expected));
         }
         return expected.cast(value);
     }
