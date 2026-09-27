@@ -1544,12 +1544,11 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
-                if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
+                if (!isFiniteVector(vector)) {
                     throw Mishap.invalidValue("hexcasting.error.raycast_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = start.add(
-                    vector.normalize().scale(RAYCAST_DISTANCE));
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1561,7 +1560,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 } else {
                     net.minecraft.util.math.BlockPos pos = hit.getBlockPos();
                     stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                        pos.getX(), pos.getY(), pos.getZ())));
+                        pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D)));
                 }
             }
         });
@@ -1588,12 +1587,11 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d start = origin.getValue();
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
-                if (!isFiniteVector(vector) || vector.lengthVector() == 0.0D) {
+                if (!isFiniteVector(vector)) {
                     throw Mishap.invalidValue("hexcasting.error.raycast_axis_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = start.add(
-                    vector.normalize().scale(RAYCAST_DISTANCE));
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1634,13 +1632,12 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, caster, start, "hexcasting.error.raycast_entity_range");
                 double length = vector.lengthVector();
-                if (!isFiniteVector(vector) || length == 0.0D
+                if (!isFiniteVector(vector)
                     || Double.isNaN(length) || Double.isInfinite(length)) {
                     throw Mishap.invalidValue("hexcasting.error.raycast_entity_zero");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = start.add(
-                    vector.scale(RAYCAST_DISTANCE / length));
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
                 net.minecraft.util.math.AxisAlignedBB search = new net.minecraft.util.math.AxisAlignedBB(
                     Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z),
                     Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z))
@@ -5152,6 +5149,17 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             && !Double.isNaN(vector.x) && !Double.isInfinite(vector.x)
             && !Double.isNaN(vector.y) && !Double.isInfinite(vector.y)
             && !Double.isNaN(vector.z) && !Double.isInfinite(vector.z);
+    }
+
+    /** Match the modern raycast helper's zero-vector normalization behavior. */
+    private static net.minecraft.util.math.Vec3d raycastEnd(
+        net.minecraft.util.math.Vec3d origin,
+        net.minecraft.util.math.Vec3d direction) {
+        double length = direction.lengthVector();
+        if (length < 1.0E-4D) {
+            return origin;
+        }
+        return origin.add(direction.scale(RAYCAST_DISTANCE / length));
     }
 
     private static boolean isVecInRange(
