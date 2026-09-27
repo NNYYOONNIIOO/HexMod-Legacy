@@ -598,7 +598,10 @@ public class Mishap extends CastingException {
             case BAD_CASTER:
                 return "hexcasting.mishap.bad_caster";
             case NOT_ENOUGH_MEDIA:
-                return "hexcasting.error.not_enough_media";
+                // Keep the player-facing message used by MishapNotEnoughMedia
+                // in modern Hex.  The generic error key is retained only for
+                // legacy exception classification.
+                return "hexcasting.message.cant_overcast";
             case NOT_ENOUGH_ARGUMENTS:
                 return "hexcasting.error.stack_underflow";
             case PERMISSION_DENIED:
