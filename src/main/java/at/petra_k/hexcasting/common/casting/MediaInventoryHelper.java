@@ -358,7 +358,13 @@ public final class MediaInventoryHelper {
 
     /** Restore the mutable fields of an ItemStack without replacing its slot object. */
     public static void restoreStack(ItemStack target, ItemStack before) {
-        if (target == null || before == null || before.isEmpty()) {
+        if (target == null || before == null) {
+            return;
+        }
+        if (before.isEmpty()) {
+            target.setCount(0);
+            target.setItemDamage(0);
+            target.setTagCompound(null);
             return;
         }
         target.setCount(before.getCount());
