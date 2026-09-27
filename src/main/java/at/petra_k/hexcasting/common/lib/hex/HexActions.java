@@ -1185,18 +1185,21 @@ public static final HexPattern BOOL_IF_PATTERN =
                     }
                     net.minecraft.block.state.IBlockState state =
                         player.world.getBlockState(current);
-                    if (!canBreakBlock(player, current, state)) {
-                        continue;
-                    }
-                    BlockSnapshot before = BlockSnapshot.capture(
-                        player.world, current);
-                    if (extinguishBlock(player.world, current)) {
-                        changedBlocks.add(before);
-                        player.world.spawnParticle(
-                            net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
-                            current.getX() + 0.5D, current.getY() + 0.5D,
-                            current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
-                        successes++;
+                    // The search is a flood fill over editable positions, not
+                    // over extinguished blocks.  A non-breakable or already
+                    // unlit block must not stop the search from reaching fire
+                    // on the other side of it.
+                    if (canBreakBlock(player, current, state)) {
+                        BlockSnapshot before = BlockSnapshot.capture(
+                            player.world, current);
+                        if (extinguishBlock(player.world, current)) {
+                            changedBlocks.add(before);
+                            player.world.spawnParticle(
+                                net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL,
+                                current.getX() + 0.5D, current.getY() + 0.5D,
+                                current.getZ() + 0.5D, 0.0D, 0.05D, 0.0D);
+                            successes++;
+                        }
                     }
                     // The upstream action continues the flood from every
                     // editable position, even when that position was not
