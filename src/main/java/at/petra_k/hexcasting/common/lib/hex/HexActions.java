@@ -530,28 +530,36 @@ public static final HexPattern BOOL_IF_PATTERN =
         stack.push(new DoubleIota(value.y));
         stack.push(new DoubleIota(value.z));
     });
-    /** Coerce a vector to the nearest signed axial unit vector. */
+    /** Coerce a number or vector to its nearest signed axial form. */
     public static final ResourceLocation COERCE_AXIAL_ID =
         new ResourceLocation(HexAPI.MOD_ID, "coerce_axial");
     public static final HexPattern COERCE_AXIAL_PATTERN =
         pattern(HexDir.NORTH_WEST, "qqqqqaww");
     public static final HexAction COERCE_AXIAL = register(COERCE_AXIAL_ID, COERCE_AXIAL_PATTERN, stack -> {
-        net.minecraft.util.math.Vec3d value = stack.pop(Vec3Iota.class).getValue();
-        double x = Math.abs(value.x);
-        double y = Math.abs(value.y);
-        double z = Math.abs(value.z);
-        if (x == 0.0D && y == 0.0D && z == 0.0D) {
-            throw Mishap.invalidValue("hexcasting.error.coerce_axial_zero");
+        Iota value = stack.pop();
+        if (value instanceof DoubleIota) {
+            stack.push(new DoubleIota(Math.signum(((DoubleIota) value).getValue())));
+            return;
         }
-        if (x >= y && x >= z) {
+        if (!(value instanceof Vec3Iota)) {
+            throw Mishap.invalidIota(value, 0, "numvec");
+        }
+
+        net.minecraft.util.math.Vec3d vector = ((Vec3Iota) value).getValue();
+        double x = Math.abs(vector.x);
+        double y = Math.abs(vector.y);
+        double z = Math.abs(vector.z);
+        if (x == 0.0D && y == 0.0D && z == 0.0D) {
+            stack.push(new Vec3Iota(vector));
+        } else if (x >= y && x >= z) {
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                Math.copySign(1.0D, value.x), 0.0D, 0.0D)));
+                Math.copySign(1.0D, vector.x), 0.0D, 0.0D)));
         } else if (y >= z) {
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                0.0D, Math.copySign(1.0D, value.y), 0.0D)));
+                0.0D, Math.copySign(1.0D, vector.y), 0.0D)));
         } else {
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                0.0D, 0.0D, Math.copySign(1.0D, value.z))));
+                0.0D, 0.0D, Math.copySign(1.0D, vector.z))));
         }
     });
 
