@@ -777,9 +777,10 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexAction SWIZZLE = register(SWIZZLE_ID, SWIZZLE_PATTERN, stack -> {
         java.util.List<Iota> before = stack.snapshot();
         try {
-            long code = requireNonNegativeLong(stack.pop(DoubleIota.class));
+            DoubleIota codeValue = stack.pop(DoubleIota.class);
+            long code = requireNonNegativeLong(codeValue);
             java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
-            int width = swizzleWidth(code);
+            int width = swizzleWidth(codeValue);
             if (width > values.size()) {
                 // The code itself counts as an argument in the modern
                 // operation, so report the full required and available stack
@@ -1034,14 +1035,15 @@ public static final HexPattern BOOL_IF_PATTERN =
     }
 
     /** Return the number of factorial strides required by the code. */
-    private static int swizzleWidth(long code) throws CastingException {
+    private static int swizzleWidth(DoubleIota codeValue) throws CastingException {
+        long code = Math.round(codeValue.getValue());
         long factorial = 1L;
         long multiplier = 1L;
         int width = 0;
         while (factorial <= code) {
             width++;
             if (width >= 20 || factorial > Long.MAX_VALUE / multiplier) {
-                throw Mishap.invalidValue("hexcasting.error.swizzle_too_large");
+                throw Mishap.invalidIota(codeValue, 0, "int.positive");
             }
             factorial *= multiplier;
             multiplier++;
