@@ -626,11 +626,9 @@ public static final HexPattern BOOL_IF_PATTERN =
         pattern(HexDir.NORTH_WEST, "wqaeaqw");
     public static final HexAction REPLACE = register(REPLACE_ID, REPLACE_PATTERN, stack -> {
         Iota value = stack.pop();
-        int index = requireInteger(stack.pop(DoubleIota.class, 1), Integer.MAX_VALUE, 1);
+        DoubleIota indexIota = stack.pop(DoubleIota.class, 1);
         ListIota list = stack.pop(ListIota.class, 2);
-        if (index >= list.getItems().size()) {
-            throw Mishap.invalidValue("hexcasting.error.list_index_out_of_bounds");
-        }
+        int index = requireListIndex(indexIota, list.getItems().size(), 1);
         java.util.ArrayList<Iota> items = new java.util.ArrayList<>(list.getItems());
         items.set(index, value);
         stack.push(new ListIota(items));
@@ -5695,6 +5693,20 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             || rounded > Integer.MAX_VALUE) {
             throw Mishap.invalidIota(value, reverseIndex,
                 "int.positive.less.equal", maxInclusive);
+        }
+        return (int) rounded;
+    }
+
+    private static int requireListIndex(DoubleIota value, int size,
+                                        int reverseIndex) throws CastingException {
+        double raw = value.getValue();
+        long rounded = Math.round(raw);
+        if (Double.isNaN(raw) || Double.isInfinite(raw)
+            || Math.abs(raw - rounded) > DoubleIota.TOLERANCE
+            || rounded < 0L || rounded >= size
+            || rounded > Integer.MAX_VALUE) {
+            throw Mishap.invalidIota(value, reverseIndex,
+                "int.positive.less.equal", Math.max(0, size));
         }
         return (int) rounded;
     }
