@@ -2173,6 +2173,11 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                     MediaInventoryHelper.snapshotEntity(droppedEntity);
                 final net.minecraft.item.ItemStack holderBefore = offHand.copy();
                 final long holderMediaBefore = holder.getMedia();
+                vm.addRollbackAction(() -> {
+                    sourceBefore.restore();
+                    MediaInventoryHelper.restoreStack(offHand, holderBefore);
+                    holder.setMedia(holderMediaBefore);
+                });
                 // The modern rendered spell does not fail when the receiver
                 // is full. It extracts only up to the currently available
                 // space; a discrete source may still be consumed as a whole
@@ -2185,11 +2190,6 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
                         holder.insertMedia(transferred, false);
                     }
                 }
-                vm.addRollbackAction(() -> {
-                    sourceBefore.restore();
-                    MediaInventoryHelper.restoreStack(offHand, holderBefore);
-                    holder.setMedia(holderMediaBefore);
-                });
             }
         });
 
