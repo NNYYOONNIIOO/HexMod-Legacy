@@ -92,8 +92,7 @@ public final class ParenControlAction implements HexAction {
         if (Double.isNaN(raw) || Double.isInfinite(raw) || raw != Math.rint(raw)
             || raw < 0.0D || raw > Iota.MAX_SERIALIZATION_TOTAL) {
             stack.push(value);
-            throw Mishap.invalidValue("hexcasting.error.non_negative_integer",
-                "Expected a non-negative integer parenthesis count but found " + raw);
+            throw Mishap.invalidIota(value, 0, "int.positive");
         }
         return (int) raw;
     }
