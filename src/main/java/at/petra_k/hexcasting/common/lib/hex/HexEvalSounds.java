@@ -40,7 +40,7 @@ public final class HexEvalSounds {
         "break_block", "raycast", "raycast_axis", "raycast_entity",
         "conjure_block", "conjure_light", "flight", "flight/can_fly",
         "flight/range", "flight/time", "colorize", "brainsweep",
-        "teleport/great", "craft_battery", "craft/cypher", "craft/trinket",
+        "teleport/great", "craft/battery", "craft/cypher", "craft/trinket",
         "craft/artifact", "edify", "erase", "place_block", "bonemeal",
         "lightning", "blink", "create_water", "create_lava", "destroy_water",
         "potion_absorption", "potion_haste", "potion_levitation",
