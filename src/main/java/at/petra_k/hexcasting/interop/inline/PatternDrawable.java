@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.interop.inline;
 
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 import mezz.jei.api.gui.IDrawable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -19,6 +20,7 @@ public final class PatternDrawable implements IDrawable {
     private final ResourceLocation action;
     private final int width;
     private final int height;
+    private boolean strokeOrder;
     private boolean drawDots = true;
 
     public PatternDrawable(ResourceLocation action, int width, int height) {
@@ -29,10 +31,17 @@ public final class PatternDrawable implements IDrawable {
         this.action = action;
         this.width = Math.max(1, width);
         this.height = Math.max(1, height);
+        // The 1.20.1 JEI renderer uses STATIC settings for every action in
+        // the per-world-pattern tag.  The port previously rendered every
+        // icon with readable settings, making great-spell icons appear to
+        // advertise a fixed stroke order.
+        this.strokeOrder = !PerWorldPatternData.isPerWorldAction(action);
     }
 
     public PatternDrawable strokeOrder(boolean enabled) {
-        this.drawDots = enabled;
+        this.strokeOrder = enabled;
+        // The modern JEI drawable changes only the zappy/stroke-order mode;
+        // static previews still retain their pattern dots.
         return this;
     }
 
@@ -61,8 +70,15 @@ public final class PatternDrawable implements IDrawable {
         }
         try {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            HexPatternChatGeometry.drawPreview(pattern, xOffset, yOffset,
-                Math.min(width, height), 255, 0xC80C0A0C, 0xFF333030, drawDots);
+            if (strokeOrder) {
+                HexPatternChatGeometry.drawPreview(pattern, xOffset, yOffset,
+                    Math.min(width, height), 255,
+                    0xC80C0A0C, 0xFF333030, drawDots);
+            } else {
+                HexPatternChatGeometry.drawStaticPreview(pattern, xOffset, yOffset,
+                    Math.min(width, height), 255,
+                    0xC80C0A0C, 0xFF333030, drawDots);
+            }
         } finally {
             GlStateManager.resetColor();
         }
