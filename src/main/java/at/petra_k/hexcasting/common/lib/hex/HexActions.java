@@ -4197,11 +4197,15 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 if (vm == null || vm.getPlayer() == null) {
                     throw Mishap.invalidContext("hexcasting.error.teleport_great_context");
                 }
-                Vec3Iota deltaIota = stack.pop(Vec3Iota.class);
+                Iota deltaValue = stack.pop();
                 Iota entityValue = stack.pop();
+                if (!(deltaValue instanceof Vec3Iota)) {
+                    throw Mishap.invalidIota(deltaValue, 0, "vector");
+                }
                 if (!(entityValue instanceof EntityIota)) {
                     throw Mishap.invalidIota(entityValue, 1, "entity");
                 }
+                Vec3Iota deltaIota = (Vec3Iota) deltaValue;
                 EntityIota entityIota = (EntityIota) entityValue;
                 net.minecraft.entity.Entity target = resolveEntity(entityIota, vm);
                 requireEntityInRange(vm, vm.getPlayer(), target,
@@ -4218,12 +4222,10 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         }
                     }
                 }
-                if (deltaIota == null) {
-                    throw Mishap.invalidValue("hexcasting.error.teleport_great_expected");
-                }
                 net.minecraft.util.math.Vec3d delta = deltaIota.getValue();
                 if (!isFiniteVector(delta)) {
-                    throw Mishap.invalidValue("hexcasting.error.teleport_great_position");
+                    throw Mishap.badLocation("hexcasting.error.teleport_great_position")
+                        .withLocationType("out_of_world");
                 }
                 net.minecraft.util.math.Vec3d destination = new net.minecraft.util.math.Vec3d(
                     target.posX + delta.x, target.posY + delta.y,
