@@ -73,10 +73,10 @@ public final class TileEntityImpetus extends TileEntity
             }
             if (stack.getItem() instanceof ItemCreativeUnlocker) {
                 ItemStack remainder = stack.copy();
+                remainder.shrink(1);
                 if (!simulate) {
                     media = -1L;
                     markDirty();
-                    remainder.shrink(1);
                 }
                 return remainder;
             }
@@ -91,14 +91,16 @@ public final class TileEntityImpetus extends TileEntity
                 return stack.copy();
             }
             ItemStack remainder = stack.copy();
+            long extracted = MediaInventoryHelper.extractMediaAtMost(
+                remainder, accepted, true, false);
+            // Static media cannot be partially withdrawn.  Do not consume a
+            // whole source item when less than one item fits.  Extraction is
+            // performed on the copied stack so simulation returns the exact
+            // remainder without mutating the caller's stack.
+            if (extracted <= 0L || extracted > capacity) {
+                return stack.copy();
+            }
             if (!simulate) {
-                long extracted = MediaInventoryHelper.extractMediaAtMost(
-                    remainder, accepted, true, false);
-                // Static media cannot be partially withdrawn.  Do not consume
-                // a whole source item when less than one item fits.
-                if (extracted <= 0L || extracted > capacity) {
-                    return stack.copy();
-                }
                 media += extracted;
                 markDirty();
             }
