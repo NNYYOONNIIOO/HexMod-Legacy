@@ -3,11 +3,21 @@ package at.petra_k.hexcasting.common.capability;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.casting.eval.CastingException;
+import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
+import at.petra_k.hexcasting.api.item.HexHolderItem;
+import at.petra_k.hexcasting.api.item.VariantItem;
+import at.petra_k.hexcasting.api.item.PigmentItem;
+import at.petra_k.hexcasting.common.entity.EntityWallScroll;
+import at.petra_k.hexcasting.api.misc.MediaConstants;
+import at.petra_k.hexcasting.common.misc.AmethystCompat;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.init.Items;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -44,13 +54,85 @@ public final class HexCapabilityHandler {
             event.addCapability(HexAPI.modLoc("media_holder"),
                 new HexItemCapabilityProvider<>(HexCapabilities.MEDIA,
                     new HexItemMediaHolder(holder, stack)));
+        } else {
+            long worth = staticMediaWorth(stack);
+            if (worth > 0L) {
+                event.addCapability(HexAPI.modLoc("static_media"),
+                    new HexItemCapabilityProvider<>(HexCapabilities.MEDIA,
+                        new HexStaticMediaHolder(stack, worth, staticMediaPriority(stack))));
+            }
         }
         if (stack.getItem() instanceof IotaHolderItem) {
             IotaHolderItem holder = (IotaHolderItem) stack.getItem();
             event.addCapability(HexAPI.modLoc("iota_holder"),
                 new HexItemCapabilityProvider<>(HexCapabilities.IOTA,
                     new HexItemIotaHolder(holder, stack)));
+        } else if (stack.getItem() == Items.PUMPKIN_PIE) {
+            event.addCapability(HexAPI.modLoc("static_iota"),
+                new HexItemCapabilityProvider<>(HexCapabilities.IOTA,
+                    new HexStaticIotaHolder(stack,
+                        value -> new DoubleIota(Math.PI * value.getCount()))));
         }
+        if (stack.getItem() instanceof HexHolderItem) {
+            HexHolderItem holder = (HexHolderItem) stack.getItem();
+            event.addCapability(HexAPI.modLoc("hex_holder"),
+                new HexItemCapabilityProvider<>(HexCapabilities.HEX_HOLDER,
+                    new HexItemHexHolder(holder, stack)));
+        }
+        if (stack.getItem() instanceof VariantItem) {
+            VariantItem variant = (VariantItem) stack.getItem();
+            event.addCapability(HexAPI.modLoc("variant_item"),
+                new HexItemCapabilityProvider<>(HexCapabilities.VARIANT,
+                    new HexItemVariant(variant, stack)));
+        }
+        if (stack.getItem() instanceof PigmentItem) {
+            PigmentItem pigment = (PigmentItem) stack.getItem();
+            event.addCapability(HexAPI.modLoc("pigment"),
+                new HexItemCapabilityProvider<>(HexCapabilities.PIGMENT,
+                    new HexItemPigment(pigment, stack)));
+        }
+    }
+
+    @SubscribeEvent
+    public static void attachEntityCapabilities(AttachCapabilitiesEvent<Entity> event) {
+        Entity entity = event.getObject();
+        if (entity instanceof EntityItem || entity instanceof EntityItemFrame
+            || entity instanceof EntityWallScroll) {
+            event.addCapability(HexAPI.modLoc("entity_iota"),
+                new HexEntityCapabilityProvider(
+                    new HexEntityIotaHolder(entity)));
+        }
+    }
+
+    private static long staticMediaWorth(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || stack.getItem().getRegistryName() == null) {
+            return 0L;
+        }
+        net.minecraft.util.ResourceLocation id = stack.getItem().getRegistryName();
+        if ("minecraft".equals(id.getResourceDomain())
+            && "amethyst_shard".equals(id.getResourcePath())) {
+            return MediaConstants.SHARD_UNIT;
+        }
+        net.minecraft.util.ResourceLocation selected = AmethystCompat.shardId();
+        if (selected != null && selected.equals(id)) {
+            return MediaConstants.SHARD_UNIT;
+        }
+        if (AmethystCompat.legacyShardId().equals(id) && selected == null) {
+            return MediaConstants.SHARD_UNIT;
+        }
+        if (HexAPI.MOD_ID.equals(id.getResourceDomain())
+            && "quenched_allay".equals(id.getResourcePath())) {
+            return MediaConstants.QUENCHED_BLOCK_UNIT;
+        }
+        return 0L;
+    }
+
+    private static int staticMediaPriority(ItemStack stack) {
+        net.minecraft.util.ResourceLocation id = stack.getItem().getRegistryName();
+        return id != null && HexAPI.MOD_ID.equals(id.getResourceDomain())
+            && "quenched_allay".equals(id.getResourcePath())
+            ? (int) at.petra_k.hexcasting.api.addldata.ADMediaHolder.QUENCHED_ALLAY_PRIORITY
+            : (int) at.petra_k.hexcasting.api.addldata.ADMediaHolder.AMETHYST_SHARD_PRIORITY;
     }
 
     /** Preserve the casting stack when Forge creates a replacement player. */

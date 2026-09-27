@@ -1,7 +1,6 @@
 package at.petra_k.hexcasting.common.world;
 
 import at.petra_k.hexcasting.api.casting.math.HexAngle;
-import at.petra_k.hexcasting.api.casting.math.HexCoord;
 import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -124,33 +123,13 @@ public final class PerWorldPatternData extends WorldSavedData {
     }
 
     /**
-     * Resolve both the canonical per-world stroke order and the shape shown in
-     * the guide.  Hex's guide intentionally hides stroke order for great
-     * spells: it displays the prototype shape, while the world stores one
-     * Euler traversal of that same line graph.  Matching only the compact turn
-     * signature therefore made the guide drawing report "no action" even
-     * though it was the correct great-spell shape.
+     * Resolve a drawn pattern using only the exact per-world angle signature.
+     * The prototype and every other Euler traversal are intentionally
+     * rejected; accepting them would make the great spell ignore its stroke
+     * order again.
      */
     public static synchronized ResourceLocation actionFor(World world, HexPattern pattern) {
-        if (pattern == null) {
-            return null;
-        }
-        ResourceLocation exact = actionFor(world, pattern.anglesSignature());
-        if (exact != null) {
-            return exact;
-        }
-
-        String shape = shapeKey(pattern);
-        if (shape.isEmpty()) {
-            return null;
-        }
-        for (ResourceLocation action : PER_WORLD_ACTIONS) {
-            HexPattern prototype = HexActionRegistry.getPattern(action);
-            if (prototype != null && shape.equals(shapeKey(prototype))) {
-                return action;
-            }
-        }
-        return null;
+        return pattern == null ? null : actionFor(world, pattern.anglesSignature());
     }
 
     /** Return the canonical, world-specific pattern for an action id. */
@@ -252,47 +231,6 @@ public final class PerWorldPatternData extends WorldSavedData {
         }
         return oldByAction == null || oldBySignature == null
             || !oldByAction.equals(entry) || !oldBySignature.equals(entry);
-    }
-
-    /**
-     * Canonical, translation-independent representation of the undirected
-     * line graph traced by a pattern.  Different Euler stroke orders then
-     * produce the same key, while rotations remain distinct as in Hex.
-     */
-    private static String shapeKey(HexPattern pattern) {
-        if (pattern == null || pattern.directions().isEmpty()) {
-            return "";
-        }
-        ArrayList<HexCoord> points = new ArrayList<>();
-        HexCoord cursor = HexCoord.Origin;
-        points.add(cursor);
-        for (HexDir direction : pattern.directions()) {
-            cursor = cursor.plus(direction);
-            points.add(cursor);
-        }
-
-        int minQ = Integer.MAX_VALUE;
-        int minR = Integer.MAX_VALUE;
-        for (HexCoord point : points) {
-            minQ = Math.min(minQ, point.getQ());
-            minR = Math.min(minR, point.getR());
-        }
-
-        ArrayList<String> edges = new ArrayList<>(points.size() - 1);
-        for (int i = 0; i + 1 < points.size(); i++) {
-            HexCoord first = points.get(i);
-            HexCoord second = points.get(i + 1);
-            String firstKey = (first.getQ() - minQ) + ":" + (first.getR() - minR);
-            String secondKey = (second.getQ() - minQ) + ":" + (second.getR() - minR);
-            if (firstKey.compareTo(secondKey) > 0) {
-                String swap = firstKey;
-                firstKey = secondKey;
-                secondKey = swap;
-            }
-            edges.add(firstKey + "-" + secondKey);
-        }
-        Collections.sort(edges);
-        return String.join(",", edges);
     }
 
     @Override

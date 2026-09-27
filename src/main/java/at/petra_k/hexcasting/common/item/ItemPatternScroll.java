@@ -301,7 +301,18 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
             return;
         }
         ResourceLocation id = getActionId(stack);
-        HexPattern pattern = getPattern(stack, world);
+        if (isCreativeTabPreview(stack)) {
+            // Creative-tab ancient scroll entries intentionally expose only
+            // the spell name.  Do not add the pattern token: the same stack
+            // is also used by the Shift overlay hook.
+            if (id != null) {
+                tooltip.add(I18n.translateToLocal("hexcasting.tooltip.action")
+                    + ": " + localizeAction(id));
+            }
+            return;
+        }
+        // Entries shown directly in the creative tab contain only op_id.
+        HexPattern pattern = getTooltipPattern(stack, world);
         if (pattern == null) {
             if (tag != null && tag.hasKey(TAG_OP_ID, 8)) {
                 tooltip.add(I18n.translateToLocal("hexcasting.tooltip.scroll.pattern_not_loaded"));
@@ -423,6 +434,23 @@ public final class ItemPatternScroll extends Item implements IotaHolderItem {
         }
         ResourceLocation action = getActionId(stack);
         return action == null ? null : HexActionRegistry.getPattern(action, world);
+    }
+
+    /** Whether this is the unmaterialized ancient-scroll entry from the creative tab. */
+    public static boolean isCreativeTabPreview(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        ResourceLocation action = getActionId(stack);
+        return tag != null && tag.hasKey(TAG_OP_ID, 8)
+            && !tag.hasKey(KEY_PATTERN, 10)
+            && PerWorldPatternData.isPerWorldAction(action);
+    }
+
+    /** Pattern used by item previews and tooltips. */
+    public static HexPattern getTooltipPattern(ItemStack stack, World world) {
+        if (isCreativeTabPreview(stack)) {
+            return null;
+        }
+        return getPattern(stack, world);
     }
 
     public static boolean hasPattern(ItemStack stack) {

@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.interop.inline.InlinePatternRenderer;
 import at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemScryingLens;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
@@ -1020,7 +1021,8 @@ private void drawMove(int mouseX, int mouseY) {
         double dx = clampedMouseX - anchorPixel[0];
         double dy = clampedMouseY - anchorPixel[1];
         double hexSize = hexSize();
-        double snapDistance = hexSize * hexSize * SNAP_DISTANCE_FACTOR;
+        double snapDistance = hexSize * hexSize * SNAP_DISTANCE_FACTOR
+            * Math.max(0.5D, Math.min(1.0D, HexConfig.gridSnapThreshold()));
         if (dx * dx + dy * dy < snapDistance) {
             return;
         }

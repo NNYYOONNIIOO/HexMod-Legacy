@@ -2,6 +2,9 @@
   "variants": {
     "normal": {
       "model": "hexcasting:conjured"
+    },
+    "waterlogged=true": {
+      "model": "hexcasting:conjured"
     }
   }
 }

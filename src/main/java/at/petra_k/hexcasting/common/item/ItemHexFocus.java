@@ -8,6 +8,7 @@ import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
+import at.petra_k.hexcasting.api.item.VariantItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -30,7 +31,7 @@ import net.minecraft.util.text.translation.I18n;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** Action-selectable portable casting item for the 1.12.2 port. */
-public final class ItemHexFocus extends Item implements IotaHolderItem {
+public final class ItemHexFocus extends Item implements IotaHolderItem, VariantItem {
     private static final String KEY_SELECTED_ACTION = "selected_action";
     private static final String KEY_SEALED = "sealed";
     private static final String KEY_VARIANT = "variant";
@@ -124,6 +125,21 @@ public final class ItemHexFocus extends Item implements IotaHolderItem {
             stack.setTagCompound(tag);
         }
         tag.setInteger(KEY_VARIANT, Math.max(0, Math.min(7, variant)));
+    }
+
+    @Override
+    public int numVariants() {
+        return 8;
+    }
+
+    @Override
+    public int getVariantValue(ItemStack stack) {
+        return getVariant(stack);
+    }
+
+    @Override
+    public void setVariantValue(ItemStack stack, int variant) {
+        setVariant(stack, variant);
     }
 
     @Override

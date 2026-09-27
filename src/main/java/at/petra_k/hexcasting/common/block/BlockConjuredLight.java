@@ -3,19 +3,24 @@ package at.petra_k.hexcasting.common.block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.MaterialTransparent;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 /** An invisible light source created by Hex Casting. */
 public final class BlockConjuredLight extends BlockConjured {
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     /**
      * A distinct transparent material is required here.  1.12.2's client
      * block-breaking controller treats the exact Material.AIR singleton as
@@ -38,6 +43,45 @@ public final class BlockConjuredLight extends BlockConjured {
         // to remove it; non-collision is handled independently below.
         setHardness(0.0F);
         setResistance(0.0F);
+        setDefaultState(blockState.getBaseState().withProperty(WATERLOGGED, false));
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, WATERLOGGED);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(WATERLOGGED, (meta & 8) != 0);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(WATERLOGGED) ? 8 : 0;
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
+                                            float hitX, float hitY, float hitZ,
+                                            int meta, EntityLivingBase placer) {
+        return getDefaultState().withProperty(WATERLOGGED,
+            world.getBlockState(pos).getMaterial() == Material.WATER);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos,
+                                net.minecraft.block.Block block,
+                                BlockPos fromPos) {
+        if (state.getValue(WATERLOGGED)) {
+            world.scheduleUpdate(pos, Blocks.WATER, Blocks.WATER.tickRate(world));
+        }
+        super.neighborChanged(state, world, pos, block, fromPos);
+    }
+
+    @Override
+    public boolean isTranslucent(IBlockState state) {
+        return true;
     }
 
     @Override

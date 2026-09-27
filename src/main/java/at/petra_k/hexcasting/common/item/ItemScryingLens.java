@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.item;
 
 import baubles.api.IBauble;
 import baubles.api.BaubleType;
+import at.petra_k.hexcasting.common.lib.HexAttributes;
 import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
@@ -74,16 +75,37 @@ public final class ItemScryingLens extends Item implements IBauble {
 
     /** Effective legacy equivalent of HexAttributes.GRID_ZOOM. */
     public static double getGridZoom(EntityPlayer player) {
+        if (isFeebleMind(player)) {
+            return 1.0D;
+        }
+        if (player != null && player.getAttributeMap()
+            .getAttributeInstance(HexAttributes.GRID_ZOOM) != null) {
+            return player.getEntityAttribute(HexAttributes.GRID_ZOOM).getAttributeValue();
+        }
         return isEquipped(player) ? 1.0D + GRID_ZOOM : 1.0D;
     }
 
     /** Effective legacy equivalent of HexAttributes.SCRY_SIGHT. */
     public static double getScrySight(EntityPlayer player) {
+        if (isFeebleMind(player)) {
+            return 0.0D;
+        }
+        if (player != null && player.getAttributeMap()
+            .getAttributeInstance(HexAttributes.SCRY_SIGHT) != null) {
+            return player.getEntityAttribute(HexAttributes.SCRY_SIGHT).getAttributeValue();
+        }
         return isEquipped(player) ? SCRY_SIGHT : 0.0D;
     }
 
     private static boolean isLens(ItemStack stack) {
         return stack != null && !stack.isEmpty()
             && stack.getItem() instanceof ItemScryingLens;
+    }
+
+    private static boolean isFeebleMind(EntityPlayer player) {
+        return player != null && player.getAttributeMap()
+            .getAttributeInstance(HexAttributes.FEEBLE_MIND) != null
+            && player.getEntityAttribute(HexAttributes.FEEBLE_MIND)
+                .getAttributeValue() > 0.0D;
     }
 }

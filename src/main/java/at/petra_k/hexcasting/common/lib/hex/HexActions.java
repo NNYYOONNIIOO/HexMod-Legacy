@@ -15,6 +15,7 @@ import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
 import at.petra_k.hexcasting.common.item.ItemSpellbook;
 import at.petra_k.hexcasting.common.lib.HexItems;
+import at.petra_k.hexcasting.common.lib.HexAttributes;
 import at.petra_k.hexcasting.common.lib.HexSounds;
 import at.petra_k.hexcasting.api.casting.iota.DoubleIota;
 import at.petra_k.hexcasting.api.casting.iota.EntityIota;
@@ -41,6 +42,7 @@ import at.petra_k.hexcasting.common.casting.IotaDataHolder;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.HexBlocks;
 import at.petra_k.hexcasting.common.world.HexEdifiedTreeGenerator;
+import at.petra_k.hexcasting.common.world.SentinelData;
 import at.petra_k.hexcasting.common.effect.HexPigmentSource;
 import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.network.MsgBeepS2C;
@@ -1547,7 +1549,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector,
+                    castingRange(vm.getPlayer()));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1590,7 +1593,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector,
+                    castingRange(vm.getPlayer()));
                 net.minecraft.util.math.RayTraceResult hit = vm.getPlayer().world.rayTraceBlocks(
                     start, end, false, false, false);
                 if (hit == null || hit.typeOfHit != net.minecraft.util.math.RayTraceResult.Type.BLOCK
@@ -1636,7 +1640,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                     throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
-                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
+                net.minecraft.util.math.Vec3d end = raycastEnd(start, vector,
+                    castingRange(vm.getPlayer()));
                 net.minecraft.util.math.AxisAlignedBB search = new net.minecraft.util.math.AxisAlignedBB(
                     Math.min(start.x, end.x), Math.min(start.y, end.y), Math.min(start.z, end.z),
                     Math.max(start.x, end.x), Math.max(start.y, end.y), Math.max(start.z, end.z))
@@ -2075,8 +2080,7 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
             requireEntityInRange(vm, vm.getPlayer(), entity,
                 "hexcasting.error.entity_data_range");
-            stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
-                entity.motionX, entity.motionY, entity.motionZ)));
+            stack.push(new Vec3Iota(HexAPI.getEntityVelocitySpecial(entity)));
             }
         });
 
@@ -2498,6 +2502,9 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
         } else if (entity instanceof net.minecraft.entity.item.EntityItemFrame) {
             result = ((net.minecraft.entity.item.EntityItemFrame) entity)
                 .getDisplayedItem();
+        } else if (entity instanceof at.petra_k.hexcasting.common.entity.EntityWallScroll) {
+            result = ((at.petra_k.hexcasting.common.entity.EntityWallScroll) entity)
+                .getScroll();
         }
         return result;
     }
@@ -5164,12 +5171,74 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
     /** Match the modern raycast helper's zero-vector normalization behavior. */
     private static net.minecraft.util.math.Vec3d raycastEnd(
         net.minecraft.util.math.Vec3d origin,
-        net.minecraft.util.math.Vec3d direction) {
+        net.minecraft.util.math.Vec3d direction,
+        double distance) {
         double length = direction.lengthVector();
         if (length < 1.0E-4D) {
             return origin;
         }
-        return origin.add(direction.scale(RAYCAST_DISTANCE / length));
+        return origin.add(direction.scale(distance / length));
+    }
+
+    private static double castingRange(
+        net.minecraft.entity.player.EntityPlayer player) {
+        double range = ambitRange(player);
+        SentinelData.State sentinel = getActiveSentinel(player);
+        if (sentinel != null) {
+            double sentinelRadius = player.getEntityAttribute(HexAttributes.SENTINEL_RADIUS)
+                .getAttributeValue();
+            if (!Double.isNaN(sentinelRadius) && !Double.isInfinite(sentinelRadius)
+                && sentinelRadius >= 0.0D) {
+                double dx = sentinel.x - player.posX;
+                double dy = sentinel.y - player.posY;
+                double dz = sentinel.z - player.posZ;
+                range = Math.max(range, Math.sqrt(dx * dx + dy * dy + dz * dz)
+                    + sentinelRadius);
+            }
+        }
+        return range;
+    }
+
+    private static double ambitRange(
+        net.minecraft.entity.player.EntityPlayer player) {
+        if (player != null && player.getAttributeMap()
+            .getAttributeInstance(HexAttributes.AMBIT_RADIUS) != null) {
+            double value = player.getEntityAttribute(HexAttributes.AMBIT_RADIUS)
+                .getAttributeValue();
+            if (!Double.isNaN(value) && !Double.isInfinite(value) && value >= 0.0D) {
+                return value;
+            }
+        }
+        return RAYCAST_DISTANCE;
+    }
+
+    private static SentinelData.State getActiveSentinel(
+        net.minecraft.entity.player.EntityPlayer player) {
+        if (player == null || player.world == null) {
+            return null;
+        }
+        SentinelData.State state = SentinelData.get(player.world)
+            .get(player.getUniqueID());
+        return state != null && state.extendedRange
+            && state.dimension == player.dimension ? state : null;
+    }
+
+    private static boolean isInSentinelRange(
+        net.minecraft.entity.player.EntityPlayer player,
+        net.minecraft.util.math.Vec3d position) {
+        SentinelData.State sentinel = getActiveSentinel(player);
+        if (sentinel == null || player.getEntityAttribute(HexAttributes.SENTINEL_RADIUS) == null) {
+            return false;
+        }
+        double radius = player.getEntityAttribute(HexAttributes.SENTINEL_RADIUS)
+            .getAttributeValue();
+        if (Double.isNaN(radius) || Double.isInfinite(radius) || radius < 0.0D) {
+            return false;
+        }
+        double dx = position.x - sentinel.x;
+        double dy = position.y - sentinel.y;
+        double dz = position.z - sentinel.z;
+        return dx * dx + dy * dy + dz * dz <= radius * radius + 1.0E-8D;
     }
 
     private static boolean isVecInRange(
@@ -5181,10 +5250,19 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             || Double.isNaN(position.z) || Double.isInfinite(position.z)) {
             return false;
         }
+        if (isInSentinelRange(player, position)) {
+            return position.y >= 0.0D && position.y < 256.0D
+                && Math.abs(position.x) <= 30000000.0D
+                && Math.abs(position.z) <= 30000000.0D
+                && player.world != null
+                && player.world.getWorldBorder().contains(
+                    new net.minecraft.util.math.BlockPos(position.x, position.y, position.z));
+        }
         double dx = position.x - player.posX;
         double dy = position.y - player.posY;
         double dz = position.z - player.posZ;
-        return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D
+        double range = ambitRange(player);
+        return dx * dx + dy * dy + dz * dz <= range * range + 1.0E-8D
             && position.y >= 0.0D && position.y < 256.0D
             && Math.abs(position.x) <= 30000000.0D
             && Math.abs(position.z) <= 30000000.0D
@@ -5200,10 +5278,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         if (player == null || position == null || !isFiniteVector(position)) {
             return false;
         }
+        if (isInSentinelRange(player, position)) {
+            return true;
+        }
         double dx = position.x - player.posX;
         double dy = position.y - player.posY;
         double dz = position.z - player.posZ;
-        return dx * dx + dy * dy + dz * dz <= 32.0D * 32.0D + 1.0E-8D;
+        double range = ambitRange(player);
+        return dx * dx + dy * dy + dz * dz <= range * range + 1.0E-8D;
     }
 
     /** Check the 1.12 world border independently of vanilla Y/X/Z bounds. */

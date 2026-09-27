@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
+import at.petra_k.hexcasting.api.item.VariantItem;
 import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
@@ -31,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 /** A 64-page spellbook whose pages preserve complete drawable Hex patterns. */
-public final class ItemSpellbook extends Item implements IotaHolderItem {
+public final class ItemSpellbook extends Item implements IotaHolderItem, VariantItem {
     /** One-based selected page; zero means that the book has no pages. */
     public static final String TAG_SELECTED_PAGE = "page_idx";
     /** A compound of one-based page numbers to serialized Iotas. */
@@ -53,6 +54,21 @@ public final class ItemSpellbook extends Item implements IotaHolderItem {
 
     public ItemSpellbook() {
         setMaxStackSize(1);
+    }
+
+    @Override
+    public int numVariants() {
+        return VARIANT_COUNT;
+    }
+
+    @Override
+    public int getVariantValue(ItemStack stack) {
+        return getVariant(stack);
+    }
+
+    @Override
+    public void setVariantValue(ItemStack stack, int variant) {
+        setVariant(stack, variant);
     }
 
     @Override

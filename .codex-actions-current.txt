@@ -1,0 +1,298 @@
+61:    public static final HexAction PUSH_ZERO = register(PUSH_ZERO_ID, PUSH_ZERO_PATTERN, stack ->
+66:    public static final HexAction PUSH_ONE = register(PUSH_ONE_ID, PUSH_ONE_PATTERN, stack ->
+72:    public static final HexAction DUPLICATE = register(DUPLICATE_ID, DUPLICATE_PATTERN, stack ->
+78:    public static final HexAction SWAP = register(SWAP_ID, SWAP_PATTERN, stack -> {
+88:    public static final HexAction ADD = register(ADD_ID, ADD_PATTERN,
+94:    public static final HexAction NOT = register(NOT_ID, NOT_PATTERN, stack ->
+102:    public static final HexAction EMPTY_LIST = register(EMPTY_LIST_ID, EMPTY_LIST_PATTERN, stack ->
+110:    public static final HexAction SINGLETON = register(SINGLETON_ID, SINGLETON_PATTERN, stack -> {
+120:    public static final HexAction SPLAT = register(SPLAT_ID, SPLAT_PATTERN, stack -> {
+130:    public static final HexAction EQUALITY = register(EQUALITY_ID, EQUALITY_PATTERN, stack -> {
+141:    public static final HexAction NOT_EQUALS = register(NOT_EQUALS_ID, NOT_EQUALS_PATTERN, stack -> {
+151:    public static final HexAction TYPE_EQUALITY = register(TYPE_EQUALITY_ID, TYPE_EQUALITY_PATTERN, stack -> {
+162:    public static final HexAction TYPE_NOT_EQUALS = register(
+173:    public static final HexAction COERCE_TO_BOOL = register(COERCE_TO_BOOL_ID, COERCE_TO_BOOL_PATTERN, stack ->
+180:    public static final HexAction BOOL_IF = register(BOOL_IF_ID, BOOL_IF_PATTERN,
+188:    public static final HexAction RANDOM = register(RANDOM_ID, RANDOM_PATTERN,
+196:    public static final HexAction PRINT = register(PRINT_ID, PRINT_PATTERN,
+204:    public static final HexAction GREATER = register(GREATER_ID, GREATER_PATTERN,
+211:    public static final HexAction LESS = register(LESS_ID, LESS_PATTERN,
+218:    public static final HexAction GREATER_EQ = register(GREATER_EQ_ID, GREATER_EQ_PATTERN,
+225:    public static final HexAction LESS_EQ = register(LESS_EQ_ID, LESS_EQ_PATTERN,
+233:    public static final HexAction APPEND = register(APPEND_ID, APPEND_PATTERN, stack -> {
+246:    public static final HexAction UNAPPEND = register(UNAPPEND_ID, UNAPPEND_PATTERN, stack -> {
+263:    public static final HexAction INDEX = register(INDEX_ID, INDEX_PATTERN, stack -> {
+279:    public static final HexAction REVERSE = register(REVERSE_ID, REVERSE_PATTERN, stack -> {
+291:    public static final HexAction LAST_N_LIST = register(LAST_N_LIST_ID, LAST_N_LIST_PATTERN, stack -> {
+306:    public static final HexAction SUB = register(SUB_ID, SUB_PATTERN,
+314:    public static final HexAction MUL_DOT = register(MUL_DOT_ID, MUL_DOT_PATTERN, new OperationAction(2, HexArithmetics::multiply));
+321:    public static final HexAction DIV_CROSS = register(DIV_CROSS_ID, DIV_CROSS_PATTERN, new OperationAction(2, HexArithmetics::divide));
+328:    public static final HexAction ABS = register(ABS_ID, ABS_PATTERN,
+336:    public static final HexAction POW_PROJ = register(POW_PROJ_ID, POW_PROJ_PATTERN, new OperationAction(2, HexArithmetics::power));
+343:    public static final HexAction FLOOR = register(FLOOR_ID, FLOOR_PATTERN,
+351:    public static final HexAction CEIL = register(CEIL_ID, CEIL_PATTERN,
+359:    public static final HexAction MODULO = register(MODULO_ID, MODULO_PATTERN,
+366:    public static final HexAction CONST_NULL = register(CONST_NULL_ID, CONST_NULL_PATTERN, stack -> {
+375:    public static final HexAction CONST_TRUE = register(CONST_TRUE_ID, CONST_TRUE_PATTERN, stack -> {
+384:    public static final HexAction CONST_FALSE = register(CONST_FALSE_ID, CONST_FALSE_PATTERN, stack -> {
+393:    public static final HexAction CONST_DOUBLE_PI = register(CONST_DOUBLE_PI_ID, CONST_DOUBLE_PI_PATTERN, stack -> {
+402:    public static final HexAction CONST_DOUBLE_TAU = register(CONST_DOUBLE_TAU_ID, CONST_DOUBLE_TAU_PATTERN, stack -> {
+411:    public static final HexAction CONST_DOUBLE_E = register(CONST_DOUBLE_E_ID, CONST_DOUBLE_E_PATTERN, stack -> {
+420:    public static final HexAction CONST_DOUBLE_PHI = register(CONST_DOUBLE_PHI_ID, CONST_DOUBLE_PHI_PATTERN, stack -> {
+429:    public static final HexAction AND = register(AND_ID, AND_PATTERN,
+437:    public static final HexAction OR = register(OR_ID, OR_PATTERN,
+444:    public static final HexAction READ_LOCAL = register(READ_LOCAL_ID, READ_LOCAL_PATTERN, stack ->
+452:    public static final HexAction WRITE_LOCAL = register(WRITE_LOCAL_ID, WRITE_LOCAL_PATTERN, stack ->
+460:    public static final HexAction CONST_VEC_PX = register(CONST_VEC_PX_ID, CONST_VEC_PX_PATTERN, stack ->
+468:    public static final HexAction CONST_VEC_PY = register(CONST_VEC_PY_ID, CONST_VEC_PY_PATTERN, stack ->
+476:    public static final HexAction CONST_VEC_PZ = register(CONST_VEC_PZ_ID, CONST_VEC_PZ_PATTERN, stack ->
+484:    public static final HexAction CONST_VEC_NX = register(CONST_VEC_NX_ID, CONST_VEC_NX_PATTERN, stack ->
+492:    public static final HexAction CONST_VEC_NY = register(CONST_VEC_NY_ID, CONST_VEC_NY_PATTERN, stack ->
+500:    public static final HexAction CONST_VEC_NZ = register(CONST_VEC_NZ_ID, CONST_VEC_NZ_PATTERN, stack ->
+508:    public static final HexAction CONST_VEC_ZERO = register(CONST_VEC_ZERO_ID, CONST_VEC_ZERO_PATTERN, stack ->
+515:    public static final HexAction CONSTRUCT_VEC = register(CONSTRUCT_VEC_ID, CONSTRUCT_VEC_PATTERN, stack -> {
+527:    public static final HexAction DECONSTRUCT_VEC = register(DECONSTRUCT_VEC_ID, DECONSTRUCT_VEC_PATTERN, stack -> {
+538:    public static final HexAction COERCE_AXIAL = register(COERCE_AXIAL_ID, COERCE_AXIAL_PATTERN, stack -> {
+563:    public static final HexAction INDEX_OF = register(INDEX_OF_ID, INDEX_OF_PATTERN, stack -> {
+581:    public static final HexAction REMOVE_FROM = register(REMOVE_FROM_ID, REMOVE_FROM_PATTERN, stack -> {
+599:    public static final HexAction SLICE = register(SLICE_ID, SLICE_PATTERN, stack -> {
+619:    public static final HexAction REPLACE = register(REPLACE_ID, REPLACE_PATTERN, stack -> {
+635:    public static final HexAction ROTATE = register(ROTATE_ID, ROTATE_PATTERN, stack -> {
+649:    public static final HexAction ROTATE_REVERSE = register(ROTATE_REVERSE_ID, ROTATE_REVERSE_PATTERN, stack -> {
+663:    public static final HexAction OVER = register(OVER_ID, OVER_PATTERN, stack -> {
+676:    public static final HexAction STACK_LEN = register(STACK_LEN_ID, STACK_LEN_PATTERN, stack ->
+683:    public static final HexAction TUCK = register(TUCK_ID, TUCK_PATTERN, stack -> {
+696:    public static final HexAction TWO_DUP = register(TWO_DUP_ID, TWO_DUP_PATTERN, stack -> {
+710:    public static final HexAction DUPLICATE_N = register(DUPLICATE_N_ID, DUPLICATE_N_PATTERN, stack -> {
+723:    public static final HexAction FISHERMAN = register(FISHERMAN_ID, FISHERMAN_PATTERN, stack -> {
+742:    public static final HexAction FISHERMAN_COPY = register(
+770:    public static final HexAction SWIZZLE = register(SWIZZLE_ID, SWIZZLE_PATTERN, stack -> {
+800:    public static final HexAction UNIQUE = register(UNIQUE_ID, UNIQUE_PATTERN,
+816:    public static final HexAction FOR_EACH = register(FOR_EACH_ID, FOR_EACH_PATTERN,
+824:    public static final HexAction ESCAPE = register(ESCAPE_ID, ESCAPE_PATTERN,
+833:    public static final HexAction RUNTIME_ESCAPE = register(
+843:    public static final HexAction OPEN_PAREN = register(OPEN_PAREN_ID, OPEN_PAREN_PATTERN,
+852:    public static final HexAction CLOSE_PAREN = register(CLOSE_PAREN_ID, CLOSE_PAREN_PATTERN,
+861:    public static final HexAction OPEN_N_PARENS = register(
+871:    public static final HexAction CLOSE_ALL_PARENS = register(
+881:    public static final HexAction READ_INTO_PARENS = register(
+891:    public static final HexAction UNDO = register(
+901:    public static final HexAction HALT = register(HALT_ID, HALT_PATTERN,
+909:    public static final HexAction EVAL = register(EVAL_ID, EVAL_PATTERN,
+916:    public static final HexAction EVAL_CC = register(EVAL_CC_ID, EVAL_CC_PATTERN,
+924:    public static final HexAction SIN = register(SIN_ID,
+931:    public static final HexAction COS = register(COS_ID,
+938:    public static final HexAction TAN = register(TAN_ID,
+945:    public static final HexAction ARCSIN = register(ARCSIN_ID,
+952:    public static final HexAction ARCCOS = register(ARCCOS_ID,
+959:    public static final HexAction ARCTAN = register(ARCTAN_ID,
+966:    public static final HexAction ARCTAN2 = register(ARCTAN2_ID,
+973:    public static final HexAction LOG = register(LOG_ID,
+981:    public static final HexAction XOR = register(XOR_ID, XOR_PATTERN,
+989:    public static final HexAction CONSTRUCT = register(CONSTRUCT_ID, CONSTRUCT_PATTERN, stack -> {
+1003:    public static final HexAction DECONSTRUCT = register(
+1068:    public static final HexAction IGNITE = register(
+1069:        IGNITE_ID, IGNITE_PATTERN, new HexAction() {
+1087:                    vm.consumeMedia(MediaConstants.DUST_UNIT);
+1108:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+1127:    public static final HexAction EXTINGUISH = register(
+1128:        EXTINGUISH_ID, EXTINGUISH_PATTERN, new HexAction() {
+1150:                vm.consumeMedia(MediaConstants.DUST_UNIT * 6L);
+1207:    public static final HexAction ADD_MOTION = register(
+1208:        ADD_MOTION_ID, ADD_MOTION_PATTERN, new HexAction() {
+1241:                long rawCost = motionCost >= Long.MAX_VALUE / (double) MediaConstants.DUST_UNIT
+1242:                    ? Long.MAX_VALUE : (long) (motionCost * MediaConstants.DUST_UNIT);
+1243:                vm.consumeMedia(rawCost);
+1261:    public static final HexAction BEEP = register(
+1262:        BEEP_ID, BEEP_PATTERN, new HexAction() {
+1309:                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+1322:    public static final HexAction SUMMON_RAIN = register(
+1323:        SUMMON_RAIN_ID, SUMMON_RAIN_PATTERN, new HexAction() {
+1335:                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+1355:    public static final HexAction DISPEL_RAIN = register(
+1356:        DISPEL_RAIN_ID, DISPEL_RAIN_PATTERN, new HexAction() {
+1368:                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+1388:    public static final HexAction EXPLODE = register(
+1396:    public static final HexAction EXPLODE_FIRE = register(
+1400:        return new HexAction() {
+1438:                long mediaCost = (long) (MediaConstants.DUST_UNIT
+1440:                vm.consumeMedia(mediaCost);
+1456:    public static final HexAction BREAK_BLOCK = register(
+1457:        BREAK_BLOCK_ID, BREAK_BLOCK_PATTERN, new HexAction() {
+1482:                vm.consumeMedia(cheap ? MediaConstants.DUST_UNIT / 100L
+1483:                    : MediaConstants.DUST_UNIT / 8L);
+1517:    public static final HexAction RAYCAST = register(RAYCAST_ID, RAYCAST_PATTERN,
+1518:        new HexAction() {
+1537:                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
+1560:    public static final HexAction RAYCAST_AXIS = register(
+1562:        new HexAction() {
+1581:                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
+1604:    public static final HexAction RAYCAST_ENTITY = register(
+1606:        new HexAction() {
+1628:                vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
+1689:    public static final HexAction GET_ENTITY = register(
+1697:    public static final HexAction GET_ENTITY_ANIMAL = register(
+1706:    public static final HexAction GET_ENTITY_MONSTER = register(
+1715:    public static final HexAction GET_ENTITY_ITEM = register(
+1724:    public static final HexAction GET_ENTITY_PLAYER = register(
+1733:    public static final HexAction GET_ENTITY_LIVING = register(
+1739:        return new HexAction() {
+1785:    public static final HexAction ZONE_ENTITY = register(
+1792:    public static final HexAction ZONE_ENTITY_ANIMAL = register(
+1800:    public static final HexAction ZONE_ENTITY_NOT_ANIMAL = register(
+1808:    public static final HexAction ZONE_ENTITY_MONSTER = register(
+1816:    public static final HexAction ZONE_ENTITY_NOT_MONSTER = register(
+1824:    public static final HexAction ZONE_ENTITY_ITEM = register(
+1832:    public static final HexAction ZONE_ENTITY_NOT_ITEM = register(
+1840:    public static final HexAction ZONE_ENTITY_PLAYER = register(
+1848:    public static final HexAction ZONE_ENTITY_NOT_PLAYER = register(
+1856:    public static final HexAction ZONE_ENTITY_LIVING = register(
+1864:    public static final HexAction ZONE_ENTITY_NOT_LIVING = register(
+1871:        return new HexAction() {
+1940:    public static final HexAction GET_CASTER = register(GET_CASTER_ID, GET_CASTER_PATTERN,
+1941:        new HexAction() {
+1962:    public static final HexAction ENTITY_HEIGHT = register(
+1964:        new HexAction() {
+1983:    public static final HexAction ENTITY_POS_EYE = register(
+1985:        new HexAction() {
+2004:    public static final HexAction ENTITY_POS_FOOT = register(
+2006:        new HexAction() {
+2026:    public static final HexAction GET_ENTITY_LOOK = register(
+2028:        new HexAction() {
+2047:    public static final HexAction GET_ENTITY_VELOCITY = register(
+2049:        new HexAction() {
+2069:    public static final HexAction COMPARE_ENTITY = register(
+2070:        COMPARE_ENTITY_ID, COMPARE_ENTITY_PATTERN, new HexAction() {
+2098:    public static final HexAction RECHARGE = register(RECHARGE_ID, RECHARGE_PATTERN,
+2099:        new HexAction() {
+2143:                vm.consumeMedia(MediaConstants.SHARD_UNIT);
+2172:    public static final HexAction READ = register(READ_ID, READ_PATTERN, new HexAction() {
+2186:    public static final HexAction WRITE = register(WRITE_ID, WRITE_PATTERN, new HexAction() {
+2227:    public static final HexAction READABLE = register(READABLE_ID, READABLE_PATTERN, new HexAction() {
+2246:    public static final HexAction WRITABLE = register(WRITABLE_ID, WRITABLE_PATTERN, new HexAction() {
+2265:    public static final HexAction READ_ENTITY = register(
+2266:        READ_ENTITY_ID, READ_ENTITY_PATTERN, new HexAction() {
+2284:    public static final HexAction WRITE_ENTITY = register(
+2285:        WRITE_ENTITY_ID, WRITE_ENTITY_PATTERN, new HexAction() {
+2314:    public static final HexAction READABLE_ENTITY = register(
+2315:        READABLE_ENTITY_ID, READABLE_ENTITY_PATTERN, new HexAction() {
+2336:    public static final HexAction WRITABLE_ENTITY = register(
+2337:        WRITABLE_ENTITY_ID, WRITABLE_ENTITY_PATTERN, new HexAction() {
+2498:    public static final HexAction GET_MEDIA = register(GET_MEDIA_ID, GET_MEDIA_PATTERN,
+2499:        new HexAction() {
+2517:                    ((double) available) / (double) MediaConstants.DUST_UNIT
+2527:    public static final HexAction CREATE_WATER = register(CREATE_WATER_ID, CREATE_WATER_PATTERN,
+2531:            MediaConstants.DUST_UNIT, net.minecraft.init.Items.WATER_BUCKET,
+2539:    public static final HexAction CREATE_LAVA = register(CREATE_LAVA_ID, CREATE_LAVA_PATTERN,
+2543:            MediaConstants.CRYSTAL_UNIT, net.minecraft.init.Items.LAVA_BUCKET,
+2551:    public static final HexAction DESTROY_WATER = register(DESTROY_WATER_ID, DESTROY_WATER_PATTERN,
+2552:        new HexAction() {
+2570:                vm.consumeMedia(2L * MediaConstants.CRYSTAL_UNIT);
+2682:        return new HexAction() {
+2703:                vm.consumeMedia(mediaCost);
+2757:    public static final HexAction EDIFY = register(EDIFY_ID, EDIFY_PATTERN, new HexAction() {
+2779:            vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+2818:    public static final HexAction ERASE = register(ERASE_ID, ERASE_PATTERN, new HexAction() {
+2835:                if (count > Long.MAX_VALUE / MediaConstants.DUST_UNIT) {
+2839:                vm.consumeMedia(count * MediaConstants.DUST_UNIT);
+2851:    public static final HexAction COMPARE_BLOCK = register(
+2859:    public static final HexAction COMPARE_BLOCK_STRICT = register(
+2867:    public static final HexAction COMPARE_ITEM = register(
+2874:    public static final HexAction COMPARE_ITEM_STRICT = register(
+2882:    public static final HexAction BONEMEAL = register(
+2883:        BONEMEAL_ID, BONEMEAL_PATTERN, new HexAction() {
+2901:                vm.consumeMedia(MediaConstants.DUST_UNIT
+2902:                    + MediaConstants.DUST_UNIT / 8L);
+2926:    public static final HexAction LIGHTNING = register(
+2927:        LIGHTNING_ID, LIGHTNING_PATTERN, new HexAction() {
+2952:                vm.consumeMedia(3L * MediaConstants.SHARD_UNIT);
+2975:    public static final HexAction BLINK = register(BLINK_ID, BLINK_PATTERN, new HexAction() {
+3030:            double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
+3035:            vm.consumeMedia(Math.round(mediaCost));
+3054:    public static final HexAction PLACE_BLOCK = register(
+3055:        PLACE_BLOCK_ID, PLACE_BLOCK_PATTERN, new HexAction() {
+3098:                vm.consumeMedia(MediaConstants.DUST_UNIT / 8L);
+3136:    public static final HexAction POTION_ABSORPTION = register(
+3139:            MediaConstants.DUST_UNIT, true, true));
+3146:    public static final HexAction POTION_HASTE = register(
+3149:            MediaConstants.DUST_UNIT / 3L, true, true));
+3156:    public static final HexAction POTION_LEVITATION = register(
+3159:            MediaConstants.DUST_UNIT / 5L, false, false));
+3166:    public static final HexAction POTION_NIGHT_VISION = register(
+3169:            MediaConstants.DUST_UNIT / 5L, false, true));
+3176:    public static final HexAction POTION_POISON = register(
+3179:            MediaConstants.DUST_UNIT / 3L, true, false));
+3186:    public static final HexAction POTION_REGENERATION = register(
+3189:            MediaConstants.DUST_UNIT, true, true));
+3196:    public static final HexAction POTION_SLOWNESS = register(
+3199:            MediaConstants.DUST_UNIT / 3L, true, false));
+3206:    public static final HexAction POTION_STRENGTH = register(
+3209:            MediaConstants.DUST_UNIT / 3L, true, true));
+3216:    public static final HexAction POTION_WEAKNESS = register(
+3219:            MediaConstants.DUST_UNIT / 10L, true, false));
+3226:    public static final HexAction POTION_WITHER = register(
+3229:            MediaConstants.DUST_UNIT, true, false));
+3235:        return new HexAction() {
+3300:                vm.consumeMedia((long) mediaCost);
+3335:    public static final HexAction THANATOS = register(
+3336:        THANATOS_ID, THANATOS_PATTERN, new HexAction() {
+3356:    public static final HexAction CYCLE_VARIANT = register(
+3357:        CYCLE_VARIANT_ID, CYCLE_VARIANT_PATTERN, new HexAction() {
+3374:                vm.consumeMedia(MediaConstants.DUST_UNIT / 10L);
+3387:    public static final HexAction CONJURE_BLOCK = register(
+3388:        CONJURE_BLOCK_ID, CONJURE_BLOCK_PATTERN, new HexAction() {
+3423:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+3449:    public static final HexAction CONJURE_LIGHT = register(
+3450:        CONJURE_LIGHT_ID, CONJURE_LIGHT_PATTERN, new HexAction() {
+3485:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+3516:    public static final HexAction FLIGHT = register(
+3517:        FLIGHT_ID, FLIGHT_PATTERN, new HexAction() {
+3530:                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+3547:    public static final HexAction FLIGHT_CAN_FLY = register(
+3548:        FLIGHT_CAN_FLY_ID, FLIGHT_CAN_FLY_PATTERN, new HexAction() {
+3568:    public static final HexAction FLIGHT_RANGE = register(
+3569:        FLIGHT_RANGE_ID, FLIGHT_RANGE_PATTERN, new HexAction() {
+3594:                vm.consumeMedia(cost);
+3610:    public static final HexAction FLIGHT_TIME = register(
+3611:        FLIGHT_TIME_ID, FLIGHT_TIME_PATTERN, new HexAction() {
+3639:                vm.consumeMedia(cost);
+3865:    public static final HexAction CIRCLE_BOUNDS_MAX = register(
+3866:        CIRCLE_BOUNDS_MAX_ID, CIRCLE_BOUNDS_MAX_PATTERN, new HexAction() {
+3891:    public static final HexAction CIRCLE_BOUNDS_MIN = register(
+3892:        CIRCLE_BOUNDS_MIN_ID, CIRCLE_BOUNDS_MIN_PATTERN, new HexAction() {
+3917:    public static final HexAction CIRCLE_IMPETUS_POS = register(
+3918:        CIRCLE_IMPETUS_POS_ID, CIRCLE_IMPETUS_POS_PATTERN, new HexAction() {
+3942:    public static final HexAction CIRCLE_IMPETUS_DIR = register(
+3943:        CIRCLE_IMPETUS_DIR_ID, CIRCLE_IMPETUS_DIR_PATTERN, new HexAction() {
+3968:    public static final HexAction COLORIZE = register(
+3969:        COLORIZE_ID, COLORIZE_PATTERN, new HexAction() {
+3996:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+4024:    public static final HexAction BRAINSWEEP = register(
+4025:        BRAINSWEEP_ID, BRAINSWEEP_PATTERN, new HexAction() {
+4094:                vm.consumeMedia(match.getMediaCost());
+4147:    public static final HexAction TELEPORT_GREAT = register(
+4148:        TELEPORT_GREAT_ID, TELEPORT_GREAT_PATTERN, new HexAction() {
+4202:                vm.consumeMedia(10L * MediaConstants.CRYSTAL_UNIT);
+4221:    public static final HexAction CRAFT_BATTERY = register(
+4222:        CRAFT_BATTERY_ID, CRAFT_BATTERY_PATTERN, new HexAction() {
+4283:                vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+4327:        return new HexAction() {
+4375:                vm.consumeMedia(mediaCost);
+4402:    public static final HexAction CRAFT_CYPHER = register(
+4408:            MediaConstants.CRYSTAL_UNIT,
+4415:    public static final HexAction CRAFT_TRINKET = register(
+4417:        packagedSpellAction(HexItems.TRINKET, 5L * MediaConstants.CRYSTAL_UNIT,
+4425:    public static final HexAction CRAFT_ARTIFACT = register(
+4427:        packagedSpellAction(HexItems.ARTIFACT, 10L * MediaConstants.CRYSTAL_UNIT,
+4435:    public static final HexAction AKASHIC_READ = register(
+4436:        AKASHIC_READ_ID, AKASHIC_READ_PATTERN, new HexAction() {
+4464:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+4478:    public static final HexAction AKASHIC_WRITE = register(
+4479:        AKASHIC_WRITE_ID, AKASHIC_WRITE_PATTERN, new HexAction() {
+4506:                vm.consumeMedia(MediaConstants.DUST_UNIT);
+4886:        return new HexAction() {
+4923:        return new HexAction() {
+5598:    private static HexAction register(ResourceLocation id, HexPattern pattern, HexAction action) {
+5599:        return HexActionRegistry.register(id, pattern, action);
+5660:        double rawCost = amount * 2.0D * MediaConstants.DUST_UNIT;
+5667:            ? Math.max(2L * MediaConstants.DUST_UNIT, rounded) : rounded;

@@ -118,6 +118,19 @@ public final class HexPatternChatGeometry {
     }
 
     /**
+     * Draw a static shape preview.  This is used by JEI and creative-tab
+     * representations of great spells: the prototype's line graph is shown,
+     * but no readable/zappy perturbation is applied that could communicate a
+     * particular stroke order.
+     */
+    public static void drawStaticPreview(HexPattern pattern, int x, int y, int size,
+                                         int alpha, int outerArgb, int innerArgb,
+                                         boolean drawDots) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, false, 0.0D, 0.0D, 0.0D, 0.0D, 1.0D, 0.0D, 0.0D);
+    }
+
+    /**
      * Draw a fitted preview while preserving the depth test used by a world
      * renderer.  The ordinary preview is deliberately depthless because it
      * is used by GUI and wall-scroll overlays; block-entity previews must be

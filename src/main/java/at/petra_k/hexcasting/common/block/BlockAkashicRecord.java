@@ -20,6 +20,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.IBlockAccess;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -42,6 +43,21 @@ public final class BlockAkashicRecord extends Block {
         setResistance(4.0F);
         setHarvestLevel("axe", 0);
         setLightLevel(1.0F);
+    }
+
+    @Override
+    public boolean isFlammable(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return true;
+    }
+
+    @Override
+    public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return 5;
+    }
+
+    @Override
+    public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return 5;
     }
 
     /** Look up a key in connected bookshelves, with the old world-data bridge as fallback. */

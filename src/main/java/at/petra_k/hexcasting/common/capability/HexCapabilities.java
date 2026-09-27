@@ -3,6 +3,9 @@ package at.petra_k.hexcasting.common.capability;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
 import at.petra_k.hexcasting.api.addldata.ADIotaHolder;
+import at.petra_k.hexcasting.api.addldata.ADHexHolder;
+import at.petra_k.hexcasting.api.addldata.ADVariantItem;
+import at.petra_k.hexcasting.api.addldata.ADPigment;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -22,6 +25,15 @@ public final class HexCapabilities {
 
     @CapabilityInject(ADIotaHolder.class)
     public static Capability<ADIotaHolder> IOTA = null;
+
+    @CapabilityInject(ADHexHolder.class)
+    public static Capability<ADHexHolder> HEX_HOLDER = null;
+
+    @CapabilityInject(ADVariantItem.class)
+    public static Capability<ADVariantItem> VARIANT = null;
+
+    @CapabilityInject(ADPigment.class)
+    public static Capability<ADPigment> PIGMENT = null;
 
     private static boolean registered;
 
@@ -102,6 +114,63 @@ public final class HexCapabilities {
                                      ADIotaHolder instance, EnumFacing side, NBTBase nbt) {
                     // ItemStack NBT is authoritative; providers are rebuilt
                     // from the stack when Forge attaches them.
+                }
+            },
+            () -> null
+        );
+        CapabilityManager.INSTANCE.register(
+            ADHexHolder.class,
+            new Capability.IStorage<ADHexHolder>() {
+                @Override
+                public NBTBase writeNBT(Capability<ADHexHolder> capability,
+                                         ADHexHolder instance, EnumFacing side) {
+                    return new NBTTagCompound();
+                }
+
+                @Override
+                public void readNBT(Capability<ADHexHolder> capability,
+                                     ADHexHolder instance, EnumFacing side, NBTBase nbt) {
+                    // The item stack is the authoritative storage.
+                }
+            },
+            () -> null
+        );
+        CapabilityManager.INSTANCE.register(
+            ADVariantItem.class,
+            new Capability.IStorage<ADVariantItem>() {
+                @Override
+                public NBTBase writeNBT(Capability<ADVariantItem> capability,
+                                         ADVariantItem instance, EnumFacing side) {
+                    NBTTagCompound tag = new NBTTagCompound();
+                    if (instance != null) {
+                        tag.setInteger("variant", instance.getVariant());
+                    }
+                    return tag;
+                }
+
+                @Override
+                public void readNBT(Capability<ADVariantItem> capability,
+                                     ADVariantItem instance, EnumFacing side, NBTBase nbt) {
+                    if (instance != null && nbt instanceof NBTTagCompound) {
+                        instance.setVariant(((NBTTagCompound) nbt).getInteger("variant"));
+                    }
+                }
+            },
+            () -> null
+        );
+        CapabilityManager.INSTANCE.register(
+            ADPigment.class,
+            new Capability.IStorage<ADPigment>() {
+                @Override
+                public NBTBase writeNBT(Capability<ADPigment> capability,
+                                         ADPigment instance, EnumFacing side) {
+                    return new NBTTagCompound();
+                }
+
+                @Override
+                public void readNBT(Capability<ADPigment> capability,
+                                     ADPigment instance, EnumFacing side, NBTBase nbt) {
+                    // Pigment items keep their colour and animation data in NBT.
                 }
             },
             () -> null

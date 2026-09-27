@@ -4,6 +4,8 @@ import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.casting.iota.PatternIota;
 import at.petra_k.hexcasting.api.item.MediaHolderItem;
+import at.petra_k.hexcasting.api.item.HexHolderItem;
+import at.petra_k.hexcasting.api.item.VariantItem;
 import at.petra_k.hexcasting.common.capability.HexItemMediaHolder;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
@@ -13,6 +15,7 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.interop.inline.HexInline;
 import net.minecraft.entity.player.EntityPlayer;
@@ -34,7 +37,7 @@ import java.util.List;
 import java.util.UUID;
 
 /** A single-use or reusable packaged spell container for the 1.12.2 port. */
-public class ItemPackagedSpell extends Item implements MediaHolderItem {
+public class ItemPackagedSpell extends Item implements MediaHolderItem, HexHolderItem, VariantItem {
     /** Modern Hex stores executable Iotas in this list. */
     public static final String TAG_PROGRAM = "patterns";
     public static final String TAG_PIGMENT = "pigment";
@@ -213,6 +216,21 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
     }
 
     @Override
+    public int numVariants() {
+        return VARIANT_COUNT;
+    }
+
+    @Override
+    public int getVariantValue(ItemStack stack) {
+        return getVariant(stack);
+    }
+
+    @Override
+    public void setVariantValue(ItemStack stack, int variant) {
+        setVariant(stack, variant);
+    }
+
+    @Override
     public long getMaxMedia(ItemStack stack) {
         long maximum = readMediaTag(stack, TAG_MAX_MEDIA, LEGACY_MAX_MEDIA);
         if (maximum <= 0L) {
@@ -264,6 +282,67 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
     /** Whether this package may fall back to the caster's media inventory. */
     protected boolean canDrawMediaFromInventory() {
         return false;
+    }
+
+    @Override
+    public boolean canDrawMediaFromInventory(ItemStack stack) {
+        return canDrawMediaFromInventory();
+    }
+
+    @Override
+    public boolean hasHex(ItemStack stack) {
+        return !getPackagedIotas(stack).isEmpty();
+    }
+
+    @Override
+    public List<Iota> getHex(ItemStack stack, World world) {
+        return new ArrayList<>(getPackagedIotas(stack));
+    }
+
+    @Override
+    public void writeHex(ItemStack stack, List<Iota> program, int pigment,
+                         String pigmentVariant, UUID pigmentOwner, long media) {
+        writePackagedProgram(stack, program, media);
+        setPigment(stack, pigment, pigmentVariant, pigmentOwner);
+    }
+
+    @Override
+    public void clearHex(ItemStack stack) {
+        clearPackagedAction(stack);
+    }
+
+    @Override
+    public int getPigment(ItemStack stack) {
+        return getPigmentColor(stack, 0xAA66FF);
+    }
+
+    @Override
+    public String getPigmentVariant(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null || !tag.hasKey(TAG_PIGMENT, 10)) {
+            return "default_colorizer";
+        }
+        NBTTagCompound pigment = tag.getCompoundTag(TAG_PIGMENT);
+        String value = pigment.hasKey("variant", 8)
+            ? pigment.getString("variant") : "default_colorizer";
+        return value.isEmpty() ? "default_colorizer" : value;
+    }
+
+    @Override
+    public UUID getPigmentOwner(ItemStack stack) {
+        NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
+        if (tag == null || !tag.hasKey(TAG_PIGMENT, 10)) {
+            return new UUID(0L, 0L);
+        }
+        NBTTagCompound pigment = tag.getCompoundTag(TAG_PIGMENT);
+        if (!pigment.hasKey("owner", 8)) {
+            return new UUID(0L, 0L);
+        }
+        try {
+            return UUID.fromString(pigment.getString("owner"));
+        } catch (IllegalArgumentException ignored) {
+            return new UUID(0L, 0L);
+        }
     }
 
     /** Cyphers override this to disappear once their stored media is spent. */
@@ -341,7 +420,7 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem {
         }
         try {
             vm.enqueueIotas(program);
-            vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            vm.run(HexConfig.maxOperations());
             String resultText = result.isEmpty()
                 ? I18n.translateToLocal("hexcasting.message.empty_stack")
                 : result.peek().display();

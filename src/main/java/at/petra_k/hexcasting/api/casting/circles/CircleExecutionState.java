@@ -8,6 +8,7 @@ import at.petra_k.hexcasting.common.block.BlockCircleComponent;
 import at.petra_k.hexcasting.common.block.TileEntityImpetus;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.HexSounds;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,7 +36,7 @@ import java.util.UUID;
  * the current slate or leave a half-energized ring behind.</p>
  */
 public final class CircleExecutionState {
-    public static final int MAX_CIRCLE_LENGTH = 1024;
+    public static final int MAX_CIRCLE_LENGTH = HexConfig.DEFAULT_MAX_CIRCLE_LENGTH;
     private static final String KEY_IMPETUS_POS = "impetus_pos";
     private static final String KEY_IMPETUS_DIR = "impetus_dir";
     private static final String KEY_REACHED_POSITIONS = "reached_positions";
@@ -121,7 +122,7 @@ public final class CircleExecutionState {
             lastVisited = pos;
             greater = max(greater, pos);
             lesser = min(lesser, pos);
-            if (seen.size() >= MAX_CIRCLE_LENGTH) {
+            if (seen.size() >= HexConfig.maxCircleLength()) {
                 return CreationResult.failure(null);
             }
             for (EnumFacing direction : component.possibleExitDirections(

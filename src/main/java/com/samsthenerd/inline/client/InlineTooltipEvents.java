@@ -78,7 +78,7 @@ public final class InlineTooltipEvents {
         boolean ancientShiftAccent = false;
         if (event.getItemStack() != null
             && event.getItemStack().getItem() instanceof ItemPatternScroll) {
-            previewPattern = ItemPatternScroll.getPattern(
+            previewPattern = ItemPatternScroll.getTooltipPattern(
                 event.getItemStack(), minecraft == null ? null : minecraft.world);
             net.minecraft.nbt.NBTTagCompound tag = event.getItemStack().getTagCompound();
             ancient = tag != null && (tag.hasKey(ItemPatternScroll.TAG_OP_ID, 8)

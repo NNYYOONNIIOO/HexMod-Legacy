@@ -5,6 +5,7 @@ import at.petra_k.hexcasting.api.casting.circles.ICircleComponent;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.casting.MishapFeedback;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
 import at.petra_k.hexcasting.common.item.ItemSlate;
 import net.minecraft.block.Block;
@@ -97,7 +98,7 @@ public final class BlockSlate extends BlockCircleComponent {
         try {
             image.resetOperationCounter();
             image.enqueue(pattern);
-            image.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            image.run(HexConfig.maxOperations());
             return new ICircleComponent.Continue(image, output);
         } catch (at.petra_k.hexcasting.api.casting.eval.CastingException exception) {
             Mishap mishap = image.getLastMishap();

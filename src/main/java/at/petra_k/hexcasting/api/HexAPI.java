@@ -8,6 +8,9 @@ import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /** Shared public constants for the 1.12.2 Hex Casting port. */
 public final class HexAPI {
     public static final String MOD_ID = "hexcasting";
@@ -15,6 +18,8 @@ public final class HexAPI {
     public static final String MOD_VERSION = "0.1.0-1.12.2";
     /** Casting-image userdata key used by actions with per-cast bookkeeping. */
     public static final String MARKED_MOVED_USERDATA = "hexcasting:marked_moved";
+    private static final Map<Class<? extends Entity>, EntityVelocityGetter<?>> SPECIAL_VELOCITIES =
+        new ConcurrentHashMap<>();
 
     private HexAPI() {
     }
@@ -52,5 +57,42 @@ public final class HexAPI {
             return new Vec3d(look.x, -look.y, look.z);
         }
         return look;
+    }
+
+    /** Register the velocity exposed by the get-entity-velocity action. */
+    public static <T extends Entity> void registerSpecialVelocityGetter(
+        Class<T> entityClass, EntityVelocityGetter<T> getter) {
+        if (entityClass == null || getter == null) {
+            throw new IllegalArgumentException("Special velocity registration cannot be null");
+        }
+        SPECIAL_VELOCITIES.put(entityClass, getter);
+    }
+
+    /** Return Hex's logical velocity, including the vanilla compatibility rules. */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static Vec3d getEntityVelocitySpecial(Entity entity) {
+        if (entity == null) {
+            return Vec3d.ZERO;
+        }
+        EntityVelocityGetter getter = SPECIAL_VELOCITIES.get(entity.getClass());
+        if (getter == null) {
+            for (Map.Entry<Class<? extends Entity>, EntityVelocityGetter<?>> entry
+                : SPECIAL_VELOCITIES.entrySet()) {
+                if (entry.getKey().isAssignableFrom(entity.getClass())) {
+                    getter = entry.getValue();
+                    break;
+                }
+            }
+        }
+        if (getter == null) {
+            return new Vec3d(entity.motionX, entity.motionY, entity.motionZ);
+        }
+        Vec3d velocity = getter.getVelocity(entity);
+        return velocity == null ? Vec3d.ZERO : velocity;
+    }
+
+    @FunctionalInterface
+    public interface EntityVelocityGetter<T extends Entity> {
+        Vec3d getVelocity(T entity);
     }
 }

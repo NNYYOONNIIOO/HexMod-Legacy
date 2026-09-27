@@ -11,6 +11,7 @@ import at.petra_k.hexcasting.common.casting.HexEvaluator;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.casting.StaffCastExecutor;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.lib.HexAttributes;
 import at.petra_k.hexcasting.common.network.MsgStaffProgramS2C;
 import at.petra_k.hexcasting.common.network.MsgPerWorldPatternsS2C;
 import net.minecraft.entity.player.EntityPlayer;
@@ -62,6 +63,10 @@ public final class ItemHexStaff extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         ItemStack staff = player.getHeldItem(hand);
+        if (player.getAttributeMap().getAttributeInstance(HexAttributes.FEEBLE_MIND) != null
+            && player.getEntityAttribute(HexAttributes.FEEBLE_MIND).getAttributeValue() > 0.0D) {
+            return new ActionResult<>(EnumActionResult.FAIL, staff);
+        }
         if (world.isRemote) {
             // The server clears the authoritative program below. Clear the
             // client copy first so the GUI is opened only after the old

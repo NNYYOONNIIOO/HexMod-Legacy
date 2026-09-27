@@ -14,6 +14,7 @@ import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GlStateManager;
@@ -48,6 +49,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,6 +58,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 /** Client-side particles and world-space rune orbit used by staff casting. */
 @SideOnly(Side.CLIENT)
@@ -78,6 +81,9 @@ public final class HexClientEffects {
         new ArrayList<>();
     private static final int MAX_CONJURE_PARTICLES = 4096;
     private static final Random PARTICLE_RANDOM = new Random();
+    /** RenderPlayer instances are long-lived; weak keys avoid retaining old skin renderers. */
+    private static final Set<RenderPlayer> ALTIORA_LAYERS =
+        Collections.newSetFromMap(new WeakHashMap<RenderPlayer, Boolean>());
     private static TextureAtlasSprite CONJURE_SPRITE;
     private static World PARTICLE_WORLD;
     /** Number of client ticks for which a newly loaded world retries staff restoration. */
@@ -711,8 +717,14 @@ public final class HexClientEffects {
     @SubscribeEvent
     public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
         Minecraft minecraft = Minecraft.getMinecraft();
+        if (event == null || event.getRenderer() == null) {
+            return;
+        }
+        if (ALTIORA_LAYERS.add(event.getRenderer())) {
+            event.getRenderer().addLayer(new HexAltioraRenderer());
+        }
         if (minecraft == null || !(minecraft.currentScreen instanceof GuiInventory)
-            || event == null || event.getEntityPlayer() == null
+            || event.getEntityPlayer() == null
             || event.getEntityPlayer() != minecraft.player) {
             return;
         }
@@ -732,12 +744,6 @@ public final class HexClientEffects {
         endOrbitRender(true);
         GlStateManager.popAttrib();
         GlStateManager.popMatrix();
-    }
-
-    /** Draw Altiora's player-render layer after the vanilla model. */
-    @SubscribeEvent
-    public static void onRenderPlayerPost(RenderPlayerEvent.Post event) {
-        HexAltioraRenderer.render(event);
     }
 
     /** Render the queued cloud with Hex's SRC_ALPHA/ONE blend mode. */

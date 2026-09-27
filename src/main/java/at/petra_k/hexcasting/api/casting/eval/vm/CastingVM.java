@@ -19,10 +19,13 @@ import at.petra_k.hexcasting.common.casting.MishapFeedback;
 import at.petra_k.hexcasting.common.casting.OvercastHelper;
 import at.petra_k.hexcasting.common.casting.SpecialPatternResolver;
 import at.petra_k.hexcasting.common.config.HexConfig;
+import at.petra_k.hexcasting.common.lib.HexAttributes;
 import at.petra_k.hexcasting.common.lib.hex.HexActions;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
 import at.petra_k.hexcasting.common.lib.hex.HexEvalSounds;
 import at.petra_k.hexcasting.common.lib.hex.HexIotaTypes;
+import at.petra_k.hexcasting.common.lib.HexStatistics;
+import at.petra_k.hexcasting.api.advancements.HexAdvancementTriggers;
 import at.petra_k.hexcasting.common.world.PerWorldPatternData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagByte;
@@ -52,7 +55,7 @@ import net.minecraft.util.ResourceLocation;
  */
 public final class CastingVM {
     /** Conservative default matching the old port's bounded evaluation goal. */
-    public static final int DEFAULT_MAX_OPERATIONS = 1024;
+    public static final int DEFAULT_MAX_OPERATIONS = HexConfig.DEFAULT_MAX_OPERATIONS;
 
     private static final class WorkItem {
         private final HexPattern pattern;
@@ -130,7 +133,7 @@ public final class CastingVM {
     private int operationsConsumed;
     /** Persistent casting-image data for action-local bookkeeping. */
     private NBTTagCompound userData = new NBTTagCompound();
-    private int activeOperationLimit = DEFAULT_MAX_OPERATIONS;
+    private int activeOperationLimit = HexConfig.maxOperations();
     private IHexCastingData castingData;
     private EntityPlayer player;
     /** The hand containing the staff/focus that started this cast. */
@@ -1080,11 +1083,31 @@ public final class CastingVM {
             mediaTransaction.rollback();
             throw Mishap.notEnoughMedia(effectiveAmount, extracted + generated);
         }
+        if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            long actualMedia = Math.min(effectiveAmount, extracted);
+            HexStatistics.award(player, HexStatistics.MEDIA_USED, actualMedia);
+            if (generated > 0L) {
+                HexStatistics.award(player, HexStatistics.MEDIA_OVERCAST, generated);
+                double healthUsed = generated
+                    / (2.0D * (double) at.petra_k.hexcasting.api.misc.MediaConstants.CRYSTAL_UNIT / 20.0D);
+                HexAdvancementTriggers.OVERCAST_TRIGGER.trigger(
+                    (net.minecraft.entity.player.EntityPlayerMP) player, generated,
+                    healthUsed / Math.max(1.0F, player.getMaxHealth()), player.getHealth());
+            }
+            HexAdvancementTriggers.SPEND_MEDIA_TRIGGER.trigger(
+                (net.minecraft.entity.player.EntityPlayerMP) player,
+                actualMedia, generated);
+        }
     }
 
     /** Apply the same configured multiplier to every extraction path. */
     private long scaleMediaCost(long amount) {
         double multiplier = HexConfig.mediaCostMultiplier(activeActionId);
+        if (player != null && player.getAttributeMap()
+            .getAttributeInstance(HexAttributes.MEDIA_CONSUMPTION) != null) {
+            multiplier *= player.getEntityAttribute(HexAttributes.MEDIA_CONSUMPTION)
+                .getAttributeValue();
+        }
         if (multiplier <= 0.0D) {
             return 0L;
         }
@@ -1332,6 +1355,10 @@ public final class CastingVM {
     private void unlockOvercastForFailedGreatSpell(ResourceLocation actionId) {
         if (player != null && PerWorldPatternData.isPerWorldAction(actionId)) {
             OvercastHelper.unlock(player);
+            if (player instanceof net.minecraft.entity.player.EntityPlayerMP) {
+                HexAdvancementTriggers.FAIL_GREAT_SPELL_TRIGGER.trigger(
+                    (net.minecraft.entity.player.EntityPlayerMP) player);
+            }
         }
     }
 

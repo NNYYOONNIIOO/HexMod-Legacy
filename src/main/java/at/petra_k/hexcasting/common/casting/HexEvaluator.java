@@ -6,6 +6,7 @@ import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.effect.HexCastingEffects;
+import at.petra_k.hexcasting.common.config.HexConfig;
 
 import java.util.List;
 import at.petra_k.hexcasting.api.capability.IHexCastingData;
@@ -19,12 +20,12 @@ public final class HexEvaluator {
 
     public static CastingStack evaluate(List<HexPattern> patterns) throws CastingException {
         CastingStack stack = new CastingStack();
-        evaluate(patterns, stack, CastingVM.DEFAULT_MAX_OPERATIONS);
+        evaluate(patterns, stack, HexConfig.maxOperations());
         return stack;
     }
 
     public static void evaluate(List<HexPattern> patterns, CastingStack stack) throws CastingException {
-        evaluate(patterns, stack, CastingVM.DEFAULT_MAX_OPERATIONS);
+        evaluate(patterns, stack, HexConfig.maxOperations());
     }
 
     /** Evaluate with an explicit operation budget. */
@@ -58,7 +59,7 @@ public final class HexEvaluator {
         vm.setMediaConsumptionBypassed(player != null
             && player.capabilities.isCreativeMode);
         try {
-            vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            vm.run(HexConfig.maxOperations());
             HexCastingEffects.onPortableCast(player, castingHand, patterns, true,
                 vm.getSound() == null ? null : vm.getSound().getSound());
         } catch (CastingException exception) {

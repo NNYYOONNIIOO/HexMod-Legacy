@@ -10,6 +10,7 @@ import at.petra_k.hexcasting.api.casting.iota.NullIota;
 import at.petra_k.hexcasting.api.casting.iota.Vec3Iota;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.world.SentinelData;
+import at.petra_k.hexcasting.common.lib.HexAttributes;
 import at.petra_k.hexcasting.common.network.MsgSentinelStatusS2C;
 import at.petrak.paucal.api.PaucalAPI;
 import net.minecraft.entity.player.EntityPlayer;
@@ -202,6 +203,9 @@ public final class SentinelActions {
         double dy = target.y - player.posY;
         double dz = target.z - player.posZ;
         double range = 32.0D;
+        if (player.getAttributeMap().getAttributeInstance(HexAttributes.AMBIT_RADIUS) != null) {
+            range = player.getEntityAttribute(HexAttributes.AMBIT_RADIUS).getAttributeValue();
+        }
         if (dx * dx + dy * dy + dz * dz > range * range + 1.0E-8D) {
             throw Mishap.badLocation("hexcasting.error.sentinel_out_of_range");
         }

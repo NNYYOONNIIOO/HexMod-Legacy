@@ -6,6 +6,8 @@ import at.petra_k.hexcasting.api.casting.eval.CastingStack;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.eval.vm.CastingVM;
 import at.petra_k.hexcasting.common.lib.HexSounds;
+import at.petra_k.hexcasting.common.config.HexConfig;
+import at.petra_k.hexcasting.common.lib.HexStatistics;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
@@ -114,8 +116,12 @@ public final class StaffCastExecutor {
             boolean isCaptured = wasEscaped || (wasInParens
                 && (action == null || !action.executesInParentheses()));
             vm.enqueue(pattern);
-            vm.run(CastingVM.DEFAULT_MAX_OPERATIONS);
+            vm.run(HexConfig.maxOperations());
             save(staff, vm);
+            HexStatistics.award(player, HexStatistics.PATTERNS_DRAWN, 1L);
+            if (isStackClear(vm)) {
+                HexStatistics.award(player, HexStatistics.SPELLS_CAST, 1L);
+            }
             Resolution resolution = resolveResolution(action, wasEscaped,
                 wasInParens, vm);
             return CastOutcome.success(resolution, preview(vm),

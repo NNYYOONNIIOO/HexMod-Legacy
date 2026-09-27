@@ -9,6 +9,9 @@ import net.minecraftforge.fml.common.registry.EntityRegistry;
 import at.petra_k.hexcasting.common.CommonProxy;
 import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.lib.hex.HexActionRegistry;
+import at.petra_k.hexcasting.common.misc.HexSpecialVelocity;
+import at.petra_k.hexcasting.common.lib.HexStatistics;
+import at.petra_k.hexcasting.api.advancements.HexAdvancementTriggers;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.block.TileEntityConjured;
 import at.petra_k.hexcasting.common.block.TileEntityImpetus;
@@ -63,6 +66,9 @@ public final class HexCasting {
             new net.minecraft.util.ResourceLocation(MOD_ID, "wall_scroll"),
             EntityWallScroll.class, "wall_scroll", 1, this, 64, 10, false);
         HexCapabilities.register();
+        HexSpecialVelocity.register();
+        HexStatistics.register();
+        HexAdvancementTriggers.registerTriggers();
         HexActionRegistry.bootstrap();
         PaucalAPI.init();
         // Register the complete message set before any world/player event can

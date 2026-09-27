@@ -12,6 +12,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.SoundCategory;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -25,8 +29,9 @@ public class BlockConjured extends Block {
 
     protected BlockConjured(Material material) {
         super(material);
-        setHardness(0.3F);
-        setResistance(0.3F);
+        setHardness(0.0F);
+        setResistance(0.0F);
+        setLightLevel(2.0F / 15.0F);
         setLightOpacity(0);
     }
 
@@ -37,6 +42,12 @@ public class BlockConjured extends Block {
 
     @Override
     public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean canCreatureSpawn(IBlockState state, IBlockAccess world, BlockPos pos,
+                                    EntityLiving.SpawnPlacementType type) {
         return false;
     }
 
@@ -54,6 +65,16 @@ public class BlockConjured extends Block {
     public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
         world.notifyBlockUpdate(pos, state, state, 3);
         super.onBlockAdded(world, pos, state);
+    }
+
+    /** Hex's invisible block still uses the amethyst break sound. */
+    @Override
+    public void onBlockDestroyedByPlayer(World world, BlockPos pos, IBlockState state) {
+        if (world != null && !world.isRemote) {
+            world.playSound(null, pos, SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.BLOCKS, 1.0F, 1.0F);
+        }
+        super.onBlockDestroyedByPlayer(world, pos, state);
     }
 
     @Override

@@ -29,7 +29,7 @@ public abstract class MixinRenderItem {
         Minecraft minecraft = Minecraft.getMinecraft();
         HexPattern pattern = null;
         if (stack.getItem() instanceof ItemPatternScroll) {
-            pattern = ItemPatternScroll.getPattern(stack,
+            pattern = ItemPatternScroll.getTooltipPattern(stack,
                 minecraft == null ? null : minecraft.world);
         } else if (stack.getItem() instanceof ItemSlate) {
             pattern = ItemSlate.getPattern(stack);

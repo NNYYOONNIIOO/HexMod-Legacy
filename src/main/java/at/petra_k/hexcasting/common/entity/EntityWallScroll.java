@@ -104,6 +104,13 @@ public final class EntityWallScroll extends EntityHanging
         return scroll == null ? ItemStack.EMPTY : scroll;
     }
 
+    /** Replace the stored scroll after an entity-Iota write. */
+    public void setScroll(ItemStack replacement) {
+        scroll = replacement == null ? ItemStack.EMPTY : replacement.copy();
+        scroll.setCount(Math.min(1, scroll.getCount()));
+        recalculateDisplay();
+    }
+
     @Override
     public int getWidthPixels() {
         return 16 * blockSize;

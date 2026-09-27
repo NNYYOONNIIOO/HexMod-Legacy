@@ -4,6 +4,8 @@ import at.petra_k.hexcasting.api.casting.eval.CastingException;
 import at.petra_k.hexcasting.api.casting.eval.Mishap;
 import at.petra_k.hexcasting.api.casting.iota.Iota;
 import at.petra_k.hexcasting.api.item.IotaHolderItem;
+import at.petra_k.hexcasting.api.addldata.ADIotaHolder;
+import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.item.ItemAbacus;
 import at.petra_k.hexcasting.common.item.ItemHexStaff;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
@@ -24,6 +26,10 @@ public final class IotaDataHolder {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
+        if (HexCapabilities.IOTA != null
+            && stack.getCapability(HexCapabilities.IOTA, null) != null) {
+            return true;
+        }
         if (stack.getItem() instanceof IotaHolderItem) {
             return true;
         }
@@ -34,6 +40,14 @@ public final class IotaDataHolder {
     public static boolean canRead(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return false;
+        }
+        ADIotaHolder capability = iotaCapability(stack);
+        if (capability != null) {
+            try {
+                return capability.readIota() != null;
+            } catch (CastingException | RuntimeException ignored) {
+                return false;
+            }
         }
         if (stack.getItem() instanceof IotaHolderItem) {
             try {
@@ -50,6 +64,10 @@ public final class IotaDataHolder {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
+        ADIotaHolder capability = iotaCapability(stack);
+        if (capability != null) {
+            return capability.writeable();
+        }
         if (stack.getItem() instanceof IotaHolderItem) {
             return ((IotaHolderItem) stack.getItem()).writeable(stack);
         }
@@ -60,6 +78,10 @@ public final class IotaDataHolder {
     public static boolean canWrite(ItemStack stack, Iota value) {
         if (stack == null || stack.isEmpty() || value == null) {
             return false;
+        }
+        ADIotaHolder capability = iotaCapability(stack);
+        if (capability != null) {
+            return capability.writeable() && capability.writeIota(value, true);
         }
         if (stack.getItem() instanceof IotaHolderItem) {
             IotaHolderItem holder = (IotaHolderItem) stack.getItem();
@@ -141,6 +163,14 @@ public final class IotaDataHolder {
             throw Mishap.invalidDataHolder("hexcasting.error.data_holder_missing");
         }
         try {
+            ADIotaHolder capability = iotaCapability(stack);
+            if (capability != null) {
+                Iota value = capability.readIota();
+                if (value == null) {
+                    throw Mishap.invalidDataHolder("hexcasting.error.data_holder_missing");
+                }
+                return value;
+            }
             if (stack.getItem() instanceof IotaHolderItem) {
                 Iota value = ((IotaHolderItem) stack.getItem()).readIota(stack);
                 if (value == null) {
@@ -160,6 +190,13 @@ public final class IotaDataHolder {
         if (!canWrite(stack, value)) {
             throw Mishap.invalidDataHolder("hexcasting.error.data_holder_not_writable");
         }
+        ADIotaHolder capability = iotaCapability(stack);
+        if (capability != null) {
+            if (!capability.writeIota(value, false)) {
+                throw Mishap.invalidDataHolder("hexcasting.error.data_holder_not_writable");
+            }
+            return;
+        }
         if (stack.getItem() instanceof IotaHolderItem) {
             IotaHolderItem holder = (IotaHolderItem) stack.getItem();
             holder.writeDatum(stack, value);
@@ -168,5 +205,10 @@ public final class IotaDataHolder {
         NBTTagCompound tag = stack.hasTagCompound() ? stack.getTagCompound() : new NBTTagCompound();
         tag.setTag(TAG_IOTA, value.serialize());
         stack.setTagCompound(tag);
+    }
+
+    private static ADIotaHolder iotaCapability(ItemStack stack) {
+        return stack == null || stack.isEmpty() || HexCapabilities.IOTA == null
+            ? null : stack.getCapability(HexCapabilities.IOTA, null);
     }
 }

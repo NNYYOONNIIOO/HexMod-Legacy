@@ -69,6 +69,10 @@ public final class HexActionRegistry {
             return ordinary;
         }
 
+        // Great spells are deliberately absent from the ordinary lookup in
+        // modern Hex.  A prototype or another Euler traversal must not be
+        // accepted here: only the exact angle signature generated for this
+        // world's seed is a valid cast.
         ResourceLocation perWorldId = PerWorldPatternData.actionFor(world, pattern);
         if (perWorldId != null) {
             HexAction perWorld = get(perWorldId);
@@ -76,7 +80,7 @@ public final class HexActionRegistry {
                 return perWorld;
             }
         }
-        return ordinary;
+        return null;
     }
 
     public static HexPattern getPattern(ResourceLocation id) {

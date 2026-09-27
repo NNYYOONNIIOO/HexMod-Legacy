@@ -11,13 +11,14 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import at.petra_k.hexcasting.api.item.PigmentItem;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
 /** A pigment item that stores a color on a focus or staff in 1.12.2. */
-public final class ItemColorizer extends Item {
+public final class ItemColorizer extends Item implements PigmentItem {
     private static final String KEY_COLOR = "hexcasting_color";
     private static final String KEY_VARIANT = "hexcasting_pigment_variant";
     private static final String KEY_OWNER = "hexcasting_pigment_owner";
@@ -102,6 +103,14 @@ public final class ItemColorizer extends Item {
         }
         return HexPigmentColors.color(getVariant(stack), fallback,
             getOwner(stack), time, x, y, z);
+    }
+
+    @Override
+    public int provideColor(ItemStack stack, UUID owner, float time,
+                            double x, double y, double z) {
+        int fallback = getColorValue();
+        return HexPigmentColors.color(variant, fallback,
+            owner == null ? new UUID(0L, 0L) : owner, time, x, y, z);
     }
 
     /** Return the pigment implementation saved on a colorized focus/staff. */
