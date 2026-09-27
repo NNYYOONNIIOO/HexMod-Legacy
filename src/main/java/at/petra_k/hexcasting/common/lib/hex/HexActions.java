@@ -3630,7 +3630,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     (DoubleIota) radiusValue);
                 net.minecraft.entity.player.EntityPlayer target =
                     requireFlightTarget((EntityIota) targetValue, vm, 1);
-                long cost = flightCost(radius, true);
+                 long cost = flightCost((DoubleIota) radiusValue, true, 0);
                 vm.consumeMedia(cost);
                 final FlightSnapshot before = FlightSnapshot.capture(target);
                 vm.addRollbackAction(before::restore);
@@ -3671,7 +3671,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 double seconds = requirePositiveFlightArgument(secondsIota);
                 net.minecraft.entity.player.EntityPlayer target =
                     requireFlightTarget((EntityIota) targetValue, vm, 1);
-                long cost = flightCost(seconds, false);
+                 long cost = flightCost((DoubleIota) secondsValue, false, 0);
                 if (seconds > Integer.MAX_VALUE / 20.0D) {
                     throw Mishap.invalidIota(secondsIota, 0, "double.positive");
                 }
@@ -5755,12 +5755,14 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         return raw;
     }
 
-    private static long flightCost(double amount, boolean minimumOneUnit)
+    private static long flightCost(DoubleIota amountIota, boolean minimumOneUnit,
+                                   int reverseIndex)
         throws CastingException {
+        double amount = amountIota.getValue();
         double rawCost = amount * 2.0D * MediaConstants.DUST_UNIT;
         if (Double.isNaN(rawCost) || Double.isInfinite(rawCost)
             || rawCost > Long.MAX_VALUE) {
-            throw Mishap.invalidValue("hexcasting.error.flight_duration");
+            throw Mishap.invalidIota(amountIota, reverseIndex, "double.positive");
         }
         long rounded = Math.round(rawCost);
         return minimumOneUnit
