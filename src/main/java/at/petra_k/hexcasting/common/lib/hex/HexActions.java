@@ -781,7 +781,10 @@ public static final HexPattern BOOL_IF_PATTERN =
             java.util.ArrayList<Iota> values = new java.util.ArrayList<>(stack.snapshot());
             int width = swizzleWidth(code);
             if (width > values.size()) {
-                throw Mishap.invalidValue("hexcasting.error.swizzle_width");
+                // The code itself counts as an argument in the modern
+                // operation, so report the full required and available stack
+                // sizes rather than a legacy swizzle-specific error.
+                throw Mishap.notEnoughArguments(width + 1, values.size() + 1);
             }
             int start = values.size() - width;
             java.util.ArrayList<Iota> selected = new java.util.ArrayList<>(
