@@ -1088,7 +1088,8 @@ public static final HexPattern BOOL_IF_PATTERN =
                         "hexcasting.error.ignite_range");
                     vm.consumeMedia(MediaConstants.DUST_UNIT);
                     if (!player.world.isRemote) {
-                        final int fireBefore = entity.getFire();
+                        final int fireBefore = entity.writeToNBT(
+                            new net.minecraft.nbt.NBTTagCompound()).getShort("Fire");
                         vm.addRollbackAction(() -> restoreFire(entity, fireBefore));
                         entity.setFire(8);
                     }
@@ -1505,7 +1506,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                           player.world, blockPos);
                       final java.util.Set<java.util.UUID> existingEntities =
                           snapshotEntityIds(player.world);
-                      if (player.world.destroyBlock(blockPos, true, player)) {
+                      if (player.world.destroyBlock(blockPos, true)) {
                           final java.util.List<net.minecraft.entity.item.EntityItem> drops =
                               findNewItemEntities(player.world, existingEntities);
                           vm.addRollbackAction(() -> {
@@ -2232,10 +2233,11 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
             if (otherName != null) {
                 throw Mishap.othersName(otherName);
             }
+            final net.minecraft.item.ItemStack targetStack = target;
             final net.minecraft.item.ItemStack targetBefore = target.copy();
             vm.addRollbackAction(() ->
-                MediaInventoryHelper.restoreStack(target, targetBefore));
-            IotaDataHolder.write(target, value);
+                MediaInventoryHelper.restoreStack(targetStack, targetBefore));
+            IotaDataHolder.write(targetStack, value);
             stack.pop();
         }
     });
@@ -2981,7 +2983,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                         if (!bolt.isDead) {
                             bolt.setDead();
                         }
-                        player.world.removeWeatherEffect(bolt);
+                        player.world.weatherEffects.remove(bolt);
                     });
                 }
             }

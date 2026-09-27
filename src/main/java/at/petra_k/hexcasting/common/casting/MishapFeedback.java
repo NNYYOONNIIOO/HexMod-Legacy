@@ -504,7 +504,7 @@ public final class MishapFeedback {
             ItemStack held = mishap.getOffhandItem();
             return I18n.translateToLocalFormatted(
                 "hexcasting.mishap.bad_item.offhand", expected,
-                held.getCount(), held.getDisplayName().getUnformattedText());
+                held.getCount(), held.getDisplayName());
         }
 
         Entity target = mishap.getTargetEntity();
@@ -519,7 +519,7 @@ public final class MishapFeedback {
                 "hexcasting.mishap.no_item", expected);
         }
         return I18n.translateToLocalFormatted("hexcasting.mishap.bad_item",
-            expected, stack.getCount(), stack.getDisplayName().getUnformattedText());
+            expected, stack.getCount(), stack.getDisplayName());
     }
 
     /** Localize a block failure with the recorded position and actual state. */
