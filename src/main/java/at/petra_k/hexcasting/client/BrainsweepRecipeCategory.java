@@ -1,8 +1,7 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
-import at.petra_k.hexcasting.common.lib.hex.HexActions;
-import at.petra_k.hexcasting.interop.inline.PatternDrawable;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiItemStackGroup;
@@ -11,6 +10,8 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 
 /** Legacy JEI category for the recipe-driven brainsweep action. */
 public final class BrainsweepRecipeCategory
@@ -26,7 +27,13 @@ public final class BrainsweepRecipeCategory
             HexAPI.modLoc("textures/gui/brainsweep_recipe.png"), 0, 0, 118, 86)
             .setTextureSize(128, 128)
             .build();
-        icon = new PatternDrawable(HexActions.BRAINSWEEP_ID, 16, 16);
+        // Brainsweep is a per-world great spell, so its pattern is
+        // intentionally hidden in JEI.  Chargeable amethyst is the spell's
+        // defining ingredient and keeps the category tab visible.
+        Item chargedAmethyst = HexItems.EXTRA_ITEMS.get("charged_amethyst");
+        icon = chargedAmethyst == null
+            ? guiHelper.createBlankDrawable(16, 16)
+            : guiHelper.createDrawableIngredient(new ItemStack(chargedAmethyst));
         title = I18n.format("hexcasting.action.brainsweep");
     }
 

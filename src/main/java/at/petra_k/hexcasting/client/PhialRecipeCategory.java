@@ -1,8 +1,7 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.api.HexAPI;
-import at.petra_k.hexcasting.common.lib.hex.HexActions;
-import at.petra_k.hexcasting.interop.inline.PatternDrawable;
+import at.petra_k.hexcasting.common.lib.HexItems;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiItemStackGroup;
@@ -11,6 +10,7 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.item.ItemStack;
 
 /** Legacy JEI category for crafting a media battery. */
 public final class PhialRecipeCategory implements IRecipeCategory<PhialRecipeWrapper> {
@@ -25,7 +25,10 @@ public final class PhialRecipeCategory implements IRecipeCategory<PhialRecipeWra
             HexAPI.modLoc("textures/gui/phial_recipe.png"), 0, 0, 113, 40)
             .setTextureSize(128, 128)
             .build();
-        icon = new PatternDrawable(HexActions.CRAFT_BATTERY_ID, 12, 12);
+        // Craft Phial is a per-world great spell, so its pattern is
+        // intentionally hidden in JEI.  Use the produced item as the
+        // category icon instead of leaving the tab blank.
+        icon = guiHelper.createDrawableIngredient(new ItemStack(HexItems.BATTERY));
         title = I18n.format("hexcasting.action.craft/battery");
     }
 
