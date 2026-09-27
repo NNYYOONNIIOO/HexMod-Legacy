@@ -1548,7 +1548,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_range");
                 if (!isFiniteVector(vector)) {
-                    throw Mishap.invalidValue("hexcasting.error.raycast_zero");
+                    throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
@@ -1591,7 +1591,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 net.minecraft.util.math.Vec3d vector = direction.getValue();
                 requireVecInRange(vm, vm.getPlayer(), start, "hexcasting.error.raycast_axis_range");
                 if (!isFiniteVector(vector)) {
-                    throw Mishap.invalidValue("hexcasting.error.raycast_axis_zero");
+                    throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
@@ -1637,7 +1637,7 @@ public static final HexPattern BOOL_IF_PATTERN =
                 double length = vector.lengthVector();
                 if (!isFiniteVector(vector)
                     || Double.isNaN(length) || Double.isInfinite(length)) {
-                    throw Mishap.invalidValue("hexcasting.error.raycast_entity_zero");
+                    throw Mishap.invalidIota(direction, 0, "vector");
                 }
                 vm.consumeMedia(MediaConstants.DUST_UNIT / 100L);
                 net.minecraft.util.math.Vec3d end = raycastEnd(start, vector);
@@ -3038,7 +3038,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             }
             double delta = deltaIota.getValue();
             if (Double.isNaN(delta) || Double.isInfinite(delta)) {
-                throw Mishap.invalidValue("hexcasting.error.blink_position");
+                throw Mishap.invalidIota(deltaIota, 0, "double");
             }
             net.minecraft.util.math.Vec3d displacement =
                 HexAPI.getEntityLookDirSpecial(target).scale(delta);
@@ -3066,7 +3066,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             double mediaCost = MediaConstants.SHARD_UNIT * Math.abs(delta) * 0.5D;
             if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
                 || mediaCost >= Long.MAX_VALUE) {
-                throw Mishap.invalidValue("hexcasting.error.blink_cost");
+                throw Mishap.invalidIota(deltaIota, 0, "double");
             }
             vm.consumeMedia(Math.round(mediaCost));
             if (!caster.world.isRemote) {
@@ -3329,7 +3329,8 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 double mediaCost = baseCost * duration * potencyCost;
                 if (Double.isNaN(mediaCost) || Double.isInfinite(mediaCost)
                     || mediaCost > Long.MAX_VALUE) {
-                    throw Mishap.invalidValue("hexcasting.error.potion_cost");
+                    throw Mishap.invalidIota(durationIota, durationReverseIndex,
+                        "double.positive");
                 }
                 // SpellAction.Result stores the Kotlin Double as a Long,
                 // which truncates fractional media rather than rounding it
