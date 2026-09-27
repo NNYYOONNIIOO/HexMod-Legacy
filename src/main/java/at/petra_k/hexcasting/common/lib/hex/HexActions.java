@@ -2656,7 +2656,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                                     (net.minecraftforge.fluids.IFluidBlock) block;
                                 if (fluidBlock.canDrain(player.world, current)) {
                                     net.minecraftforge.fluids.FluidStack drained =
-                                        fluidBlock.drain(player.world, current, false);
+                                        fluidBlock.drain(player.world, current, true);
                                     success = drained != null && drained.amount > 0;
                                 }
                             } else if (block instanceof net.minecraft.block.BlockLiquid) {
@@ -5350,13 +5350,13 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                     continue;
                 }
                 net.minecraftforge.fluids.FluidStack drained =
-                    handler.drain(contents, false);
+                    handler.drain(contents, true);
                 drainedAny |= drained != null && drained.amount > 0;
             }
         }
         if (!drainedAny) {
             net.minecraftforge.fluids.FluidStack drained =
-                handler.drain(Integer.MAX_VALUE, false);
+                handler.drain(Integer.MAX_VALUE, true);
             drainedAny = drained != null && drained.amount > 0;
         }
         return drainedAny;
