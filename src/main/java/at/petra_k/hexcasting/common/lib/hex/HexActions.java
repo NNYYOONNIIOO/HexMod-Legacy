@@ -56,16 +56,6 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 public final class HexActions {
     private static final double RAYCAST_DISTANCE = 32.0D;
 
-    public static final ResourceLocation PUSH_ZERO_ID = new ResourceLocation(HexAPI.MOD_ID, "push_zero");
-    public static final HexPattern PUSH_ZERO_PATTERN = pattern(HexDir.EAST);
-    public static final HexAction PUSH_ZERO = register(PUSH_ZERO_ID, PUSH_ZERO_PATTERN, stack ->
-        stack.push(new DoubleIota(0.0D)));
-
-    public static final ResourceLocation PUSH_ONE_ID = new ResourceLocation(HexAPI.MOD_ID, "push_one");
-    public static final HexPattern PUSH_ONE_PATTERN = pattern(HexDir.EAST, HexAngle.FORWARD);
-    public static final HexAction PUSH_ONE = register(PUSH_ONE_ID, PUSH_ONE_PATTERN, stack ->
-        stack.push(new DoubleIota(1.0D)));
-
     public static final ResourceLocation DUPLICATE_ID = new ResourceLocation(HexAPI.MOD_ID, "duplicate");
 public static final HexPattern DUPLICATE_PATTERN =
         pattern(HexDir.EAST, "aadaa");
@@ -5596,8 +5586,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
 
     public static void touch() {
         // Referencing a static field forces class initialization and registry population.
-        if (PUSH_ZERO == null || PUSH_ONE == null || DUPLICATE == null
-            || SWAP == null || ADD == null || NOT == null
+        if (DUPLICATE == null || SWAP == null || ADD == null || NOT == null
             || EMPTY_LIST == null || SINGLETON == null || SPLAT == null
             || EQUALITY == null || TYPE_EQUALITY == null || COERCE_TO_BOOL == null
             || BOOL_IF == null || GREATER == null || LESS == null || GREATER_EQ == null

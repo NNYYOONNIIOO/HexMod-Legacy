@@ -192,8 +192,10 @@ public final class ItemThoughtKnot extends Item implements IotaHolderItem {
         if (legacy != null) {
             return legacy;
         }
-        return HexActionRegistry.get(HexActions.PUSH_ONE_ID) == null
-            ? HexActionRegistry.firstId() : HexActions.PUSH_ONE_ID;
+        // Number literals are resolved by SpecialPatternResolver rather than
+        // by a normal registry entry.  Keep the legacy fallback deterministic
+        // without reintroducing the removed push_one alias.
+        return HexActionRegistry.firstId();
     }
 
     private static ResourceLocation getLegacyAction(ItemStack stack) {
