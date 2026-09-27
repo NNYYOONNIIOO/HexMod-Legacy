@@ -1981,6 +1981,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_height_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+            requireEntityInRange(vm, vm.getPlayer(), entity,
+                "hexcasting.error.entity_data_range");
             stack.push(new DoubleIota(entity.height));
             }
         });
@@ -2002,6 +2004,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_pos_eye_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+            requireEntityInRange(vm, vm.getPlayer(), entity,
+                "hexcasting.error.entity_data_range");
             stack.push(new Vec3Iota(entity.getPositionEyes(1.0F)));
             }
         });
@@ -2023,6 +2027,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_pos_foot_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+            requireEntityInRange(vm, vm.getPlayer(), entity,
+                "hexcasting.error.entity_data_range");
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
                 entity.posX, entity.posY, entity.posZ)));
             }
@@ -2045,6 +2051,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_look_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+            requireEntityInRange(vm, vm.getPlayer(), entity,
+                "hexcasting.error.entity_data_range");
             stack.push(new Vec3Iota(HexAPI.getEntityLookDirSpecial(entity)));
             }
         });
@@ -2066,6 +2074,8 @@ throw Mishap.invalidContext("hexcasting.error.entity_velocity_context");
             public void execute(CastingStack stack, CastingVM vm) throws CastingException {
             EntityIota entityIota = stack.pop(EntityIota.class);
             net.minecraft.entity.Entity entity = resolveEntity(entityIota, vm);
+            requireEntityInRange(vm, vm.getPlayer(), entity,
+                "hexcasting.error.entity_data_range");
             stack.push(new Vec3Iota(new net.minecraft.util.math.Vec3d(
                 entity.motionX, entity.motionY, entity.motionZ)));
             }
