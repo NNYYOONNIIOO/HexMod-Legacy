@@ -22,8 +22,11 @@ public final class ForEachAction implements HexAction {
     public void execute(CastingStack stack, CastingVM vm) throws CastingException {
         List<Iota> before = stack.snapshot();
         try {
-            ListIota code = stack.pop(ListIota.class);
-            ListIota data = stack.pop(ListIota.class);
+            // The action receives [code, data]; data is the top argument.
+            // Pop it first, while preserving both argument positions for
+            // invalid-Iota Mishaps.
+            ListIota data = stack.pop(ListIota.class, 0);
+            ListIota code = stack.pop(ListIota.class, 1);
 
             List<Iota> baseStack = stack.snapshot();
             ArrayList<Iota> accumulator = new ArrayList<>();
