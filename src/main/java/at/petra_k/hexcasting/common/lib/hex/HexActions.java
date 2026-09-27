@@ -714,7 +714,8 @@ public static final HexPattern BOOL_IF_PATTERN =
     public static final HexPattern DUPLICATE_N_PATTERN =
         pattern(HexDir.EAST, "aadaadaa");
     public static final HexAction DUPLICATE_N = register(DUPLICATE_N_ID, DUPLICATE_N_PATTERN, stack -> {
-        int count = requireInteger(stack.pop(DoubleIota.class), Iota.MAX_SERIALIZATION_TOTAL);
+        long requestedCount = requireNonNegativeLong(stack.pop(DoubleIota.class));
+        int count = (int) Math.min(requestedCount, (long) Iota.MAX_SERIALIZATION_TOTAL);
         Iota value = stack.pop();
         for (int i = 0; i < count; i++) {
             stack.push(value);
