@@ -162,16 +162,17 @@
     "category": "player",
     "subtitle": "hexcasting.subtitles.flight.ambience",
     "sounds": [
-      "minecraft:block/enchantment_table/enchant1"
+      "block/amethyst/shimmer"
     ]
   },
   "flight.finish": {
     "category": "player",
     "subtitle": "hexcasting.subtitles.flight.finish",
     "sounds": [
-      "minecraft:dig/glass1",
-      "minecraft:dig/glass2",
-      "minecraft:dig/glass3"
+      "block/amethyst/break1",
+      "block/amethyst/break2",
+      "block/amethyst/break3",
+      "block/amethyst/break4"
     ]
   }
 }

@@ -472,8 +472,12 @@ public final class GuiHexStaff extends GuiScreen {
         if (pixelPoints.size() > 1) {
             // RenderLib.drawPatternFromPoints expands segments with makeZappy
             // before the 5 px outer and 2 px inner drawLineSeq passes.
+            // GuiSpellcasting passes the full final segment for both saved
+            // and in-progress paths. The 0.8 default belongs to other
+            // animated renderers; using it here leaves every closed stroke
+            // visibly open at its final edge.
             ZappyPath zappyPath = makeZappyPoints(pixelPoints, duplicateIndices,
-                unstable ? 0.9F : 0.2F, 0.8F, points.size());
+                unstable ? 0.9F : 0.2F, 1.0F, points.size());
             // Match Hex RenderLib.drawPatternFromPoints: one 5 px pattern
             // ribbon followed by the 2 px readability pass. The old extra
             // 8 px halo made connections visibly thicker than upstream.

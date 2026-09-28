@@ -105,7 +105,7 @@ public final class HexPatternChatGeometry {
                                    int outerArgb, int innerArgb) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb, true,
             false, READABLE_VARIANCE, 0.0D, READABLE_FLOW_IRREGULAR,
-            READABLE_OFFSET, READABLE_LAST_SEGMENT, 0.0D, 0.0D);
+            READABLE_OFFSET, READABLE_LAST_SEGMENT, 0.0D, 0.0D, -1);
     }
 
     /** Draw a fitted preview, optionally omitting the readable-scroll dots. */
@@ -114,7 +114,7 @@ public final class HexPatternChatGeometry {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
             drawDots, false, READABLE_VARIANCE, 0.0D,
             READABLE_FLOW_IRREGULAR, READABLE_OFFSET, READABLE_LAST_SEGMENT,
-            0.0D, 0.0D);
+            0.0D, 0.0D, -1);
     }
 
     /**
@@ -127,7 +127,7 @@ public final class HexPatternChatGeometry {
                                          int alpha, int outerArgb, int innerArgb,
                                          boolean drawDots) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
-            drawDots, false, 0.0D, 0.0D, 0.0D, 0.0D, 1.0D, 0.0D, 0.0D);
+            drawDots, false, 0.0D, 0.0D, 0.0D, 0.0D, 1.0D, 0.0D, 0.0D, -1);
     }
 
     /**
@@ -141,7 +141,26 @@ public final class HexPatternChatGeometry {
                                         boolean drawDots) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
             drawDots, true, READABLE_VARIANCE, 0.0D,
-            READABLE_FLOW_IRREGULAR, 0.0D, 1.0D, 0.0D, 0.0D);
+            READABLE_FLOW_IRREGULAR, 0.0D, 1.0D, 0.0D, 0.0D, -1);
+    }
+
+    /** Draw a world pattern with the block lightmap value used by its face. */
+    public static void drawWorldPreview(HexPattern pattern, int x, int y, int size,
+                                        int alpha, int outerArgb, int innerArgb,
+                                        boolean drawDots, int packedLight) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, true, READABLE_VARIANCE, 0.0D,
+            READABLE_FLOW_IRREGULAR, 0.0D, 1.0D, 0.0D, 0.0D, packedLight);
+    }
+
+    /** Draw the static or readable world form used by a wall scroll. */
+    public static void drawScrollPreview(HexPattern pattern, int x, int y, int size,
+                                         int alpha, int outerArgb, int innerArgb,
+                                         boolean readable, int packedLight) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            readable, true, READABLE_VARIANCE, 0.0D,
+            READABLE_FLOW_IRREGULAR, readable ? READABLE_OFFSET : 0.0D,
+            readable ? READABLE_LAST_SEGMENT : 1.0D, 0.0D, 0.0D, packedLight);
     }
 
     /** Draw the animated WOBBLY pattern used by an energized world slate. */
@@ -152,7 +171,18 @@ public final class HexPatternChatGeometry {
                                                double seed) {
         drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
             drawDots, true, 2.5D, 0.1D, READABLE_FLOW_IRREGULAR,
-            0.0D, 1.0D, time, seed);
+            0.0D, 1.0D, time, seed, -1);
+    }
+
+    /** Animated world preview with a block lightmap value. */
+    public static void drawWobblyWorldPreview(HexPattern pattern, int x, int y,
+                                               int size, int alpha,
+                                               int outerArgb, int innerArgb,
+                                               boolean drawDots, float time,
+                                               double seed, int packedLight) {
+        drawPreview(pattern, x, y, size, alpha, outerArgb, innerArgb,
+            drawDots, true, 2.5D, 0.1D, READABLE_FLOW_IRREGULAR,
+            0.0D, 1.0D, time, seed, packedLight);
     }
 
     private static void drawPreview(HexPattern pattern, int x, int y, int size,
@@ -162,7 +192,7 @@ public final class HexPatternChatGeometry {
                                     double flowIrregular,
                                     double readabilityOffset,
                                     double lastSegmentLength,
-                                    double time, double seed) {
+                                    double time, double seed, int packedLight) {
         if (pattern == null || size <= 0 || alpha <= 3) {
             return;
         }
@@ -188,13 +218,17 @@ public final class HexPatternChatGeometry {
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(GL11.GL_TRIANGLES, packedLight >= 0
+            ? DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP
+            : DefaultVertexFormats.POSITION_COLOR);
         double outerWidth = size * READABLE_OUTER_WIDTH;
         double innerWidth = size * READABLE_INNER_WIDTH;
         drawLineSequence(buffer, preview.linePoints, outerWidth, alpha,
-            (outerArgb >> 16) & 0xFF, (outerArgb >> 8) & 0xFF, outerArgb & 0xFF);
+            (outerArgb >> 16) & 0xFF, (outerArgb >> 8) & 0xFF,
+            outerArgb & 0xFF, packedLight);
         drawLineSequence(buffer, preview.linePoints, innerWidth, alpha,
-            (innerArgb >> 16) & 0xFF, (innerArgb >> 8) & 0xFF, innerArgb & 0xFF);
+            (innerArgb >> 16) & 0xFF, (innerArgb >> 8) & 0xFF,
+            innerArgb & 0xFF, packedLight);
         tessellator.draw();
 
         if (drawDots) {
@@ -203,12 +237,12 @@ public final class HexPatternChatGeometry {
             // units at the 128 px render size, not a fraction of each grid step.
             drawPreviewDot(preview.dots.get(0), size * READABLE_START_DOT_RADIUS,
                 alpha,
-                0x5B, 0x7B, 0xD7);
+                0x5B, 0x7B, 0xD7, packedLight);
             int gridAlpha = alpha * 0x80 / 0xFF;
             for (int i = 1; i < preview.dots.size(); i++) {
                 drawPreviewDot(preview.dots.get(i), size * READABLE_GRID_DOT_RADIUS,
                     gridAlpha, (outerArgb >> 16) & 0xFF,
-                    (outerArgb >> 8) & 0xFF, outerArgb & 0xFF);
+                    (outerArgb >> 8) & 0xFF, outerArgb & 0xFF, packedLight);
             }
         }
 
@@ -250,7 +284,7 @@ public final class HexPatternChatGeometry {
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         drawLineSequence(buffer, layout.points, STROKE_WIDTH, alpha,
-            red, green, blue);
+            red, green, blue, -1);
         tessellator.draw();
 
         GlStateManager.enableTexture2D();
@@ -335,7 +369,8 @@ public final class HexPatternChatGeometry {
                                          int alpha,
                                          int red,
                                          int green,
-                                         int blue) {
+                                         int blue,
+                                         int packedLight) {
         if (points.size() <= 1 || width <= 0.0D) {
             return;
         }
@@ -394,63 +429,74 @@ public final class HexPatternChatGeometry {
                 p2.x - tangentX * Math.max(0.0D, -high) - normalX,
                 p2.y - tangentY * Math.max(0.0D, -high) - normalY);
 
-            vertex(buffer, p1Down, alpha, red, green, blue);
-            vertex(buffer, p1, alpha, red, green, blue);
-            vertex(buffer, p1Up, alpha, red, green, blue);
-            vertex(buffer, p1Down, alpha, red, green, blue);
-            vertex(buffer, p1Up, alpha, red, green, blue);
-            vertex(buffer, p2Up, alpha, red, green, blue);
-            vertex(buffer, p1Down, alpha, red, green, blue);
-            vertex(buffer, p2Up, alpha, red, green, blue);
-            vertex(buffer, p2, alpha, red, green, blue);
-            vertex(buffer, p1Down, alpha, red, green, blue);
-            vertex(buffer, p2, alpha, red, green, blue);
-            vertex(buffer, p2Down, alpha, red, green, blue);
+            vertex(buffer, p1Down, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1Up, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1Down, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1Up, alpha, red, green, blue, packedLight);
+            vertex(buffer, p2Up, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1Down, alpha, red, green, blue, packedLight);
+            vertex(buffer, p2Up, alpha, red, green, blue, packedLight);
+            vertex(buffer, p2, alpha, red, green, blue, packedLight);
+            vertex(buffer, p1Down, alpha, red, green, blue, packedLight);
+            vertex(buffer, p2, alpha, red, green, blue, packedLight);
+            vertex(buffer, p2Down, alpha, red, green, blue, packedLight);
 
             if (i > 0) {
                 drawJoin(buffer, p1, normalX, normalY, joinAngles[i],
-                    alpha, red, green, blue);
+                    alpha, red, green, blue, packedLight);
             }
         }
         drawCapFan(buffer, points.get(0), points.get(1), radius,
-            alpha, red, green, blue);
+            alpha, red, green, blue, packedLight);
         drawCapFan(buffer, points.get(count - 1), points.get(count - 2), radius,
-            alpha, red, green, blue);
+            alpha, red, green, blue, packedLight);
     }
 
     private static void vertex(BufferBuilder buffer, double x, double y, int alpha,
-                               int red, int green, int blue) {
-        buffer.pos(x, y, 0.0D)
-            .color(red, green, blue, alpha)
-            .endVertex();
+                               int red, int green, int blue, int packedLight) {
+        if (packedLight >= 0) {
+            buffer.pos(x, y, 0.0D)
+                .tex(0.0D, 0.0D)
+                .color(red, green, blue, alpha)
+                .lightmap(packedLight & 0xFFFF, (packedLight >>> 16) & 0xFFFF);
+        } else {
+            buffer.pos(x, y, 0.0D)
+                .color(red, green, blue, alpha);
+        }
+        buffer.endVertex();
     }
 
     private static void vertex(BufferBuilder buffer, Point point, int alpha,
-                               int red, int green, int blue) {
-        vertex(buffer, point.x, point.y, alpha, red, green, blue);
+                               int red, int green, int blue, int packedLight) {
+        vertex(buffer, point.x, point.y, alpha, red, green, blue, packedLight);
     }
 
     private static void drawPreviewDot(Point point, double radius, int alpha,
-                                       int red, int green, int blue) {
+                                       int red, int green, int blue,
+                                       int packedLight) {
         if (point == null || radius <= 0.0D || alpha <= 0) {
             return;
         }
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
-        buffer.pos(point.x, point.y, 0.0D).color(red, green, blue, alpha).endVertex();
+        buffer.begin(GL11.GL_TRIANGLE_FAN, packedLight >= 0
+            ? DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP
+            : DefaultVertexFormats.POSITION_COLOR);
+        vertex(buffer, point.x, point.y, alpha, red, green, blue, packedLight);
         for (int i = 0; i <= 6; i++) {
             double angle = Math.PI * 2.0D * i / 6.0D;
-            buffer.pos(point.x + Math.cos(angle) * radius,
-                point.y + Math.sin(angle) * radius, 0.0D)
-                .color(red, green, blue, alpha).endVertex();
+            vertex(buffer, point.x + Math.cos(angle) * radius,
+                point.y + Math.sin(angle) * radius, alpha, red, green, blue,
+                packedLight);
         }
         tessellator.draw();
     }
 
     private static void drawJoin(BufferBuilder buffer, Point point,
                                  double normalX, double normalY, double signedAngle,
-                                 int alpha, int red, int green, int blue) {
+                                 int alpha, int red, int green, int blue,
+                                 int packedLight) {
         double angle = Math.abs(signedAngle);
         if (angle <= 0.000001D) {
             return;
@@ -466,9 +512,10 @@ public final class HexPatternChatGeometry {
                 double[] fan = rotate(rnormalX, rnormalY,
                     -signedAngle * j / joinSteps);
                 Point current = new Point(point.x - fan[0], point.y - fan[1]);
-                vertex(buffer, point, alpha, red, green, blue);
-                vertex(buffer, previous[0], previous[1], alpha, red, green, blue);
-                vertex(buffer, current, alpha, red, green, blue);
+                vertex(buffer, point, alpha, red, green, blue, packedLight);
+                vertex(buffer, previous[0], previous[1], alpha, red, green, blue,
+                    packedLight);
+                vertex(buffer, current, alpha, red, green, blue, packedLight);
                 previous = new double[] {current.x, current.y};
             }
         } else {
@@ -479,9 +526,10 @@ public final class HexPatternChatGeometry {
                 double[] fan = rotate(normalX, normalY,
                     -signedAngle * j / joinSteps);
                 Point current = new Point(point.x - fan[0], point.y - fan[1]);
-                vertex(buffer, point, alpha, red, green, blue);
-                vertex(buffer, previous[0], previous[1], alpha, red, green, blue);
-                vertex(buffer, current, alpha, red, green, blue);
+                vertex(buffer, point, alpha, red, green, blue, packedLight);
+                vertex(buffer, previous[0], previous[1], alpha, red, green, blue,
+                    packedLight);
+                vertex(buffer, current, alpha, red, green, blue, packedLight);
                 previous = new double[] {current.x, current.y};
             }
         }
@@ -489,7 +537,7 @@ public final class HexPatternChatGeometry {
 
     private static void drawCapFan(BufferBuilder buffer, Point point, Point previous,
                                    double radius, int alpha, int red, int green,
-                                   int blue) {
+                                   int blue, int packedLight) {
         double dx = point.x - previous.x;
         double dy = point.y - previous.y;
         double segmentLength = length(dx, dy);
@@ -505,9 +553,9 @@ public final class HexPatternChatGeometry {
         for (int j = 1; j <= 10; j++) {
             Point current = rotatedPoint(point, normalX, normalY,
                 -Math.PI + Math.PI * j / 10.0D);
-            vertex(buffer, point, alpha, red, green, blue);
-            vertex(buffer, last, alpha, red, green, blue);
-            vertex(buffer, current, alpha, red, green, blue);
+            vertex(buffer, point, alpha, red, green, blue, packedLight);
+            vertex(buffer, last, alpha, red, green, blue, packedLight);
+            vertex(buffer, current, alpha, red, green, blue, packedLight);
             last = current;
         }
     }

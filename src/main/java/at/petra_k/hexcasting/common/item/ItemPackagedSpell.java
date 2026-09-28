@@ -50,7 +50,8 @@ public class ItemPackagedSpell extends Item implements MediaHolderItem, HexHolde
     private static final String KEY_PACKAGED_ACTION = "packaged_action";
     private static final String KEY_PATTERN_PROGRAM = "pattern_program";
     private static final String KEY_VARIANT = "variant";
-    private static final int VARIANT_COUNT = 5;
+    /** The eight visual CAD variants shared by packaged spells and foci. */
+    public static final int VARIANT_COUNT = 8;
 
     /** Returns the action stored in this packaged spell, or null for an empty item. */
     public static ResourceLocation getPackagedAction(ItemStack stack) {

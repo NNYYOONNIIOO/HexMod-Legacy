@@ -32,6 +32,7 @@ import at.petra_k.hexcasting.interop.inline.HexInline;
 
 /** Action-selectable portable casting item for the 1.12.2 port. */
 public final class ItemHexFocus extends Item implements IotaHolderItem, VariantItem {
+    public static final int VARIANT_COUNT = 8;
     private static final String KEY_SELECTED_ACTION = "selected_action";
     private static final String KEY_SEALED = "sealed";
     private static final String KEY_VARIANT = "variant";
@@ -112,7 +113,8 @@ public final class ItemHexFocus extends Item implements IotaHolderItem, VariantI
 
     public static int getVariant(ItemStack stack) {
         NBTTagCompound tag = stack == null ? null : stack.getTagCompound();
-        return tag == null ? 0 : Math.max(0, Math.min(7, tag.getInteger(KEY_VARIANT)));
+        return tag == null ? 0
+            : Math.max(0, Math.min(VARIANT_COUNT - 1, tag.getInteger(KEY_VARIANT)));
     }
 
     public static void setVariant(ItemStack stack, int variant) {
@@ -124,12 +126,12 @@ public final class ItemHexFocus extends Item implements IotaHolderItem, VariantI
             tag = new NBTTagCompound();
             stack.setTagCompound(tag);
         }
-        tag.setInteger(KEY_VARIANT, Math.max(0, Math.min(7, variant)));
+        tag.setInteger(KEY_VARIANT, Math.max(0, Math.min(VARIANT_COUNT - 1, variant)));
     }
 
     @Override
     public int numVariants() {
-        return 8;
+        return VARIANT_COUNT;
     }
 
     @Override

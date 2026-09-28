@@ -50,10 +50,12 @@ public final class RenderWallScroll extends Render<EntityWallScroll> {
             // The front paper plane is one pixel in front of the backing
             // box in this renderer's 1/16-pixel coordinate space.
             GlStateManager.translate(0.0D, 0.0D, -1.03D);
-            HexPatternChatGeometry.drawPreview(entity.getPattern(),
+            int packedLight = entity.world.getCombinedLight(
+                entity.getPosition(), 0);
+            HexPatternChatGeometry.drawScrollPreview(entity.getPattern(),
                 -size / 2, -size / 2, size, 255,
-                0xC80C0A0C, 0xFF333030,
-                entity.getShowsStrokeOrder());
+                0xFFD2C8C8, 0xFF554D54,
+                entity.getShowsStrokeOrder(), packedLight);
         }
 
         GlStateManager.disableRescaleNormal();

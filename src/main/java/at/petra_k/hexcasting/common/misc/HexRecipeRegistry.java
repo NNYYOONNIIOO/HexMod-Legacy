@@ -85,6 +85,12 @@ public final class HexRecipeRegistry {
             new String[] {"NBA", "NFA", "NBA"},
             'A', charged, 'B', Items.WRITABLE_BOOK, 'F', Items.CHORUS_FRUIT,
             'N', goldNugget);
+        register(event, new SealRecipe(
+            new ResourceLocation(HexAPI.MOD_ID, "dynamicseal_focus"), true),
+            "dynamicseal_focus");
+        register(event, new SealRecipe(
+            new ResourceLocation(HexAPI.MOD_ID, "dynamicseal_spellbook"), false),
+            "dynamicseal_spellbook");
         shaped(event, "jeweler_hammer", hexItem("jeweler_hammer"),
             new String[] {"IAN", " S ", " S "},
             'A', shard, 'I', ironIngot, 'N', ironNugget,

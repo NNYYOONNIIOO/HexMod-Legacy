@@ -24,6 +24,9 @@ public final class HexAkashicBookshelfRenderer
             return;
         }
         EnumFacing facing = state.getValue(BlockAkashicBookshelf.FACING);
-        HexWorldPatternRenderer.render(tile.getPattern(), facing, false);
+        int packedLight = tile.getWorld().getCombinedLight(
+            tile.getPos().offset(facing), 0);
+        HexWorldPatternRenderer.render(tile.getPattern(), facing, false,
+            0.0F, 0.0F, tile.getPos().hashCode(), packedLight);
     }
 }

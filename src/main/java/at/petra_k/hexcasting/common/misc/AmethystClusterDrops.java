@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.common.misc;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -32,9 +33,12 @@ public final class AmethystClusterDrops {
         // using it also avoids depending on the backport's registry timing.
         ResourceLocation clusterId = event.getState().getBlock().getRegistryName();
         int fortune = Math.max(0, event.getFortuneLevel());
-        int dustCount = 2 + event.getWorld().rand.nextInt(3) + fortune;
+        boolean maxHarvestable = isMaxHarvestable(event);
+        int dustCount = maxHarvestable
+            ? 2 + event.getWorld().rand.nextInt(3 + fortune)
+            : event.getWorld().rand.nextInt(3);
         Item dust = HexItems.EXTRA_ITEMS.get("amethyst_dust");
-        if (dust != null) {
+        if (dust != null && dustCount > 0) {
             event.getDrops().add(new ItemStack(dust, dustCount));
         }
 
@@ -58,13 +62,23 @@ public final class AmethystClusterDrops {
         }
 
         Item charged = HexItems.EXTRA_ITEMS.get("charged_amethyst");
-        if (charged != null && event.getWorld().rand.nextFloat()
-            < chargedChance(fortune)) {
+        float chance = maxHarvestable ? chargedChance(fortune) : 0.125F;
+        if (charged != null && event.getWorld().rand.nextFloat() < chance) {
             event.getDrops().add(new ItemStack(charged, 1));
         }
         // HarvestDropsEvent is filtered once more by Block#dropBlockAsItem;
         // the replacement shards and charged crystal are intentional drops.
         event.setDropChance(1.0F);
+    }
+
+    private static boolean isMaxHarvestable(BlockEvent.HarvestDropsEvent event) {
+        EntityPlayer harvester = event.getHarvester();
+        if (harvester == null) {
+            return false;
+        }
+        ItemStack tool = harvester.getHeldItemMainhand();
+        return tool != null && !tool.isEmpty()
+            && tool.canHarvestBlock(event.getState());
     }
 
     /**

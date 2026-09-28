@@ -14,25 +14,29 @@ final class HexWorldPatternRenderer {
     private static final double FACE_OFFSET = 0.003D;
     private static final int DEFAULT_OUTER = 0xFFD2C8C8;
     private static final int DEFAULT_INNER = 0xFF554D54;
-    private static final int ENERGIZED_OUTER = 0xFFCFA0F3;
-    private static final int ENERGIZED_INNER = 0xFF9B68C2;
-
     private HexWorldPatternRenderer() {
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized) {
-        render(pattern, facing, energized, 0.0F, 0L, 0L, false);
+        render(pattern, facing, energized, 0.0F, 0L, 0L, -1, false);
     }
 
     static void render(HexPattern pattern, EnumFacing facing, boolean energized,
                        float partialTicks, float worldTime, long seed) {
-        render(pattern, facing, energized, partialTicks, worldTime, seed, true);
+        render(pattern, facing, energized, partialTicks, worldTime, seed, -1, true);
+    }
+
+    static void render(HexPattern pattern, EnumFacing facing, boolean energized,
+                       float partialTicks, float worldTime, long seed,
+                       int packedLight) {
+        render(pattern, facing, energized, partialTicks, worldTime, seed,
+            packedLight, true);
     }
 
     private static void render(HexPattern pattern, EnumFacing facing,
                                boolean energized, float partialTicks,
                                float worldTime, long seed,
-                               boolean slateSurface) {
+                               int packedLight, boolean slateSurface) {
         if (pattern == null || facing == null) {
             return;
         }
@@ -53,11 +57,17 @@ final class HexWorldPatternRenderer {
             HexPatternChatGeometry.drawWobblyWorldPreview(pattern,
                 -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
                 0xFFCFA0F3, 0xFFE7CFF9, false,
-                (float) worldTime + partialTicks, seed);
+                (float) worldTime + partialTicks, seed, packedLight);
         } else {
-            HexPatternChatGeometry.drawWorldPreview(pattern,
-                -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
-                DEFAULT_OUTER, DEFAULT_INNER, false);
+            if (packedLight >= 0) {
+                HexPatternChatGeometry.drawWorldPreview(pattern,
+                    -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
+                    DEFAULT_OUTER, DEFAULT_INNER, false, packedLight);
+            } else {
+                HexPatternChatGeometry.drawWorldPreview(pattern,
+                    -PREVIEW_SIZE / 2, -PREVIEW_SIZE / 2, PREVIEW_SIZE, 255,
+                    DEFAULT_OUTER, DEFAULT_INNER, false);
+            }
         }
         GlStateManager.popMatrix();
     }

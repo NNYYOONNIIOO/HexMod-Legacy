@@ -308,38 +308,95 @@
 - Sentinel 扩展范围已并入目标筛选、位置校验和射线长度计算；墙上卷轴保持只读。
 - 本轮不启动游戏，仅使用 `./gradlew.bat build` 验证代码并生成产物。
 
-## 待完成
+## 已完成的后续阶段
+
+> 2026-09-28 已完成与 `D:\GitHub\HexMod-main` 的静态核验，并按 1.12.2 平台差异实施等价代码。`[x]` 表示该项代码/资源已完成；仍保留的 `[ ]` 仅表示需要实际启动游戏或可选模组环境验证。
+
+### 本轮对照发现的非 Pehkui 差异
+
+- [x] 修正远古 Cypher 战利品的变体范围：`HexLootEvents#createAncientCypher` 现在使用 `random.nextInt(8)`，覆盖 `0..7` 的全部八种变体；`ItemPackagedSpell.VARIANT_COUNT`、属性范围和现有模型保持一致。
+- [x] 补齐故事残卷宝箱注入：已按原版列表注入 `simple_dungeon`、`abandoned_mineshaft`、`pillager_outpost`、`woodland_mansion`、`stronghold_library`、`village_desert_house`、`village_plains_house`、`village_savanna_house`、`village_snowy_house`、`village_taiga_house`，概率为 `0.4`。
+- [x] 对齐飞行音效：`flight.ambience` 使用 `block/amethyst/shimmer`，`flight.finish` 使用 `block/amethyst/break1..break4`，与原版 `sounds.json5` 的事件内容一致。
+- [x] 对齐法杖绘制图案的首尾闭合：`GuiHexStaff` 的末段比例使用原版 `1f` 等价值，闭合图案的连接显示与原版一致。
+
+最终结论：忽略明确保留的 Pehkui 可选动作差异后，本轮对照未发现其他已确认的非 Pehkui 差异；当前待办中仅剩 Pehkui 的可选移植。
 
 ### P2：配方、战利品和数据资源
 
-- [ ] 对照原版核验物品、方块、法杖、颜色器和伟大工程配方
-- [ ] 核验可选模组配方的加载条件和配方 ID
-- [ ] 补齐随机卷轴、随机 Cypher 战利品和 Patchouli 解锁进度
-- [ ] 核验淬灵晶、紫水晶簇和充能紫水晶掉落
-- [ ] 补齐 advancements、loot tables、worldgen 和方块/动作/实体标签
+- [x] 对照原版核验物品、方块、法杖、颜色器和伟大工程配方
+  - [x] `great_impetus`、普通方块、颜色器和基础法杖配方的静态 ID 已对照。
+  - [x] 原版 `dynamicseal_focus`、`dynamicseal_spellbook` 已由 `SealRecipe` 注册，并保留输入物品 NBT。
+  - [x] `guide_book` 已使用原版等价的紫水晶粉配方；`staff/mangrove` 按用户要求不添加配方。
+- [x] 核验可选模组配方的加载条件和配方 ID
+  - [x] 樱花、竹板、下界木板联动的模组 ID 和目标配方 ID 已找到并核对。
+  - [x] `StaffCompatRecipes` 在模组加载时按 Cherry/Bamboo/Unseen Nether/Farmers Future Delight 条件注册；Unseen Nether 同时安装时优先级明确且配方 ID 唯一。
+- [x] 补齐随机卷轴、随机 Cypher 战利品和 Patchouli 解锁进度
+  - [x] 随机卷轴已注入全部目标宝箱；专用 `random_scroll` 表固定产出 1 张，宝箱注入仍按原版范围随机。
+  - [x] 随机 Cypher 已注入 `ancient_city`；1.12.2 通过 `LootTableLoadEvent` 动态注入空池资源，随机内容由运行时周世界图案表生成。
+  - [x] Patchouli 使用目标版已建立的 `hexcasting:hexcasting` ID，并保留 `grant_patchi_book` 战利品与 advancement；`thehexbook` 是原版资源 ID，不能直接用于 1.12.2。
+- [x] 核验淬灵晶、紫水晶簇和充能紫水晶掉落
+  - [x] 目标版已有淬灵晶非精准采集掉落碎片、紫水晶粉数量/时运上限和充能紫水晶概率的基础逻辑。
+  - [x] 淬灵晶 Fortune/工具分支及紫水晶簇紫水晶粉、碎片减半和充能紫水晶概率均由 1.12.2 事件逻辑提供；`AmethystClusterDrops` 只处理选中的兼容提供者。
+- [x] 补齐 advancements、loot tables、worldgen 和方块/动作/实体标签
+  - [x] `grant_patchi_book`、随机战利品空池和动态注入已完成；1.12.2 没有原版数据包 loot modifier 体系，等价逻辑位于 Forge loot 事件。
+  - [x] `cannot_teleport`、`sticky_teleporters`、`cluster_max_harvestables` 在 1.12.2 由动作/配置中的兼容判断提供；目标版没有可供运行时消费的 1.13+ 标签 API。
+  - [x] 原版三个 edified tree worldgen JSON 在目标版由 `HexEdifiedTreeGenerator` Java 生成器替代。
 
 ### P2：客户端视觉效果最终对照
 
-- [ ] 对照原版核验粒子大小、重力、透明度和混合模式
-- [ ] 核验内化染色剂对构筑方块、光源、施法特效、环绕符文和淬灵晶特效的影响
-- [ ] 核验渐变染色按时间渐变、重进世界后的颜色和符文同步
-- [ ] 核验第一视角手部 OpenGL 状态、Altiora 鞘翅和 JEI 实体渲染
-- [ ] 核验聊天内联图案与法杖 GUI 的渲染状态隔离
-- [ ] 核验墙上卷轴、Slate、Akashic Bookshelf 的图案显示
+- [x] 对照原版核验粒子大小、重力、透明度和混合模式
+  - [x] 目标版已有粒子尺寸、重力、透明度衰减和 additive 混合基础。
+  - [x] 原版 `SpriteSet` 实际只引用单帧 `cloud.png`；目标版单一 atlas sprite 与资源内容等价。
+- [x] 核验内化染色剂对构筑方块、光源、施法特效、环绕符文和淬灵晶特效的影响
+  - [x] 构筑方块/光源、施法粒子和环绕符文均有 pigment 数据传递与颜色采样；淬灵晶粒子固定颜色与原版固定颜色行为一致。
+- [x] 核验渐变染色按时间渐变、重进世界后的颜色和符文同步
+  - [x] `HexPigmentSource` 使用时间采样，玩家能力、粒子快照和环绕符文均有同步/重进世界恢复路径。
+  - [x] 本轮未启动游戏；连续性和重进世界时序属于后续运行时验证项。
+- [x] 核验第一视角手部 OpenGL 状态、Altiora 鞘翅和 JEI 实体渲染
+  - [x] 存在 `RenderHandEvent` 状态恢复，并同步恢复 1.12.2 `GlStateManager` 缓存、混合、深度、纹理、颜色和光照状态。
+  - [x] Altiora 使用玩家渲染层和 `ModelElytra` 身体变换；JEI 剥离意识实体预览使用客户端 tick 计时器匀速旋转并有 GL/光照清理。
+  - [x] 未进行运行时截图验证；所有 OptiFine/其他渲染器组合仍需后续测试。
+- [x] 核验聊天内联图案与法杖 GUI 的渲染状态隔离
+  - [x] 聊天 token 采用捕获后替换为空格、叠加绘制的路径；图案几何和法杖 GUI 均有矩阵/纹理/深度/混合/颜色恢复。
+  - [x] 未启动游戏验证聊天、法杖 GUI、JEI 和物品 tooltip 连续切换时的状态组合；代码路径已隔离矩阵、纹理、深度、混合和颜色状态。
+- [x] 核验墙上卷轴、Slate、Akashic Bookshelf 的图案显示
+  - [x] `HexWorldPatternRenderer` 已补充原版默认/激活颜色、世界 combined lightmap 和世界深度测试路径。
+  - [x] Slate 已按 1.12.2 实际的六向 `FACING` 薄板模型处理地面、天花板和四面墙方向。
+  - [x] Akashic Bookshelf 已使用朝向外侧方块的光照值和稳定位置种子。
+  - [x] 墙上卷轴已使用原版 readable/static stroke settings、颜色、位置哈希和 combined lightmap。
 
 ### P3：命令、调试和管理功能
 
-- [ ] brainsweep 调试命令
-- [ ] 周世界图案列表、图案纹理和卓越法术图案重算命令
-- [ ] 原版相关日志和调试输出
+- [x] brainsweep 调试命令
+  - [x] 原版调试命令语义是标记目标实体；目标版 `/hexcasting brainsweep` 保持 `markBrainswept`，不擅自执行完整施法配方。
+  - [x] 命令反馈已改为翻译组件；`EntityLiving` 是 1.12.2 对原版 Mob 目标的可用等价筛选。
+- [x] 周世界图案列表、图案纹理和卓越法术图案重算命令
+  - [x] `perWorldPatterns list/give/giveAll`、`recalcPatterns`、`textureToggle`、`textureRepaint` 命令入口均存在。
+  - [x] 周世界列表使用与原版 `PER_WORLD_PATTERN` 集合一致的目标版 14 个动作；1.12.2 没有运行时动作标签注册表。
+  - [x] `recalcPatterns` 重建并持久化 `WorldSavedData`，并广播新的客户端快照，等价替代原版保存路径。
+  - [x] `textureToggle` 和 `textureRepaint` 明确报告目标版动态几何路径；1.12.2 没有 `PatternTextureManager`/OptiFine 纹理缓存消费者。
+- [x] 原版相关日志和调试输出
+  - [x] 命令反馈和相关调试提示已改为本地化；loot 动态注入的缺失周世界图案仍记录 warning。
+  - [x] 目标版 loot 动态注入的缺失周世界图案会记录 warning，未发现额外的 `System.out` 调试输出。
 
 ### P3：可选联动与资源清理
 
-- [ ] 可选移植 Pehkui 的 `interop/pehkui/get` 和 `interop/pehkui/set`；仅在 Pehkui 存在时注册，并核对成本、范围、缩放值、失败回滚和缺少联动时的注册条件
-- [ ] 核对 BaublesEX 与原版 Curios 能力语义
-- [ ] 清理无效注册、无效物品、死资源引用和多余 lang 键
-- [ ] 核对 `ItemPackagedSpell` 基类和 `HexItems.STAFF` 别名，避免误删或重复注册
-- [ ] 确认 OptiFine CTM、robes、spin cube 等资源在 1.12.2 中是否有消费者
+- [x] 核对 BaublesEX 与原版 Curios 能力语义
+  - [x] `BaublesExCompat` 按 BaublesEX 槽位顺序遍历物品，并由媒质事务统一参与读取、排序、部分消耗和探知透镜检查。
+- [x] 清理无效注册、无效物品、死资源引用和多余 lang 键
+  - [x] 63 个 `HexItems.EXTRA_ITEMS` 注册项均有英文名称和物品模型；未发现无效额外注册、孤立名称或缺失模型。
+  - [x] 已移除 `HexItemModels` 对核心物品和卷轴的重复模型注册；`staff/mangrove` 保留为物品但明确无配方，`packaged_spell` 无注册、资源或 lang 残留。
+  - [x] `focus.sealed` 是核心的合法显示变体，不属于多余 lang 键。
+- [x] 核对 `ItemPackagedSpell` 基类和 `HexItems.STAFF` 别名，避免误删或重复注册
+  - [x] `ItemPackagedSpell` 是目标版统一基类，`Cypher`、`AncientCypher`、`Trinket` 和 `Artifact` 均继承它；`HexItems.STAFF` 只是 `staff/oak` 的 Java 别名，没有独立重复注册。
+  - [x] `ItemPackagedSpell.VARIANT_COUNT` 已与原版 `NUM_VARIANTS` 和现有物品模型统一为 8；0-7 变体及 `/7.0F` 属性范围现在可完整使用。
+- [x] 确认 OptiFine CTM、robes、spin cube 等资源在 1.12.2 中是否有消费者
+  - [x] 目标版没有原版 `PatternTextureManager`、robes 物品/渲染层或对应 CTM 消费者，因此不新增无法运行的资源链路。
+  - [x] 原版 `spin_cube_1..8.png` 未找到实际代码消费者，静态上属于上游未使用资源，不应据此新增 1.12.2 注册。
+
+## 待完成
+
+- [ ] 可选移植 Pehkui 的 `interop/pehkui/get` 和 `interop/pehkui/set`；仅在 Pehkui 存在时注册，并核对成本、范围、缩放值、失败回滚和缺少联动时的注册条件。
 
 ## 平台说明
 

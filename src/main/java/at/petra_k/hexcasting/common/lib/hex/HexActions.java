@@ -5726,7 +5726,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             return;
         }
         if (stack.getItem() instanceof ItemHexFocus) {
-            setVariant(stack, (ItemHexFocus.getVariant(stack) + 1) % 8);
+            setVariant(stack, (ItemHexFocus.getVariant(stack) + 1) % ItemHexFocus.VARIANT_COUNT);
         } else if (stack.getItem() instanceof ItemSpellbook) {
             ItemSpellbook.cycleVariant(stack);
         } else if (stack.getItem() instanceof ItemPackagedSpell) {

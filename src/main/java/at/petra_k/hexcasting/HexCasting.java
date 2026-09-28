@@ -3,6 +3,7 @@ package at.petra_k.hexcasting;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -19,6 +20,7 @@ import at.petra_k.hexcasting.common.block.TileEntitySlate;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicBookshelf;
 import at.petra_k.hexcasting.common.block.TileEntityAkashicRecord;
 import at.petra_k.hexcasting.common.block.TileEntityQuenchedAllay;
+import at.petra_k.hexcasting.common.command.HexCommand;
 import at.petra_k.hexcasting.common.entity.EntityWallScroll;
 import at.petra_k.hexcasting.common.network.MsgCastParticlesS2C;
 import at.petra_k.hexcasting.common.network.MsgCastingDataS2C;
@@ -94,5 +96,10 @@ public final class HexCasting {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         PROXY.registerRenderers();
+    }
+
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new HexCommand());
     }
 }

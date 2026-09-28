@@ -98,6 +98,16 @@ public final class PerWorldPatternData extends WorldSavedData {
         return data;
     }
 
+    /** Rebuild and persist the deterministic table for an existing server world. */
+    public static synchronized PerWorldPatternData recalculate(World world) {
+        if (world == null || world.isRemote) {
+            return null;
+        }
+        PerWorldPatternData data = createFromScratch(world.getSeed());
+        world.getPerWorldStorage().setData(DATA_NAME, data);
+        return data;
+    }
+
     /** Return the action ids that need an entry in the scroll creative tab. */
     public static List<ResourceLocation> perWorldActionIds() {
         return PER_WORLD_ACTIONS;

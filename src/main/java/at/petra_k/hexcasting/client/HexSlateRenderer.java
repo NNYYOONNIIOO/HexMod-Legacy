@@ -24,8 +24,10 @@ public final class HexSlateRenderer extends TileEntitySpecialRenderer<TileEntity
         }
         EnumFacing facing = state.getValue(BlockSlate.FACING);
         boolean energized = state.getValue(BlockCircleComponent.ENERGIZED);
+        int packedLight = tile.getWorld().getCombinedLight(
+            tile.getPos().offset(facing), 0);
         HexWorldPatternRenderer.render(tile.getPattern(), facing, energized,
             HexClientTickCounter.getPartialTicks(), HexClientTickCounter.getTotal(),
-            tile.getPos().hashCode());
+            tile.getPos().hashCode(), packedLight);
     }
 }
