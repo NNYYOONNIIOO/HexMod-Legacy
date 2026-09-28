@@ -16,7 +16,7 @@ project and is maintained as a legacy branch for 1.12.2.
 - Minecraft Forge
 - [Patchouli](https://www.curseforge.com/minecraft/mc-mods/patchouli)
 - [Raids Backport](https://www.curseforge.com/minecraft/mc-mods/raids-backport)
-- [Caves & Not Cliffs](https://modrinth.com/mod/caves-not-cliffs-backported) or [Farmer's Delight Legacy](https://www.curseforge.com/minecraft/mc-mods/farmers-future-delight) (install one)
+- [Caves & Not Cliffs](https://modrinth.com/mod/caves-not-cliffs-backported) or [Farmer's Future Delight](https://www.curseforge.com/minecraft/mc-mods/farmers-future-delight) (install one)
 
 Caves & Not Cliffs and Farmer's Delight
 Legacy are alternative required resource providers; if both are installed,
