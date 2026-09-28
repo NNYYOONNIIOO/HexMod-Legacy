@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.block;
 
 import at.petra_k.hexcasting.common.effect.HexPigmentColors;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -147,7 +148,15 @@ public final class TileEntityConjured extends TileEntity implements ITickable {
 
     private int particleColor(float time) {
         double scale = RANDOM.nextDouble() * 3.0D;
-        return HexPigmentColors.color(pigmentVariant, color, pigmentOwner,
+        String visibleVariant = HexConfig.hidePrideColors()
+            && pigmentVariant != null
+            && pigmentVariant.startsWith("pride_colorizer_")
+            ? "default_colorizer" : pigmentVariant;
+        int visibleColor = "default_colorizer".equals(visibleVariant)
+            && pigmentVariant != null
+            && pigmentVariant.startsWith("pride_colorizer_")
+            ? DEFAULT_COLOR : color;
+        return HexPigmentColors.color(visibleVariant, visibleColor, pigmentOwner,
             time, RANDOM.nextDouble() * scale, RANDOM.nextDouble() * scale,
             RANDOM.nextDouble() * scale);
     }

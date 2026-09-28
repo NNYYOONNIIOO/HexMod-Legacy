@@ -92,7 +92,8 @@ final class HexSentinelRenderer {
             if (dx * dx + dy * dy + dz * dz > 256.0D * 256.0D) {
                 continue;
             }
-            HexPigmentSource pigment = HexPigmentSource.resolvePlayer(owner);
+            HexPigmentSource pigment = HexClientPigment.normalize(
+                HexPigmentSource.resolvePlayer(owner));
             if (pigment == null) {
                 pigment = HexPigmentSource.defaultSource();
             }

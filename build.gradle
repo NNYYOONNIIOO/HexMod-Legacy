@@ -19,7 +19,7 @@ apply plugin: 'maven-publish'
 
 version = '0.1.0-1.12.2'
 group = 'at.petra-k.hexcasting'
-archivesBaseName = 'hexcasting'
+archivesBaseName = 'HexCastingLegacy'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -81,8 +81,10 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
 
     implementation fg.deobf(files('libs/Patchouli-1.0-23.6.jar'))
-    implementation fg.deobf(files('libs/jei_1.12.2-4.16.5.1030.jar'))
-    implementation fg.deobf(files('libs/BaublesEX-1.12.2-2.3.7.jar'))
+    // Optional client/inventory integrations. They are available to the
+    // compiler but must not be pulled in as runtime prerequisites.
+    compileOnly fg.deobf(files('libs/jei_1.12.2-4.16.5.1030.jar'))
+    compileOnly fg.deobf(files('libs/BaublesEX-1.12.2-2.3.7.jar'))
     implementation fg.deobf(files('libs/Raids-Backport-1.12.2-1.1.5b.jar'))
     implementation fg.deobf(files('libs/cavesnotcliffs-2.0.4.jar'))
     implementation fg.deobf(files('libs/FarmersDelightLegacy-1.1.7.jar'))

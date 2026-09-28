@@ -1,8 +1,8 @@
-Args: "--in-jar", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\libs\hexcasting-0.1.0-1.12.2.jar", "--out-jar", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\reobfJar\output.jar", "--srg-in", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\createMcpToSrg\output.tsrg", "--srg-in", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\tmp\compileJava\compileJava-mappings.tsrg", "--live"
+Args: "--in-jar", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\libs\HexCastingLegacy-0.1.0-1.12.2.jar", "--out-jar", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\reobfJar\output.jar", "--srg-in", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\createMcpToSrg\output.tsrg", "--srg-in", "C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\build\tmp\compileJava\compileJava-mappings.tsrg", "--live"
 Classpath: C:\Users\wubid\.gradle\caches\forge_gradle\maven_downloader\net\md-5\SpecialSource\1.8.3\SpecialSource-1.8.3-shaded.jar
-Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\Patchouli-1.0-23.6.jar
 Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\jei_1.12.2-4.16.5.1030.jar
 Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\BaublesEX-1.12.2-2.3.7.jar
+Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\Patchouli-1.0-23.6.jar
 Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\Raids-Backport-1.12.2-1.1.5b.jar
 Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\cavesnotcliffs-2.0.4.jar
 Classpath: C:\Users\wubid\Documents\Codex\2026-09-11\1-12-2forge-c-users-wubid\libs\FarmersDelightLegacy-1.1.7.jar

@@ -13,6 +13,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Loader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,7 +81,9 @@ public final class MediaInventoryHelper {
             for (ItemStack stack : player.inventory.offHandInventory) {
                 addStackSource(sources, stack);
             }
-            BaublesExCompat.forEach(player, stack -> addStackSource(sources, stack));
+            if (Loader.isModLoaded("baubles")) {
+                BaublesExCompat.forEach(player, stack -> addStackSource(sources, stack));
+            }
         }
         if (data != null) {
             addSource(sources, data, null);

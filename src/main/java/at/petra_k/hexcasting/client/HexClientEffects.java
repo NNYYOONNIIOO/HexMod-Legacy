@@ -153,9 +153,10 @@ public final class HexClientEffects {
             if (pigment == null) {
                 PLAYER_PIGMENTS.remove(playerUuid);
             } else {
-                PLAYER_PIGMENTS.put(playerUuid, pigment);
+                PLAYER_PIGMENTS.put(playerUuid, HexClientPigment.normalize(pigment));
             }
         }
+        pigment = HexClientPigment.normalize(pigment);
         List<OrbitPattern> patterns = ORBITS.get(playerUuid);
         if (patterns == null) {
             patterns = new ArrayList<>();
@@ -204,7 +205,8 @@ public final class HexClientEffects {
             return;
         }
         UUID playerUuid = player.getUniqueID();
-        HexPigmentSource source = HexPigmentSource.fromInternalData(data);
+        HexPigmentSource source = HexClientPigment.normalize(
+            HexPigmentSource.fromInternalData(data));
         if (source == null) {
             PLAYER_PIGMENTS.remove(playerUuid);
         } else {
@@ -266,12 +268,14 @@ public final class HexClientEffects {
         if (cached != null) {
             return cached;
         }
-        HexPigmentSource source = HexPigmentSource.resolvePlayer(player);
+        HexPigmentSource source = HexClientPigment.normalize(
+            HexPigmentSource.resolvePlayer(player));
         return source == null ? HexPigmentSource.defaultSource() : source;
     }
 
     private static HexPigmentSource localPigmentSource(EntityPlayer player) {
-        HexPigmentSource playerPigment = HexPigmentSource.resolvePlayer(player);
+        HexPigmentSource playerPigment = HexClientPigment.normalize(
+            HexPigmentSource.resolvePlayer(player));
         return playerPigment == null
             ? HexPigmentSource.defaultSource() : playerPigment;
     }
@@ -335,6 +339,12 @@ public final class HexClientEffects {
         TextureAtlasSprite sprite = CONJURE_SPRITE;
         HexPigmentSource pigment = pigmentVariant == null ? null
             : HexPigmentSource.of(pigmentBaseColor, pigmentVariant, pigmentOwner);
+        boolean hiddenPride = HexClientPigment.hides(pigment);
+        pigment = HexClientPigment.normalize(pigment);
+        if (hiddenPride) {
+            color = HexClientPigment.defaultColor(
+                HexClientTickCounter.getTotal(), posX, posY, posZ);
+        }
 
         for (int i = 0; i < amount; i++) {
             // This is the same randomInCircle/velocity-cone construction as
@@ -1376,7 +1386,8 @@ public final class HexClientEffects {
                 HexPigmentSource current = PLAYER_PIGMENTS.get(
                     player.getUniqueID());
                 if (current == null) {
-                    current = HexPigmentSource.resolvePlayer(player);
+                    current = HexClientPigment.normalize(
+                        HexPigmentSource.resolvePlayer(player));
                 }
                 if (current != null) {
                     // An internalized pigment is an attribute of the caster,
@@ -1390,7 +1401,7 @@ public final class HexClientEffects {
             // Portable casts and legacy item-colourized staffs retain the
             // immutable source carried by their server packet.
             if (pigment != null) {
-                return 0xFF000000 | pigment.sample(time,
+                return 0xFF000000 | HexClientPigment.normalize(pigment).sample(time,
                     player.posX, player.posY, player.posZ);
             }
             return 0xFF000000 | (localPigment(player) & 0xFFFFFF);

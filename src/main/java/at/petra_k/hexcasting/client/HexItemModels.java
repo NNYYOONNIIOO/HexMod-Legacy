@@ -3,6 +3,7 @@ package at.petra_k.hexcasting.client;
 import at.petra_k.hexcasting.api.HexAPI;
 import at.petra_k.hexcasting.common.lib.HexItems;
 import at.petra_k.hexcasting.common.misc.AmethystCompat;
+import at.petra_k.hexcasting.common.config.HexConfig;
 import at.petra_k.hexcasting.common.item.ItemColorizer;
 import at.petra_k.hexcasting.common.item.ItemHexFocus;
 import at.petra_k.hexcasting.common.item.ItemPackagedSpell;
@@ -39,6 +40,7 @@ public final class HexItemModels {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        HexConfig.applyClientLanguageDefault(HexClientProxy.currentLanguage());
         registerPackagedSpellProperties();
         registerFocusProperties();
         registerSpellbookProperties();
@@ -55,8 +57,19 @@ public final class HexItemModels {
 
         for (Item item : HexItems.allItems()) {
             if (item.getRegistryName() != null) {
+                ResourceLocation modelId = item.getRegistryName();
+                if (HexConfig.hidePrideColors()
+                    && item instanceof ItemColorizer
+                    && HexClientPigment.isPrideVariant(
+                        ((ItemColorizer) item).getVariant())) {
+                    Item defaultColorizer = HexItems.EXTRA_ITEMS.get("default_colorizer");
+                    if (defaultColorizer != null
+                        && defaultColorizer.getRegistryName() != null) {
+                        modelId = defaultColorizer.getRegistryName();
+                    }
+                }
                 ModelLoader.setCustomModelResourceLocation(
-                    item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+                    item, 0, new ModelResourceLocation(modelId, "inventory"));
             }
         }
         net.minecraft.client.renderer.color.ItemColors itemColors =
@@ -245,6 +258,10 @@ public final class HexItemModels {
         return ItemSpellbook.getVariant(stack) / (ItemSpellbook.VARIANT_COUNT - 1.0F);
     }
     private static int colorFor(ItemStack stack) {
+        if (HexClientPigment.hides(ItemColorizer.getVariant(stack))) {
+            return HexClientPigment.defaultColor(
+                HexClientTickCounter.getTotal(), 0.0D, 0.0D, 0.0D);
+        }
         int color = ItemColorizer.getColor(stack);
         return color < 0 ? 0xFFFFFF : color;
     }

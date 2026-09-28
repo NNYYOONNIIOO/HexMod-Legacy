@@ -14,8 +14,11 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 
 /** BaublesEX-backed wearable equivalent of Hex Casting's scrying lens. */
+@Optional.Interface(iface = "baubles.api.IBauble", modid = "baubles", striprefs = true)
 public final class ItemScryingLens extends Item implements IBauble {
     /** The same multiplicative grid modifier as Hex's GRID_ZOOM attribute. */
     public static final double GRID_ZOOM = 0.33D;
@@ -46,11 +49,13 @@ public final class ItemScryingLens extends Item implements IBauble {
     }
 
     @Override
+    @Optional.Method(modid = "baubles")
     public BaubleType getBaubleType(ItemStack itemstack) {
         return BaubleType.HEAD;
     }
 
     @Override
+    @Optional.Method(modid = "baubles")
     public void onWornTick(ItemStack itemstack, EntityLivingBase player) {
         // BaublesEX invokes this hook for the head slot.  The 1.12.2 port
         // computes the effective values from the current equipment instead
@@ -70,7 +75,8 @@ public final class ItemScryingLens extends Item implements IBauble {
         if (isLens(player.getItemStackFromSlot(EntityEquipmentSlot.HEAD))) {
             return true;
         }
-        return BaublesExCompat.contains(player, ItemScryingLens::isLens);
+        return Loader.isModLoaded("baubles")
+            && BaublesExCompat.contains(player, ItemScryingLens::isLens);
     }
 
     /** Effective legacy equivalent of HexAttributes.GRID_ZOOM. */

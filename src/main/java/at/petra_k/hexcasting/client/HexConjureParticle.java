@@ -20,7 +20,7 @@ final class HexConjureParticle extends Particle {
                                 TextureAtlasSprite sprite, int color,
                                 HexPigmentSource pigment) {
         super(world, x, y, z, motionX, motionY, motionZ);
-        this.pigment = pigment;
+        this.pigment = HexClientPigment.normalize(pigment);
         setParticleTexture(sprite);
         setColor(color);
         particleAlpha = 0.30F;
