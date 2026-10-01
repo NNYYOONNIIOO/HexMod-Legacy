@@ -1037,7 +1037,11 @@ public final class CastingVM {
     /** Drain all pending work using the default operation budget. */
     /** Consume persistent player media for a contextual spell action. */
     public void consumeMedia(long amount) throws CastingException {
-        if (amount <= 0L) {
+        if (amount < 0L) {
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Media amount cannot be negative");
+        }
+        if (amount == 0L) {
             return;
         }
         long effectiveAmount = scaleMediaCost(amount);

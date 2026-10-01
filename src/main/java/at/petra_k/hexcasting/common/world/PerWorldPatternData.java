@@ -70,7 +70,7 @@ public final class PerWorldPatternData extends WorldSavedData {
             ids.add(new ResourceLocation("hexcasting", id));
         }
         ids.sort(Comparator.comparing(ResourceLocation::toString));
-        PER_WORLD_ACTIONS = Collections.unmodifiableList(ids);
+        PER_WORLD_ACTIONS = ids;
     }
 
     public PerWorldPatternData() {
@@ -109,12 +109,25 @@ public final class PerWorldPatternData extends WorldSavedData {
     }
 
     /** Return the action ids that need an entry in the scroll creative tab. */
-    public static List<ResourceLocation> perWorldActionIds() {
-        return PER_WORLD_ACTIONS;
+    public static synchronized List<ResourceLocation> perWorldActionIds() {
+        return Collections.unmodifiableList(new ArrayList<>(PER_WORLD_ACTIONS));
     }
 
-    public static boolean isPerWorldAction(ResourceLocation action) {
+    public static synchronized boolean isPerWorldAction(ResourceLocation action) {
         return action != null && PER_WORLD_ACTIONS.contains(action);
+    }
+
+    /** Add a CraftTweaker great action to the same seed-based pattern table. */
+    public static synchronized boolean registerCustomPerWorldAction(
+        ResourceLocation action) {
+        if (action == null) {
+            return false;
+        }
+        if (!PER_WORLD_ACTIONS.contains(action)) {
+            PER_WORLD_ACTIONS.add(action);
+            PER_WORLD_ACTIONS.sort(Comparator.comparing(ResourceLocation::toString));
+        }
+        return true;
     }
 
     /** Look up a world-specific action by the compact angle signature. */

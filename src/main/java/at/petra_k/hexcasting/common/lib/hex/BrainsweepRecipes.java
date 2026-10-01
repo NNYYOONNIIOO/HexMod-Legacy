@@ -5,11 +5,14 @@ import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -37,6 +40,7 @@ public final class BrainsweepRecipes {
     private static final String LEGACY_BRAINSWEPT_TAG = "hexcasting.brainswept";
     private static final long VILLAGER_MEDIA_COST = 1_000_000L;
     private static final long ALLAY_MEDIA_COST = 100_000L;
+    private static final List<CustomRecipe> CUSTOM_RECIPES = new ArrayList<>();
     private static final List<DisplayRecipe> BASE_DISPLAY_RECIPES = Collections.unmodifiableList(Arrays.asList(
         new DisplayRecipe("minecraft:amethyst_block", "raids:allay", null, 1,
             "hexcasting:quenched_allay", ALLAY_MEDIA_COST),
@@ -57,6 +61,85 @@ public final class BrainsweepRecipes {
     ));
 
     private BrainsweepRecipes() {
+    }
+
+    /** Add or replace a script-defined block/entity transformation. */
+    public static synchronized boolean addCustom(ItemStack input,
+                                                 String entityType,
+                                                 NBTTagCompound entityNbt,
+                                                 long mediaCost,
+                                                 ItemStack output) {
+        return addCustom(input, entityType, entityNbt, mediaCost, output, null);
+    }
+
+    /** Add a custom recipe with an optional resource-pack translation key. */
+    public static synchronized boolean addCustom(ItemStack input,
+                                                 String entityType,
+                                                 NBTTagCompound entityNbt,
+                                                 long mediaCost,
+                                                 ItemStack output,
+                                                 String entityNameKey) {
+        IBlockState inputState = RecipeStackMatcher.blockState(input);
+        IBlockState outputState = RecipeStackMatcher.blockState(output);
+        if (inputState == null || outputState == null
+            || input.getMetadata() == 32767 || output.getMetadata() == 32767
+            || entityType == null || entityType.isEmpty() || mediaCost < 0L) {
+            return false;
+        }
+        ResourceLocation entityId;
+        try {
+            entityId = new ResourceLocation(entityType);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+        ItemStack normalizedInput = input.copy();
+        ItemStack normalizedOutput = output.copy();
+        normalizedInput.setCount(1);
+        normalizedOutput.setCount(1);
+        NBTTagCompound nbt = entityNbt == null
+            ? new NBTTagCompound() : entityNbt.copy();
+        removeCustomInputs(normalizedInput, entityId, nbt);
+        CUSTOM_RECIPES.add(0, new CustomRecipe(normalizedInput,
+            entityId.toString(), nbt, mediaCost, normalizedOutput,
+            outputState, entityNameKey));
+        return true;
+    }
+
+    /** Remove all script recipes for the given input block item. */
+    public static synchronized boolean removeCustomInput(ItemStack input) {
+        return removeCustomByStack(input, true);
+    }
+
+    /** Remove all script recipes producing the given output block item. */
+    public static synchronized boolean removeCustomOutput(ItemStack output) {
+        return removeCustomByStack(output, false);
+    }
+
+    public static synchronized boolean removeCustom(ItemStack input,
+                                                    String entityType,
+                                                    NBTTagCompound entityNbt,
+                                                    long mediaCost,
+                                                    ItemStack output) {
+        NBTTagCompound nbt = entityNbt == null
+            ? new NBTTagCompound() : entityNbt;
+        boolean removed = false;
+        for (java.util.Iterator<CustomRecipe> iterator = CUSTOM_RECIPES.iterator();
+             iterator.hasNext();) {
+            CustomRecipe recipe = iterator.next();
+            if (RecipeStackMatcher.same(recipe.input, input)
+                && recipe.entityType.equals(entityType)
+                && recipe.entityNbt.equals(nbt)
+                && recipe.mediaCost == mediaCost
+                && RecipeStackMatcher.same(recipe.output, output)) {
+                iterator.remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    public static synchronized List<CustomRecipe> customRecipes() {
+        return Collections.unmodifiableList(new ArrayList<>(CUSTOM_RECIPES));
     }
 
     /**
@@ -87,6 +170,21 @@ public final class BrainsweepRecipes {
         if (AmethystCompat.hasProvider()) {
             recipes.addAll(BASE_DISPLAY_RECIPES.subList(2, BASE_DISPLAY_RECIPES.size()));
         }
+        synchronized (BrainsweepRecipes.class) {
+            for (CustomRecipe recipe : CUSTOM_RECIPES) {
+                ResourceLocation inputId = RecipeStackMatcher.itemId(recipe.input);
+                ResourceLocation outputId = RecipeStackMatcher.itemId(recipe.output);
+                if (inputId != null && outputId != null) {
+                    int minLevel = customVillagerMinLevel(recipe.entityType,
+                        recipe.entityNbt);
+                    recipes.add(new DisplayRecipe(inputId.toString(),
+                        recipe.input.getMetadata(), recipe.entityType, null, minLevel,
+                        outputId.toString(), recipe.output.getMetadata(),
+                        recipe.entityNbt, recipe.mediaCost,
+                        recipe.entityNameKey));
+                }
+            }
+        }
         return Collections.unmodifiableList(recipes);
     }
 
@@ -97,6 +195,21 @@ public final class BrainsweepRecipes {
         }
 
         String blockId = blockId(input.getBlock());
+
+        ResourceLocation victimId = EntityList.getKey(victim);
+        if (victimId != null) {
+            synchronized (BrainsweepRecipes.class) {
+                for (CustomRecipe recipe : CUSTOM_RECIPES) {
+                    if (recipe.entityType.equals(victimId.toString())
+                        && RecipeStackMatcher.matchesBlock(recipe.input, input)
+                        && matchesEntityNbt(recipe.entityType, recipe.entityNbt,
+                            victim.writeToNBT(new NBTTagCompound()))) {
+                        return new Match(copyProperties(input, recipe.outputState),
+                            recipe.mediaCost);
+                    }
+                }
+            }
+        }
 
         // 1.12.2 does not contain the vanilla entries.  Keeping the recipe
         // conditional makes the port use the Raids Backport Allay and avoids
@@ -274,6 +387,119 @@ public final class BrainsweepRecipes {
         return id == null ? "" : id.toString();
     }
 
+    private static boolean removeCustomByStack(ItemStack stack,
+                                               boolean inputStack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        boolean removed = false;
+        for (java.util.Iterator<CustomRecipe> iterator = CUSTOM_RECIPES.iterator();
+             iterator.hasNext();) {
+            CustomRecipe recipe = iterator.next();
+            ItemStack candidate = inputStack ? recipe.input : recipe.output;
+            if (sameItem(candidate, stack)) {
+                iterator.remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    private static void removeCustomInputs(ItemStack input,
+                                           ResourceLocation entityId,
+                                           NBTTagCompound entityNbt) {
+        for (java.util.Iterator<CustomRecipe> iterator = CUSTOM_RECIPES.iterator();
+             iterator.hasNext();) {
+            CustomRecipe recipe = iterator.next();
+            if (sameItem(recipe.input, input)
+                && recipe.entityType.equals(entityId.toString())
+                && recipe.entityNbt.equals(entityNbt)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private static boolean sameItem(ItemStack left, ItemStack right) {
+        return left != null && right != null && !left.isEmpty() && !right.isEmpty()
+            && left.getItem() == right.getItem()
+            && (right.getMetadata() == 32767
+                || left.getMetadata() == right.getMetadata());
+    }
+
+    private static boolean matchesEntityNbt(String entityType,
+                                            NBTTagCompound expected,
+                                            NBTTagCompound actual) {
+        return matchesNbtSubset(expected, actual,
+            "minecraft:villager".equals(entityType));
+    }
+
+    private static boolean matchesNbtSubset(NBTTagCompound expected,
+                                            NBTTagCompound actual,
+                                            boolean villagerRoot) {
+        if (expected == null || expected.getKeySet().isEmpty()) {
+            return true;
+        }
+        if (actual == null) {
+            return false;
+        }
+        for (String key : expected.getKeySet()) {
+            NBTBase expectedTag = expected.getTag(key);
+            NBTBase actualTag = actual.getTag(key);
+            if (villagerRoot && "CareerLevel".equalsIgnoreCase(key)) {
+                Integer minimumLevel = nbtInteger(expectedTag);
+                Integer actualLevel = nbtInteger(actualTag);
+                if (minimumLevel == null || actualLevel == null
+                    || actualLevel < minimumLevel) {
+                    return false;
+                }
+                continue;
+            }
+            if (actualTag == null || actualTag.getId() != expectedTag.getId()) {
+                return false;
+            }
+            if (expectedTag instanceof NBTTagCompound) {
+                if (!(actualTag instanceof NBTTagCompound)
+                    || !matchesNbtSubset((NBTTagCompound) expectedTag,
+                        (NBTTagCompound) actualTag, false)) {
+                    return false;
+                }
+            } else if (!expectedTag.equals(actualTag)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int customVillagerMinLevel(String entityType,
+                                             NBTTagCompound entityNbt) {
+        if (!"minecraft:villager".equals(entityType) || entityNbt == null) {
+            return 1;
+        }
+        for (String key : entityNbt.getKeySet()) {
+            if ("CareerLevel".equalsIgnoreCase(key)) {
+                Integer level = nbtInteger(entityNbt.getTag(key));
+                if (level != null) {
+                    return Math.max(1, level);
+                }
+            }
+        }
+        return 1;
+    }
+
+    private static Integer nbtInteger(NBTBase tag) {
+        if (tag instanceof net.minecraft.nbt.NBTPrimitive) {
+            return ((net.minecraft.nbt.NBTPrimitive) tag).getInt();
+        }
+        if (tag instanceof net.minecraft.nbt.NBTTagString) {
+            try {
+                return Integer.parseInt(((net.minecraft.nbt.NBTTagString) tag).getString());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     private static boolean isAmethystInput(String blockId) {
         ResourceLocation selected = AmethystCompat.blockId();
         if (selected != null) {
@@ -339,28 +565,99 @@ public final class BrainsweepRecipes {
         }
     }
 
+    /** Immutable script-defined brainsweep entry. */
+    public static final class CustomRecipe {
+        private final ItemStack input;
+        private final String entityType;
+        private final NBTTagCompound entityNbt;
+        private final long mediaCost;
+        private final ItemStack output;
+        private final IBlockState outputState;
+        private final String entityNameKey;
+
+        private CustomRecipe(ItemStack input, String entityType,
+                             NBTTagCompound entityNbt, long mediaCost,
+                             ItemStack output, IBlockState outputState,
+                             String entityNameKey) {
+            this.input = input;
+            this.entityType = entityType;
+            this.entityNbt = entityNbt;
+            this.mediaCost = mediaCost;
+            this.output = output;
+            this.outputState = outputState;
+            this.entityNameKey = entityNameKey == null
+                || entityNameKey.trim().isEmpty() ? null : entityNameKey.trim();
+        }
+
+        public ItemStack getInput() {
+            return input.copy();
+        }
+
+        public String getEntityType() {
+            return entityType;
+        }
+
+        public NBTTagCompound getEntityNbt() {
+            return entityNbt.copy();
+        }
+
+        public long getMediaCost() {
+            return mediaCost;
+        }
+
+        public ItemStack getOutput() {
+            return output.copy();
+        }
+
+        public String getEntityNameKey() {
+            return entityNameKey;
+        }
+    }
+
     /** Immutable JEI-facing description of one brainsweep recipe. */
     public static final class DisplayRecipe {
         private final String blockInputId;
+        private final int blockInputMeta;
         private final String entityTypeId;
         private final String profession;
         private final int minLevel;
         private final String resultId;
+        private final int resultMeta;
+        private final NBTTagCompound entityNbt;
         private final long mediaCost;
+        private final String entityNameKey;
 
         private DisplayRecipe(String blockInputId, String entityTypeId,
                               String profession, int minLevel,
                               String resultId, long mediaCost) {
+            this(blockInputId, 0, entityTypeId, profession, minLevel,
+                resultId, 0, null, mediaCost, null);
+        }
+
+        private DisplayRecipe(String blockInputId, int blockInputMeta,
+                              String entityTypeId, String profession,
+                              int minLevel, String resultId, int resultMeta,
+                              NBTTagCompound entityNbt, long mediaCost,
+                              String entityNameKey) {
             this.blockInputId = blockInputId;
+            this.blockInputMeta = blockInputMeta;
             this.entityTypeId = entityTypeId;
             this.profession = profession;
             this.minLevel = minLevel;
             this.resultId = resultId;
+            this.resultMeta = resultMeta;
+            this.entityNbt = entityNbt == null ? new NBTTagCompound() : entityNbt.copy();
             this.mediaCost = mediaCost;
+            this.entityNameKey = entityNameKey == null
+                || entityNameKey.trim().isEmpty() ? null : entityNameKey.trim();
         }
 
         public String getBlockInputId() {
             return blockInputId;
+        }
+
+        public int getBlockInputMeta() {
+            return blockInputMeta;
         }
 
         public String getEntityTypeId() {
@@ -379,8 +676,20 @@ public final class BrainsweepRecipes {
             return resultId;
         }
 
+        public int getResultMeta() {
+            return resultMeta;
+        }
+
+        public NBTTagCompound getEntityNbt() {
+            return entityNbt.copy();
+        }
+
         public long getMediaCost() {
             return mediaCost;
+        }
+
+        public String getEntityNameKey() {
+            return entityNameKey;
         }
     }
 }

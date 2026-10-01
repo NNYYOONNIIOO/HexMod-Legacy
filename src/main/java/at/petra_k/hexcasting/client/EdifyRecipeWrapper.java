@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.client;
 
 import at.petra_k.hexcasting.common.lib.HexBlocks;
+import at.petra_k.hexcasting.common.lib.hex.EdifyRecipes;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
@@ -19,10 +20,9 @@ public final class EdifyRecipeWrapper implements IRecipeWrapper {
     private final List<List<ItemStack>> inputs;
     private final List<List<ItemStack>> outputs;
 
-    private EdifyRecipeWrapper(List<ItemStack> leaves, List<ItemStack> logs) {
-        this.inputs = Collections.singletonList(Collections.singletonList(
-            new ItemStack(Item.getItemFromBlock(Blocks.SAPLING), 1,
-                OreDictionary.WILDCARD_VALUE)));
+    private EdifyRecipeWrapper(ItemStack input, List<ItemStack> leaves,
+                               List<ItemStack> logs) {
+        this.inputs = Collections.singletonList(Collections.singletonList(input));
         this.outputs = Arrays.asList(leaves, logs);
     }
 
@@ -41,7 +41,16 @@ public final class EdifyRecipeWrapper implements IRecipeWrapper {
         if (leaves.isEmpty() || logs.isEmpty()) {
             return Collections.emptyList();
         }
-        return Collections.singletonList(new EdifyRecipeWrapper(leaves, logs));
+        List<EdifyRecipeWrapper> recipes = new ArrayList<>();
+        if (EdifyRecipes.defaultsEnabled()) {
+            recipes.add(new EdifyRecipeWrapper(new ItemStack(
+                Item.getItemFromBlock(Blocks.SAPLING), 1,
+                OreDictionary.WILDCARD_VALUE), leaves, logs));
+        }
+        for (EdifyRecipes.Recipe recipe : EdifyRecipes.recipes()) {
+            recipes.add(new EdifyRecipeWrapper(recipe.getInput(), leaves, logs));
+        }
+        return recipes;
     }
 
     private static void addBlock(List<ItemStack> destination, String id) {

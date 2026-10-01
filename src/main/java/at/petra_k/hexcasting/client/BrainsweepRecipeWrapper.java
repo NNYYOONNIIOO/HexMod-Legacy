@@ -47,8 +47,10 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
     public static List<BrainsweepRecipeWrapper> createRecipes() {
         List<BrainsweepRecipeWrapper> wrappers = new ArrayList<>();
         for (BrainsweepRecipes.DisplayRecipe recipe : BrainsweepRecipes.displayRecipes()) {
-            ItemStack input = blockStack(recipe.getBlockInputId());
-            ItemStack output = blockStack(recipe.getResultId());
+            ItemStack input = blockStack(recipe.getBlockInputId(),
+                recipe.getBlockInputMeta());
+            ItemStack output = blockStack(recipe.getResultId(),
+                recipe.getResultMeta());
             if (!input.isEmpty() && !output.isEmpty()) {
                 wrappers.add(new BrainsweepRecipeWrapper(recipe, input, output));
             }
@@ -57,6 +59,10 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
     }
 
     private static ItemStack blockStack(String id) {
+        return blockStack(id, 0);
+    }
+
+    private static ItemStack blockStack(String id, int metadata) {
         if (id == null || id.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -72,7 +78,8 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
         }
         Item item = Item.getItemFromBlock(block);
         return item == null || item == Items.AIR
-            ? ItemStack.EMPTY : new ItemStack(item);
+            ? ItemStack.EMPTY : new ItemStack(item, 1,
+                metadata == 32767 ? 0 : metadata);
     }
 
     @Override
@@ -90,22 +97,158 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
         List<String> tooltip = new ArrayList<>();
         String entityType = recipe.getEntityTypeId();
         if ("minecraft:villager".equals(entityType)) {
-            if (recipe.getMinLevel() >= 5) {
-                tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocalFormatted(
-                    "hexcasting.tooltip.brainsweep.level", 5));
+            String level = null;
+            boolean hasNbtMinimum = villagerInteger(recipe.getEntityNbt(),
+                "CareerLevel") != null;
+            if (hasNbtMinimum) {
+                level = net.minecraft.util.text.translation.I18n.translateToLocalFormatted(
+                    "hexcasting.tooltip.brainsweep.min_level", recipe.getMinLevel());
+            } else if (recipe.getMinLevel() >= 5) {
+                level = net.minecraft.util.text.translation.I18n.translateToLocalFormatted(
+                    "hexcasting.tooltip.brainsweep.level", 5);
             } else if (recipe.getMinLevel() > 1) {
-                tooltip.add(net.minecraft.util.text.translation.I18n.translateToLocalFormatted(
-                    "hexcasting.tooltip.brainsweep.min_level", recipe.getMinLevel()));
+                level = net.minecraft.util.text.translation.I18n.translateToLocalFormatted(
+                    "hexcasting.tooltip.brainsweep.min_level", recipe.getMinLevel());
             }
+            String career = vanillaVillagerCareer(recipe.getEntityNbt());
+            String target = career == null ? localizeEntity(entityType)
+                : localizeProfession(career);
             if (recipe.getProfession() != null) {
-                tooltip.add(localizeProfession(recipe.getProfession()));
-            } else {
-                tooltip.add(localizeEntity(entityType));
+                target = localizeProfession(recipe.getProfession());
             }
+            if (recipe.getEntityNameKey() != null) {
+                String localized = net.minecraft.util.text.translation.I18n
+                    .translateToLocal(recipe.getEntityNameKey());
+                if (!recipe.getEntityNameKey().equals(localized)) {
+                    target = localized;
+                }
+            }
+            tooltip.add(level == null ? target : level + " " + target);
         } else {
             tooltip.add(localizeEntity(entityType));
         }
+        if (!"minecraft:villager".equals(entityType)
+            && !recipe.getEntityNbt().getKeySet().isEmpty()) {
+            tooltip.add("NBT: " + recipe.getEntityNbt());
+        }
         return tooltip;
+    }
+
+    private static String vanillaVillagerCareer(
+        net.minecraft.nbt.NBTTagCompound nbt) {
+        if (nbt == null) {
+            return null;
+        }
+        Integer careerValue = villagerInteger(nbt, "Career");
+        if (careerValue == null || careerValue <= 0) {
+            return null;
+        }
+        int career = careerValue;
+
+        int profession = -1;
+        net.minecraft.nbt.NBTBase professionNameTag =
+            villagerTag(nbt, "ProfessionName");
+        if (professionNameTag instanceof net.minecraft.nbt.NBTTagString) {
+            String name = ((net.minecraft.nbt.NBTTagString) professionNameTag).getString();
+            try {
+                profession = Integer.parseInt(name);
+            } catch (NumberFormatException ignored) {
+                try {
+                    ResourceLocation professionId = new ResourceLocation(name);
+                    if ("minecraft".equals(professionId.getResourceDomain())) {
+                        profession = vanillaProfessionId(
+                            professionId.getResourcePath());
+                    }
+                } catch (RuntimeException ignoredId) {
+                    // Fall through to the numeric Profession field.
+                }
+            }
+        }
+        if (profession < 0) {
+            Integer professionValue = villagerInteger(nbt, "Profession");
+            if (professionValue != null) {
+                profession = professionValue;
+            }
+        }
+        if (profession < 0) {
+            // Career 4 is the vanilla farmer-profession fletcher career. Keep
+            // useful names for scripts which specify just this career field.
+            return career == 4 ? "fletcher" : null;
+        }
+
+        switch (profession) {
+            case 0:
+                switch (career) {
+                    case 1: return "farmer";
+                    case 2: return "fisherman";
+                    case 3: return "shepherd";
+                    case 4: return "fletcher";
+                    default: return null;
+                }
+            case 1:
+                switch (career) {
+                    case 1: return "librarian";
+                    case 2: return "cartographer";
+                    default: return null;
+                }
+            case 2:
+                return career == 1 ? "cleric" : null;
+            case 3:
+                switch (career) {
+                    case 1: return "armor";
+                    case 2: return "weapon";
+                    case 3: return "tool";
+                    default: return null;
+                }
+            case 4:
+                switch (career) {
+                    case 1: return "butcher";
+                    case 2: return "leather";
+                    default: return null;
+                }
+            case 5:
+                return career == 1 ? "nitwit" : null;
+            default:
+                return null;
+        }
+    }
+
+    private static Integer villagerInteger(net.minecraft.nbt.NBTTagCompound nbt,
+                                           String name) {
+        net.minecraft.nbt.NBTBase tag = villagerTag(nbt, name);
+        if (tag instanceof net.minecraft.nbt.NBTPrimitive) {
+            return ((net.minecraft.nbt.NBTPrimitive) tag).getInt();
+        }
+        if (tag instanceof net.minecraft.nbt.NBTTagString) {
+            try {
+                return Integer.parseInt(((net.minecraft.nbt.NBTTagString) tag).getString());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static int vanillaProfessionId(String profession) {
+        switch (profession) {
+            case "farmer": return 0;
+            case "librarian": return 1;
+            case "priest": return 2;
+            case "smith": return 3;
+            case "butcher": return 4;
+            case "nitwit": return 5;
+            default: return -1;
+        }
+    }
+
+    private static net.minecraft.nbt.NBTBase villagerTag(
+        net.minecraft.nbt.NBTTagCompound nbt, String expectedName) {
+        for (String key : nbt.getKeySet()) {
+            if (expectedName.equalsIgnoreCase(key)) {
+                return nbt.getTag(key);
+            }
+        }
+        return null;
     }
 
     private static String localizeEntity(String entityType) {
@@ -168,7 +311,8 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             return;
         }
 
-        Entity entity = createDisplayEntity(minecraft.world, recipe.getEntityTypeId());
+        Entity entity = createDisplayEntity(minecraft.world,
+            recipe.getEntityTypeId(), recipe.getEntityNbt());
         if (entity == null) {
             return;
         }
@@ -219,11 +363,13 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
      * supplied by Raids Backport, so resolve its registered entity class at
      * runtime instead of inventing a second model in Hex Casting.
      */
-    private static Entity createDisplayEntity(World world, String entityType) {
+    private static Entity createDisplayEntity(World world, String entityType,
+                                              net.minecraft.nbt.NBTTagCompound entityNbt) {
         if (world == null || entityType == null || entityType.isEmpty()) {
             return null;
         }
         if ("minecraft:villager".equals(entityType)) {
+            // Keep the model preview neutral; the tooltip maps NBT careers.
             return new EntityVillager(world);
         }
 
@@ -238,9 +384,22 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
             if (!constructor.isAccessible()) {
                 constructor.setAccessible(true);
             }
-            return constructor.newInstance(world);
+            return applyDisplayNbt(constructor.newInstance(world), entityNbt);
         } catch (ReflectiveOperationException | SecurityException ignored) {
             return null;
         }
+    }
+
+    private static Entity applyDisplayNbt(Entity entity,
+                                          net.minecraft.nbt.NBTTagCompound partialNbt) {
+        if (entity == null || partialNbt == null
+            || partialNbt.getKeySet().isEmpty()) {
+            return entity;
+        }
+        net.minecraft.nbt.NBTTagCompound completeNbt =
+            entity.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+        completeNbt.merge(partialNbt);
+        entity.readFromNBT(completeNbt);
+        return entity;
     }
 }

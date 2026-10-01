@@ -7,6 +7,7 @@ import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.capability.HexCapabilities;
 import at.petra_k.hexcasting.common.capability.HexItemMediaHolder;
 import at.petra_k.hexcasting.common.item.ItemMediaMaterial;
+import at.petra_k.hexcasting.common.lib.hex.CustomMediaValues;
 import at.petra_k.hexcasting.common.misc.AmethystCompat;
 import at.petra_k.hexcasting.interop.baubles.BaublesExCompat;
 import net.minecraft.entity.item.EntityItem;
@@ -151,6 +152,15 @@ public final class MediaInventoryHelper {
             return 0L;
         }
 
+        if (CustomMediaValues.has(stack)) {
+            long customWorth = CustomMediaValues.get(stack);
+            long customItems = customWorth <= 0L ? 0L
+                : Math.min((long) stack.getCount(), amount / customWorth);
+            return customItems <= 0L ? 0L
+                : extractMedia(stack, multiply(customWorth, customItems),
+                    drainForBatteries, simulate);
+        }
+
         long worth = staticMediaWorth(stack);
         if (worth > 0L) {
             long items = Math.min((long) stack.getCount(), amount / worth);
@@ -161,7 +171,8 @@ public final class MediaInventoryHelper {
                 drainForBatteries, simulate);
         }
 
-        if (stack.getItem() instanceof ItemMediaMaterial) {
+        if (stack.getItem() instanceof ItemMediaMaterial
+            && !CustomMediaValues.has(stack)) {
             ItemMediaMaterial material = (ItemMediaMaterial) stack.getItem();
             if (material.hasStoredMedia(stack)) {
                 return extractMedia(stack,
@@ -195,7 +206,8 @@ public final class MediaInventoryHelper {
             return 0L;
         }
         ItemStack stack = entity.getItem();
-        if (stack.getItem() instanceof ItemMediaMaterial) {
+        if (stack.getItem() instanceof ItemMediaMaterial
+            && !CustomMediaValues.has(stack)) {
             ItemMediaMaterial material = (ItemMediaMaterial) stack.getItem();
             if (drainForBatteries && !material.canConstructBattery(stack)) {
                 return 0L;
@@ -492,6 +504,13 @@ public final class MediaInventoryHelper {
             return null;
         }
 
+        if (CustomMediaValues.has(stack)) {
+            long customWorth = CustomMediaValues.get(stack);
+            return customWorth <= 0L ? null : new MediaSource(
+                new StaticMediaHolder(stack, customWorth,
+                    staticMediaPriority(stack)), stack);
+        }
+
         ADMediaHolder holder = findMediaHolder(stack);
         if (holder != null && holder.canProvide()
             && (!drainForBatteries || holder.canConstructBattery())) {
@@ -513,6 +532,9 @@ public final class MediaInventoryHelper {
      * without making either integration a hard Java dependency.
      */
     private static long staticMediaWorth(ItemStack stack) {
+        if (CustomMediaValues.has(stack)) {
+            return CustomMediaValues.get(stack);
+        }
         ResourceLocation id = stack.getItem().getRegistryName();
         if (id == null) {
             return 0L;

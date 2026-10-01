@@ -38,11 +38,13 @@ public final class HexStaffClientSync {
 
     public static void showCastResult(String message, int patternIndex,
                                       int resolutionOrdinal, List<String> stackPreview,
-                                      int parenDepth, boolean escapeNext) {
+                                      int parenDepth, boolean escapeNext,
+                                      boolean closeGuiAfterFailure) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (minecraft.currentScreen instanceof GuiHexStaff) {
             ((GuiHexStaff) minecraft.currentScreen).showCastResult(message,
-                patternIndex, resolutionOrdinal, stackPreview, parenDepth, escapeNext);
+                patternIndex, resolutionOrdinal, stackPreview, parenDepth,
+                escapeNext, closeGuiAfterFailure);
         }
     }
 }

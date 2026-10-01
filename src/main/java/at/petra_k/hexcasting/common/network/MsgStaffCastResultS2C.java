@@ -23,6 +23,7 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
     private int stackSize;
     private int parenDepth;
     private boolean escapeNext;
+    private boolean closeGuiAfterFailure;
     private List<String> stackPreview;
 
     public MsgStaffCastResultS2C() {
@@ -30,12 +31,13 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
         patternIndex = -1;
         resolutionOrdinal = StaffCastExecutor.Resolution.ERRORED.ordinal();
         stackPreview = Collections.emptyList();
+        closeGuiAfterFailure = false;
     }
 
     public MsgStaffCastResultS2C(EnumHand hand, boolean success, int stackSize) {
         this(hand, -1, success ? StaffCastExecutor.Resolution.EVALUATED
             : StaffCastExecutor.Resolution.ERRORED, stackSize,
-            0, false, Collections.<String>emptyList());
+            0, false, false, Collections.<String>emptyList());
     }
 
     public MsgStaffCastResultS2C(EnumHand hand, int patternIndex,
@@ -46,6 +48,7 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
             outcome == null ? 0 : outcome.getStackSize(),
             outcome == null ? 0 : outcome.getParenDepth(),
             outcome != null && outcome.isEscapeNext(),
+            closesStaffGuiAfterFailure(outcome),
             outcome == null ? Collections.<String>emptyList()
                 : outcome.getStackPreview());
     }
@@ -53,7 +56,8 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
     private MsgStaffCastResultS2C(EnumHand hand, int patternIndex,
                                   StaffCastExecutor.Resolution resolution,
                                   int stackSize, int parenDepth,
-                                  boolean escapeNext, List<String> stackPreview) {
+                                  boolean escapeNext, boolean closeGuiAfterFailure,
+                                  List<String> stackPreview) {
         handOrdinal = hand == null ? EnumHand.MAIN_HAND.ordinal() : hand.ordinal();
         this.patternIndex = patternIndex;
         this.resolutionOrdinal = resolution == null
@@ -61,6 +65,7 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
         this.stackSize = Math.max(0, stackSize);
         this.parenDepth = Math.max(0, parenDepth);
         this.escapeNext = escapeNext;
+        this.closeGuiAfterFailure = closeGuiAfterFailure;
         this.stackPreview = new ArrayList<>(stackPreview == null
             ? Collections.<String>emptyList() : stackPreview);
     }
@@ -73,6 +78,7 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
         stackSize = Math.max(0, buf.readInt());
         parenDepth = Math.max(0, buf.readInt());
         escapeNext = buf.readBoolean();
+        closeGuiAfterFailure = buf.readBoolean();
         int previewCount = Math.max(0, Math.min(64, buf.readByte()));
         stackPreview = new ArrayList<>(previewCount);
         for (int i = 0; i < previewCount; i++) {
@@ -88,6 +94,7 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
         buf.writeInt(stackSize);
         buf.writeInt(parenDepth);
         buf.writeBoolean(escapeNext);
+        buf.writeBoolean(closeGuiAfterFailure);
         int previewCount = Math.min(64, stackPreview == null ? 0 : stackPreview.size());
         buf.writeByte(previewCount);
         for (int i = 0; i < previewCount; i++) {
@@ -116,10 +123,10 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
             Class<?> bridge = Class.forName(
                 "at.petra_k.hexcasting.client.HexStaffClientSync");
             bridge.getMethod("showCastResult", String.class, int.class, int.class,
-                List.class, int.class, boolean.class).invoke(null, message,
+                List.class, int.class, boolean.class, boolean.class).invoke(null, message,
                 patternIndex, resolutionOrdinal, stackPreview == null
                     ? Collections.<String>emptyList() : stackPreview,
-                parenDepth, escapeNext);
+                parenDepth, escapeNext, closeGuiAfterFailure);
         } catch (ReflectiveOperationException ignored) {
             // The client-only bridge is intentionally absent on a dedicated server.
         }
@@ -129,6 +136,16 @@ public final class MsgStaffCastResultS2C implements PaucalMessage {
         StaffCastExecutor.Resolution[] values = StaffCastExecutor.Resolution.values();
         return resolutionOrdinal < 0 || resolutionOrdinal >= values.length
             ? StaffCastExecutor.Resolution.ERRORED : values[resolutionOrdinal];
+    }
+
+    private static boolean closesStaffGuiAfterFailure(
+        StaffCastExecutor.CastOutcome outcome) {
+        if (outcome == null || outcome.isSuccess() || outcome.getMishap() == null
+            || outcome.getMishap().getActionId() == null) {
+            return false;
+        }
+        return "hexcasting:craft/battery".equals(
+            outcome.getMishap().getActionId().toString());
     }
 
     public static void register() {

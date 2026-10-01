@@ -1319,7 +1319,8 @@ private void drawMove(int mouseX, int mouseY) {
 
     public void showCastResult(String message, int patternIndex,
                                int resolutionOrdinal, List<String> preview,
-                               int newParenDepth, boolean newEscapeNext) {
+                               int newParenDepth, boolean newEscapeNext,
+                               boolean closeGuiAfterFailure) {
         if (message != null && !message.isEmpty()) {
             status = message;
         }
@@ -1353,6 +1354,10 @@ private void drawMove(int mouseX, int mouseY) {
 
         boolean errored = resolutionOrdinal == RESOLUTION_ERRORED
             || resolutionOrdinal == RESOLUTION_INVALID;
+        if (errored && closeGuiAfterFailure && mc != null) {
+            mc.displayGuiScreen(null);
+            return;
+        }
         if (!errored && stackPreview.isEmpty() && parenDepth == 0 && !escapeNext) {
             // The modern screen closes as soon as the stack/local state is
             // completely clear. Introspection deliberately does not satisfy

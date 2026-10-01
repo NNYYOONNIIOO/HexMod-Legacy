@@ -92,6 +92,8 @@ public class Mishap extends CastingException {
     private Entity targetEntity;
     /** Actual held stack retained for bad-offhand localization. */
     private ItemStack offhandItem;
+    /** Expected held stack for recipes with a dynamic offhand ingredient. */
+    private ItemStack expectedOffhandItem;
     private boolean locationRecorded;
     private double locationX = Double.NaN;
     private double locationY = Double.NaN;
@@ -257,6 +259,10 @@ public class Mishap extends CastingException {
     /** The held stack that caused a bad-offhand failure, when available. */
     public ItemStack getOffhandItem() {
         return offhandItem == null ? null : offhandItem.copy();
+    }
+
+    public ItemStack getExpectedOffhandItem() {
+        return expectedOffhandItem == null ? null : expectedOffhandItem.copy();
     }
 
     public boolean hasLocationContext() {
@@ -476,6 +482,12 @@ public class Mishap extends CastingException {
         return this;
     }
 
+    /** Set a recipe-specific item name for bad-offhand feedback. */
+    public Mishap withExpectedOffhandItem(ItemStack item) {
+        expectedOffhandItem = item == null || item.isEmpty() ? null : item.copy();
+        return this;
+    }
+
     /** Attach the world position that an action was validating or editing. */
     public Mishap withLocation(double x, double y, double z, int dimension) {
         if (locationRecorded || Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
@@ -588,6 +600,12 @@ public class Mishap extends CastingException {
         if (errorKey.startsWith("hexcasting.")) {
             return errorKey;
         }
+        // CraftTweaker integrations may provide their own lang namespace. Do
+        // not discard a well-formed translation key merely because it is not
+        // owned by the legacy mod namespace.
+        if (isTranslationKey(errorKey)) {
+            return errorKey;
+        }
         switch (kind) {
             case INVALID_PATTERN:
                 return "hexcasting.mishap.invalid_pattern_generic";
@@ -609,6 +627,24 @@ public class Mishap extends CastingException {
             default:
                 return "hexcasting.error.unknown";
         }
+    }
+
+    private static boolean isTranslationKey(String key) {
+        if (key == null || key.isEmpty()
+            || (key.indexOf('.') < 0 && key.indexOf(':') < 0)) {
+            return false;
+        }
+        for (int i = 0; i < key.length(); i++) {
+            char character = key.charAt(i);
+            if (!(character >= 'a' && character <= 'z')
+                && !(character >= 'A' && character <= 'Z')
+                && !(character >= '0' && character <= '9')
+                && character != '_' && character != '-'
+                && character != '.' && character != ':' && character != '/') {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Convert an old string exception into a typed Mishap. */

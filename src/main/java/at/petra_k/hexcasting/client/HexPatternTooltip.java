@@ -52,7 +52,7 @@ public final class HexPatternTooltip {
     }
 
     private static String localizeAction(ResourceLocation id) {
-        String key = "hexcasting.action." + id.getResourcePath();
+        String key = "hexcasting.action." + id;
         String translated = I18n.format(key);
         return key.equals(translated) ? id.getResourcePath() : translated;
     }

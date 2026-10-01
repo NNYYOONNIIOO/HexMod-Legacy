@@ -30,6 +30,7 @@ import at.petra_k.hexcasting.api.casting.math.HexDir;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.casting.HexArithmetics;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.item.ItemStack;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -2806,10 +2807,11 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
             requireEditPermission(vm, player, position,
                 "hexcasting.error.edify_forbidden");
             net.minecraft.block.state.IBlockState sapling = player.world.getBlockState(position);
-            if (!(sapling.getBlock() instanceof net.minecraft.block.BlockSapling)) {
+            EdifyRecipes.Match edifyRecipe = EdifyRecipes.find(sapling);
+            if (edifyRecipe == null) {
                 throw Mishap.badBlock("hexcasting.error.edify_sapling");
             }
-            vm.consumeMedia(MediaConstants.CRYSTAL_UNIT);
+            vm.consumeMedia(edifyRecipe.getMediaCost());
             if (player.world.isRemote) {
                 return;
             }
@@ -4289,18 +4291,75 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
                 }
                 net.minecraft.entity.item.EntityItem itemEntity =
                     (net.minecraft.entity.item.EntityItem) sourceEntity;
+                requireEntityInRange(vm, player, itemEntity,
+                    "hexcasting.error.craft_battery_range");
+                net.minecraft.item.ItemStack source = itemEntity.getItem();
                 net.minecraft.item.ItemStack bottle = vm.getHeldItemToOperateOn(
-                    candidate -> candidate != null && !candidate.isEmpty()
-                        && candidate.getItem() == net.minecraft.init.Items.GLASS_BOTTLE);
+                    candidate -> CraftPhialRecipes.find(source, candidate) != null);
+                CraftPhialRecipes.Match matchedCustomRecipe =
+                    CraftPhialRecipes.find(source, bottle);
+                if (matchedCustomRecipe == null) {
+                    CraftPhialRecipes.Match expectedCustomRecipe =
+                        CraftPhialRecipes.findByDroppedInput(source);
+                    if (expectedCustomRecipe != null) {
+                        throw Mishap.badOffhandItem(
+                            "hexcasting.error.craft_battery_base",
+                            player.getHeldItem(vm.getOtherHand()))
+                            .withExpectedOffhandItem(
+                                expectedCustomRecipe.getHeldInput());
+                    }
+                    bottle = vm.getHeldItemToOperateOn(candidate ->
+                        candidate != null && !candidate.isEmpty()
+                            && candidate.getItem() == net.minecraft.init.Items.GLASS_BOTTLE);
+                }
                 net.minecraft.util.EnumHand hand = vm.getHandForHeldItem(bottle);
+                if (matchedCustomRecipe != null) {
+                    ItemStack customHeldInput = matchedCustomRecipe.getHeldInput();
+                    if (hand == null || bottle.getCount()
+                        < customHeldInput.getCount()) {
+                        throw Mishap.badOffhandItem("hexcasting.error.craft_battery_base");
+                    }
+                    requireEntityInRange(vm, player, itemEntity,
+                        "hexcasting.error.craft_battery_range");
+                    if (source == null || source.getCount()
+                        < matchedCustomRecipe.getDroppedInput().getCount()) {
+                        throw Mishap.badItem("hexcasting.error.craft_battery_media_item",
+                            itemEntity);
+                    }
+                    final MediaInventoryHelper.EntityItemSnapshot sourceBefore =
+                        MediaInventoryHelper.snapshotEntity(itemEntity);
+                    final ItemStack heldBefore = bottle.copy();
+                    vm.addRollbackAction(() -> {
+                        sourceBefore.restore();
+                        player.setHeldItem(hand, heldBefore.copy());
+                    });
+                    vm.consumeMedia(matchedCustomRecipe.getMediaCost());
+                    ItemStack droppedInput = matchedCustomRecipe.getDroppedInput();
+                    source.shrink(droppedInput.getCount());
+                    itemEntity.setItem(source);
+                    if (source.isEmpty()) {
+                        itemEntity.setDead();
+                    }
+                    bottle.shrink(customHeldInput.getCount());
+                    ItemStack heldRemainder = bottle;
+                    ItemStack output = matchedCustomRecipe.getOutput();
+                    if (heldRemainder.isEmpty()) {
+                        player.setHeldItem(hand, output);
+                    } else if (ItemStack.areItemsEqual(heldRemainder, output)
+                        && ItemStack.areItemStackTagsEqual(heldRemainder, output)
+                        && heldRemainder.getCount() + output.getCount()
+                            <= heldRemainder.getMaxStackSize()) {
+                        heldRemainder.grow(output.getCount());
+                    } else if (!player.inventory.addItemStackToInventory(output.copy())) {
+                        player.dropItem(output.copy(), false);
+                    }
+                    return;
+                }
                 if (bottle == null || bottle.isEmpty()
                     || bottle.getItem() != net.minecraft.init.Items.GLASS_BOTTLE
                     || bottle.getCount() != 1 || hand == null) {
                     throw Mishap.badOffhandItem("hexcasting.error.craft_battery_base");
                 }
-                requireEntityInRange(vm, player, itemEntity,
-                    "hexcasting.error.craft_battery_range");
-                net.minecraft.item.ItemStack source = itemEntity.getItem();
                 if (!MediaInventoryHelper.isBatteryMediaItem(source)) {
                     throw Mishap.badItem("hexcasting.error.craft_battery_media_item",
                         itemEntity);
@@ -5596,7 +5655,7 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         }
     }
 
-    private static void requireEntityInRange(
+    public static void requireEntityInRange(
         CastingVM vm,
         net.minecraft.entity.player.EntityPlayer player,
         net.minecraft.entity.Entity entity,
@@ -5734,21 +5793,39 @@ throw Mishap.invalidContext("hexcasting.error.get_media_context");
         }
     }
 
-    private static net.minecraft.entity.Entity resolveEntity(EntityIota entityIota, CastingVM vm)
+    public static net.minecraft.entity.Entity resolveEntity(EntityIota entityIota, CastingVM vm)
         throws CastingException {
         if (entityIota == null) {
             throw Mishap.invalidValue("hexcasting.error.entity_data_expected");
         }
         net.minecraft.entity.Entity entity = entityIota.getEntity();
-        if (entity == null && vm != null && vm.getPlayer() != null) {
-            for (net.minecraft.entity.Entity candidate : vm.getPlayer().world.loadedEntityList) {
+        net.minecraft.entity.player.EntityPlayer player = vm == null
+            ? null : vm.getPlayer();
+        net.minecraft.world.World currentWorld = player == null ? null : player.world;
+        if (currentWorld == null && vm != null
+            && vm.getMediaHolder() instanceof at.petra_k.hexcasting.common.block.TileEntityImpetus) {
+            currentWorld = ((at.petra_k.hexcasting.common.block.TileEntityImpetus)
+                vm.getMediaHolder()).getWorld();
+        }
+
+        // Entity Iotas are serialized between individual staff patterns.  The
+        // live reference may therefore belong to a previous world instance
+        // even though the UUID still identifies the entity in the current
+        // world.  Never operate on that stale reference.
+        boolean liveInCurrentWorld = entity != null && !entity.isDead
+            && entity.world != null
+            && (currentWorld == null || entity.world == currentWorld);
+        if (!liveInCurrentWorld && currentWorld != null) {
+            for (net.minecraft.entity.Entity candidate : currentWorld.loadedEntityList) {
                 if (entityIota.getUuid().equals(candidate.getUniqueID())) {
-                    entity = candidate;
+                    entity = candidate.isDead || candidate.world != currentWorld
+                        ? null : candidate;
                     break;
                 }
             }
         }
-        if (entity == null) {
+        if (entity == null || entity.isDead || entity.world == null
+            || currentWorld != null && entity.world != currentWorld) {
             throw Mishap.badEntity("hexcasting.error.entity_unavailable");
         }
         if (vm != null) {

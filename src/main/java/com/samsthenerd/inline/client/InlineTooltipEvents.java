@@ -5,6 +5,7 @@ import com.samsthenerd.inline.api.MatchContext;
 import at.petra_k.hexcasting.api.casting.math.HexPattern;
 import at.petra_k.hexcasting.common.item.MediaTooltip;
 import at.petra_k.hexcasting.common.item.ItemPatternScroll;
+import at.petra_k.hexcasting.common.lib.hex.CustomMediaValues;
 import at.petra_k.hexcasting.interop.inline.InlinePatternChatRenderer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.Minecraft;
@@ -34,6 +35,20 @@ public final class InlineTooltipEvents {
     public static void onTooltip(ItemTooltipEvent event) {
         if (event == null || event.getToolTip() == null) {
             return;
+        }
+        ItemStack stack = event.getItemStack();
+        if (stack != null && CustomMediaValues.has(stack)) {
+            boolean hasMediaToken = false;
+            for (String line : event.getToolTip()) {
+                if (MediaTooltip.containsToken(line)) {
+                    hasMediaToken = true;
+                    break;
+                }
+            }
+            long media = CustomMediaValues.get(stack);
+            if (!hasMediaToken && media > 0L) {
+                MediaTooltip.add(event.getToolTip(), media, media);
+            }
         }
         Minecraft minecraft = Minecraft.getMinecraft();
         MatchContext context = new MatchContext(

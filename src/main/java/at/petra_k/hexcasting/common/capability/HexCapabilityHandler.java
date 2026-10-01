@@ -12,6 +12,7 @@ import at.petra_k.hexcasting.api.item.PigmentItem;
 import at.petra_k.hexcasting.common.entity.EntityWallScroll;
 import at.petra_k.hexcasting.api.misc.MediaConstants;
 import at.petra_k.hexcasting.common.misc.AmethystCompat;
+import at.petra_k.hexcasting.common.lib.hex.CustomMediaValues;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.Entity;
@@ -49,7 +50,14 @@ public final class HexCapabilityHandler {
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        if (stack.getItem() instanceof MediaHolderItem) {
+        if (CustomMediaValues.has(stack)) {
+            long worth = CustomMediaValues.get(stack);
+            if (worth > 0L) {
+                event.addCapability(HexAPI.modLoc("static_media"),
+                    new HexItemCapabilityProvider<>(HexCapabilities.MEDIA,
+                        new HexStaticMediaHolder(stack, worth, staticMediaPriority(stack))));
+            }
+        } else if (stack.getItem() instanceof MediaHolderItem) {
             MediaHolderItem holder = (MediaHolderItem) stack.getItem();
             event.addCapability(HexAPI.modLoc("media_holder"),
                 new HexItemCapabilityProvider<>(HexCapabilities.MEDIA,
@@ -107,6 +115,9 @@ public final class HexCapabilityHandler {
     private static long staticMediaWorth(ItemStack stack) {
         if (stack == null || stack.isEmpty() || stack.getItem().getRegistryName() == null) {
             return 0L;
+        }
+        if (CustomMediaValues.has(stack)) {
+            return CustomMediaValues.get(stack);
         }
         net.minecraft.util.ResourceLocation id = stack.getItem().getRegistryName();
         if ("minecraft".equals(id.getResourceDomain())

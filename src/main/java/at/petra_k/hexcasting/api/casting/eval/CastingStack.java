@@ -44,7 +44,8 @@ public final class CastingStack {
     /** Fail before mutating the stack when an action needs several arguments. */
     public void requireSize(int expected) throws CastingException {
         if (expected < 0) {
-            throw new IllegalArgumentException("Expected stack size cannot be negative");
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Expected stack size cannot be negative");
         }
         if (values.size() < expected) {
             throw Mishap.notEnoughArguments(expected, values.size());
@@ -76,7 +77,11 @@ public final class CastingStack {
 
     /** Add the placeholder values required by a not-enough-arguments Mishap. */
     public void pushGarbage(int count) throws CastingException {
-        for (int i = 0; i < Math.max(0, count); i++) {
+        if (count < 0) {
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Garbage count cannot be negative");
+        }
+        for (int i = 0; i < count; i++) {
             push(new GarbageIota());
         }
     }
@@ -85,12 +90,15 @@ public final class CastingStack {
     public void replaceFromTop(int reverseIndex, Iota replacement)
         throws CastingException {
         if (replacement == null) {
-            throw new IllegalArgumentException("Stack replacement cannot be null");
+            throw Mishap.invalidValue("hexcasting.error.invalid_value",
+                "Stack replacement cannot be null");
         }
-        int index = values.size() - 1 - Math.max(0, reverseIndex);
-        if (index < 0 || index >= values.size()) {
-            throw new IllegalStateException("Stack replacement index is out of bounds");
+        if (reverseIndex < 0 || reverseIndex >= values.size()) {
+            throw Mishap.invalidValue("hexcasting.error.list_index_out_of_bounds",
+                "Stack replacement index " + reverseIndex
+                    + " is outside 0.." + (values.size() - 1));
         }
+        int index = values.size() - 1 - reverseIndex;
         values.set(index, replacement);
     }
 

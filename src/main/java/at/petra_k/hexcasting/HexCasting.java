@@ -42,7 +42,7 @@ import at.petrak.paucal.api.PaucalAPI;
 public final class HexCasting {
     public static final String MOD_ID = "hexcasting";
     public static final String NAME = "Hex Casting: Legacy";
-    public static final String VERSION = "0.1.0-1.12.2";
+    public static final String VERSION = "0.1.1-1.12.2";
 
     @SidedProxy(
         clientSide = "at.petra_k.hexcasting.client.HexClientProxy",

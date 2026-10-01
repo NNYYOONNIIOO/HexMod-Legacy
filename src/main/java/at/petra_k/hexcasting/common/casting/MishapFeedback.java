@@ -485,11 +485,14 @@ public final class MishapFeedback {
 
     /** Localize item, offhand, and hotbar failures with actual stack data. */
     private static String localizeBadItem(Mishap mishap) {
+        ItemStack expectedStack = mishap.getExpectedOffhandItem();
         String expectedKey = itemExpectationKey(mishap.getErrorKey());
-        if (expectedKey == null) {
+        if (expectedKey == null && expectedStack == null) {
             return localizeKey(mishap.getErrorKey());
         }
-        String expected = expectedKey.endsWith("iota.readonly")
+        String expected = expectedStack != null
+            ? expectedStack.getDisplayName()
+            : expectedKey.endsWith("iota.readonly")
             && mishap.getDisplayArgs().length > 0
             ? I18n.translateToLocalFormatted(expectedKey,
                 mishap.getDisplayArgs())

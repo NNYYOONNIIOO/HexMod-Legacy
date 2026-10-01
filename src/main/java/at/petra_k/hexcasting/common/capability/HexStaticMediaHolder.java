@@ -1,6 +1,7 @@
 package at.petra_k.hexcasting.common.capability;
 
 import at.petra_k.hexcasting.api.addldata.ADMediaHolder;
+import at.petra_k.hexcasting.common.lib.hex.CustomMediaValues;
 import net.minecraft.item.ItemStack;
 
 /** Capability adapter for discrete media items represented by stack count. */
@@ -17,7 +18,7 @@ public final class HexStaticMediaHolder implements ADMediaHolder {
 
     @Override
     public long getMedia() {
-        return multiply(worth, stack == null ? 0L : stack.getCount());
+        return multiply(getWorth(), stack == null ? 0L : stack.getCount());
     }
 
     @Override
@@ -37,7 +38,7 @@ public final class HexStaticMediaHolder implements ADMediaHolder {
 
     @Override
     public boolean canProvide() {
-        return true;
+        return getWorth() > 0L;
     }
 
     @Override
@@ -47,13 +48,14 @@ public final class HexStaticMediaHolder implements ADMediaHolder {
 
     @Override
     public boolean canConstructBattery() {
-        return true;
+        return getWorth() > 0L;
     }
 
     @Override
     public long withdrawMedia(long amount, boolean simulate) {
         long available = getMedia();
         long requested = amount < 0L ? available : Math.max(0L, amount);
+        long worth = getWorth();
         if (available <= 0L || requested <= 0L || worth <= 0L) {
             return 0L;
         }
@@ -69,5 +71,10 @@ public final class HexStaticMediaHolder implements ADMediaHolder {
     private static long multiply(long left, long right) {
         return left <= 0L || right <= 0L || left > Long.MAX_VALUE / right
             ? (left > 0L && right > 0L ? Long.MAX_VALUE : 0L) : left * right;
+    }
+
+    private long getWorth() {
+        return stack != null && CustomMediaValues.has(stack)
+            ? CustomMediaValues.get(stack) : worth;
     }
 }
