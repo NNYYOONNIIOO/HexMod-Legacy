@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/trapdoor_top",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "texture": "hexcasting:blocks/edified_trapdoor"
-  }
-}
