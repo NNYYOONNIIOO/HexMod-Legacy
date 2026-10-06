@@ -112,13 +112,51 @@ public final class MediaTooltip {
             return "";
         }
         int width = font.getStringWidth(plainText(entry));
-        int spaces = Math.max(1, (width + 3) / 4);
-        StringBuilder result = new StringBuilder(spaces + 2);
-        // Keep a zero-width formatting code so GuiUtils does not trim the
-        // placeholder line before PostText gets a chance to paint RGB text.
-        result.append(net.minecraft.util.text.TextFormatting.RESET);
-        for (int i = 0; i < spaces; i++) {
-            result.append(' ');
+        return widthPreservingBlank(font, width);
+    }
+
+    /**
+     * Build an invisible line whose width is measured by the active font.
+     * SmoothFont changes the width of a space, so converting pixels to a
+     * hard-coded number of four-pixel spaces makes the tooltip too narrow.
+     * A non-breaking space survives the tooltip line trimming performed by
+     * Forge and SmoothFont intentionally gives it the same width as a space.
+     */
+    private static String widthPreservingBlank(
+        net.minecraft.client.gui.FontRenderer font, int targetWidth) {
+        int target = Math.max(1, targetWidth);
+        String reset = net.minecraft.util.text.TextFormatting.RESET.toString();
+        StringBuilder result = new StringBuilder(reset);
+        char blank = '\u00a0';
+        int previousWidth = font.getStringWidth(result.toString());
+        int blankWidth = font.getStringWidth(String.valueOf(blank));
+        if (blankWidth <= 0) {
+            blank = ' ';
+        }
+
+        for (int count = 0; count < 4096; count++) {
+            if (count > 0 && previousWidth >= target) {
+                break;
+            }
+            result.append(blank);
+            int currentWidth = font.getStringWidth(result.toString());
+            if (currentWidth <= previousWidth && blank != ' ') {
+                // Some custom fonts do not expose a glyph width for NBSP.
+                // Fall back to the ordinary space before giving up.
+                result.setLength(result.length() - 1);
+                blank = ' ';
+                result.append(blank);
+                currentWidth = font.getStringWidth(result.toString());
+            }
+            if (currentWidth <= previousWidth) {
+                break;
+            }
+            previousWidth = currentWidth;
+        }
+
+        // Keep the line alive even for a font that reports zero-width blanks.
+        if (result.length() == reset.length()) {
+            result.append(blank);
         }
         return result.toString();
     }

@@ -71,6 +71,8 @@ public final class InlinePatternChatRenderer {
             return;
         }
 
+        FontRenderer font = currentFont();
+
         Matcher matcher = TOKEN.matcher(text);
         if (!matcher.find()) {
             return;
@@ -83,7 +85,7 @@ public final class InlinePatternChatRenderer {
         while (matcher.find()) {
             plainCursor += matcher.start() - rawCursor;
             int plainStart = plainCursor;
-            String replacement = tokenReplacement(matcher.group(1));
+            String replacement = tokenReplacement(matcher.group(1), font);
             plainCursor += replacement.length();
             tokens.add(new PatternToken(matcher.group(1), parseColor(matcher.group(2)),
                 plainStart, plainCursor));
@@ -97,7 +99,7 @@ public final class InlinePatternChatRenderer {
         }
 
         trackedMessages.add(0, new TrackedMessage(
-            stripTokenText(text), tokens, updateCounter, nextSequence++));
+            stripTokenText(font, text), tokens, updateCounter, nextSequence++));
         while (trackedMessages.size() > MAX_TRACKED_MESSAGES) {
             trackedMessages.remove(trackedMessages.size() - 1);
         }
@@ -116,6 +118,11 @@ public final class InlinePatternChatRenderer {
 
     /** Return the text that vanilla 1.12.2 should measure and draw. */
     public static String stripTokenText(String text) {
+        return stripTokenText(currentFont(), text);
+    }
+
+    /** Replace tokens using a specific font renderer's measured widths. */
+    public static String stripTokenText(FontRenderer font, String text) {
         if (text == null) {
             return "";
         }
@@ -123,7 +130,7 @@ public final class InlinePatternChatRenderer {
         StringBuffer result = new StringBuffer(text.length());
         while (matcher.find()) {
             matcher.appendReplacement(result,
-                Matcher.quoteReplacement(tokenReplacement(matcher.group(1))));
+                Matcher.quoteReplacement(tokenReplacement(matcher.group(1), font)));
         }
         matcher.appendTail(result);
         return result.toString();
@@ -146,15 +153,64 @@ public final class InlinePatternChatRenderer {
         return result.toString();
     }
 
-    private static String tokenReplacement(String signature) {
+    private static String tokenReplacement(String signature, FontRenderer font) {
         int width = HexPatternChatGeometry.width(signature);
-        // The default 1.12.2 font assigns four pixels to an ASCII space.
-        int spaces = Math.max(1, (width + 3) / 4);
-        StringBuilder replacement = new StringBuilder(spaces);
-        for (int i = 0; i < spaces; i++) {
-            replacement.append(' ');
+        return widthPreservingBlank(font, width);
+    }
+
+    private static FontRenderer currentFont() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        return minecraft == null ? null : minecraft.fontRenderer;
+    }
+
+    /**
+     * Reserve the pattern's actual pixel width using the active font rather
+     * than assuming every space is four pixels wide.  This keeps chat layout
+     * aligned when SmoothFont changes the space metrics.
+     */
+    private static String widthPreservingBlank(FontRenderer font, int targetWidth) {
+        int target = Math.max(1, targetWidth);
+        if (font == null) {
+            int spaces = Math.max(1, (target + 3) / 4);
+            StringBuilder fallback = new StringBuilder(spaces);
+            for (int i = 0; i < spaces; i++) {
+                fallback.append(' ');
+            }
+            return fallback.toString();
         }
-        return replacement.toString();
+
+        // Do not insert a reset code here: this string is also used in real
+        // chat messages, and resetting would discard the colour/style that
+        // should continue after the inline pattern.
+        StringBuilder result = new StringBuilder();
+        char blank = '\u00a0';
+        int previousWidth = font.getStringWidth(result.toString());
+        if (font.getStringWidth(String.valueOf(blank)) <= 0) {
+            blank = ' ';
+        }
+
+        for (int count = 0; count < 4096; count++) {
+            if (count > 0 && previousWidth >= target) {
+                break;
+            }
+            result.append(blank);
+            int currentWidth = font.getStringWidth(result.toString());
+            if (currentWidth <= previousWidth && blank != ' ') {
+                result.setLength(result.length() - 1);
+                blank = ' ';
+                result.append(blank);
+                currentWidth = font.getStringWidth(result.toString());
+            }
+            if (currentWidth <= previousWidth) {
+                break;
+            }
+            previousWidth = currentWidth;
+        }
+
+        if (result.length() == 0) {
+            result.append(blank);
+        }
+        return result.toString();
     }
 
     /** Return whether a string contains one or more Inline pattern tokens. */
@@ -164,7 +220,7 @@ public final class InlinePatternChatRenderer {
 
     /** Measure text after replacing private tokens with their reserved width. */
     public static int stringWidth(FontRenderer font, String text) {
-        return font == null ? 0 : font.getStringWidth(stripTokenText(text));
+        return font == null ? 0 : font.getStringWidth(stripTokenText(font, text));
     }
 
     /**
@@ -254,7 +310,7 @@ public final class InlinePatternChatRenderer {
         if (font == null || text == null) {
             return;
         }
-        font.drawString(stripTokenText(text), x, y, argb);
+        font.drawString(stripTokenText(font, text), x, y, argb);
         drawInlinePatterns(font, text, x, y, argb);
     }
 
@@ -266,7 +322,7 @@ public final class InlinePatternChatRenderer {
         }
         Matcher matcher = TOKEN.matcher(text);
         while (matcher.find()) {
-            String prefix = stripTokenText(text.substring(0, matcher.start()));
+            String prefix = stripTokenText(font, text.substring(0, matcher.start()));
             drawInlinePattern(matcher.group(1),
                 x + font.getStringWidth(prefix), y,
                 parseColorOrDefault(matcher.group(2), argb));
@@ -286,7 +342,7 @@ public final class InlinePatternChatRenderer {
             || !containsTokens(sourceText)) {
             return false;
         }
-        String plainSource = stripTokenText(sourceText);
+        String plainSource = stripTokenText(font, sourceText);
         int lineStart = plainSource.indexOf(renderedLine);
         if (lineStart < 0) {
             // GuiUtils can remove the reserved spaces from an inline-only
@@ -304,7 +360,8 @@ public final class InlinePatternChatRenderer {
         while (matcher.find()) {
             // Translate the raw token position into the width-preserving
             // plain string before comparing it with the wrapped line.
-            String beforeToken = stripTokenText(sourceText.substring(0, matcher.start()));
+            String beforeToken = stripTokenText(font,
+                sourceText.substring(0, matcher.start()));
             int tokenStart = beforeToken.length();
             int lineEnd = lineStart + renderedLine.length();
             // GuiUtils trims trailing spaces from a tooltip line. The token
