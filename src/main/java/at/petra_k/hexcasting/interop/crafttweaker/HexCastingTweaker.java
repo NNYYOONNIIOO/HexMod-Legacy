@@ -135,14 +135,40 @@ public final class HexCastingTweaker {
             final String entityId = entity == null ? null : entity.getId();
             final NBTTagCompound entityNbt = nbt(nbt);
             final String displayKey = entityNameKey;
-            submit("Adding Hex Casting brainsweep recipe " + in + " -> " + out,
-                () -> {
-                    if (!BrainsweepRecipes.addCustom(in, entityId, entityNbt,
-                        mediaCost, out, displayKey)) {
-                        warn("Skipped brainsweep recipe " + in + " -> " + out
-                            + ": both items must have concrete block forms, the entity must be registered, and media must be non-negative.");
-                    }
-                });
+            addCustom(in, entityId, entityNbt, mediaCost, out, displayKey);
+        }
+
+        /**
+         * Register a recipe by resource-location string.
+         *
+         * <p>CraftTweaker 1.12 rebuilds its entity bracket cache during a
+         * recipe registry event. Mods which call EntityRegistry.registerModEntity
+         * during init can therefore make a valid {@code <entity:...>} bracket
+         * evaluate to null. Keeping this string form lets scripts refer to the
+         * runtime registry ID without depending on that cache.</p>
+         */
+        @ZenMethod
+        public static void addById(IItemStack input, String entityId,
+                                   long mediaCost, IItemStack output) {
+            addWithNbtById(input, entityId, null, mediaCost, output, null);
+        }
+
+        @ZenMethod
+        public static void addWithNbtById(IItemStack input, String entityId,
+                                          IData nbt, long mediaCost,
+                                          IItemStack output) {
+            addWithNbtById(input, entityId, nbt, mediaCost, output, null);
+        }
+
+        @ZenMethod
+        public static void addWithNbtById(IItemStack input, String entityId,
+                                          IData nbt, long mediaCost,
+                                          IItemStack output,
+                                          String entityNameKey) {
+            final ItemStack in = stack(input);
+            final ItemStack out = stack(output);
+            final NBTTagCompound entityNbt = nbt(nbt);
+            addCustom(in, entityId, entityNbt, mediaCost, out, entityNameKey);
         }
 
         @ZenMethod
@@ -176,6 +202,38 @@ public final class HexCastingTweaker {
             submit("Removing exact Hex Casting brainsweep recipe", () ->
                 BrainsweepRecipes.removeCustom(in, entityId, entityNbt,
                     mediaCost, out));
+        }
+
+        @ZenMethod
+        public static void removeById(IItemStack input, String entityId,
+                                      long mediaCost, IItemStack output) {
+            removeWithNbtById(input, entityId, null, mediaCost, output);
+        }
+
+        @ZenMethod
+        public static void removeWithNbtById(IItemStack input, String entityId,
+                                             IData nbt, long mediaCost,
+                                             IItemStack output) {
+            final ItemStack in = stack(input);
+            final ItemStack out = stack(output);
+            final NBTTagCompound entityNbt = nbt(nbt);
+            submit("Removing exact Hex Casting brainsweep recipe", () ->
+                BrainsweepRecipes.removeCustom(in, entityId, entityNbt,
+                    mediaCost, out));
+        }
+
+        private static void addCustom(ItemStack input, String entityId,
+                                      NBTTagCompound entityNbt, long mediaCost,
+                                      ItemStack output, String entityNameKey) {
+            submit("Adding Hex Casting brainsweep recipe " + input + " -> " + output,
+                () -> {
+                    if (!BrainsweepRecipes.addCustom(input, entityId, entityNbt,
+                        mediaCost, output, entityNameKey)) {
+                        warn("Skipped brainsweep recipe " + input + " -> " + output
+                            + ": input/output and entity id are required, and media must be non-negative."
+                            + " Use addById for entities registered during mod initialization.");
+                    }
+                });
         }
     }
 

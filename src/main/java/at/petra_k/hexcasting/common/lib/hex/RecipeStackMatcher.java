@@ -2,6 +2,7 @@ package at.petra_k.hexcasting.common.lib.hex;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -55,12 +56,66 @@ public final class RecipeStackMatcher {
             ? null : stack.getItem().getRegistryName();
     }
 
-    public static IBlockState blockState(ItemStack stack) {
-        if (stack == null || stack.isEmpty()
-            || !(stack.getItem() instanceof ItemBlock)) {
+    /**
+     * Return the block represented by an item stack.
+     *
+     * <p>Most 1.12.2 block items are direct {@link ItemBlock}s.  A few legacy
+     * mods create subtype ItemBlocks dynamically, however, and their item
+     * registry entry is the only reliable lookup point while registries are
+     * still settling.  Keep both paths so script recipes do not depend on the
+     * concrete ItemBlock implementation.</p>
+     */
+    public static Block blockForItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
             return null;
         }
-        Block block = ((ItemBlock) stack.getItem()).getBlock();
+
+        Item item = stack.getItem();
+        if (item == null) {
+            return null;
+        }
+
+        if (item instanceof ItemBlock) {
+            Block block = ((ItemBlock) item).getBlock();
+            if (block != null) {
+                return block;
+            }
+        }
+
+        ResourceLocation itemId = item.getRegistryName();
+        if (itemId != null) {
+            Block block = Block.REGISTRY.getObject(itemId);
+            if (block != null && block != net.minecraft.init.Blocks.AIR) {
+                return block;
+            }
+        }
+
+        // Some legacy dynamic registries expose the ItemBlock before the
+        // corresponding registry-name lookup is visible.  Scan the block
+        // registry as a final compatibility path and compare both the item
+        // identity and the unlocalized names used by 1.12.2 ItemBlocks.
+        String itemName = item.getUnlocalizedName(stack);
+        for (Block block : Block.REGISTRY) {
+            if (block == null || block == net.minecraft.init.Blocks.AIR) {
+                continue;
+            }
+            if (Item.getItemFromBlock(block) == item) {
+                return block;
+            }
+            if (itemName != null && itemName.equals(block.getUnlocalizedName())) {
+                return block;
+            }
+        }
+        return null;
+    }
+
+    /** Whether the stack is backed by a registered block item. */
+    public static boolean isBlockItem(ItemStack stack) {
+        return blockForItem(stack) != null;
+    }
+
+    public static IBlockState blockState(ItemStack stack) {
+        Block block = blockForItem(stack);
         if (block == null) {
             return null;
         }

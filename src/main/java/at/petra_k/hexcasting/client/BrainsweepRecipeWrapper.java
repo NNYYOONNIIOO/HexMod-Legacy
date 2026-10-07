@@ -258,14 +258,26 @@ public final class BrainsweepRecipeWrapper implements IRecipeWrapper {
         ResourceLocation id = new ResourceLocation(entityType);
         String path = id.getResourcePath();
         String modernKey = "entity." + id.getResourceDomain() + "." + path;
-        for (String key : new String[] {
+        List<String> keys = new ArrayList<>();
+        // Forge 1.12 entity translations use EntityEntry's registered name,
+        // which may be CamelCase and therefore cannot be reconstructed from
+        // the resource-location path (e.g. StrayedMirror vs strayed_mirror).
+        EntityEntry entry = ForgeRegistries.ENTITIES.getValue(id);
+        if (entry != null && entry.getName() != null
+            && !entry.getName().isEmpty()) {
+            keys.add("entity." + entry.getName() + ".name");
+            keys.add("entity." + entry.getName());
+            keys.add("entity." + id.getResourceDomain() + "."
+                + entry.getName() + ".name");
+        }
+        Collections.addAll(keys,
             modernKey,
             "entity." + path,
             "entity." + capitalize(path) + ".name",
             "entity." + capitalize(path),
             "hexcasting.entity." + id.getResourceDomain() + "." + path,
-            "hexcasting.entity." + path
-        }) {
+            "hexcasting.entity." + path);
+        for (String key : keys) {
             String translated = net.minecraft.util.text.translation.I18n.translateToLocal(key);
             if (!key.equals(translated)) {
                 return translated;

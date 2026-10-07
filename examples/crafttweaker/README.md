@@ -58,3 +58,10 @@ continuations, parenthesis control, escape state, and Mishap stack effects.
 `my_pack.hexcasting.brainsweep.fletcher`; the supplied resource-pack language
 files translate it to Fletcher/制箭师. `CareerLevel: 3` is interpreted as level
 3 or higher, so the tooltip can show both the profession and minimum level.
+
+If a third-party entity is registered during mod initialization, CraftTweaker
+1.12 may evaluate its `<entity:...>` bracket before the entity cache is rebuilt.
+Use `Brainsweep.addById` (or `addWithNbtById`) with the full resource location,
+for example `"thaumicconcilium:strayed_mirror"`. The entity ID is matched at
+cast time, so this form also works for entities that are unavailable while
+CraftTweaker is compiling brackets.

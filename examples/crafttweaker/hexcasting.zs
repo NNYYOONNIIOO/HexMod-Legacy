@@ -32,6 +32,16 @@ mods.hexcasting.Brainsweep.add(
     <minecraft:diamond_block>
 );
 
+// Use addById when a mod registers its entity during init rather than during
+// the Forge registry event. This avoids CraftTweaker 1.12's early entity
+// bracket cache; the ID is still checked against the entity at cast time.
+// mods.hexcasting.Brainsweep.addById(
+//     <minecraft:stone>,
+//     "thaumicconcilium:strayed_mirror",
+//     75000,
+//     <minecraft:gold_block>
+// );
+
 // Profession 0 + Career 4 is the 1.12.2 fletcher villager career.
 // CareerLevel 3 means level 3 or higher. The final argument is a translation
 // key supplied by the pack author, so JEI can display a localized profession.

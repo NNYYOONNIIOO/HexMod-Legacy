@@ -79,17 +79,16 @@ public final class BrainsweepRecipes {
                                                  long mediaCost,
                                                  ItemStack output,
                                                  String entityNameKey) {
-        IBlockState inputState = RecipeStackMatcher.blockState(input);
-        IBlockState outputState = RecipeStackMatcher.blockState(output);
-        if (inputState == null || outputState == null
-            || input.getMetadata() == 32767 || output.getMetadata() == 32767
-            || entityType == null || entityType.isEmpty() || mediaCost < 0L) {
+        // CraftTweaker may evaluate scripts before a third-party dynamic
+        // block has completed its registry setup. Keep the concrete stacks
+        // and resolve their block states again when the spell is actually
+        // matched instead of discarding an otherwise valid script recipe.
+        if (input == null || output == null
+            || entityType == null || entityType.trim().isEmpty() || mediaCost < 0L) {
             return false;
         }
-        ResourceLocation entityId;
-        try {
-            entityId = new ResourceLocation(entityType);
-        } catch (IllegalArgumentException exception) {
+        String normalizedEntityType = normalizeEntityType(entityType);
+        if (normalizedEntityType == null) {
             return false;
         }
         ItemStack normalizedInput = input.copy();
@@ -98,10 +97,10 @@ public final class BrainsweepRecipes {
         normalizedOutput.setCount(1);
         NBTTagCompound nbt = entityNbt == null
             ? new NBTTagCompound() : entityNbt.copy();
-        removeCustomInputs(normalizedInput, entityId, nbt);
+        removeCustomInputs(normalizedInput, normalizedEntityType, nbt);
         CUSTOM_RECIPES.add(0, new CustomRecipe(normalizedInput,
-            entityId.toString(), nbt, mediaCost, normalizedOutput,
-            outputState, entityNameKey));
+            normalizedEntityType, nbt, mediaCost, normalizedOutput,
+            RecipeStackMatcher.blockState(output), entityNameKey));
         return true;
     }
 
@@ -120,6 +119,10 @@ public final class BrainsweepRecipes {
                                                     NBTTagCompound entityNbt,
                                                     long mediaCost,
                                                     ItemStack output) {
+        String normalizedEntityType = normalizeEntityType(entityType);
+        if (normalizedEntityType == null) {
+            return false;
+        }
         NBTTagCompound nbt = entityNbt == null
             ? new NBTTagCompound() : entityNbt;
         boolean removed = false;
@@ -127,7 +130,7 @@ public final class BrainsweepRecipes {
              iterator.hasNext();) {
             CustomRecipe recipe = iterator.next();
             if (RecipeStackMatcher.same(recipe.input, input)
-                && recipe.entityType.equals(entityType)
+                && recipe.entityType.equals(normalizedEntityType)
                 && recipe.entityNbt.equals(nbt)
                 && recipe.mediaCost == mediaCost
                 && RecipeStackMatcher.same(recipe.output, output)) {
@@ -204,8 +207,14 @@ public final class BrainsweepRecipes {
                         && RecipeStackMatcher.matchesBlock(recipe.input, input)
                         && matchesEntityNbt(recipe.entityType, recipe.entityNbt,
                             victim.writeToNBT(new NBTTagCompound()))) {
-                        return new Match(copyProperties(input, recipe.outputState),
-                            recipe.mediaCost);
+                        IBlockState outputState = recipe.outputState;
+                        if (outputState == null) {
+                            outputState = RecipeStackMatcher.blockState(recipe.output);
+                        }
+                        if (outputState != null) {
+                            return new Match(copyProperties(input, outputState),
+                                recipe.mediaCost);
+                        }
                     }
                 }
             }
@@ -373,6 +382,13 @@ public final class BrainsweepRecipes {
     /** Preserve shared facing/energized (and any future common) properties. */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static IBlockState copyProperties(IBlockState original, IBlockState result) {
+        // A custom recipe may intentionally transform one metadata variant
+        // into another variant of the same block (for example, a dynamic
+        // budding block).  Copying every property in that case would restore
+        // the input variant and silently discard the recipe output.
+        if (original.getBlock() == result.getBlock()) {
+            return result;
+        }
         for (Map.Entry<IProperty<?>, Comparable<?>> property : original.getProperties().entrySet()) {
             IProperty key = property.getKey();
             if (result.getPropertyKeys().contains(key)) {
@@ -406,16 +422,35 @@ public final class BrainsweepRecipes {
     }
 
     private static void removeCustomInputs(ItemStack input,
-                                           ResourceLocation entityId,
+                                           String entityId,
                                            NBTTagCompound entityNbt) {
         for (java.util.Iterator<CustomRecipe> iterator = CUSTOM_RECIPES.iterator();
              iterator.hasNext();) {
             CustomRecipe recipe = iterator.next();
             if (sameItem(recipe.input, input)
-                && recipe.entityType.equals(entityId.toString())
+                && recipe.entityType.equals(entityId)
                 && recipe.entityNbt.equals(entityNbt)) {
                 iterator.remove();
             }
+        }
+    }
+
+    private static String normalizeEntityType(String entityType) {
+        String normalized = entityType == null ? "" : entityType.trim();
+        if (normalized.startsWith("entity:")) {
+            normalized = normalized.substring("entity:".length());
+        }
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        try {
+            return new ResourceLocation(normalized).toString();
+        } catch (IllegalArgumentException ignored) {
+            // Keep a namespaced-looking ID usable even if a third-party
+            // registry uses a non-standard path character. The runtime
+            // matcher will simply not select it unless the entity has the
+            // same registry ID.
+            return normalized;
         }
     }
 
